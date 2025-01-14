@@ -302,7 +302,7 @@
                             if (typeof data == "string") data = $.parseJSON(data);
                             if (!erro && data.tipo == "invalido") {
                                 erro = data.dado + " não encontrad" + (data.dado == "Empresa" ? "a" : "o");
-                                document.getElementById("pessoa-" + data.dato.toLowerCase()).classList.add("invalido");
+                                document.getElementById("pessoa-" + data.dado.toLowerCase()).classList.add("invalido");
                             }
                             if (!erro && data.tipo == "duplicado" && !parseInt(document.getElementById("pessoa-id").value)) {
                                 erro = "Já existe um registro com esse " + data.dado;
