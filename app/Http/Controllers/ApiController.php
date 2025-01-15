@@ -11,96 +11,10 @@ use App\Models\Estoque;
 use App\Models\Retiradas;
 use App\Models\Atribuicoes;
 use App\Models\Empresas;
+use App\Models\Pessoas;
 
 class ApiController extends ControllerKX {
     //GETS
-    private function retirarMain(Request $request) {
-        $resultado = new \stdClass;
-        $cont = 0;
-        while (isset($request[$cont]["id_atribuicao"])) {
-            $retirada = $request[$cont];
-            $atribuicao = Atribuicoes::find($retirada["id_atribuicao"]);
-            if ($atribuicao == null) {
-                $resultado->code = 404;
-                $resultado->msg = "Atribuição não encontrada";
-                return json_encode($resultado);
-            }
-            $maquinas = DB::table("valores")
-                            ->where("seq", $retirada["id_maquina"])
-                            ->where("alias", "maquinas")
-                            ->get();
-            if (!sizeof($maquinas)) {
-                $resultado->code = 404;
-                $resultado->msg = "Máquina não encontrada";
-                return json_encode($resultado);
-            }
-            $comodato = DB::table("comodatos")
-                            ->select("id")
-                            ->where("id_maquina", $maquinas[0]->id)
-                            ->whereRaw("inicio <= CURDATE()")
-                            ->whereRaw("fim >= CURDATE()")
-                            ->get();
-            if (!sizeof($comodato)) {
-                $resultado->code = 404;
-                $resultado->msg = "Máquina não comodatada para nenhuma empresa";
-                return json_encode($resultado);
-            }
-            if (!isset($retirada["id_supervisor"]) && !$this->retirada_consultar($retirada["id_atribuicao"], $retirada["qtd"])) {
-                $resultado->code = 401;
-                $resultado->msg = "Essa quantidade de produtos não é permitida para essa pessoa";
-                return json_encode($resultado);
-            }
-            if (floatval($retirada["qtd"]) > floatval(DB::table(DB::raw("(
-                SELECT
-                    CASE
-                        WHEN (es = 'E') THEN qtd
-                        ELSE qtd * -1
-                    END AS qtd
-                
-                FROM estoque
-    
-                JOIN maquinas_produtos AS mp
-                    ON mp.id = estoque.id_mp
-    
-                WHERE id_maquina = ".$maquinas[0]->id."
-                  AND id_produto = ".$retirada["id_produto"]."
-            ) AS tab"))->selectRaw("SUM(qtd) AS qtd")->value("qtd"))) {
-                $resultado->code = 500;
-                $resultado->msg = "Essa quantidade de produtos não está disponível em estoque";
-                return json_encode($resultado);
-            }
-            $salvar = array(
-                "id_pessoa" => $retirada["id_pessoa"],
-                "id_produto" => $retirada["id_produto"],
-                "id_atribuicao" => $retirada["id_atribuicao"],
-                "id_comodato" => $comodato[0]->id,
-                "qtd" => $retirada["qtd"],
-                "data" => date("Y-m-d")
-            );
-            if (isset($retirada["id_supervisor"])) {
-                $salvar += [
-                    "id_supervisor" => $retirada["id_supervisor"],
-                    "obs" => $retirada["obs"]
-                ];
-            }
-            $this->retirada_salvar($salvar);
-            $linha = new Estoque;
-            $linha->es = "S";
-            $linha->descr = "RETIRADA";
-            $linha->qtd = $retirada["qtd"];
-            $linha->id_mp = DB::table("maquinas_produtos")
-                                ->where("id_produto", $retirada["id_produto"])
-                                ->where("id_maquina", $maquinas[0]->id)
-                                ->value("id");
-            $linha->save();
-            $this->log_inserir("C", "estoque", $linha->id, true);
-            $cont++;
-        }
-        $resultado->code = 201;
-        $resultado->msg = "Sucesso";
-        return json_encode($resultado);
-    }
-
     public function empresas() {
         return json_encode(
             DB::table("empresas")
@@ -255,7 +169,7 @@ class ApiController extends ControllerKX {
         $modelo = $this->log_inserir($letra_log, "produtos", $linha->id, true);
         if (isset($request->usu)) $modelo->nome = $request->usu;
         $modelo->save();
-        $this->mov_estoque($linha->id, true);
+        $this->mov_estoque($linha->id, true, $request->usu);
         $consulta = DB::table("produtos")
                         ->select(
                             "id",
@@ -316,7 +230,7 @@ class ApiController extends ControllerKX {
         $this->log_inserir2("E", "maquinas_produtos", $where, $nome, true);
     }
 
-    public function validarApp(Request $request) {
+    public function validar_app(Request $request) {
         return sizeof(
             DB::table("pessoas")
                 ->where("cpf", $request->cpf)
@@ -326,7 +240,7 @@ class ApiController extends ControllerKX {
         ) ? 1 : 0;
     }
 
-    public function verPessoa(Request $request) {
+    public function ver_pessoa(Request $request) {
         return json_encode(
             DB::table("pessoas")
                 ->where("cpf", $request->cpf)
@@ -334,7 +248,7 @@ class ApiController extends ControllerKX {
         );
     }
 
-    public function produtosPorPessoa(Request $request) {
+    public function produtos_por_pessoa(Request $request) {
         $consulta = DB::table("produtos")
                         ->select(
                             "produtos.id",
@@ -418,18 +332,97 @@ class ApiController extends ControllerKX {
     }
 
     public function retirar(Request $request) {
-        return $this->retirarMain($request);
+        $resultado = new \stdClass;
+        $cont = 0;
+        while (isset($request[$cont]["id_atribuicao"])) {
+            $retirada = $request[$cont];
+            $atribuicao = Atribuicoes::find($retirada["id_atribuicao"]);
+            if ($atribuicao == null) {
+                $resultado->code = 404;
+                $resultado->msg = "Atribuição não encontrada";
+                return json_encode($resultado);
+            }
+            $maquinas = DB::table("valores")
+                            ->where("seq", $retirada["id_maquina"])
+                            ->where("alias", "maquinas")
+                            ->get();
+            if (!sizeof($maquinas)) {
+                $resultado->code = 404;
+                $resultado->msg = "Máquina não encontrada";
+                return json_encode($resultado);
+            }
+            $comodato = DB::table("comodatos")
+                            ->select("id")
+                            ->where("id_maquina", $maquinas[0]->id)
+                            ->whereRaw("inicio <= CURDATE()")
+                            ->whereRaw("fim >= CURDATE()")
+                            ->get();
+            if (!sizeof($comodato)) {
+                $resultado->code = 404;
+                $resultado->msg = "Máquina não comodatada para nenhuma empresa";
+                return json_encode($resultado);
+            }
+            if (!isset($retirada["id_supervisor"]) && !$this->retirada_consultar($retirada["id_atribuicao"], $retirada["qtd"])) {
+                $resultado->code = 401;
+                $resultado->msg = "Essa quantidade de produtos não é permitida para essa pessoa";
+                return json_encode($resultado);
+            }
+            if (floatval($retirada["qtd"]) > floatval(DB::table(DB::raw("(
+                SELECT
+                    CASE
+                        WHEN (es = 'E') THEN qtd
+                        ELSE qtd * -1
+                    END AS qtd
+                
+                FROM estoque
+    
+                JOIN maquinas_produtos AS mp
+                    ON mp.id = estoque.id_mp
+    
+                WHERE id_maquina = ".$maquinas[0]->id."
+                  AND id_produto = ".$retirada["id_produto"]."
+            ) AS tab"))->selectRaw("SUM(qtd) AS qtd")->value("qtd"))) {
+                $resultado->code = 500;
+                $resultado->msg = "Essa quantidade de produtos não está disponível em estoque";
+                return json_encode($resultado);
+            }
+            $salvar = array(
+                "id_pessoa" => $retirada["id_pessoa"],
+                "id_produto" => $retirada["id_produto"],
+                "id_atribuicao" => $retirada["id_atribuicao"],
+                "id_comodato" => $comodato[0]->id,
+                "qtd" => $retirada["qtd"],
+                "data" => date("Y-m-d")
+            );
+            if (isset($retirada["id_supervisor"])) {
+                $salvar += [
+                    "id_supervisor" => $retirada["id_supervisor"],
+                    "obs" => $retirada["obs"]
+                ];
+            }
+            $this->retirada_salvar($salvar);
+            $linha = new Estoque;
+            $linha->es = "S";
+            $linha->descr = "RETIRADA";
+            $linha->qtd = $retirada["qtd"];
+            $linha->id_mp = DB::table("maquinas_produtos")
+                                ->where("id_produto", $retirada["id_produto"])
+                                ->where("id_maquina", $maquinas[0]->id)
+                                ->value("id");
+            $linha->save();
+            $this->log_inserir("C", "estoque", $linha->id, true);
+            $cont++;
+        }
+        $resultado->code = 201;
+        $resultado->msg = "Sucesso";
+        return json_encode($resultado);
     }
 
-    public function validarSpv(Request $request) {
+    public function validar_spv(Request $request) {
         return $this->supervisor_consultar($request);
     }
 
-    public function retirarComSupervisao(Request $request) {
-        return $this->retirarMain($request);
-    }
-
-    public function marcarGerouPedido(Request $request) {
+    public function marcar_gerou_pedido(Request $request) {
         foreach ($request->ids as $id) {
             $retirada = Retiradas::firstOrNew(["id" => $id]);
             $retirada->gerou_pedido = "S";
@@ -446,7 +439,7 @@ class ApiController extends ControllerKX {
         return $empresa->id;
     }
 
-    public function pessoasComFoto() {
+    public function pessoas_com_foto() {
         return json_encode(
             DB::table("pessoas")
                 ->select(
@@ -458,5 +451,20 @@ class ApiController extends ControllerKX {
                 ->whereNotNull("foto64")
                 ->get()
         );
+    }
+
+    public function biometria(Request $request) {
+        $pessoa = Pessoas::find($request->id);
+        if ($pessoa == null) return 404;
+        $pessoa->biometria = $request->biometria;
+        $pessoa->save();
+        $this->log_inserir("E", "pessoas", $pessoa->id, true);
+        return 200;
+    }
+
+    public function validar_biometria(Request $request) {
+        $pessoa = DB::table("pessoas")->where("biometria", $request->biometria)->value("id");
+        if ($pessoa == null) return 0;
+        return $pessoa;
     }
 }

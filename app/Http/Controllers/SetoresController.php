@@ -153,7 +153,7 @@ class SetoresController extends ControllerKX {
         $this->log_inserir("D", "setores", $linha->id);
     }
 
-    public function primeiroAdmin() {
+    public function primeiro_admin() {
         return json_encode(
             DB::table("setores")
                 ->where("lixeira", 0)

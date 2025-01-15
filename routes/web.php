@@ -48,7 +48,7 @@ Route::middleware("auth")->group(function () {
         Route::get ("/pessoas/{id}",   [SetoresController::class, "pessoas"]);
         Route::get ("/mostrar/{id}",   [SetoresController::class, "mostrar"]);
         Route::get ("/aviso/{id}",     [SetoresController::class, "aviso"]);
-        Route::get ("/primeiro-admin", [SetoresController::class, "primeiroAdmin"]);
+        Route::get ("/primeiro-admin", [SetoresController::class, "primeiro_admin"]);
         Route::post("/salvar",         [SetoresController::class, "salvar"]);
         Route::post("/excluir",        [SetoresController::class, "excluir"]);
     });

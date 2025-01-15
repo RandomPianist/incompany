@@ -192,7 +192,7 @@ class ControllerKX extends Controller {
         return $resultado;
     }
 
-    protected function mov_estoque($id_produto, $api) {
+    protected function mov_estoque($id_produto, $api, $nome = "") {
         $maquinas = DB::table("valores")
                         ->where("alias", "maquinas")
                         ->pluck("id");
@@ -207,7 +207,11 @@ class ControllerKX extends Controller {
                 $gestor->id_maquina = $maquina;
                 $gestor->id_produto = $id_produto;
                 $gestor->save();
-                $this->log_inserir("C", "maquinas_produtos", $gestor->id, $api);
+                $modelo = $this->log_inserir("C", "maquinas_produtos", $gestor->id, $api);
+                if ($nome) {
+                    $modelo->nome = $request->usu;
+                    $modelo->save();
+                }
             }
         }
     }
