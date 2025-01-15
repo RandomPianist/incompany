@@ -46,7 +46,8 @@ CREATE TABLE pessoas (
 	senha INT,
 	foto VARCHAR(512),
 	foto64 TEXT,
-	supervisor TINYINT DEFAULT 0
+	supervisor TINYINT DEFAULT 0,
+	biometria TEXT
 );
 
 CREATE TABLE produtos (
