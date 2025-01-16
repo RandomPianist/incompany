@@ -523,7 +523,7 @@ function RelatorioBilateral(_grupo) {
     }, 0);
 }
 
-function RelatorioItens() {
+function RelatorioItens(resumido) {
     let elementos = relObterElementos(["inicio1", "fim1", "produto", "maquina2"]);
     
     this.validar = function() {
@@ -543,9 +543,16 @@ function RelatorioItens() {
     limpar_invalido();
     setTimeout(function() {
         modal("relatorioItensModal", 0, function() {
+            let lm = document.getElementById("rel-lm");
+            lm.value = "N";
+            let estilo = lm.parentElement.parentElement.parentElement.classList;
+            if (resumido) estilo.add("d-none");
+            else estilo.remove("d-none");
             elementos.inicio.value = hoje();
             elementos.fim.value = hoje();
-            document.getElementById("rel-lm").value = "N";
+            document.getElementById("relatorioItensModalLabel").innerHTML = resumido ? "Saldo por máquina" : "Extrato de itens";
+            document.getElementById("resumo").value = resumido ? "S" : "N";
+            document.getElementById("rel-lm-chk").checked = false;
         });
     }, 0);
 }

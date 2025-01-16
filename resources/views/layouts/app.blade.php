@@ -109,11 +109,11 @@
                                 <li onclick = "relatorio = new RelatorioControle()">
                                     <span>Controle de Entrega</span>
                                 </li>
-                                
+
                                     <li onclick = "relatorio = new RelatorioBilateral('empresas-por-maquina')">
                                         <span>Empresas por máquina</span>
                                     </li>
-                                    <li onclick = "relatorio = new RelatorioItens()">
+                                    <li onclick = "relatorio = new RelatorioItens(false)">
                                         <span>Extrato de itens</span>
                                     </li>
                                 @if (!intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa))
@@ -128,6 +128,10 @@
                                 <li onclick = "relatorio = new RelatorioRanking()">
                                     <span>Ranking de retiradas</span>
                                 </li>
+
+                                    <li onclick = "relatorio = new RelatorioItens(true)">
+                                        <span>Saldo por máquina</span>
+                                    </li>
                             </ul>
                         </a>
                     </div>

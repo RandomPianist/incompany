@@ -238,6 +238,18 @@ class RelatoriosController extends ControllerKX {
                         END AS qtd
                     "),
                     DB::raw("
+                        CASE
+                            WHEN (es = 'E') THEN estoque.qtd
+                            ELSE 0
+                        END AS entradas
+                    "),
+                    DB::raw("
+                        CASE
+                            WHEN (es = 'S') THEN estoque.qtd
+                            ELSE 0
+                        END AS saidas
+                    "),
+                    DB::raw("
                         IFNULL(pessoas.nome, CONCAT(
                             'API',
                             IFNULL(CONCAT(' - ', log.nome), '')
@@ -314,6 +326,8 @@ class RelatoriosController extends ControllerKX {
                             "preco" => $itens2[0]->preco,
                             "saldo_ant" => intval($itens2[0]->saldo),
                             "saldo_res" => intval($itens2[0]->saldo) + $itens2->sum("qtd"),
+                            "entradas" => $itens2->sum("entradas"),
+                            "saidas" => $itens2->sum("saidas"),
                             "movimentacao" => $itens2->map(function($movimento) {
                                 $qtd = floatval($movimento->qtd);
                                 return [
@@ -330,7 +344,8 @@ class RelatoriosController extends ControllerKX {
             ];
         })->sortBy("descr")->values()->all();
         $criterios = join(" | ", $criterios);
-        return sizeof($resultado) ? view("reports/extrato", compact("resultado", "lm", "criterios")) : view("nada");
+        if (sizeof($resultado)) return view("reports/".($request->resumo == "N" ? "extrato" : "saldo"), compact("resultado", "lm", "criterios"));
+        return view("nada");
     }
 
     public function extrato_consultar(Request $request) {
