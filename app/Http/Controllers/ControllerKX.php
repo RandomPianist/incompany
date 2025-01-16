@@ -209,7 +209,7 @@ class ControllerKX extends Controller {
                 $gestor->save();
                 $modelo = $this->log_inserir("C", "maquinas_produtos", $gestor->id, $api);
                 if ($nome) {
-                    $modelo->nome = $request->usu;
+                    $modelo->nome = $nome;
                     $modelo->save();
                 }
             }
