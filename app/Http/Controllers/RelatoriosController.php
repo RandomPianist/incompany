@@ -224,6 +224,7 @@ class RelatoriosController extends ControllerKX {
                     // GRUPO 2
                     "produtos.id AS id_produto",
                     "produtos.descr AS produto",
+                    "tot.qtd AS saldo",
                     DB::raw("IFNULL(mp.preco, produtos.preco) AS preco"),
 
                     // DETALHES
@@ -232,8 +233,8 @@ class RelatoriosController extends ControllerKX {
                     "estoque.descr AS estoque_descr",
                     DB::raw("
                         CASE
-                            WHEN (es = 'E') THEN qtd
-                            ELSE qtd * -1
+                            WHEN (es = 'E') THEN estoque.qtd
+                            ELSE estoque.qtd * -1
                         END AS qtd
                     "),
                     DB::raw("
@@ -248,6 +249,26 @@ class RelatoriosController extends ControllerKX {
                 ->join("produtos", "produtos.id", "mp.id_produto")
                 ->join("valores", "valores.id", "mp.id_maquina")
                 ->leftjoin("pessoas", "pessoas.id", "log.id_pessoa")
+                ->leftjoinsub(
+                    DB::table("estoque")
+                        ->select(
+                            "id_mp",
+                            DB::raw("
+                                SUM(CASE
+                                    WHEN (es = 'E') THEN qtd
+                                    ELSE qtd * -1
+                                END) AS qtd
+                            ")
+                        )
+                        ->where(function($sql) use($request) {
+                            if ($request->inicio){
+                                $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
+                                $sql->whereRaw("DATE(created_at) < '".$inicio."'");
+                            }
+                        })
+                        ->groupby("id_mp"),
+                    "tot", "tot.id_mp", "mp.id"
+                )
                 ->where(function($sql) use($request, &$criterios) {
                     if ($request->inicio || $request->fim) {
                         $periodo = "Período";
@@ -291,7 +312,8 @@ class RelatoriosController extends ControllerKX {
                         return [
                             "descr" => $itens2[0]->produto,
                             "preco" => $itens2[0]->preco,
-                            "saldo" => $itens2->sum("qtd"),
+                            "saldo_ant" => intval($itens2[0]->saldo),
+                            "saldo_res" => intval($itens2[0]->saldo) + $itens2->sum("qtd"),
                             "movimentacao" => $itens2->map(function($movimento) {
                                 $qtd = floatval($movimento->qtd);
                                 return [
