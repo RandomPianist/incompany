@@ -20,16 +20,17 @@ class ApiController extends ControllerKX {
             DB::table("empresas")
                 ->select(
                     "empresas.id",
+                    DB::raw("IFNULL(empresas.cod_externo, '') as cod_externo"),
                     DB::raw("
                         CONCAT(
                             empresas.nome_fantasia,
                             IFNULL(CONCAT(' - ', matriz.nome_fantasia), '')
-                        ) AS descr, IFNULL(empresas.cod_externo, '') as cod_externo
-                    "),
+                        ) AS descr
+                    ")
                 )
                 ->leftjoin("empresas AS matriz", "matriz.id", "empresas.id_matriz")
+                ->whereRaw("matriz.lixeira = 0 OR matriz.id IS NULL")
                 ->where("empresas.lixeira", 0)
-                ->where("matriz.lixeira", 0)
                 ->get()
         );
     }
