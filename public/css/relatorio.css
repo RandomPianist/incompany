@@ -671,8 +671,12 @@ h5 {
 	clear: both
 }
 
-.report-header>div {
-	width: 50%
+.report-header>div.float-left {
+	width: 30%
+}
+
+.report-header>div.float-right {
+	width: 70%
 }
 
 .report-header ul {

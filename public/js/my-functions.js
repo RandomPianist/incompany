@@ -543,16 +543,13 @@ function RelatorioItens(resumido) {
     limpar_invalido();
     setTimeout(function() {
         modal("relatorioItensModal", 0, function() {
-            let lm = document.getElementById("rel-lm");
-            lm.value = "N";
-            let estilo = lm.parentElement.parentElement.parentElement.classList;
-            if (resumido) estilo.add("d-none");
-            else estilo.remove("d-none");
+            document.getElementById("rel-lm").value = "N";
             elementos.inicio.value = hoje();
             elementos.fim.value = hoje();
-            document.getElementById("relatorioItensModalLabel").innerHTML = resumido ? "Saldo por máquina" : "Extrato de itens";
+            document.getElementById("relatorioItensModalLabel").innerHTML = resumido ? "Sugestão de compra" : "Extrato de itens";
             document.getElementById("resumo").value = resumido ? "S" : "N";
             document.getElementById("rel-lm-chk").checked = false;
+            document.querySelector("label[for='rel-lm-chk']").innerHTML = resumido ? "Listar apenas produtos cuja compra é sugerida" : "Listar movimentação";
         });
     }, 0);
 }

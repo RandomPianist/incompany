@@ -130,7 +130,7 @@
                                 </li>
 
                                     <li onclick = "relatorio = new RelatorioItens(true)">
-                                        <span>Saldo por máquina</span>
+                                        <span>Sugestão de compra</span>
                                     </li>
                             </ul>
                         </a>

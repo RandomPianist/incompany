@@ -8,7 +8,7 @@
         <div class = "float-right">
             <ul class = "m-0">
                 <li class = "text-right">
-                    <h6 class = "m-0 fw-600">Saldo por máquina</h6>
+                    <h6 class = "m-0 fw-600">Sugestão de compra</h6>
                 </li>
                 <li class = "text-right">
                     <h6 class = "m-0 traduzir">
@@ -34,10 +34,12 @@
             <thead>
                 <tr class = "report-row">
                     <td width = "40%">Produto</td>
-                    <td width = "15%" class = "text-right">Saldo Ant.</td>
-                    <td width = "15%" class = "text-right">Entradas</td>
-                    <td width = "15%" class = "text-right">Saídas</td>
-                    <td width = "15%" class = "text-right">Saldo Final</td>
+                    <td width = "10%" class = "text-right">Saldo Ant.</td>
+                    <td width = "10%" class = "text-right">Entradas</td>
+                    <td width = "10%" class = "text-right">Saídas</td>
+                    <td width = "10%" class = "text-right">Saldo Final</td>
+                    <td width = "10%" class = "text-right">Qtde. Mínima</td>
+                    <td width = "10%" class = "text-right">Qtde. Sugerida</td>
                 </tr>
             </thead>
         </table>
@@ -45,13 +47,17 @@
             <table class = "report-body table table-sm table-bordered table-striped">
                 <tbody>
                     @foreach ($item["maquina"]["produtos"] as $produto)
-                        <tr class = "report-row">
-                            <td width = "40%">{{ $produto["descr"] }}</td>
-                            <td width = "15%" class = "text-right">{{ $produto["saldo_ant"] }}</td>
-                            <td width = "15%" class = "text-right">{{ $produto["entradas"] }}</td>
-                            <td width = "15%" class = "text-right">{{ $produto["saidas"] }}</td>
-                            <td width = "15%" class = "text-right">{{ $produto["saldo_res"] }}</td>
-                        </tr>
+                        @if (($lm && $produto["sugeridos"] > 0) || !$lm)
+                            <tr class = "report-row">
+                                <td width = "40%">{{ $produto["descr"] }}</td>
+                                <td width = "10%" class = "text-right">{{ $produto["saldo_ant"] }}</td>
+                                <td width = "10%" class = "text-right">{{ $produto["entradas"] }}</td>
+                                <td width = "10%" class = "text-right">{{ $produto["saidas"] }}</td>
+                                <td width = "10%" class = "text-right">{{ $produto["saldo_res"] }}</td>
+                                <td width = "10%" class = "text-right">{{ $produto["minimo"] }}</td>
+                                <td width = "10%" class = "text-right">{{ $produto["sugeridos"] }}</td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
             </table>

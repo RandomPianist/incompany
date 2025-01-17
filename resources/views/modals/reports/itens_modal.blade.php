@@ -61,7 +61,7 @@
                                 <div class = "custom-control custom-switch">
                                     <input id = "rel-lm" name = "lm" type = "hidden" />
                                     <input id = "rel-lm-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "$(this).prev().val(this.checked ? 'S' : 'N')" />
-                                    <label for = "rel-lm-chk" class = "custom-control-label">Listar movimentação<label>
+                                    <label for = "rel-lm-chk" class = "custom-control-label"><label>
                                 </div>
                             </div>
                         </div>

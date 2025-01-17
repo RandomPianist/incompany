@@ -214,6 +214,7 @@ class RelatoriosController extends ControllerKX {
     public function extrato(Request $request) {
         $criterios = array();
         $lm = $request->lm == "S";
+        $resumo = $request->resumo == "S";
         $resultado = collect(
             DB::table("log")
                 ->select(
@@ -229,6 +230,7 @@ class RelatoriosController extends ControllerKX {
 
                     // DETALHES
                     DB::raw("DATE_FORMAT(log.created_at, '%d/%m/%Y %H:%i') AS data"),
+                    "mp.minimo",
                     "estoque.es",
                     "estoque.descr AS estoque_descr",
                     DB::raw("
@@ -321,13 +323,20 @@ class RelatoriosController extends ControllerKX {
                 "maquina" => [
                     "descr" => $itens1[0]->maquina,
                     "produtos" => collect($itens1)->groupBy("id_produto")->map(function($itens2) {
+                        $minimo = intval($itens2[0]->minimo);
+                        $saldo_ant = intval($itens2[0]->saldo);
+                        $saldo_res = $saldo_ant + $itens2->sum("qtd");
+                        $sugeridos = $minimo - $saldo_res;
+                        if ($sugeridos < 0) $sugeridos = 0;
                         return [
                             "descr" => $itens2[0]->produto,
                             "preco" => $itens2[0]->preco,
-                            "saldo_ant" => intval($itens2[0]->saldo),
-                            "saldo_res" => intval($itens2[0]->saldo) + $itens2->sum("qtd"),
+                            "saldo_ant" => $saldo_ant,
+                            "saldo_res" => $saldo_res,
                             "entradas" => $itens2->sum("entradas"),
                             "saidas" => $itens2->sum("saidas"),
+                            "sugeridos" => $sugeridos,
+                            "minimo" => $minimo,
                             "movimentacao" => $itens2->map(function($movimento) {
                                 $qtd = floatval($movimento->qtd);
                                 return [
@@ -343,8 +352,9 @@ class RelatoriosController extends ControllerKX {
                 ]
             ];
         })->sortBy("descr")->values()->all();
+        if ($lm && $resumo) array_push($criterios, "Apenas produtos cuja compra é sugerida");
         $criterios = join(" | ", $criterios);
-        if (sizeof($resultado)) return view("reports/".($request->resumo == "N" ? "extrato" : "saldo"), compact("resultado", "lm", "criterios"));
+        if (sizeof($resultado)) return view("reports/".($resumo ? "saldo" : "extrato"), compact("resultado", "lm", "criterios"));
         return view("nada");
     }
 
