@@ -180,13 +180,13 @@ class ApiController extends ControllerKX {
                             DB::raw("IFNULL(ca, '') AS ca"),
                             DB::raw("IFNULL(foto, '') AS foto"),
                             "lixeira",
-                            "referencia AS refer",
+                            DB::raw("IFNULL(referencia, '') AS refer"),
                             DB::raw("IFNULL(tamanho, '') AS tamanho"),
                             "id_categoria AS idCategoria",
                             "cod_externo AS codExterno",
                             DB::raw("'123' AS usu"),
                             "consumo",
-                            "validade_ca"
+                            DB::raw("IFNULL (validade_ca, '') AS validade_ca")
                         )
                         ->where("id", $linha->id)
                         ->first();
