@@ -14,6 +14,45 @@ use App\Models\Empresas;
 use App\Models\Pessoas;
 
 class ApiController extends ControllerKX {
+    private function info_atb($select, $where) {
+        return DB::table("produtos")
+                    ->select(DB::raw($select))
+                    ->join("atribuicoes", "atribuicoes.id", DB::raw("(
+                        SELECT atribuicoes.id
+                        
+                        FROM atribuicoes
+
+                        JOIN pessoas
+                            ON (atribuicoes.pessoa_ou_setor_chave = 'P' AND atribuicoes.pessoa_ou_setor_valor = pessoas.id)
+                                OR (atribuicoes.pessoa_ou_setor_chave = 'S' AND atribuicoes.pessoa_ou_setor_valor = pessoas.id_setor)
+                        
+                        WHERE (
+                            (produto_ou_referencia_chave = 'P' AND produto_ou_referencia_valor = produtos.cod_externo)
+                        OR (produto_ou_referencia_chave = 'R' AND produto_ou_referencia_valor = produtos.referencia)
+                        ) AND ".$where."
+                        AND pessoas.lixeira = 0
+                        AND atribuicoes.lixeira = 0
+
+                        ORDER BY pessoa_ou_setor_chave
+
+                        LIMIT 1
+                    )"))->leftjoinSub(
+                        DB::table("retiradas")
+                            ->select(
+                                DB::raw("SUM(retiradas.qtd) AS qtd"),
+                                "id_atribuicao",
+                                DB::raw("DATE_FORMAT(MAX(retiradas.data), '%d/%m/%Y') AS ultima_retirada"),
+                                DB::raw("DATE_ADD(MAX(retiradas.data), INTERVAL atribuicoes.validade DAY) AS proxima_retirada")
+                            )
+                            ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
+                            ->whereRaw("DATE_ADD(retiradas.data, INTERVAL atribuicoes.validade DAY) >= CURDATE()")
+                            ->groupby(
+                                "id_atribuicao",
+                                "atribuicoes.validade"
+                            ),
+                    "ret", "ret.id_atribuicao", "atribuicoes.id");
+    }
+
     //GETS
     public function empresas() {
         return json_encode(
@@ -250,55 +289,20 @@ class ApiController extends ControllerKX {
     }
 
     public function produtos_por_pessoa(Request $request) {
-        $consulta = DB::table("produtos")
-                        ->select(
-                            "produtos.id",
-                            "produtos.referencia",
-                            "produtos.descr AS nome",
-                            "produtos.detalhes",
-                            "produtos.cod_externo AS codbar",
-                            DB::raw("IFNULL(produtos.tamanho, '') AS tamanho"),
-                            DB::raw("IFNULL(produtos.foto, '') AS foto"),
-                            "atribuicoes.id AS id_atribuicao",
-                            "atribuicoes.obrigatorio",
-                            DB::raw("(atribuicoes.qtd - IFNULL(ret.qtd, 0)) AS qtd"),
-                            DB::raw("IFNULL(ret.ultima_retirada, '') AS ultima_retirada"),
-                            DB::raw("DATE_FORMAT(IFNULL(ret.proxima_retirada, CURDATE()), '%d/%m/%Y') AS proxima_retirada")
-                        )->join("atribuicoes", "atribuicoes.id", DB::raw("(
-                            SELECT atribuicoes.id
-                            
-                            FROM atribuicoes
-
-                            JOIN pessoas
-                                ON (atribuicoes.pessoa_ou_setor_chave = 'P' AND atribuicoes.pessoa_ou_setor_valor = pessoas.id)
-                                    OR (atribuicoes.pessoa_ou_setor_chave = 'S' AND atribuicoes.pessoa_ou_setor_valor = pessoas.id_setor)
-                            
-                            WHERE (
-                                (produto_ou_referencia_chave = 'P' AND produto_ou_referencia_valor = produtos.cod_externo)
-                            OR (produto_ou_referencia_chave = 'R' AND produto_ou_referencia_valor = produtos.referencia)
-                            ) AND pessoas.cpf = '".$request->cpf."'
-                              AND pessoas.lixeira = 0
-                              AND atribuicoes.lixeira = 0
-
-                            ORDER BY pessoa_ou_setor_chave
-
-                            LIMIT 1
-                        )"))->leftjoinSub(
-                            DB::table("retiradas")
-                                ->select(
-                                    DB::raw("SUM(retiradas.qtd) AS qtd"),
-                                    "id_atribuicao",
-                                    DB::raw("DATE_FORMAT(MAX(retiradas.data), '%d/%m/%Y') AS ultima_retirada"),
-                                    DB::raw("DATE_ADD(MAX(retiradas.data), INTERVAL atribuicoes.validade DAY) AS proxima_retirada")
-                                )
-                                ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
-                                ->whereRaw("DATE_ADD(retiradas.data, INTERVAL atribuicoes.validade DAY) >= CURDATE()")
-                                ->groupby(
-                                    "id_atribuicao",
-                                    "atribuicoes.validade"
-                                ),
-                        "ret", "ret.id_atribuicao", "atribuicoes.id")
-                        ->get();
+        $consulta = $this->info_atb("
+            produtos.id,
+            produtos.referencia,
+            produtos.descr AS nome,
+            produtos.detalhes,
+            produtos.cod_externo AS codbar,
+            IFNULL(produtos.tamanho, '') AS tamanho,
+            IFNULL(produtos.foto, '') AS foto,
+            atribuicoes.id AS id_atribuicao,
+            atribuicoes.obrigatorio,
+            (atribuicoes.qtd - IFNULL(ret.qtd, 0)) AS qtd,
+            IFNULL(ret.ultima_retirada, '') AS ultima_retirada,
+            DATE_FORMAT(IFNULL(ret.proxima_retirada, CURDATE()), '%d/%m/%Y') AS proxima_retirada
+        ", "pessoas.cpf = '".$request->cpf."'")->get();
         $resultado = array();
         foreach ($consulta as $linha) {
             if ($linha->foto) {
@@ -335,6 +339,8 @@ class ApiController extends ControllerKX {
     public function retirar(Request $request) {
         $resultado = new \stdClass;
         $cont = 0;
+        $produtos_ids = array();
+        $produtos_refer = array();
         while (isset($request[$cont]["id_atribuicao"])) {
             $retirada = $request[$cont];
             $atribuicao = Atribuicoes::find($retirada["id_atribuicao"]);
@@ -363,11 +369,11 @@ class ApiController extends ControllerKX {
                 $resultado->msg = "Máquina não comodatada para nenhuma empresa";
                 return json_encode($resultado);
             }
-            if (!isset($retirada["id_supervisor"]) && !$this->retirada_consultar($retirada["id_atribuicao"], $retirada["qtd"])) {
-                $resultado->code = 401;
-                $resultado->msg = "Essa quantidade de produtos não é permitida para essa pessoa";
-                return json_encode($resultado);
-            }
+            // if (!isset($retirada["id_supervisor"]) && !$this->retirada_consultar($retirada["id_atribuicao"], $retirada["qtd"])) {
+            //     $resultado->code = 401;
+            //     $resultado->msg = "Essa quantidade de produtos não é permitida para essa pessoa";
+            //     return json_encode($resultado);
+            // }
             if (floatval($retirada["qtd"]) > floatval(DB::table(DB::raw("(
                 SELECT
                     CASE
@@ -412,8 +418,46 @@ class ApiController extends ControllerKX {
                                 ->value("id");
             $linha->save();
             $this->log_inserir("C", "estoque", $linha->id, true);
+            array_push($produtos_ids, intval($retirada["id_produto"]));
+            array_push($produtos_refer, strval(
+                DB::table("produtos")
+                    ->selectRaw("IFNULL(referencia, '') AS referencia")
+                    ->where("id", $retirada["id_produto"])
+                    ->value("referencia")
+            ));
             $cont++;
         }
+
+        $consulta = $this->info_atb("
+            CASE
+                WHEN atribuicoes.produto_ou_referencia_chave = 'R' THEN produtos.referencia
+                ELSE produtos.id
+            END AS chave,
+            CASE
+                WHEN atribuicoes.produto_ou_referencia_chave = 'R' THEN produtos.referencia
+                ELSE produtos.descr
+            END AS nome,
+            atribuicoes.produto_ou_referencia_chave,
+            (atribuicoes.qtd - IFNULL(ret.qtd, 0)) AS qtd
+        ", "pessoas.id = ".$retirada["id_pessoa"])
+            ->where("atribuicoes.obrigatorio", 1)
+            ->whereRaw("(atribuicoes.qtd - IFNULL(ret.qtd, 0)) > 0")
+            ->whereRaw("IFNULL(ret.proxima_retirada, CURDATE()) <= CURDATE()")
+            ->get();
+        foreach ($consulta as $linha) {
+            if (
+                ($linha->produto_ou_referencia_chave == "R" && !in_array($linha->chave, $produtos_refer)) ||
+                ($linha->produto_ou_referencia_chave == "P" && !in_array(intval($linha->chave), $produtos_ids))
+            ) {
+                $msg = "Há um produto obrigatório que não foi retirado: ";
+                if ($linha->produto_ou_referencia_chave == "R") $msg .= "referência ";
+                $msg .= $linha->nome;
+                $resultado->code = 400;
+                $resultado->msg = $msg; 
+                return json_encode($resultado);
+            }
+        }
+
         $resultado->code = 201;
         $resultado->msg = "Sucesso";
         return json_encode($resultado);
