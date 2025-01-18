@@ -103,7 +103,7 @@
                                     <span>Consumo<img class = "dropdown-icon" src = "/incompany/img/sort-down.png"></span>
                                     <ul class = "subdropdown-toolbar">
                                         <li onclick = "relatorio = new RelatorioRetiradas('pessoa')">por colaborador</li>
-                                        <li onclick = "relatorio = new RelatorioRetiradas('setor')">por setor</li>
+                                        <li onclick = "relatorio = new RelatorioRetiradas('setor')">por centro de custo</li>
                                     </ul>
                                 </li>
                                 <li onclick = "relatorio = new RelatorioControle()">

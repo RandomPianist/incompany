@@ -624,7 +624,9 @@ function RelatorioRetiradas(quebra) {
             }
             elementos.consumo.value = "todos";
             elementos.tipo.value = "A";
-            document.getElementById("relatorioRetiradasModalLabel").innerHTML = "Consumo por " + quebra.replace("pessoa", "colaborador");
+            let titulo = "Consumo por ";
+            titulo += quebra == "pessoa" ? "colaborador" : "centro de custo";
+            document.getElementById("relatorioRetiradasModalLabel").innerHTML = titulo;
             document.getElementById("rel-grupo2").value = quebra;
         });
     }, 0);
