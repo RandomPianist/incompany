@@ -12,6 +12,7 @@ use App\Models\Retiradas;
 use App\Models\Atribuicoes;
 use App\Models\Empresas;
 use App\Models\Pessoas;
+use App\Models\Log;
 
 class ApiController extends ControllerKX {
     private function info_atb($select, $where) {
@@ -339,6 +340,7 @@ class ApiController extends ControllerKX {
     public function retirar(Request $request) {
         $resultado = new \stdClass;
         $cont = 0;
+        $excluir = array();
         $produtos_ids = array();
         $produtos_refer = array();
         while (isset($request[$cont]["id_atribuicao"])) {
@@ -417,7 +419,7 @@ class ApiController extends ControllerKX {
                                 ->where("id_maquina", $maquinas[0]->id)
                                 ->value("id");
             $linha->save();
-            $this->log_inserir("C", "estoque", $linha->id, true);
+            array_push($excluir, $this->log_inserir("C", "estoque", $linha->id, true));
             array_push($produtos_ids, intval($retirada["id_produto"]));
             array_push($produtos_refer, strval(
                 DB::table("produtos")
@@ -449,6 +451,10 @@ class ApiController extends ControllerKX {
                 ($linha->produto_ou_referencia_chave == "R" && !in_array($linha->chave, $produtos_refer)) ||
                 ($linha->produto_ou_referencia_chave == "P" && !in_array(intval($linha->chave), $produtos_ids))
             ) {
+                foreach ($excluir as $aux) {
+                    Estoque::find($aux->fk)->delete();
+                    Log::find($aux->id)->delete();
+                }
                 $msg = "Há um produto obrigatório que não foi retirado: ";
                 if ($linha->produto_ou_referencia_chave == "R") $msg .= "referência ";
                 $msg .= $linha->nome;
