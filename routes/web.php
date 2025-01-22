@@ -25,10 +25,15 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware("auth")->group(function () {
-    Route::get("/",                               [DashboardController::class, "pagina"]);
-    Route::get("/produtos-em-atraso/{id_pessoa}", [DashboardController::class, "produtos"]);
-    Route::get("/ultimas-retiradas/{id_pessoa}",  [DashboardController::class, "ultimas_retiradas_prod"]);
-    Route::get("/autocomplete",                   [HomeController::class, "autocomplete"]);
+    Route::get("/",             [DashboardController::class, "iniciar"]);
+    Route::get("/autocomplete", [HomeController::class, "autocomplete"]);
+
+    Route::group(["prefix" => "dashboard"], function() {
+        Route::get("/dados",                           [DashboardController::class, "dados"]);
+        Route::get("/produtos",                        [DashboardController::class, "det_ultimas_retiradas"]);
+        Route::get("/retiradas-por-setor",             [DashboardController::class, "det_retiradas_por_setor"]);
+        Route::get("/retiradas-em-atraso/{id_pessoa}", [DashboardController::class, "produtos_em_atraso"]);
+    });
 
     Route::group(["prefix" => "valores/{alias}"], function() {
         Route::get ("/",             [ValoresController::class, "ver"]);
@@ -56,6 +61,7 @@ Route::middleware("auth")->group(function () {
     Route::group(["prefix" => "empresas"], function() {
         Route::get ("/",             [EmpresasController::class, "ver"]);
         Route::get ("/listar",       [EmpresasController::class, "listar"]);
+        Route::get ("/todas",        [EmpresasController::class, "todas"]);
         Route::get ("/consultar",    [EmpresasController::class, "consultar"]);
         Route::get ("/mostrar/{id}", [EmpresasController::class, "mostrar"]);
         Route::get ("/aviso/{id}",   [EmpresasController::class, "aviso"]);
@@ -64,14 +70,15 @@ Route::middleware("auth")->group(function () {
     });
 
     Route::group(["prefix" => "colaboradores"], function() {
-        Route::get ("/pagina/{tipo}", [PessoasController::class, "ver"]);
-        Route::get ("/listar",        [PessoasController::class, "listar"]);
-        Route::get ("/consultar",     [PessoasController::class, "consultar"]);
-        Route::get ("/mostrar/{id}",  [PessoasController::class, "mostrar"]);
-        Route::get ("/aviso/{id}",    [PessoasController::class, "aviso"]);
-        Route::post("/salvar",        [PessoasController::class, "salvar"]);
-        Route::post("/excluir",       [PessoasController::class, "excluir"]);
-        Route::post("/supervisor",    [PessoasController::class, "supervisor"]);
+        Route::get ("/pagina/{tipo}",   [PessoasController::class, "ver"]);
+        Route::get ("/listar",          [PessoasController::class, "listar"]);
+        Route::get ("/consultar",       [PessoasController::class, "consultar"]);
+        Route::get ("/mostrar/{id}",    [PessoasController::class, "mostrar"]);
+        Route::get ("/aviso/{id}",      [PessoasController::class, "aviso"]);
+        Route::post("/salvar",          [PessoasController::class, "salvar"]);
+        Route::post("/alterar-empresa", [PessoasController::class, "alterar_empresa"]);
+        Route::post("/excluir",         [PessoasController::class, "excluir"]);
+        Route::post("/supervisor",      [PessoasController::class, "supervisor"]);
     });
 
     Route::group(["prefix" => "produtos"], function() {

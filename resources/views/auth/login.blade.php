@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 @section('content')
-    <div class="container-login shadow-sm d-flex justify-center align-center w-50 h-75">
+    <div class = "container-login d-flex justify-center align-items-center">
         <form method = "POST" action = "{{ route('login') }}" class="d-flex flex-column justify-center align-center">
             <img src = "{{ asset('img/logo.png') }}" alt = "Logo" class = "mb-4 w-75 mx-auto">
             @csrf

@@ -422,11 +422,11 @@ class RelatoriosController extends ControllerKX {
                     DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data"),
                     "produtos.descr AS produto",
                     "pessoas.nome",
-                    "retiradas.qtd",
+                    DB::raw("SUM(retiradas.qtd) AS qtd"),
                     DB::raw("
                         CASE
-                            WHEN mp.preco IS NOT NULL THEN (mp.preco * retiradas.qtd)
-		                    ELSE (produtos.preco * retiradas.qtd)
+                            WHEN mp.preco IS NOT NULL THEN (mp.preco * SUM(retiradas.qtd))
+		                    ELSE (produtos.preco * SUM(retiradas.qtd))
                         END AS valor
                     ")
                 )
@@ -480,7 +480,17 @@ class RelatoriosController extends ControllerKX {
                         array_push($criterios, "Apenas ".($request->consumo == "epi" ? "EPI" : "produtos de consumo"));
                     }
                 })
-                ->orderby("retiradas.id")
+                ->groupby(
+                    "retiradas.id_pessoa",
+                    "pessoas.id_setor",
+                    "setores.descr",
+                    "retiradas.data",
+                    "produtos.descr",
+                    "pessoas.nome",
+                    "mp.preco",
+                    "produtos.preco"
+                )
+                ->orderby("retiradas.data")
                 ->get()
         )->groupBy("id_".$request->rel_grupo)->map(function($itens) use($request, &$qtd_total, &$val_total) {
             $qtd_total += $itens->sum("qtd");
@@ -503,6 +513,13 @@ class RelatoriosController extends ControllerKX {
         $criterios = join(" | ", $criterios);
         $quebra = $request->rel_grupo;
         $titulo = $request->rel_grupo == "pessoa" ? "Consumo por colaborador" : "Consumo por setor";
+        if ($request->json == "S") {
+            $retorno = new \stdClass;
+            $retorno->json = $resultado;
+            $retorno->qtd_total = $qtd_total;
+            $retorno->val_total = $val_total;
+            return json_encode($retorno);
+        }
         return sizeof($resultado) ? view("reports/retiradas".$request->tipo, compact("resultado", "criterios", "quebra", "val_total", "qtd_total", "titulo")) : view("nada");
     }
 

@@ -11,6 +11,7 @@
             </div>
             <form action = "{{ config('app.root_url') }}/relatorios/retiradas" method = "GET" target = "_blank">
                 <input id = "rel-grupo2" name = "rel_grupo" type = "hidden" />
+                <input name = "json" type = "hidden" value = "N"/>
                 <div class = "modal-body">
                     <div class = "container">
                         <div class = "row">

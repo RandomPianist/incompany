@@ -204,6 +204,24 @@ window.onload = function() {
         foto_pessoa(".main-toolbar .user-pic", data.foto ? data.foto : "");
     });
 
+    document.querySelector(".user-card").onmouseover = function() {
+        document.querySelector(".dropdown-toolbar-user").style.display = "block";
+    }
+
+    document.querySelector(".user-card").onmouseleave = function(e) {
+        let el = document.querySelector(".dropdown-toolbar-user");
+        if (!el.contains(e.target) && !document.querySelector(".main-toolbar.shadow-sm").contains(e.target)) el.style.removeProperty("display");
+    }
+
+    setTimeout(function() {
+        [".main-toolbar.shadow-sm", ".dropdown-toolbar-user"].forEach((seletor) => {
+            document.querySelector(seletor).onmouseleave = function() {
+                document.querySelector(".dropdown-toolbar-user").style.removeProperty("display");
+            }
+        })
+    }, 200);
+    
+
     listar(location.href.indexOf("produtos") > -1 ? 1 : 0);
 }
 
@@ -859,6 +877,31 @@ async function controleTodos(ids) {
     }
 }
 
+function formatarData(dataISO) {
+    const [ano, mes, dia] = dataISO.split("-"); // Divide a data em partes
+    return `${dia}/${mes}/${ano}`; // Rearranja no formato DD/MM/YYYY
+}
+
+function extrato_maquina_dashboard(id_maquina) {
+    let req = {};
+    req.id_produto = "";
+    const dataInicial = getMesSelecionado().split(" ")[0];
+    const dataFinal = getMesSelecionado().split(" ")[1];
+
+    const dataInicialFormatada = formatarData(dataInicial); // 01/01/2025
+    const dataFinalFormatada = formatarData(dataFinal); // 31/01/2025
+
+    req.inicio = dataInicialFormatada;
+    req.fim = dataFinalFormatada;
+
+    req.lm = "S";
+    req.id_maquina = id_maquina;
+    let link = document.createElement("a");
+    link.href = URL + "/relatorios/extrato?" + $.param(req);
+    link.target = "_blank";
+    link.click();
+}
+
 function extrato_maquina(id_maquina) {
     let req = {};
     ["inicio", "fim", "id_produto"].forEach((chave) => {
@@ -890,4 +933,66 @@ function RelatorioRanking() {
             elementos.fim.value = hoje();
         });
     }, 0);
+}
+
+function trocarEmpresa() {
+    $.post(URL + "/colaboradores/alterar-empresa", {
+        _token : $("meta[name='csrf-token']").attr("content"),
+        idEmpresa : document.getElementById("empresa-select").value
+    }, function() {
+        location.reload();
+    });
+}
+
+function trocarEmpresaModal() {
+    $.get(URL + "/empresas/todas", function(data) {
+        data = $.parseJSON(data);
+        let resultado = "<option value = '0'>Todas</option>";
+        data.forEach((empresa) => {
+            resultado += "<option value = '" + empresa.id + "'>" + empresa.nome_fantasia + "</option>";
+            empresa.filiais.forEach((filial) => {
+                resultado += "<option value = '" + filial.id + "'>- " + filial.nome_fantasia + "</option>";
+            });
+        })
+        document.getElementById("empresa-select").innerHTML = resultado;
+        document.querySelector("#empresa-select option[value='" + EMPRESA + "']").selected = true;
+        $("#trocarEmpresaModal").modal();    
+    });
+}
+
+function gerarSelect() {
+    const selectElement = document.getElementById('dashboard-select');
+    const meses = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    const dataAtual = new Date(); 
+    let mesAtual = dataAtual.getMonth(); 
+    let anoAtual = dataAtual.getFullYear(); 
+
+    for (let i = 0; i < 12; i++) {
+        const option = document.createElement('option');
+
+        if (mesAtual < 0) {
+            mesAtual = 11; // Dezembro
+            anoAtual--;
+        }
+
+        const ultimoDia = new Date(anoAtual, mesAtual + 1, 0).getDate();
+
+        option.value = `${anoAtual}-${mesAtual + 1}-1 ${anoAtual}-${mesAtual + 1}-${ultimoDia}`;
+        option.textContent = `${meses[mesAtual]} de ${anoAtual}`;
+
+        selectElement.appendChild(option);
+
+        mesAtual--;
+    }
+}
+
+
+function getMesSelecionado() {
+    const selectElement = document.getElementById('dashboard-select');
+    const date = selectElement.value;
+    return date;
 }

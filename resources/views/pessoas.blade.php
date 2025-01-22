@@ -27,13 +27,16 @@
                 <table>
                     <thead>
                         <tr class = "sortable-columns" for = "#table-dados">
+                            <th width = "5%" class = 'nao-ordena'>
+                               
+                            </th>
                             <th width = "10%" class = "text-right">
                                 <span>Código</span>
                             </th>
                             <th width = "30%">
                                 <span>Nome</span>
                             </th>
-                            <th width = "25%">
+                            <th width = "20%">
                                 <span>Empresa</span>
                             </th>
                             <th width = "20%">
@@ -65,10 +68,19 @@
                 let resultado = "";
                 if (typeof data == "string") data = $.parseJSON(data);
                 data.forEach((linha) => {
+                    let biometria;
+                    if(linha.possui_biometria === 'possui') {
+                        biometria = "<td width = '5%'><img src={{ asset('img/biometria-sim.png') }} class = 'imagem-biometria'></td>";
+                    } else if(linha.possui_biometria === 'nao-possui'){
+                        biometria = "<td width = '5%'><img src={{ asset('img/biometria-nao.png') }} class = 'imagem-biometria'></td>";
+                    } else {
+                        biometria = "<td width = '5%'></td>";
+                    }
                     resultado += "<tr>" +
+                        biometria + 
                         "<td width = '10%' class = 'text-right'>" + linha.id.toString().padStart(4, "0") + "</td>" +
                         "<td width = '30%'>" + linha.nome + "</td>" +
-                        "<td width = '25%'>" + linha.empresa + "</td>" +
+                        "<td width = '20%'>" + linha.empresa + "</td>" +
                         "<td width = '20%'>" + linha.setor + "</td>" +
                         "<td class = 'text-center btn-table-action' width = '15%'>";
                     if (parseInt(linha.possui_retiradas)) {

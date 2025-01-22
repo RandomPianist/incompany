@@ -216,7 +216,7 @@ class ApiController extends ControllerKX {
                             "id",
                             "descr",
                             "preco",
-                            "validade",
+                            DB::raw("IFNULL(validade, 0) AS validade"),
                             DB::raw("IFNULL(ca, '') AS ca"),
                             DB::raw("IFNULL(foto, '') AS foto"),
                             "lixeira",
@@ -506,7 +506,7 @@ class ApiController extends ControllerKX {
 
     public function biometria(Request $request) {
         $pessoa = Pessoas::find($request->id);
-        if ($pessoa == null) return 404;
+        if ($pessoa == null) return [];
         $pessoa->biometria = $request->biometria;
         $pessoa->save();
         $this->log_inserir("E", "pessoas", $pessoa->id, true);

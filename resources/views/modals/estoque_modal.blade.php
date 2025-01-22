@@ -139,8 +139,11 @@
         el_prod.id = "produto-" + cont;
         el_prod.classList.add("form-control", "autocomplete", "produto");
         el_prod.autocomplete = "off";
-        $(el_prod).data($("#produto-1").data());
-        $(el_prod).data("input", "#id-produto-" + cont);
+        el_prod.dataset.input = "#id_produto-" + cont;
+        el_prod.dataset.column = "descr";
+        el_prod.dataset.table = "produtos";
+        el_prod.dataset.filter_col = "";
+        el_prod.dataset.filter = "";
 
         let el_prod_post = document.createElement("input");
         el_prod_post.classList.add("id-produto");

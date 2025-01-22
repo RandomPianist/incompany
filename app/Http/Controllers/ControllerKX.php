@@ -246,4 +246,33 @@ class ControllerKX extends Controller {
         }
         return $where;
     }
+
+    protected function minhas_maquinas($inicio = "", $fim = "") {
+        if (!$inicio) $inicio = date("Y-m")."-01";
+        if (!$fim) $fim = date("Y-m-d");
+        return DB::table("comodatos")
+                    ->select(
+                        "minhas_empresas.id_pessoa",
+                        "comodatos.id_maquina"
+                    )
+                    ->joinsub(
+                        DB::table("pessoas")
+                            ->select(
+                                "id AS id_pessoa",
+                                "id_empresa"
+                            )
+                            ->unionAll(
+                                DB::table("pessoas")
+                                    ->select(
+                                        "pessoas.id AS id_pessoa",
+                                        "filiais.id AS id_empresa"
+                                    )
+                                    ->join("empresas AS filiais", "filiais.id_matriz", "pessoas.id_empresa")
+                            ),
+                        "minhas_empresas",
+                        "minhas_empresas.id_empresa",
+                        "comodatos.id_empresa"
+                    )
+                    ->whereRaw("(('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim) OR ('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim))");
+    }
 }

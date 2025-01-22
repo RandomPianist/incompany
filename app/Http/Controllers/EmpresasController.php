@@ -57,6 +57,23 @@ class EmpresasController extends ControllerKX {
         return json_encode($resultado);
     }
 
+    public function todas() {
+        $matrizes = DB::table("empresas")
+                        ->where("id_matriz", 0)
+                        ->where("lixeira", 0)
+                        ->orderBy("id", "asc")
+                        ->get();
+        foreach($matrizes as $matriz) {
+            $filiais = DB::table("empresas")
+                           ->where("id_matriz", $matriz->id)
+                           ->where("lixeira", 0)
+                           ->orderBy("id", "asc")
+                           ->get();
+            $matriz->filiais = $filiais;
+        }
+        return json_encode($matrizes);
+    }
+
     public function consultar(Request $request) {
         if (sizeof(
             DB::table("empresas")

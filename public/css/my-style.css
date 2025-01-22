@@ -37,11 +37,12 @@ body {
     background: #f8f8f8;
     color: #333;
     font-family: "Soleil";
-    height: calc(100% - 80px)
+    height: calc(100% - 100.5px);
 }
 
 main {
-    margin-top: 80px
+    margin-top: 80px;
+    margin-bottom: 20.5px;
 }
 
 .modal-header {
@@ -152,12 +153,10 @@ main {
 }
 
 .user-card:hover {
-    border-radius: .5rem .5rem 0 0;
     border: solid #ced4da 1px
 }
 
 .user-card:hover .dropdown-toolbar-user {
-    opacity: 1;
     height: unset
 }
 
@@ -175,8 +174,8 @@ main {
     border-radius: 0.5rem;
     border: solid #e8e8e8 1px;
     padding: 10px;
-    padding-right: 25px;
-    position: relative
+    padding-right: 65px;
+    position: relative;
 }
 
 .user-pic {
@@ -197,10 +196,7 @@ main {
 }
 
 .user-card:hover .dropdown-toolbar-user {
-    opacity: 1;
     height: unset;
-    margin-top: -1.9%;
-    padding-top: 3%
 }
 
 .main-toolbar a:hover .dropdown-toolbar {
@@ -223,7 +219,7 @@ main {
     transition: 0.3s
 }
 
-.subdropdown-toolbar>li {
+.subdropdown-toolbar > li {
     padding: 10px 20px
 }
 
@@ -281,19 +277,18 @@ main {
 .dropdown-toolbar-user {
     background: #ffffff;
     border: solid #c9c9c9 1px;
-    border-top: unset;
-    border-radius: 0 0 0.5rem 0.5rem;
+    border-radius: 0.5rem;
     color: black;
     list-style-type: none;
-    margin: -1px;
-    padding: 5px 0px 0px 1%;
+    margin-top: 3px;
+    padding: 10px 0px;
     overflow: hidden;
     position: absolute;
     top: 59px;
     transition: 0.3s;
-    width: 100%;
-    right: 1px;
-    opacity: 0;
+    width: 170px;
+    right: 0;
+    display: none;
     z-index: -1
 }
 
@@ -303,9 +298,16 @@ main {
     display: grid;
     font-size: 12px;
     font-weight: 600;
-    padding: 0 20px;
     position: relative;
     text-align: left
+}
+
+.dropdown-toolbar-user > li {
+    padding: 8px 20px
+}
+
+.dropdown-toolbar > li {
+    padding: 0 20px
 }
 
 .dropdown-toolbar > li > span {
@@ -483,9 +485,9 @@ main {
 
 .custom-fab {
     border-radius: 25rem;
-    bottom: 15px;
+    bottom: 30px;
     position: fixed;
-    right: 15px;
+    right: 30px;
     height: 50px;
     width: 50px;
     box-shadow: 0 8px 6px -6px #999;
@@ -674,18 +676,19 @@ span, label, table, h1, h2, h3, h4, h5, h6, .texto-tabela {
 }
 
 .card-dashboard {
-    height: 83vh;
+    height: calc(100vh - 190px);
     overflow-y: auto;
+    min-width: 386px;
 }
 
 .header-card-dashboard {
-    height: 70px;
+    height: 56px;
 }
 
 .titulo-card-dashboard {
-    font-size: 14pt;
+    font-size: 1.3rem;
     color: #333;
-    font-weight: bold;
+    font-weight: 600;
 }
 
 .subtitulo-card-dashboard {
@@ -697,28 +700,23 @@ span, label, table, h1, h2, h3, h4, h5, h6, .texto-tabela {
     margin:auto;
 }
 
-.tabela-funcionarios-dashboard {
+.table-body-dashboard {
     width: 100%;
     border: none;
 }
 
-.tabela-funcionarios-dashboard td {
+.table-body-dashboard td {
     font-weight: 400;
     vertical-align: middle;
     height: 80px;
 }
 
-.cProd td {
-    cursor: pointer
-}
-
-.tabela-funcionarios-dashboard tr:first-child td {
+.table-body-dashboard tr:first-child td {
     border: none;
 }
 
-.tabela-funcionarios-dashboard tbody {
-    font-size: 11pt;
-    border: none
+.clickable td {
+    cursor: pointer
 }
 
 .foto-funcionario-dashboard {
@@ -738,12 +736,11 @@ span, label, table, h1, h2, h3, h4, h5, h6, .texto-tabela {
 .table-itens-em-atraso td {
     font-weight: 400;
     vertical-align: middle;
-    cursor: pointer;
     padding:13px;
     color:#333;
 }
 
-.table-itens-em-atraso thead  td {
+.table-itens-em-atraso thead td {
     font-weight: bold;
 }
 
@@ -758,11 +755,40 @@ span, label, table, h1, h2, h3, h4, h5, h6, .texto-tabela {
 }
 
 .numerico {
-    height: 20px;
-    width: 20px;
+    height: 24px;
+    width: 24px;
     background: red;
     border-radius: 50%;
-    text-align: center;
-    padding-bottom: 23px;
-    padding-left: 1px
+    color: #FFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.imagem-biometria {
+    width: 21px;
+    height: 21px;
+    margin-right: 8px;
+}
+
+.select-dashboard {
+    font-size: 1.3rem;
+    padding: 5px;
+    border:none;
+    color: inherit;
+    font-family: inherit;
+}
+
+footer {
+    position:absolute;
+    bottom:0;
+    background-color:#FFF;
+    width: 100%;
+    z-index: 1000;
+    border-top: 1px solid #DDDDDD;
+}
+
+.footer-text {
+    font-size: 12px;
+    margin-bottom: 0;
 }

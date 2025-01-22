@@ -50,6 +50,6 @@ Route::group(["prefix" => "app"], function() {
         Route::get("/retiradas-por-setor/{id_pessoa}",  [DashboardController::class, "retiradas_por_setor"]);
         Route::get("/retiradas-em-atraso/{id_pessoa}",  [DashboardController::class, "retiradas_em_atraso"]);
         Route::get("/ultimas-retiradas/{id_pessoa}",    [DashboardController::class, "ultimas_retiradas"]);
-        Route::get("/produtos-em-atraso/{id_pessoa}",   [DashboardController::class, "produtos"]);
+        Route::get("/produtos-em-atraso/{id_pessoa}",   [DashboardController::class, "produtos_em_atraso"]);
     });
 });

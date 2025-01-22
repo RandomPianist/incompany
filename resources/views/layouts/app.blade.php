@@ -34,6 +34,11 @@
         </style>
     </head>
     <body>
+        <footer>
+            <div class = "container-fluid">
+                <p class = "footer-text">{{ $empresa_descr }}</p>
+            </div>
+        </footer>
         <div id = "app">
             <main class = "py-4">
                 <div class = "main-toolbar shadow-sm">
@@ -155,11 +160,16 @@
                             </div>
                             <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
                             <ul class = "dropdown-toolbar-user">
+                                @if (intval(Auth::user()->admin))
+                                    <li onclick = "trocarEmpresaModal()">
+                                        <span>Trocar empresa</span>
+                                    </li>
+                                @endif
                                 <li onclick = "pessoa = new Pessoa(USUARIO)">
-                                    <span class = "pb-2">Editar</span>
+                                    <span>Editar</span>
                                 </li>
                                 <li onclick = "document.getElementById('logout-form').submit()">
-                                    <span class = "pb-2">Sair</span>
+                                    <span>Sair</span>
                                 </li>
                             </ul>
                         </div>
@@ -168,9 +178,11 @@
                         @csrf
                     </form>
                 </div>
+
                 @yield("content")
                 
                 @include("modals.pessoas_modal")
+                @include("modals.trocar_empresa_modal")
                 @include("modals.reports.bilateral_modal")
                 @include("modals.reports.itens_modal")
                 @include("modals.reports.retiradas_modal")
@@ -184,6 +196,7 @@
         <script type = "text/javascript" language = "JavaScript">
             const URL = "{{ config('app.root_url') }}";
             const USUARIO = {{ Auth::user()->id_pessoa }};
+            const EMPRESA = {{ App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa }};
 
             function redirect(url, bNew_Tab) {
                 if (bNew_Tab) window.open(url, '_blank');
@@ -284,11 +297,11 @@
                                 _email.value.toLowerCase() != anteriores.email.toLowerCase()
                             ) alterou = true;
                         } else if (document.getElementById("senha").value) alterou = true;
-                        if (!erro && !validar_cpf(_cpf.value)/* && _cpf.value.trim()*/) {
-                            erro = "CPF inválido";
-                            _cpf.classList.add("invalido");
-                        }
-                        if (_cpf.value != anteriores.cpf) alterou = true;
+                        // if (!erro && !validar_cpf(_cpf.value)/* && _cpf.value.trim()*/) {
+                        //     erro = "CPF inválido";
+                        //     _cpf.classList.add("invalido");
+                        // }
+                        // if (_cpf.value != anteriores.cpf) alterou = true;
                         
                         aux = document.getElementById("admissao").value;
                         if (aux) {

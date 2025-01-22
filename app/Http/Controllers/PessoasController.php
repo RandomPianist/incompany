@@ -15,6 +15,14 @@ class PessoasController extends ControllerKX {
                     ->select(
                         "pessoas.id",
                         DB::raw("
+                            CASE 
+                                WHEN pessoas.id_empresa <> 0 THEN 
+                                    CASE
+                                        WHEN pessoas.biometria <> '' THEN 'possui'
+                                        ELSE 'nao-possui'
+                                    END
+                                ELSE 'sem-foto'
+                            END AS possui_biometria,
                             CONCAT(
                                 pessoas.nome,
                                 CASE
@@ -45,10 +53,7 @@ class PessoasController extends ControllerKX {
                         if (in_array($tipo, ["A", "U"])) {
                             $sql->where("setores.cria_usuario", 1);
                             if ($tipo == "A") $sql->where("pessoas.id_empresa", 0);
-                        } else {
-                            $sql->where("setores.cria_usuario", 0)
-                                ->where("pessoas.supervisor", ($tipo == "S" ? 1 : 0));
-                        }
+                        } else $sql->where("pessoas.supervisor", ($tipo == "S" ? 1 : 0));
                     })
                     ->whereRaw($where)
                     ->where("pessoas.lixeira", 0)
@@ -264,5 +269,13 @@ class PessoasController extends ControllerKX {
 
     public function supervisor(Request $request) {
         return $this->supervisor_consultar($request);
+    }
+
+    public function alterar_empresa(Request $request) {
+        if (Auth::user()->admin) {
+            $pessoa = Pessoas::find(Auth::user()->id_pessoa);
+            $pessoa->id_empresa = $request->idEmpresa;
+            $pessoa->save();
+        }
     }
 }

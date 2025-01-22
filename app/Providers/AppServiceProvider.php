@@ -2,7 +2,12 @@
 
 namespace App\Providers;
 
+use Auth;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\View;
+use App\Models\Pessoas;
+use App\Models\Empresas;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +28,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        if (strpos(Route::getCurrentRoute(), "api") === false) {
+            View::composer('*', function ($view) {
+                if (Auth::user() !== null) {
+                    $emp = Empresas::find(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+                    $view->with([
+                        'empresa_descr' => $emp !== null ? $emp->nome_fantasia : "Todas"
+                    ]);
+                }
+            });
+        }
     }
 }
