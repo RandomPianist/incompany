@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int    $validade
  * @property string $ca
  * @property string $cod_externo
+ * @property string $cod_fab
  * @property string $descr
  * @property string $detalhes
  * @property string $foto
@@ -43,7 +44,7 @@ class Produtos extends Model
      * @var array
      */
     protected $fillable = [
-        'ca', 'cod_externo', 'consumo', 'created_at', 'descr', 'detalhes', 'foto', 'id_categoria', 'lixeira', 'preco', 'referencia', 'tamanho', 'updated_at', 'validade', 'validade_ca'
+        'ca', 'cod_externo', 'cod_fab', 'consumo', 'created_at', 'descr', 'detalhes', 'foto', 'id_categoria', 'lixeira', 'preco', 'referencia', 'tamanho', 'updated_at', 'validade', 'validade_ca'
     ];
 
     /**
@@ -61,7 +62,7 @@ class Produtos extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'ca' => 'string', 'cod_externo' => 'string', 'consumo' => 'int', 'created_at' => 'timestamp', 'descr' => 'string', 'detalhes' => 'string', 'foto' => 'string', 'id_categoria' => 'int', 'lixeira' => 'int', 'referencia' => 'string', 'tamanho' => 'string', 'updated_at' => 'timestamp', 'validade' => 'int', 'validade_ca' => 'date'
+        'id' => 'int', 'ca' => 'string', 'cod_externo' => 'string', 'cod_fab' => 'string', 'consumo' => 'int', 'created_at' => 'timestamp', 'descr' => 'string', 'detalhes' => 'string', 'foto' => 'string', 'id_categoria' => 'int', 'lixeira' => 'int', 'referencia' => 'string', 'tamanho' => 'string', 'updated_at' => 'timestamp', 'validade' => 'int', 'validade_ca' => 'date'
     ];
 
     /**

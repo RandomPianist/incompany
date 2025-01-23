@@ -78,6 +78,7 @@
                 fim: dataFinal
             });
             const parsedResp = JSON.parse(resp);
+            // console.log(parsedResp);
 
             const cardUltimaRetirada = document.getElementById("card-ult-retirada-dados");
             const cardRetiradaAtraso = document.getElementById("card-retirada-atraso-dados");
@@ -191,11 +192,11 @@
             if(retiradasPorSetor.retiradas.length > 0) {
                 consumosCentroHTML +=
                     `<div class = "d-flex justify-content-center">
-                        <table class = "table table-body-dashboard">`;
+                        <table class = "table table-body-dashboard clickable">`;
 
                 retiradasPorSetor.retiradas.forEach(item => {
                     consumosCentroHTML +=
-                    `<tr>
+                    `<tr onclick="retiradasSetor(${item.id})">
                          <td width="65%" class = "pl-4">${item.descr}</td>
                          <td class="text-right" width = "35%">
                              R$ ${Number(item.valor).toFixed(2).toString().replace(".", ",")}
@@ -402,7 +403,15 @@
         }
 
         function retiradas(idFuncionario) {
-            $.get(URL + "/dashboard/produtos", {id_pessoa: idFuncionario}, function(data) {
+            const dataSelecionada = getMesSelecionado();
+            const dataInicial = dataSelecionada.split(" ")[0];
+            const dataFinal = dataSelecionada.split(" ")[1];
+
+            $.get(URL + "/dashboard/produtos", {
+                id_pessoa: idFuncionario,
+                inicio: dataInicial,
+                fim: dataFinal
+            }, function(data) {
                 let resultado = "";
                 if (typeof data == "string") data = $.parseJSON(data);
                 data.forEach((linha) => {
@@ -416,7 +425,32 @@
                 modal("retiradasListaModal", 0);
             });
         }
+
+        function retiradasSetor(idSetor) {
+            const dataSelecionada = getMesSelecionado();
+            const dataInicial = dataSelecionada.split(" ")[0];
+            const dataFinal = dataSelecionada.split(" ")[1];
+
+            $.get(URL + "/dashboard/retiradas-por-setor", {
+                id_setor: idSetor,
+                inicio: dataInicial,
+                fim: dataFinal
+            }, function(data) {
+                let resultado = "";
+                if (typeof data == "string") data = $.parseJSON(data);
+                data.forEach((linha) => {
+                    resultado +=
+                        "<tr>" +
+                        "<td width = '75%' class = 'text-left px-2'>" + linha.nome + "</td>" +
+                        "<td width = '25%' class = 'text-right pr-2'>R$ " + Number(linha.valor).toFixed(2).toString().replace(".", ",") + "</td>" +
+                        "</tr>";
+                });
+                document.getElementById("table-retirados-centro-dados").innerHTML = resultado;
+                modal("retiradasCentroModal", 0);
+            });
+        }
     </script>
     @include('modals.itens_em_atraso_modal')
     @include('modals.retiradas_lista_modal')
+    @include('modals.retiradas_centro_modal')
 @endsection

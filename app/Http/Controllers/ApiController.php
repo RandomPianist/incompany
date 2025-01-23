@@ -204,6 +204,7 @@ class ApiController extends ControllerKX {
         if (isset($request->refer)) $linha->referencia = $request->refer;
         if (isset($request->tamanho)) $linha->tamanho = $request->tamanho;
         if (isset($request->consumo)) $linha->consumo = $request->consumo;
+        if (isset($request->cod_fab)) $linha->cod_fab = $request->cod_fab;
         $linha->save();
         $letra_log = $request->id ? "E" : "C";
         if (intval($request->lixeira)) $letra_log = "D";
@@ -226,7 +227,8 @@ class ApiController extends ControllerKX {
                             "cod_externo AS codExterno",
                             DB::raw("'123' AS usu"),
                             "consumo",
-                            DB::raw("IFNULL (validade_ca, '') AS validade_ca")
+                            DB::raw("IFNULL (validade_ca, '') AS validade_ca"),
+                            DB::raw("IFNULL (cod_fab, '') AS cod_fab")
                         )
                         ->where("id", $linha->id)
                         ->first();
@@ -407,6 +409,11 @@ class ApiController extends ControllerKX {
                 $salvar += [
                     "id_supervisor" => $retirada["id_supervisor"],
                     "obs" => $retirada["obs"]
+                ];
+            }
+            if (isset($retirada["biometria_ou_senha"])) {
+                $salvar += [
+                    "biometria_ou_senha" => $retirada["biometria_ou_senha"]
                 ];
             }
             $this->retirada_salvar($salvar);

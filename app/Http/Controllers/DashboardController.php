@@ -318,7 +318,8 @@ class DashboardController extends ControllerKX {
         $fim = date("Y-m-d");
         if (isset($request->inicio)) $inicio = $request->inicio;
         if (isset($request->fim)) $fim = $request->fim;
-        return DB::table("retiradas")
+        return collect(
+            DB::table("retiradas")
                     ->select(
                         "pessoas.id",
                         "pessoas.nome",
@@ -347,7 +348,15 @@ class DashboardController extends ControllerKX {
                         "mp.preco",
                         "produtos.preco"
                     )
-                    ->get();
+                    ->get()
+        )->groupby("id")->map(function($itens) {
+            return [
+                "id" => $itens[0]->id,
+                "nome" => $itens[0]->nome,
+                "retirados" => $itens->sum("retirados"),
+                "valor" => $itens->sum("valor")
+            ];
+        })->values()->all();
     }
 
     // API

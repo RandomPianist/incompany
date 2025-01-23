@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int    $id
+ * @property int    $admin
  * @property int    $created_at
  * @property int    $id_empresa
  * @property int    $id_setor
@@ -43,7 +44,7 @@ class Pessoas extends Model
      * @var array
      */
     protected $fillable = [
-        'admissao', 'biometria', 'cpf', 'created_at', 'foto', 'foto64', 'funcao', 'id_empresa', 'id_setor', 'lixeira', 'nome', 'senha', 'supervisor', 'updated_at'
+        'admin', 'admissao', 'biometria', 'cpf', 'created_at', 'foto', 'foto64', 'funcao', 'id_empresa', 'id_setor', 'lixeira', 'nome', 'senha', 'supervisor', 'updated_at'
     ];
 
     /**
@@ -61,7 +62,7 @@ class Pessoas extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'admissao' => 'date', 'biometria' => 'string', 'cpf' => 'string', 'created_at' => 'timestamp', 'foto' => 'string', 'foto64' => 'string', 'funcao' => 'string', 'id_empresa' => 'int', 'id_setor' => 'int', 'lixeira' => 'int', 'nome' => 'string', 'senha' => 'int', 'supervisor' => 'int', 'updated_at' => 'timestamp'
+        'id' => 'int', 'admin' => 'int', 'admissao' => 'date', 'biometria' => 'string', 'cpf' => 'string', 'created_at' => 'timestamp', 'foto' => 'string', 'foto64' => 'string', 'funcao' => 'string', 'id_empresa' => 'int', 'id_setor' => 'int', 'lixeira' => 'int', 'nome' => 'string', 'senha' => 'int', 'supervisor' => 'int', 'updated_at' => 'timestamp'
     ];
 
     /**

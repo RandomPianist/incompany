@@ -66,7 +66,8 @@ CREATE TABLE produtos (
 	tamanho VARCHAR(32),
 	detalhes TEXT,
 	validade_ca DATE,
-	consumo TINYINT
+	consumo TINYINT,
+	cod_fab VARCHAR(30)
 );
 
 CREATE TABLE maquinas_produtos (
@@ -130,7 +131,8 @@ CREATE TABLE retiradas (
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	gerou_pedido CHAR,
-	numero_ped INT
+	numero_ped INT,
+	biometria_ou_senha VARCHAR(1)
 );
 
 CREATE TABLE log (

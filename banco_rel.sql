@@ -64,6 +64,7 @@ CREATE TABLE users (
 	password VARCHAR(512),
 	lixeira TINYINT DEFAULT 0,
 	id_pessoa INT,
+	admin TINYINT DEFAULT 0,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	FOREIGN KEY (id_pessoa) REFERENCES pessoas(id)
@@ -90,6 +91,7 @@ CREATE TABLE produtos (
 	detalhes TEXT,
 	validade_ca DATE,
 	consumo TINYINT,
+	cod_fab VARCHAR(30),
 	FOREIGN KEY (id_categoria) REFERENCES valores(id)
 );
 
@@ -172,6 +174,7 @@ CREATE TABLE retiradas (
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	gerou_pedido CHAR,
 	numero_ped INT,
+	biometria_ou_senha VARCHAR(1),
 	FOREIGN KEY (id_atribuicao) REFERENCES atribuicoes(id),
 	FOREIGN KEY (id_comodato) REFERENCES comodatos(id),
 	FOREIGN KEY (id_pessoa) REFERENCES pessoas(id),
