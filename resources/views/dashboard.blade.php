@@ -10,7 +10,7 @@
             </select>
         </div>
         
-        <div class = "d-flex justify-content-around" style = "overflow-x:auto;">
+        <div class = "d-flex justify-content-around" style = "overflow-x:auto;padding-bottom:15px">
             <div class = "card-dashboard mx-1 bg-white rounded-lg shadow-sm custom-scrollbar" id = "card-ult-retirada">
                 <div class = "header-card-dashboard d-flex justify-content-between border-bottom">
                     <div class = "d-flex flex-column justify-content-center align-items-start ml-3 mr-3">

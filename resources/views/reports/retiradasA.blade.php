@@ -62,7 +62,7 @@
                         </tr>
                     @endforeach
                     <tr class = "report-row">
-                        <td width = "60%" colspan = @if ($quebra == 'setor') 3 @else 2 @endif>
+                        <td width = "70%" colspan = @if ($quebra == 'setor') 3 @else 2 @endif>
                             <b>Total</b>
                         </td>
                         <td width = "10%" class = "text-right"><b>{{ number_format($item["total_qtd"], 0) }}</b></td>
@@ -76,7 +76,7 @@
     <table class = "report-body table table-sm table-bordered table-striped">
         <tbody>
             <tr>
-                <td width = "60%">
+                <td width = "70%">
                     <h5>Totais:</h5>
                 </td>
                 <td width = "10%" class = "text-right">
