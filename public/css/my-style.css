@@ -611,7 +611,7 @@ span, label, table, h1, h2, h3, h4, h5, h6, .texto-tabela {
     border: 2px solid #F00;
 }
 
-.ultima-atualizacao, .manter-junto {
+.ultima-atualizacao, .manter-junto, .manter-junto * {
     white-space: nowrap
 }
 
