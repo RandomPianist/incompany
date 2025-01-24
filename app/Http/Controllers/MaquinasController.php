@@ -13,15 +13,32 @@ class MaquinasController extends ControllerKX {
     public function estoque(Request $request) {
         for ($i = 0; $i < sizeof($request->id_produto); $i++) {
             $linha = new Estoque;
-            $linha->es = $request->es[$i];
-            $linha->descr = $request->obs[$i];
-            $linha->qtd = $request->qtd[$i];
-            $linha->id_mp = DB::table("maquinas_produtos")
-                                ->where("id_produto", $request->id_produto[$i])
-                                ->where("id_maquina", $request->id_maquina)
-                                ->value("id");
-            $linha->save();
-            $this->log_inserir("C", "estoque", $linha->id);
+
+            $qtdRequest = floatval($request->qtd[$i]);
+            $ajusteIgualEstoque = false;
+            if ($request->es[$i] == "A") {
+                $saldo = $this->retorna_saldo_mp($request->id_maquina, $request->id_produto[$i]);
+                if ($saldo > $qtdRequest) {
+                    $linha->es = "S";
+                    $linha->qtd = $saldo - $qtdRequest;
+                } else if ($saldo < $qtdRequest) {
+                    $linha->es = "E";
+                    $linha->qtd = ($saldo - $qtdRequest) * -1;
+                } else $ajusteIgualEstoque = true;
+            } else {
+                $linha->es = $request->es[$i];
+                $linha->qtd = $qtdRequest;
+            }
+
+            if (!$ajusteIgualEstoque) {
+                $linha->descr = $request->obs[$i];
+                $linha->id_mp = DB::table("maquinas_produtos")
+                                    ->where("id_produto", $request->id_produto[$i])
+                                    ->where("id_maquina", $request->id_maquina)
+                                    ->value("id");
+                $linha->save();
+                $this->log_inserir("C", "estoque", $linha->id);
+            }
         }
         return redirect("/valores/maquinas");
     }
@@ -52,30 +69,14 @@ class MaquinasController extends ControllerKX {
 
         if (!$texto) {
             for ($i = 0; $i < sizeof($produtos_id); $i++) {
-                $consulta = DB::table(DB::raw("(
-                    SELECT
-                        CASE
-                            WHEN (es = 'E') THEN qtd
-                            ELSE qtd * -1
-                        END AS qtd,
-                        id_mp
-
-                    FROM estoque
-                ) AS estq"))->selectRaw("IFNULL(SUM(qtd), 0) AS saldo")
-                    ->join("maquinas_produtos AS mp", "mp.id", "estq.id_mp")
-                    ->where("mp.id_maquina", $request->id_maquina)
-                    ->where("mp.id_produto", $produtos_id[$i])
-                    ->get();
-                $erro = !sizeof($consulta);
-                if (!$erro) {
-                    $valor = floatval($quantidades[$i]);
-                    if ($es[$i] == "S") $valor *= -1;
-                    $erro = (floatval($consulta[0]->saldo) + $valor) < 0;
-                }
-                if ($erro) {
+                $saldo = $this->retorna_saldo_mp($request->id_maquina, $produtos_id[$i]);
+                if (
+                    $es[$i] == "S" &&
+                    ($saldo - floatval($quantidades[$i])) < 0
+                ) {
                     array_push($campos, "qtd-".($i + 1));
-                    array_push($valores, floatval($consulta[0]->saldo) * 1);
-                    $linha2 = !$texto ? "Os campos foram corrigidos" : "O campo foi corrigido";
+                    array_push($valores, $saldo);
+                    $linha2 = $texto ? "Os campos foram corrigidos" : "O campo foi corrigido";
                     $linha2 .= " para zerar o estoque.<br>Por favor, verifique e tente novamente.";
                     $texto = "Essa movimentação de estoque provocaria estoque negativo.<br>".$linha2;
                 }

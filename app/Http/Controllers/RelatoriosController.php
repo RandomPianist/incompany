@@ -225,7 +225,7 @@ class RelatoriosController extends ControllerKX {
                     // GRUPO 2
                     "produtos.id AS id_produto",
                     "produtos.descr AS produto",
-                    "tot.qtd AS saldo",
+                    DB::raw("IFNULL(tot.qtd, 0) AS saldo"),
                     DB::raw("IFNULL(mp.preco, produtos.preco) AS preco"),
 
                     // DETALHES
@@ -267,12 +267,12 @@ class RelatoriosController extends ControllerKX {
                     DB::table("estoque")
                         ->select(
                             "id_mp",
-                            DB::raw("
+                            DB::raw($request->inicio ? "
                                 SUM(CASE
                                     WHEN (es = 'E') THEN qtd
                                     ELSE qtd * -1
                                 END) AS qtd
-                            ")
+                            " : "0 AS qtd")
                         )
                         ->where(function($sql) use($request) {
                             if ($request->inicio){

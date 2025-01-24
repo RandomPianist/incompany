@@ -105,9 +105,9 @@ CREATE TABLE comodatos (
 
 CREATE TABLE atribuicoes (
 	id INT AUTO_INCREMENT PRIMARY KEY,
-	pessoa_ou_setor_chave VARCHAR(16),
+	pessoa_ou_setor_chave VARCHAR(1),
 	pessoa_ou_setor_valor INT,
-	produto_ou_referencia_chave VARCHAR(16),
+	produto_ou_referencia_chave VARCHAR(1),
 	produto_ou_referencia_valor VARCHAR(256),
 	qtd NUMERIC(10,5),
 	validade INT,
@@ -144,4 +144,30 @@ CREATE TABLE log (
 	fk INT,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    email_verified_at TIMESTAMP,
+    password VARCHAR(255) NOT NULL,
+    remember_token VARCHAR(100),
+    id_pessoa INT,
+    admin TINYINT DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE VIEW vestoque AS (
+	SELECT
+		SUM(CASE
+			WHEN (es = 'E') THEN qtd
+			ELSE qtd * -1
+		END) AS qtd,
+		id_mp
+	
+	FROM estoque
+
+	GROUP BY id_mp
 );

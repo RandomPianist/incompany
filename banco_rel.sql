@@ -204,3 +204,16 @@ CREATE TABLE log (
 	FOREIGN KEY (fk) REFERENCES users(id),
 	FOREIGN KEY (fk) REFERENCES valores(id)
 );
+
+CREATE VIEW vestoque AS (
+	SELECT
+		SUM(CASE
+			WHEN (es = 'E') THEN qtd
+			ELSE qtd * -1
+		END) AS qtd,
+		id_mp
+	
+	FROM estoque
+
+	GROUP BY id_mp
+);

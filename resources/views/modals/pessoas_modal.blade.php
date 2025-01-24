@@ -63,7 +63,7 @@
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
                                 <a href = "{{ config('app.root_url') }}/empresas" title = "Cadastro de empresas" target = "_blank">
-                                    <i class="fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
+                                    <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
                                 </a>
                             </div>
                         </div>
@@ -88,7 +88,7 @@
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
                                 <a href = "{{ config('app.root_url') }}/setores" title = "Cadastro de centro de custos" target = "_blank">
-                                    <i class="fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
+                                    <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
                                 </a>
                             </div>
                         </div>

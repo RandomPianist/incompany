@@ -76,7 +76,7 @@
                             </div>
                             <div class = "col-1 d-flex align-items-center pl-0 pt-3 j-end">
                                 <a href = "{{ config('app.root_url') }}/valores/categorias" title = "Cadastro de categorias" target = "_blank">
-                                    <i class="fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
+                                    <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
                                 </a>
                             </div>
                             <div class = "col-3">

@@ -276,4 +276,16 @@ class ControllerKX extends Controller {
                     )
                     ->whereRaw("(('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim) OR ('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim))");
     }
+
+    protected function retorna_saldo_mp($id_maquina, $id_produto) {
+        return floatval(
+            DB::table("maquinas_produtos AS mp")
+                ->selectRaw("IFNULL(vestoque.qtd, 0) AS saldo")
+                ->leftjoin("vestoque", "vestoque.id_mp", "mp.id")
+                ->where("mp.id_maquina", $id_maquina)
+                ->where("mp.id_produto", $id_produto)
+                ->first()
+                ->saldo
+        );
+    }
 }

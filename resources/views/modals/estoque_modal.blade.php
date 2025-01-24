@@ -34,6 +34,7 @@
                                 <select id = "es-1" name = "es[]" class = "form-control es" onchange = "carrega_obs(1)">
                                     <option value = "E">ENTRADA</option>
                                     <option value = "S">SAÍDA</option>
+                                    <option value = "A">AJUSTE</option>
                                 </select>
                             </div>
                             <div class = "col-2 p-0 px-1">
@@ -108,7 +109,13 @@
     }
 
     function carrega_obs(seq) {
-        document.getElementById("obs-" + seq).value = document.getElementById("es-" + seq).value == "E" ? "ENTRADA" : "SAÍDA";
+        if (document.getElementById("es-" + seq).value == "E") {
+            document.getElementById("obs-" + seq).value = "ENTRADA";
+        } else if(document.getElementById("es-" + seq).value == "S") {
+            document.getElementById("obs-" + seq).value = "SAÍDA";
+        } else {
+            document.getElementById("obs-" + seq).value = "AJUSTE";
+        }
     }
 
     function adicionar_campo() {

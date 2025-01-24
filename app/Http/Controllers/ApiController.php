@@ -103,23 +103,11 @@ class ApiController extends ControllerKX {
                             "produtos.id",
                             "produtos.descr",
                             DB::raw("IFNULL(mp.preco, 0) AS preco"),
-                            DB::raw("IFNULL(tab.saldo, 0) AS saldo"),
+                            DB::raw("IFNULL(vestoque.qtd, 0) AS saldo"),
                             DB::raw("IFNULL(mp.minimo, 0) AS minimo"),
                             DB::raw("IFNULL(mp.maximo, 0) AS maximo")
                         )
-                        ->leftjoinSub(DB::table(DB::raw("(
-                            SELECT
-                                CASE
-                                    WHEN (es = 'E') THEN qtd
-                                    ELSE qtd * -1
-                                END AS qtd,
-                                id_mp
-                            
-                            FROM estoque
-                        ) AS estq"))->select(
-                            DB::raw("IFNULL(SUM(qtd), 0) AS saldo"),
-                            "id_mp"
-                        )->groupBy("id_mp"), "tab", "tab.id_mp", "mp.id")
+                        ->leftjoin("vestoque", "vestoque.id_mp", "mp.id")
                         ->join("produtos", "produtos.id", "mp.id_produto")
                         ->where("mp.id_maquina", $request->idMaquina)
                         ->where("produtos.lixeira", 0)
@@ -378,21 +366,7 @@ class ApiController extends ControllerKX {
             //     $resultado->msg = "Essa quantidade de produtos não é permitida para essa pessoa";
             //     return json_encode($resultado);
             // }
-            if (floatval($retirada["qtd"]) > floatval(DB::table(DB::raw("(
-                SELECT
-                    CASE
-                        WHEN (es = 'E') THEN qtd
-                        ELSE qtd * -1
-                    END AS qtd
-                
-                FROM estoque
-    
-                JOIN maquinas_produtos AS mp
-                    ON mp.id = estoque.id_mp
-    
-                WHERE id_maquina = ".$maquinas[0]->id."
-                  AND id_produto = ".$retirada["id_produto"]."
-            ) AS tab"))->selectRaw("SUM(qtd) AS qtd")->value("qtd"))) {
+            if (floatval($retirada["qtd"]) > $this->retorna_saldo_mp($maquinas[0]->id, $retirada["id_produto"])) {
                 $resultado->code = 500;
                 $resultado->msg = "Essa quantidade de produtos não está disponível em estoque";
                 return json_encode($resultado);
@@ -411,11 +385,7 @@ class ApiController extends ControllerKX {
                     "obs" => $retirada["obs"]
                 ];
             }
-            if (isset($retirada["biometria_ou_senha"])) {
-                $salvar += [
-                    "biometria_ou_senha" => $retirada["biometria_ou_senha"]
-                ];
-            }
+            if (isset($retirada["biometria_ou_senha"])) $salvar += ["biometria_ou_senha" => $retirada["biometria_ou_senha"]];
             $this->retirada_salvar($salvar);
             $linha = new Estoque;
             $linha->es = "S";

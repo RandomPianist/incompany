@@ -166,6 +166,11 @@ window.onload = function() {
         Array.from(document.getElementsByClassName("remove-produto")).forEach((el) => {
             $(el).trigger("click");
         });
+        document.getElementById("produto-1").value = "";
+        document.getElementById("id_produto-1").value = "";
+        document.getElementById("es-1").value = "E";
+        document.getElementById("qtd-1").value = 1;
+        document.getElementById("obs-1").value = "ENTRADA";
     });
 
     $("#setoresModal").on("hide.bs.modal", function() {
@@ -221,7 +226,6 @@ window.onload = function() {
         })
     }, 200);
     
-
     listar(location.href.indexOf("produtos") > -1 ? 1 : 0);
 }
 
@@ -989,7 +993,6 @@ function gerarSelect() {
         mesAtual--;
     }
 }
-
 
 function getMesSelecionado() {
     const selectElement = document.getElementById('dashboard-select');

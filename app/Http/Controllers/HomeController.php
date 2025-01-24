@@ -13,30 +13,6 @@ class HomeController extends ControllerKX {
         return redirect("/valores/categorias");
     }
 
-    private function retorna_saldo_mp($id_maquina, $id_produto) {
-        return floatval(
-            DB::table("maquinas_produtos AS mp")
-                ->selectRaw("IFNULL(tab.saldo, 0) AS saldo")
-                ->leftjoinSub(DB::table(DB::raw("(
-                    SELECT
-                        CASE
-                            WHEN (es = 'E') THEN qtd
-                            ELSE qtd * -1
-                        END AS qtd,
-                        id_mp
-                    
-                    FROM estoque
-                ) AS estq"))->select(
-                    DB::raw("IFNULL(SUM(qtd), 0) AS saldo"),
-                    "id_mp"
-                )->groupBy("id_mp"), "tab", "tab.id_mp", "mp.id")
-                ->where("mp.id_maquina", $id_maquina)
-                ->where("mp.id_produto", $id_produto)
-                ->first()
-                ->saldo
-        );
-    }
-
     public function autocomplete(Request $request) {        
         $where = " AND ".$request->column." LIKE '%".$request->search."%'";
         

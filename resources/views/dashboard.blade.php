@@ -90,11 +90,14 @@
             const mesAtual = (new Date()).getMonth();
             const mesSelecionado = dataInicial.split("-")[1] - 1;
             const cardRetiradaAtrasoElement = document.getElementById("card-retirada-atraso");
+            const cardUltimasRetiradasElement = document.getElementById("card-ult-retirada");
 
             if(mesAtual !== mesSelecionado) {
                 cardRetiradaAtrasoElement.style.display = "none";
+                cardUltimasRetiradasElement.style.display = "none";
             } else {
                 cardRetiradaAtrasoElement.style.display = "block";
+                cardUltimasRetiradasElement.style.display = "block";
             }
 
             cardUltimaRetirada.innerHTML = "";
@@ -124,7 +127,7 @@
 
                 ultimasRetiradas.forEach(item => {
                     ultimaRetiradaHTML +=
-                    `<tr onclick = "retiradas(${item.id})">
+                    `<tr onclick = "ultimasRetiradas(${item.id}, '${item.nome}')">
                          <td width = "20%" class = "td-foto text-center">
                              <img class = 'foto-funcionario-dashboard' src = '${item.foto}'
                                  onerror = "this.classList.add('d-none');this.nextElementSibling.classList.remove('d-none')" />
@@ -150,7 +153,7 @@
 
                 atrasos.forEach(item => {
                     retiradaAtrasoHTML +=
-                    `<tr onclick = "produtosEmAtraso(${item.id})">
+                    `<tr onclick = "produtosEmAtraso(${item.id}, '${item.nome}')">
                          <td width = "20%" class = "td-foto text-center">
                              <img class = 'foto-funcionario-dashboard' src = '${item.foto}'
                                  onerror = "this.classList.add('d-none');this.nextElementSibling.classList.remove('d-none')" />
@@ -196,7 +199,7 @@
 
                 retiradasPorSetor.retiradas.forEach(item => {
                     consumosCentroHTML +=
-                    `<tr onclick="retiradasSetor(${item.id})">
+                    `<tr onclick="retiradasSetor(${item.id}, '${item.descr}')">
                          <td width="65%" class = "pl-4">${item.descr}</td>
                          <td class="text-right" width = "35%">
                              R$ ${Number(item.valor).toFixed(2).toString().replace(".", ",")}
@@ -228,7 +231,7 @@
 
                 ranking.forEach(item => {
                     retiradasColabHTML +=
-                    `<tr onclick = "retiradas(${item.id})">
+                    `<tr onclick = "retiradas(${item.id}, '${item.nome}')">
                          <td width = "20%" class = "td-foto text-center">
                              <img class = 'foto-funcionario-dashboard' src = '${item.foto}'
                                  onerror = "this.classList.add('d-none');this.nextElementSibling.classList.remove('d-none')" />
@@ -385,29 +388,30 @@
             });
         }
 
-        function produtosEmAtraso(idFuncionario) {
+        function produtosEmAtraso(idFuncionario, nome) {
             $.get(URL + "/dashboard/retiradas-em-atraso/" + idFuncionario, function(data) {
                 let resultado = "";
                 if (typeof data == "string") data = $.parseJSON(data);
                 data.forEach((linha) => {
                     resultado +=
                         "<tr>" +
-                        "<td width = '50%' class = 'text-left px-2'>" + linha.produto + "</td>" +
-                        "<td width = '25%' class = 'text-right pr-2'>" + linha.qtd + "</td>" +
-                        "<td width = '25%' class = 'text-right pr-2'>" + linha.validade + "</td>" +
+                            "<td width = '60%'>" + linha.produto + "</td>" +
+                            "<td width = '20%' class = 'text-right'>" + linha.qtd + "</td>" +
+                            "<td width = '20%' class = 'text-right'>" + linha.validade + "</td>" +
                         "</tr>";
                 });
+                document.getElementById("itensEmAtrasoModalLabel").innerHTML = `Retiradas em atraso (${nome})`; 
                 document.getElementById("table-itens-em-atraso-dados").innerHTML = resultado;
                 modal("itensEmAtrasoModal", 0);
             });
         }
 
-        function retiradas(idFuncionario) {
+        function ultimasRetiradas(idFuncionario, nome) {
             const dataSelecionada = getMesSelecionado();
             const dataInicial = dataSelecionada.split(" ")[0];
             const dataFinal = dataSelecionada.split(" ")[1];
 
-            $.get(URL + "/dashboard/produtos", {
+            $.get(URL + "/dashboard/ultimas-retiradas", {
                 id_pessoa: idFuncionario,
                 inicio: dataInicial,
                 fim: dataFinal
@@ -417,16 +421,43 @@
                 data.forEach((linha) => {
                     resultado +=
                         "<tr>" +
-                        "<td width = '75%' class = 'text-left px-2'>" + linha.produto + "</td>" +
-                        "<td width = '25%' class = 'text-right pr-2'>" + linha.qtd + "</td>" +
+                            "<td width = '75%'>" + linha.produto + "</td>" +
+                            "<td width = '20%'>" + linha.data + "</td>" +
+                            "<td width = '10%' class = 'text-right'>" + linha.qtd + "</td>" +
                         "</tr>";
                 });
+                document.getElementById("ultimasRetiradasModalLabel").innerHTML = `Últimas retiradas (${nome})`; 
+                document.getElementById("table-ultimas-retiradas-dados").innerHTML = resultado;
+                modal("ultimasRetiradasModal", 0);
+            });
+        }
+
+        function retiradas(idFuncionario, nome) {
+            const dataSelecionada = getMesSelecionado();
+            const dataInicial = dataSelecionada.split(" ")[0];
+            const dataFinal = dataSelecionada.split(" ")[1];
+
+            $.get(URL + "/dashboard/retiradas-por-pessoa", {
+                id_pessoa: idFuncionario,
+                inicio: dataInicial,
+                fim: dataFinal
+            }, function(data) {
+                let resultado = "";
+                if (typeof data == "string") data = $.parseJSON(data);
+                data.forEach((linha) => {
+                    resultado +=
+                        "<tr>" +
+                            "<td width = '80%'>" + linha.produto + "</td>" +
+                            "<td width = '20%' class = 'text-right'>" + linha.qtd + "</td>" +
+                        "</tr>";
+                });
+                document.getElementById("retiradasListaModalLabel").innerHTML = `Retiradas do colaborador (${nome})`; 
                 document.getElementById("table-retirados-dados").innerHTML = resultado;
                 modal("retiradasListaModal", 0);
             });
         }
 
-        function retiradasSetor(idSetor) {
+        function retiradasSetor(idSetor, nome) {
             const dataSelecionada = getMesSelecionado();
             const dataInicial = dataSelecionada.split(" ")[0];
             const dataFinal = dataSelecionada.split(" ")[1];
@@ -441,16 +472,18 @@
                 data.forEach((linha) => {
                     resultado +=
                         "<tr>" +
-                        "<td width = '75%' class = 'text-left px-2'>" + linha.nome + "</td>" +
-                        "<td width = '25%' class = 'text-right pr-2'>R$ " + Number(linha.valor).toFixed(2).toString().replace(".", ",") + "</td>" +
+                            "<td width = '75%'>" + linha.nome + "</td>" +
+                            "<td width = '25%'>R$ " + Number(linha.valor).toFixed(2).toString().replace(".", ",") + "</td>" +
                         "</tr>";
                 });
+                document.getElementById("retiradasCentroModalLabel").innerHTML = `Consumo do centro de custo (${nome})`;
                 document.getElementById("table-retirados-centro-dados").innerHTML = resultado;
                 modal("retiradasCentroModal", 0);
             });
         }
     </script>
-    @include('modals.itens_em_atraso_modal')
-    @include('modals.retiradas_lista_modal')
-    @include('modals.retiradas_centro_modal')
+    @include('modals.dashboard.itens_em_atraso_modal')
+    @include('modals.dashboard.ultimas_retiradas_modal')
+    @include('modals.dashboard.retiradas_lista_modal')
+    @include('modals.dashboard.retiradas_centro_modal')
 @endsection

@@ -92,8 +92,8 @@ class DashboardController extends ControllerKX {
             produtos.id,
             atribuicoes.validade,
             CASE
-                WHEN atribuicoes.qtd < SUM(estq.quantidade) THEN atribuicoes.qtd
-                ELSE SUM(estq.quantidade)
+                WHEN atribuicoes.qtd < SUM(estq.quantidade) THEN ROUND(atribuicoes.qtd)
+                ELSE ROUND(SUM(estq.quantidade))
             END AS qtd,
             CASE
                 WHEN atribuicoes.produto_ou_referencia_chave = 'P' THEN produtos.descr
@@ -185,7 +185,7 @@ class DashboardController extends ControllerKX {
             pessoas.id,
             pessoas.nome,
             pessoas.foto,
-            SUM(atribuicoes.qtd) AS total
+            ROUND(SUM(atribuicoes.qtd)) AS total
         ", $where, "
             pessoas.id,
             pessoas.nome,
@@ -274,7 +274,7 @@ class DashboardController extends ControllerKX {
         return json_encode($resultado);
     }
 
-    public function det_ultimas_retiradas(Request $request) {
+    public function det_retiradas_por_pessoa(Request $request) {
         $id_pessoa = $request->id_pessoa;
         $inicio = date("Y-m")."-01";
         $fim = date("Y-m-d");
@@ -309,6 +309,37 @@ class DashboardController extends ControllerKX {
                     )
                     ->get()
             )->sortByDesc("qtd")->values()->all()
+        );
+    }
+
+    public function det_ultimas_retiradas(Request $request) {
+        $id_pessoa = $request->id_pessoa;
+        $inicio = date("Y-m")."-01";
+        $fim = date("Y-m-d");
+        if (isset($request->inicio)) $inicio = $request->inicio;
+        if (isset($request->fim)) $fim = $request->fim;
+        return json_encode(
+            collect(
+                DB::table("retiradas")
+                    ->select(
+                        "retiradas.id AS id_retirada",
+                        "produtos.id",
+                        DB::raw("
+                            CASE
+                                WHEN atribuicoes.produto_ou_referencia_chave = 'P' THEN produtos.descr
+                                ELSE produtos.referencia
+                            END AS produto
+                        "),
+                        DB::raw("ROUND(retiradas.qtd) AS qtd"),
+                        DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data")
+                    )
+                    ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
+                    ->join("produtos", "produtos.id", "retiradas.id_produto")
+                    ->where("retiradas.id_pessoa", $id_pessoa)
+                    ->whereRaw("retiradas.data >= '".$inicio."'")
+                    ->whereRaw("retiradas.data <= '".$fim."'")
+                    ->get()
+            )->sortBy("id_retirada")->values()->all()
         );
     }
 

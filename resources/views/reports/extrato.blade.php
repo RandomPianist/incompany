@@ -40,7 +40,13 @@
                         <h6 class = "pl-3 fw-600">Preço: R$ {{ str_replace(".", ",", $produto["preco"]) }}</h6>
                     </td>
                     <td class = "manter-junto">
-                        <h6 class = "pl-3 fw-600">Saldo anterior: {{ $produto["saldo_ant"] }}</h6>
+                        <h6 class = "pl-3 fw-600">
+                            @if ($lm)
+                                Saldo anterior: {{ $produto["saldo_ant"] }}
+                            @else
+                                Saldo resultante: {{ $produto["saldo_res"] }}
+                            @endif
+                        </h6>
                     </td>
                 </tr>
             </table>

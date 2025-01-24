@@ -11,17 +11,15 @@
             </div>
             <div class = "modal-body">
                 <div class = "container">
-                    @csrf
-                    <input id = "id_usuario" name = "id_usuario" type = "hidden" />
                     <div class = "row">
                         <div class = "col-12">
-                            <select name="empresa" id="empresa-select" class="form-control"></select>
+                            <select name = "empresa" id = "empresa-select" class = "form-control"></select>
                         </div>
                     </div>
                 </div>
             </div>
             <div class = "d-flex">
-                <button type = "button" class = "btn btn-target mx-auto my-4 px-5" onclick="trocarEmpresa()">Salvar</button>
+                <button type = "button" class = "btn btn-target mx-auto my-4 px-5" onclick = "trocarEmpresa()">Salvar</button>
             </div>
         </div>
     </div>

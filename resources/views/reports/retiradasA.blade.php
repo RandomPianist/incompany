@@ -33,12 +33,12 @@
         <table class = "report-body table table-sm table-bordered table-striped px-5">
             <thead>
                 <tr class = "report-row">
-                    <td width = "20%">Data</td>
+                    <td width = "10%">Data</td>
                     @if ($quebra == "setor")
-                        <td width = "25%">Produto</td>
-                        <td width = "25%">Colaborador</td>
+                        <td width = "30%">Produto</td>
+                        <td width = "30%">Colaborador</td>
                     @else
-                        <td width = "50%">Produto</td>
+                        <td width = "60%">Produto</td>
                     @endif
                     <td width = "10%" class = "text-right">Quantidade</td>
                     <td width = "20%" class = "text-right">Valor</td>
@@ -50,19 +50,19 @@
                 <tbody>
                     @foreach ($item["retiradas"] as $retirada)
                         <tr class = "report-row">
-                            <td width = "20%">{{ $retirada["data"] }}</td>
+                            <td width = "10%">{{ $retirada["data"] }}</td>
                             @if ($quebra == "setor")
-                                <td width = "25%">{{ $retirada["produto"] }}</td>
-                                <td width = "25%">{{ $retirada["pessoa"] }}</td>
+                                <td width = "30%">{{ $retirada["produto"] }}</td>
+                                <td width = "30%">{{ $retirada["pessoa"] }}</td>
                             @else
-                                <td width = "50%">{{ $retirada["produto"] }}</td>
+                                <td width = "60%">{{ $retirada["produto"] }}</td>
                             @endif
                             <td width = "10%" class = "text-right">{{ number_format($retirada["qtd"], 0) }}</td>
                             <td width = "20%" class = "text-right">R$ {{ number_format($retirada["valor"], 2, ",", ".") }}</td>
                         </tr>
                     @endforeach
                     <tr class = "report-row">
-                        <td width = "70%" colspan = @if ($quebra == 'setor') 3 @else 2 @endif>
+                        <td width = "60%" colspan = @if ($quebra == 'setor') 3 @else 2 @endif>
                             <b>Total</b>
                         </td>
                         <td width = "10%" class = "text-right"><b>{{ number_format($item["total_qtd"], 0) }}</b></td>
@@ -76,7 +76,7 @@
     <table class = "report-body table table-sm table-bordered table-striped">
         <tbody>
             <tr>
-                <td width = "70%">
+                <td width = "60%">
                     <h5>Totais:</h5>
                 </td>
                 <td width = "10%" class = "text-right">
