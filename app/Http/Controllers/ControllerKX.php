@@ -159,6 +159,7 @@ class ControllerKX extends Controller {
         $linha->id_comodato = $json["id_comodato"];
         $linha->qtd = $json["qtd"];
         $linha->data = $json["data"];
+        $linha->id_empresa = DB::table("pessoas")->where("id_pessoa", $json["id_pessoa"])->value("id_empresa");
         $linha->save();
         $api = $json["id_comodato"] > 0;
         $modelo = $this->log_inserir("C", "retiradas", $linha->id, $api);

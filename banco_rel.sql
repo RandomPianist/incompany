@@ -175,6 +175,7 @@ CREATE TABLE retiradas (
 	gerou_pedido CHAR,
 	numero_ped INT,
 	biometria_ou_senha VARCHAR(1),
+	id_empresa INT,
 	FOREIGN KEY (id_atribuicao) REFERENCES atribuicoes(id),
 	FOREIGN KEY (id_comodato) REFERENCES comodatos(id),
 	FOREIGN KEY (id_pessoa) REFERENCES pessoas(id),

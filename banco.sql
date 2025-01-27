@@ -132,7 +132,8 @@ CREATE TABLE retiradas (
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	gerou_pedido CHAR,
 	numero_ped INT,
-	biometria_ou_senha VARCHAR(1)
+	biometria_ou_senha VARCHAR(1),
+	id_empresa INT
 );
 
 CREATE TABLE log (
