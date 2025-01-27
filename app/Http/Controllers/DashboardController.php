@@ -121,13 +121,21 @@ class DashboardController extends ControllerKX {
                                 )
                                 ->joinsub(
                                     DB::table("retiradas")
-                                        ->select("id_pessoa")
+                                        ->select(
+                                            "id_pessoa",
+                                            "id_empresa"
+                                        )
                                         ->whereRaw("retiradas.data >= '".$inicio."'")
                                         ->whereRaw("retiradas.data <= '".$fim."'")
-                                        ->groupby("id_pessoa"),
+                                        ->groupby(
+                                            "id_pessoa",
+                                            "id_empresa"
+                                        ),
                                     "ret",
-                                    "ret.id_pessoa",
-                                    "pessoas.id"
+                                    function($join) {
+                                        $join->on("pessoas.id", "ret.id_pessoa")
+                                             ->on("pessoas.id_empresa", "ret.id_empresa");
+                                    }
                                 )
                                 ->whereRaw($where)
                                 ->get();
@@ -151,7 +159,10 @@ class DashboardController extends ControllerKX {
                         END AS valor
                     ")
                 )
-                ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
+                ->join("pessoas", function($join) {
+                    $join->on("pessoas.id", "retiradas.id_pessoa")
+                         ->on("pessoas.id_empresa", "retiradas.id_empresa");
+                })
                 ->join("setores", "setores.id", "pessoas.id_setor")
                 ->join("produtos", "produtos.id", "retiradas.id_produto")
                 ->leftjoin("comodatos", "comodatos.id", "retiradas.id_comodato")
@@ -240,7 +251,10 @@ class DashboardController extends ControllerKX {
                         "pessoas.foto",
                         DB::raw("SUM(qtd) AS retirados")
                     )
-                    ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
+                    ->join("pessoas", function($join) {
+                        $join->on("pessoas.id", "retiradas.id_pessoa")
+                             ->on("pessoas.id_empresa", "retiradas.id_empresa");
+                    })
                     ->whereRaw($this->obter_where(Auth::user()->id_pessoa))
                     ->whereRaw("retiradas.data >= '".$inicio."'")
                     ->whereRaw("retiradas.data <= '".$fim."'")
@@ -362,7 +376,10 @@ class DashboardController extends ControllerKX {
                             END AS valor
                         ")
                     )
-                    ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
+                    ->join("pessoas", function($join) {
+                        $join->on("pessoas.id", "retiradas.id_pessoa")
+                             ->on("pessoas.id_empresa", "retiradas.id_empresa");
+                    })
                     ->join("produtos", "produtos.id", "retiradas.id_produto")
                     ->leftjoin("comodatos", "comodatos.id", "retiradas.id_comodato")
                     ->leftjoin("maquinas_produtos AS mp", function($join) {
