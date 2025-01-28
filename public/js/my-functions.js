@@ -188,6 +188,7 @@ window.onload = function() {
                 el.focus();
                 cont++;
             } while ($($(el).parent()).hasClass("d-none") || $(el).attr("disabled"))
+            carrega_autocomplete();
         })
     });
 
