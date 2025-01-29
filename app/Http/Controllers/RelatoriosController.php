@@ -551,7 +551,10 @@ class RelatoriosController extends ControllerKX {
                         "setores.descr AS setor",
                         DB::raw("SUM(qtd) AS retirados")
                     )
-                    ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
+                    ->join("pessoas", function($join) {
+                        $join->on("pessoas.id", "retiradas.id_pessoa")
+                             ->on("pessoas.id_empresa", "retiradas.id_empresa");
+                    })
                     ->join("setores", "setores.id", "pessoas.id_setor")
                     ->where(function($sql) use($request, &$criterios) {
                         if ($request->inicio || $request->fim) {
