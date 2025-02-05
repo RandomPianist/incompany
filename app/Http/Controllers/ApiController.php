@@ -293,7 +293,17 @@ class ApiController extends ControllerKX {
             (atribuicoes.qtd - IFNULL(ret.qtd, 0)) AS qtd,
             IFNULL(ret.ultima_retirada, '') AS ultima_retirada,
             DATE_FORMAT(IFNULL(ret.proxima_retirada, CURDATE()), '%d/%m/%Y') AS proxima_retirada
-        ", "pessoas.cpf = '".$request->cpf."'")->get();
+        ", "pessoas.cpf = '".$request->cpf."'")->where(function($sql) use($request) {
+            $pode_retornar = array();
+            $produtos = DB::table("produtos")->where("lixeira", 0)->pluck("id")->toArray();
+            $minhas_maquinas = $this->minhas_maquinas()->where("id_pessoa", DB::table("pessoas")->where("cpf", $request->cpf)->value("id"))->get();
+            foreach ($minhas_maquinas as $maquina) {
+                foreach ($produtos as $produto) {
+                    if ($this->retorna_saldo_mp($maquina->id_maquina, $produto) > 0) array_push($pode_retornar, $produto);
+                }
+            }
+            $sql->whereRaw("produtos.id IN (".join(",", $pode_retornar).")");
+        })->get();
         $resultado = array();
         foreach ($consulta as $linha) {
             if ($linha->foto) {
