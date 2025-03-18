@@ -45,13 +45,19 @@ class HomeController extends ControllerKX {
                     break;
                 case "produtos":
                     $pode_retornar = array();
-                    $produtos = DB::table("produtos")->where("lixeira", 0)->pluck("id")->toArray();
-                    $minhas_maquinas = $this->minhas_maquinas()->get();
-                    foreach ($minhas_maquinas as $maquina) {
-                        foreach ($produtos as $produto) {
-                            if ($this->retorna_saldo_mp($maquina->id_maquina, $produto) > 0) array_push($pode_retornar, $produto);
-                        }
-                    }
+                    $mmtexto = $this->minhas_maquinas()
+                        ->where("id_pessoa", Auth::user()->id_pessoa)
+                        ->pluck("id_maquina")
+                        ->toArray();
+                    $pode_retornar = DB::table("produtos")
+                                        ->select("produtos.id")
+                                        ->join("maquinas_produtos AS mp", "mp.id_produto", "produtos.id")
+                                        ->join("vestoque", "vestoque.id_mp", "mp.id")
+                                        ->where("vestoque.qtd", ">", 0)
+                                        ->whereRaw("mp.id_maquina IN (".join(",", $mmtexto).")")
+                                        ->groupby("produtos.id")
+                                        ->pluck("id")
+                                        ->toArray();
                     $where .= " AND produtos.id IN (".join(",", $pode_retornar).")";
                     break;
             }
