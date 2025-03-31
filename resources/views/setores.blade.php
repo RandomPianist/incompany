@@ -30,8 +30,11 @@
                             <th width = "10%" class = "text-right">
                                 <span>Código</span>
                             </th>
-                            <th width = "75%">
+                            <th width = "35%">
                                 <span>Descrição</span>
+                            </th>
+                            <th width = "40%">
+                                <span>Empresa</span>
                             </th>
                             <th width = "15%" class = "text-center nao-ordena">
                                 <span>Ações</span>
@@ -62,7 +65,8 @@
                 data.consulta.forEach((linha) => {
                     resultado += "<tr>" +
                         "<td class = 'text-right' width = '10%'>" + linha.id.toString().padStart(4, "0") + "</td>" +
-                        "<td width = '75%'>" + linha.descr + "</td>" +
+                        "<td width = '35%'>" + linha.descr + "</td>" +
+                        "<td width = '40%'>" + linha.empresa + "</td>" +
                         "<td class = 'text-center btn-table-action' width = '15%'>" +
                             "<i class = 'my-icon far fa-box'    title = 'Atribuir produto' onclick = 'atribuicao(false, " + linha.id + ")'></i>" +
                             "<i class = 'my-icon far fa-tshirt' title = 'Atribuir grade'   onclick = 'atribuicao(true, " + linha.id + ")'></i>" +
@@ -132,11 +136,13 @@
                     ant_usr = el_cria_usuario_chk.checked;
                     modal("setoresModal", id);
                 });
-            } else modal("setoresModal", id, function() {
-                el_cria_usuario.value = "N";
-                el_cria_usuario_chk.checked = false;
-                el_setor_padrao_chk.checked = false;
-            }); 
+            } else {
+                modal("setoresModal", id, function() {
+                    el_cria_usuario.value = "N";
+                    el_cria_usuario_chk.checked = false;
+                    el_setor_padrao_chk.checked = false;
+                });
+            }
         }
 
         function muda_cria_usuario(el) {

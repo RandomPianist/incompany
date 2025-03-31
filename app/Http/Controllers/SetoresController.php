@@ -13,7 +13,8 @@ class SetoresController extends ControllerKX {
         return DB::table("setores")
                     ->select(
                         "setores.id",
-                        "setores.descr"
+                        "setores.descr",
+                        "empresas.nome_fantasia AS empresa"
                     )
                     ->leftjoin("empresas", "setores.id_empresa", "empresas.id")
                     ->whereRaw($param)
