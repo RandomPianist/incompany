@@ -67,7 +67,9 @@ class HomeController extends ControllerKX {
             if ($request->table == "setores") {
                 $colunas = explode(",", $request->filter_col);
                 $filtros = explode(",", $request->filter);
-                for ($i = 0; $i < sizeof($colunas); $i++) $where .= " AND ".$colunas[$i]." = ".$filtros[$i];
+                for ($i = 0; $i < sizeof($colunas); $i++) {
+                    if (($colunas[$i] == "cria_usuario" && $id_emp) || ($colunas[$i] != "cria_usuario")) $where .= " AND ".$colunas[$i]." = ".$filtros[$i];
+                }
             } else {
                 $where .= $request->column != "referencia" ? " AND ".$request->filter_col." = '".$request->filter."'" : " AND referencia NOT IN (
                     SELECT produto_ou_referencia_valor
