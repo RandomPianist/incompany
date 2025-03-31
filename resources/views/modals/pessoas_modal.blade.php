@@ -79,8 +79,8 @@
                                     data-input = "#pessoa-id_setor"
                                     data-table = "setores"
                                     data-column = "descr"
-                                    data-filter_col = "cria_usuario"
-                                    data-filter = ""
+                                    data-filter_col = "cria_usuario,id_empresa"
+                                    data-filter = "0,id=pessoa-id_empresa"
                                     type = "text"
                                     autocomplete = "off"
                                 />

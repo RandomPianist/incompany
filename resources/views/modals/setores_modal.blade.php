@@ -21,6 +21,27 @@
                                 <span class = "custom-label-form tam-max"></span>
                             </div>
                         </div>
+                        <div class = "row">
+                            <div class = "col-11 pr-0 form-search">
+                                <label for = "setor-empresa" class = "custom-label-form">Empresa: *</label>
+                                <input id = "setor-empresa"
+                                    class = "form-control autocomplete"
+                                    data-input = "#setor-id_empresa"
+                                    data-table = "empresas"
+                                    data-column = "nome_fantasia"
+                                    data-filter_col = ""
+                                    data-filter = ""
+                                    type = "text"
+                                    autocomplete = "off"
+                                />
+                                <input id = "setor-id_empresa" name = "id_empresa" type = "hidden" />
+                            </div>
+                            <div class = "col-1 pt-4 d-flex align-items-center">
+                                <a href = "{{ config('app.root_url') }}/empresas" title = "Cadastro de empresas" target = "_blank">
+                                    <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
+                                </a>
+                            </div>
+                        </div>
                         <div class = "row mb-3 pt-3">
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">

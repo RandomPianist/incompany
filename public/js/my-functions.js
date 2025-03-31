@@ -334,6 +334,15 @@ function autocomplete(_this) {
         div_result.empty();
     }
 
+    let filtro_tratado = "";
+    let filtro_teste = _filter.split(",");
+    filtro_teste.forEach((restricao) => {
+        if (filtro_tratado) filtro_tratado += ",";
+        if (restricao.indexOf("id=") === 0) restricao = document.getElementById(restricao.replace("id=", "")).value;
+        filtro_tratado += restricao;
+    });
+    _filter = filtro_tratado;
+
     if (!_search) $(input_id).val($(this).data().id).trigger("change");
     $.get(URL + "/autocomplete", {
         table : _table,

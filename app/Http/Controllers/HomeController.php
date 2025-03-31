@@ -41,7 +41,7 @@ class HomeController extends ControllerKX {
                     ))";
                     break;
                 case "setores":
-                    if ($request->filter_col) $where .= " AND ".$request->filter_col." = 0";
+                    if ($request->filter_col) $where .= " AND cria_usuario = 0";
                     break;
                 case "produtos":
                     $pode_retornar = array();
@@ -63,13 +63,19 @@ class HomeController extends ControllerKX {
             }
         }
 
-        if ($request->filter_col && $request->table != "setores") {
-            $where .= $request->column != "referencia" ? " AND ".$request->filter_col." = '".$request->filter."'" : " AND referencia NOT IN (
-                SELECT produto_ou_referencia_valor
-                FROM atribuicoes
-                WHERE pessoa_ou_setor_valor = ".$request->filter."
-                  AND lixeira = 0
-            )";
+        if ($request->filter_col) {
+            if ($request->table == "setores") {
+                $colunas = explode(",", $request->filter_col);
+                $filtros = explode(",", $request->filter);
+                for ($i = 0; $i < sizeof($colunas); $i++) $where .= " AND ".$colunas[$i]." = ".$filtros[$i];
+            } else {
+                $where .= $request->column != "referencia" ? " AND ".$request->filter_col." = '".$request->filter."'" : " AND referencia NOT IN (
+                    SELECT produto_ou_referencia_valor
+                    FROM atribuicoes
+                    WHERE pessoa_ou_setor_valor = ".$request->filter."
+                      AND lixeira = 0
+                )";
+            }
         }
 
         $query = "SELECT ";

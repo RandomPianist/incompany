@@ -182,11 +182,14 @@ class ControllerKX extends Controller {
     protected function setor_mostrar($id) {
         if (intval($id)) {
             return DB::table("setores")
+                        ->leftjoin("empresas", "empresas.id", "setores.id_empresa")
                         ->select(
-                            "descr",
-                            "cria_usuario"
+                            "setores.descr",
+                            "setores.cria_usuario",
+                            "setores.id_empresa",
+                            "empresas.nome_fantasia AS empresa"
                         )
-                        ->where("id", $id)
+                        ->where("setores.id", $id)
                         ->first();
         }
         $resultado = new \stdClass;

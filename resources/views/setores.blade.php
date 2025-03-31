@@ -82,39 +82,36 @@
 
         function validar() {
             limpar_invalido();
+
             const id = parseInt(document.getElementById("id").value);
-            let el_chk = document.getElementById("cria_usuario-chk");
-            let el_chk2 = document.getElementById("setor_padrao-chk");
-            let invalida_descricao = false;
-            let erro = "";
-            let el = document.getElementById("descr");
-            if (!el.value) {
-                erro = "Preencha o campo";
-                invalida_descricao = true;
-            }
-            let lista = new Array();
+            const _descr = document.getElementById("descr").value.toUpperCase().trim();
+
+            let lista = ["descr"];
             Array.from(document.getElementsByClassName("validar")).forEach((el) => {
                 lista.push(el.id);
             })
             erro = verifica_vazios(lista).erro;
+
             if (
                 id &&
                 !erro &&
-                el_chk.checked == ant_usr &&
-                el_chk2.checked == ant_padrao &&
-                el.value.toUpperCase().trim() == anteriores.descr.toUpperCase().trim()
+                document.getElementById("cria_usuario-chk").checked == ant_usr &&
+                _descr == anteriores.descr.toUpperCase().trim() &&
+                document.getElementById("setor-empresa").value.toUpperCase().trim() == anteriores["setor-empresa"].toUpperCase().trim()
             ) erro = "Não há alterações para salvar";
+
             $.get(URL + "/setores/consultar", {
-                descr : el.value.toUpperCase().trim()
+                descr : _descr,
+                id_empresa : document.getElementById("setor-id_empresa").value,
+                empresa : document.getElementById("setor-empresa").value
             }, function(data) {
-                if (!erro && parseInt(data) && !id) {
-                    erro = "Já existe um registro com essa descrição";
-                    invalida_descricao = true;
+                if (typeof data == "string") data = $.parseJSON(data);
+                if (data.msg && !erro) {
+                    erro = data.msg;
+                    document.getElementById(data.el).classList.add("invalido");
                 }
-                if (erro) {
-                    if (invalida_descricao) el.classList.add("invalido");
-                    s_alert(erro);
-                } else document.querySelector("#setoresModal form").submit();
+                if (!erro) document.querySelector("#setoresModal form").submit();
+                else s_alert(erro);
             });
         }
 
@@ -128,6 +125,8 @@
                 $.get(URL + "/setores/mostrar/" + id, function(data) {
                     if (typeof data == "string") data = $.parseJSON(data);
                     document.getElementById("descr").value = data.descr;
+                    document.getElementById("setor-id_empresa").value = data.id_empresa;
+                    document.getElementById("setor-empresa").value = data.empresa;
                     el_cria_usuario.value = parseInt(data.cria_usuario) ? "S" : "N";
                     el_cria_usuario_chk.checked = el_cria_usuario.value == "S";
                     ant_usr = el_cria_usuario_chk.checked;

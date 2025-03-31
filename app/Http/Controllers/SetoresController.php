@@ -12,11 +12,16 @@ class SetoresController extends ControllerKX {
     private function busca($param) {
         return DB::table("setores")
                     ->select(
-                        "id",
-                        "descr"
+                        "setores.id",
+                        "setores.descr"
                     )
+                    ->leftjoin("empresas", "setores.id_empresa", "empresas.id")
                     ->whereRaw($param)
-                    ->where("lixeira", 0)
+                    ->where(function($sql) {
+                        $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+                        if ($id_emp) $sql->whereRaw($id_emp." IN (empresas.id, empresas.id_matriz)");
+                    })
+                    ->where("setores.lixeira", 0)
                     ->get();
     }
 
@@ -40,13 +45,29 @@ class SetoresController extends ControllerKX {
     }
 
     public function consultar(Request $request) {
+        $resultado = new \stdClass;
+
+        if ($this->empresa_consultar($request)) {
+            $resultado->msg = "Empresa não encontrada";
+            $resultado->el = "setor-empresa";
+            return json_encode($resultado);
+        }
+
         if (sizeof(
             DB::table("setores")
                 ->where("lixeira", 0)
                 ->where("descr", $request->descr)
+                ->where("id_empresa", $request->id_empresa)
                 ->get()
-        )) return "1";
-        return "0";
+        )) {
+            $resultado->msg = "Já existe um centro de custo de mesmo nome nessa empresa";
+            $resultado->el = "descr";
+            return json_encode($resultado);
+        }
+
+        $resultado->msg = "";
+        $resultado->el = "";
+        return json_encode($resultado);
     }
 
     public function usuarios($id) {
@@ -140,6 +161,7 @@ class SetoresController extends ControllerKX {
             }
         }
         $linha->descr = mb_strtoupper($request->descr);
+        $linha->id_empresa = $request->id_empresa;
         $linha->cria_usuario = $cria_usuario;
         $linha->save();
         $this->log_inserir($request->id ? "E" : "C", "setores", $linha->id);
