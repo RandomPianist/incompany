@@ -97,7 +97,7 @@ class AtribuicoesController extends ControllerKX {
                             });
                         })
                         ->where(function($sql) use($request) {
-                            if ($request->tipo2 != "setor") {
+                            if ($request->tipo2 != "S") {
                                 $sql->whereNotNull("pessoas.id")
                                     ->orWhere("pessoa_ou_setor_chave", $request->tipo2);
                             } else $sql->where("pessoa_ou_setor_chave", $request->tipo2);
