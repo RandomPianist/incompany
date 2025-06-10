@@ -346,16 +346,28 @@
 
                 this.alterarEmpresa = function(callback) {
                     setTimeout(function() {
-                        document.getElementById("pessoa-empresa").value = document.querySelector("#pessoa-empresa-select option[value='" + document.getElementById("pessoa-id_empresa").value + "']").innerHTML;
-                        document.getElementById("pessoa-id_empresa").value = document.getElementById("pessoa-empresa-select").value;
+                        try {
+                            document.getElementById("pessoa-empresa").value = document.querySelector("#pessoa-empresa-select option[value='" + document.getElementById("pessoa-id_empresa").value + "']").innerHTML;
+                            document.getElementById("pessoa-id_empresa").value = document.getElementById("pessoa-empresa-select").value;
+                        } catch(err) {
+                            document.getElementById("pessoa-empresa").value = "--";
+                            document.getElementById("pessoa-empresa-select").value = "0";
+                            document.getElementById("pessoa-id_empresa").value = 0;
+                        }
                         if (callback !== undefined) callback();
                     }, 0);
                 }
 
                 this.alterarSetor = function(callback) {
                     setTimeout(function() {
-                        document.getElementById("pessoa-setor").value = document.querySelector("#pessoa-setor-select option[value='" + document.getElementById("pessoa-id_setor").value + "']").innerHTML;
-                        document.getElementById("pessoa-id_setor").value = document.getElementById("pessoa-setor-select").value; 
+                        try {
+                            document.getElementById("pessoa-setor").value = document.querySelector("#pessoa-setor-select option[value='" + document.getElementById("pessoa-id_setor").value + "']").innerHTML;
+                            document.getElementById("pessoa-id_setor").value = document.getElementById("pessoa-setor-select").value; 
+                        } catch(err) {
+                            document.getElementById("pessoa-setor").value = "--";
+                            document.getElementById("pessoa-setor-select").value = "0";
+                            document.getElementById("pessoa-id_setor").value = 0;
+                        }
                         if (callback !== undefined) callback();
                     }, 0);                    
                 }
