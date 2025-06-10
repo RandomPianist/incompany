@@ -76,6 +76,7 @@ Route::middleware("auth")->group(function () {
         Route::get ("/consultar",       [PessoasController::class, "consultar"]);
         Route::get ("/mostrar/{id}",    [PessoasController::class, "mostrar"]);
         Route::get ("/aviso/{id}",      [PessoasController::class, "aviso"]);
+        Route::get ("/modal",           [PessoasController::class, "modal"]);
         Route::post("/salvar",          [PessoasController::class, "salvar"]);
         Route::post("/alterar-empresa", [PessoasController::class, "alterar_empresa"]);
         Route::post("/excluir",         [PessoasController::class, "excluir"]);

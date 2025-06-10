@@ -96,6 +96,29 @@ class PessoasController extends ControllerKX {
         return intval($this->setor_mostrar($id)->cria_usuario);
     }
 
+    private function busca_emp($id_emp, $id_matriz) {
+        return DB::table("empresas")
+                    ->select(
+                        "id",
+                        "nome_fantasia"
+                    )
+                    ->where("id_matriz", $id_matriz)
+                    ->where(function($sql) use($id_emp) {
+                        if ($id_emp) {
+                            $where = "id = ".$id_emp;
+                            if (sizeof(
+                                DB::table("empresas")
+                                    ->where("id_matriz", $id_emp)
+                                    ->where("lixeira", 0)
+                                    ->get()
+                            ) > 0) $where .= " OR id_matriz = ".$id_emp;
+                            $sql->whereRaw($where);
+                        }
+                    })
+                    ->orderby("nome_fantasia")
+                    ->get();
+    }
+
     public function ver($tipo) {
         switch($tipo) {
             case "A":
@@ -136,7 +159,10 @@ class PessoasController extends ControllerKX {
 
     public function consultar(Request $request) {
         $resultado = new \stdClass;
-        if (!sizeof(
+        if ($this->empresa_consultar($request)) {
+            $resultado->tipo = "invalido";
+            $resultado->dado = "Empresa";
+        } else if (!sizeof(
             DB::table("setores")
                 ->where("id", $request->id_setor)
                 ->where("descr", $request->setor)
@@ -144,9 +170,6 @@ class PessoasController extends ControllerKX {
         )) {
             $resultado->tipo = "invalido";
             $resultado->dado = "Setor";
-        } else if ($this->empresa_consultar($request)) {
-            $resultado->tipo = "invalido";
-            $resultado->dado = "Empresa";
         } else if (sizeof(
             DB::table("pessoas")
                 ->where("lixeira", 0)
@@ -277,5 +300,37 @@ class PessoasController extends ControllerKX {
             $pessoa->id_empresa = $request->idEmpresa;
             $pessoa->save();
         }
+    }
+
+    public function modal() {
+        $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+        $resultado = new \stdClass;
+        $empresas = $this->busca_emp($id_emp, 0);
+        foreach($empresas as $matriz) {
+            $filiais = $this->busca_emp($id_emp, $matriz->id);
+            $matriz->filiais = $filiais;
+        }
+        $resultado->empresas = $empresas;
+        $resultado->setores = DB::table("setores")
+                                    ->select(
+                                        "id",
+                                        "descr"
+                                    )
+                                    ->where("cria_usuario", 0)
+                                    ->where(function($sql) use($id_emp) {
+                                        $where = "id_empresa = ".$id_emp." OR id_empresa IN (
+                                            SELECT id_matriz
+                                            FROM empresas
+                                            WHERE id = ".$id_emp."
+                                        ) OR id_empresa IN (
+                                            SELECT id
+                                            FROM empresas
+                                            WHERE id_matriz = ".$id_emp."
+                                        )";
+                                        $sql->whereRaw($where);
+                                    })
+                                    ->orderby("descr")
+                                    ->get();
+        return json_encode($resultado);
     }
 }

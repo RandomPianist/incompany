@@ -194,5 +194,5 @@ return [
         // ...
     ])->toArray(),
 
-    'root_url' => '/incompany'
+    'root_url' => ''
 ];

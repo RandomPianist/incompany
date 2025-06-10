@@ -245,6 +245,11 @@ function contar_char(el, max) {
 }
 
 function modal(nome, id, callback) {
+    const concluir = function() {
+        $("#" + nome).modal();
+        callback();
+    }
+
     limpar_invalido();
     if (callback === undefined) callback = function() {}
     if (id) document.getElementById(nome == "pessoasModal" ? "pessoa-id" : "id").value = id;
@@ -253,8 +258,27 @@ function modal(nome, id, callback) {
         if (!$(el).hasClass("autocomplete")) $(el).trigger("keyup");
         anteriores[el.id] = el.value;
     });
-    $("#" + nome).modal();
-    callback();
+    if (nome == "pessoasModal") {
+        $.get(URL + "/colaboradores/modal", function(data) {
+            if (typeof data == "string") data = $.parseJSON(data);
+            let resultado = "<option value = '0'>--</option>";
+            data.empresas.forEach((empresa) => {
+                resultado += "<option value = '" + empresa.id + "'>" + empresa.nome_fantasia + "</option>";
+                empresa.filiais.forEach((filial) => {
+                    resultado += "<option value = '" + filial.id + "'>- " + filial.nome_fantasia + "</option>";
+                });
+            });
+            document.getElementById("pessoa-empresa-select").innerHTML = resultado;
+            resultado = "<option value = '0'>--</option>";
+            data.setores.forEach((setor) => {
+                resultado += "<option value = '" + setor.id + "'>" + setor.descr + "</option>";
+            });
+            document.getElementById("pessoa-setor-select").innerHTML = resultado;
+            pessoa.alterarEmpresa();
+            pessoa.alterarSetor();
+            concluir();
+        });
+    } else concluir();
 }
 
 function modal2(nome, limpar) {
@@ -454,7 +478,7 @@ function verifica_vazios(arr, _erro) {
 }
 
 function limpar_invalido() {
-    Array.from(document.getElementsByTagName("INPUT")).forEach((el) => {
+    Array.from(document.querySelectorAll("input, select")).forEach((el) => {
         el.classList.remove("invalido");
     });
 }

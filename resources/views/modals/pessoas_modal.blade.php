@@ -47,8 +47,9 @@
                             </div>
                         </div>
                         <div class = "row">
-                            <div class = "col-11 pr-0 form-search">
+                            <div class = "col-11 pr-0">
                                 <label for = "pessoa-empresa" class = "custom-label-form">Empresa: *</label>
+                                <select id = "pessoa-empresa-select" class = "form-control" onchange = "pessoa.alterarEmpresa()"></select>
                                 <input id = "pessoa-empresa"
                                     class = "form-control autocomplete"
                                     data-input = "#pessoa-id_empresa"
@@ -58,6 +59,7 @@
                                     data-filter = ""
                                     type = "text"
                                     autocomplete = "off"
+                                    style = "display:none"
                                 />
                                 <input id = "pessoa-id_empresa" name = "id_empresa" type = "hidden" />
                             </div>
@@ -72,8 +74,9 @@
                                 <label for = "cpf" class = "custom-label-form">CPF: *</label>
                                 <input id = "cpf" name = "cpf" class = "form-control" autocomplete = "off" type = "text" onkeyup = "formatar_cpf(this)" />
                             </div>
-                            <div class = "col-5 pr-0 form-search-2">
+                            <div class = "col-5 pr-0">
                                 <label for = "pessoa-setor" class = "custom-label-form">Centro de custo: *</label>
+                                <select id = "pessoa-setor-select" class = "form-control" onchange = "pessoa.alterarSetor()"></select>
                                 <input id = "pessoa-setor"
                                     class = "form-control autocomplete"
                                     data-input = "#pessoa-id_setor"
@@ -83,6 +86,7 @@
                                     data-filter = "0,id=pessoa-id_empresa"
                                     type = "text"
                                     autocomplete = "off"
+                                    style = "display:none"
                                 />
                                 <input id = "pessoa-id_setor" name = "id_setor" type = "hidden" onchange = "pessoa.toggle_user(parseInt(this.value))"/>
                             </div>

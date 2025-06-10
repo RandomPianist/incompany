@@ -51,10 +51,10 @@
                             <span>Corporativo</span>
                             <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
                             <ul class = "dropdown-toolbar">
-                                <li onclick = "redirect('/incompany/empresas')">
+                                <li onclick = "redirect('/empresas')">
                                     <span>Empresas</span>
                                 </li>
-                                <li onclick = "redirect('/incompany/setores')">
+                                <li onclick = "redirect('/setores')">
                                     <span>Centro de custos</span>
                                 </li>
                             </ul>
@@ -65,17 +65,17 @@
                             <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
                             <ul class = "dropdown-toolbar">
                                 @if (!intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa))
-                                    <li onclick = "redirect('/incompany/colaboradores/pagina/A')">
+                                    <li onclick = "redirect('/colaboradores/pagina/A')">
                                         <span>Administradores</span>
                                     </li>
                                 @endif
-                                <li onclick = "redirect('/incompany/colaboradores/pagina/F')">
+                                <li onclick = "redirect('/colaboradores/pagina/F')">
                                     <span>Funcionários</span>
                                 </li>
-                                <li onclick = "redirect('/incompany/colaboradores/pagina/S')">
+                                <li onclick = "redirect('/colaboradores/pagina/S')">
                                     <span>Supervisores</span>
                                 </li>
-                                <li onclick = "redirect('/incompany/colaboradores/pagina/U')">
+                                <li onclick = "redirect('/colaboradores/pagina/U')">
                                     <span>Usuários</span>
                                 </li>
                             </ul>
@@ -86,10 +86,10 @@
                                 <span>Itens</span>
                                 <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
                                 <ul class = "dropdown-toolbar">
-                                    <li onclick = "redirect('/incompany/valores/categorias')">
+                                    <li onclick = "redirect('/valores/categorias')">
                                         <span>Categorias</span>
                                     </li>
-                                    <li onclick = "redirect('/incompany/produtos')">
+                                    <li onclick = "redirect('/produtos')">
                                         <span>Produtos</span>
                                     </li>
                                 </ul>
@@ -105,7 +105,7 @@
                             <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
                             <ul class = "dropdown-toolbar">
                                 <li>
-                                    <span>Consumo<img class = "dropdown-icon" src = "/incompany/img/sort-down.png"></span>
+                                    <span>Consumo<img class = "dropdown-icon" src = "/img/sort-down.png"></span>
                                     <ul class = "subdropdown-toolbar">
                                         <li onclick = "relatorio = new RelatorioRetiradas('pessoa')">por colaborador</li>
                                         <li onclick = "relatorio = new RelatorioRetiradas('setor')">por centro de custo</li>
@@ -122,7 +122,7 @@
                                         <span>Extrato de itens</span>
                                     </li>
                                 @if (!intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa))
-                                    <li onclick = "window.open('/incompany/relatorios/comodatos', '_blank')">
+                                    <li onclick = "window.open('/relatorios/comodatos', '_blank')">
                                         <span>Locação</span>
                                     </li>
                                 @endif
@@ -220,6 +220,8 @@
         <script type = "text/javascript" language = "JavaScript">
             function Pessoa(id) {
                 let that = this;
+                let ant_id_setor = 0;
+                let ant_id_empresa = 0;
 
                 this.toggle_user = function(setor) {
                     $.get(URL + "/setores/mostrar/" + setor, function(data) {
@@ -259,79 +261,103 @@
                         return valido;
                     }
 
-                    limpar_invalido();
-                    let erro = "";
+                    that.alterarEmpresa(function() {
+                        that.alterarSetor(function() {
+                            limpar_invalido();
+                            let erro = "";
 
-                    const id_setor = document.getElementById("pessoa-id_setor").value;
+                            const id_setor = document.getElementById("pessoa-id_setor").value;
 
-                    let _email = document.getElementById("email");
-                    let _cpf = document.getElementById("cpf");
-                    let nome = document.getElementById("nome");
+                            let _email = document.getElementById("email");
+                            let _cpf = document.getElementById("cpf");
+                            let nome = document.getElementById("nome");
 
-                    $.get(URL + "/setores/mostrar/" + id_setor, function(data) {
-                        if (typeof data == "string") data = $.parseJSON(data);
-                        if (parseInt(data.cria_usuario)) {
-                            if (!_email.value) {
-                                erro = "Preencha o campo";
-                                _email.classList.add("invalido");
-                            }
-                        }
-                        if (!_cpf.value) {
-                            if (!erro) erro = "Preencha o campo";
-                            else erro = "Preencha os campos";
-                            _cpf.classList.add("invalido");
-                        }
-                        let lista = ["nome", "pessoa-setor", "pessoa-empresa", "funcao", "admissao", "supervisor"];
-                        if (!parseInt(document.getElementById("pessoa-id").value)) lista.push(parseInt(data.cria_usuario) ? "password" : "senha");
-                        let aux = verifica_vazios(lista, erro);
-                        erro = aux.erro;
-                        let alterou = aux.alterou;
-                        
-                        if (parseInt(data.cria_usuario)) {
-                            if (!erro && !validar_email(_email.value)) {
-                                erro = "E-mail inválido";
-                                _email.classList.add("invalido");
-                            }
-                            if (
-                                document.getElementById("password").value ||
-                                _email.value.toLowerCase() != anteriores.email.toLowerCase()
-                            ) alterou = true;
-                        } else if (document.getElementById("senha").value) alterou = true;
-                        // if (!erro && !validar_cpf(_cpf.value)/* && _cpf.value.trim()*/) {
-                        //     erro = "CPF inválido";
-                        //     _cpf.classList.add("invalido");
-                        // }
-                        // if (_cpf.value != anteriores.cpf) alterou = true;
-                        
-                        aux = document.getElementById("admissao").value;
-                        if (aux) {
-                            if (!erro && eFuturo(aux)) erro = "A admissão não pode ser no futuro";
-                        }
+                            $.get(URL + "/setores/mostrar/" + id_setor, function(data) {
+                                if (typeof data == "string") data = $.parseJSON(data);
+                                if (parseInt(data.cria_usuario)) {
+                                    if (!_email.value) {
+                                        erro = "Preencha o campo";
+                                        _email.classList.add("invalido");
+                                    }
+                                }
+                                if (!_cpf.value) {
+                                    if (!erro) erro = "Preencha o campo";
+                                    else erro = "Preencha os campos";
+                                    _cpf.classList.add("invalido");
+                                }
+                                let lista = ["nome", /*"pessoa-setor", "pessoa-empresa", */"funcao", "admissao", "supervisor"];
+                                if (!parseInt(document.getElementById("pessoa-id").value)) lista.push(parseInt(data.cria_usuario) ? "password" : "senha");
+                                let aux = verifica_vazios(lista, erro);
+                                erro = aux.erro;
+                                let alterou = aux.alterou;
+                                
+                                if (parseInt(data.cria_usuario)) {
+                                    if (!erro && !validar_email(_email.value)) {
+                                        erro = "E-mail inválido";
+                                        _email.classList.add("invalido");
+                                    }
+                                    if (
+                                        document.getElementById("password").value ||
+                                        _email.value.toLowerCase() != anteriores.email.toLowerCase()
+                                    ) alterou = true;
+                                } else if (document.getElementById("senha").value) alterou = true;
+                                
+                                // if (!erro && !validar_cpf(_cpf.value)/* && _cpf.value.trim()*/) {
+                                //     erro = "CPF inválido";
+                                //     _cpf.classList.add("invalido");
+                                // }
+                                // if (_cpf.value != anteriores.cpf) alterou = true;
+                                
+                                if (!erro && document.getElementById("pessoa-id_setor").value != ant_id_setor) alterou = true;
+                                if (!erro && document.getElementById("pessoa-id_empresa").value != ant_id_empresa) alterou = true;
 
-                        $.get(URL + "/colaboradores/consultar/", {
-                            cpf : _cpf.value.replace(/\D/g, ""),
-                            email : _email.value,
-                            empresa : document.getElementById("pessoa-empresa").value,
-                            id_empresa : document.getElementById("pessoa-id_empresa").value,
-                            setor : document.getElementById("pessoa-setor").value,
-                            id_setor : document.getElementById("pessoa-id_setor").value
-                        }, function(data) {
-                            if (typeof data == "string") data = $.parseJSON(data);
-                            if (!erro && data.tipo == "invalido") {
-                                erro = data.dado + " não encontrad" + (data.dado == "Empresa" ? "a" : "o");
-                                document.getElementById("pessoa-" + data.dado.toLowerCase()).classList.add("invalido");
-                            }
-                            if (!erro && data.tipo == "duplicado" && !parseInt(document.getElementById("pessoa-id").value)) {
-                                erro = "Já existe um registro com esse " + data.dado;
-                                document.getElementById(data.dado == "CPF" ? "cpf" : "email").classList.add("invalido");
-                            }
-                            if (!erro && !alterou && !document.querySelector("#pessoasModal input[type=file]").value) erro = "Altere pelo menos um campo para salvar";
-                            if (!erro) {
-                                _cpf.value = _cpf.value.replace(/\D/g, "");
-                                document.querySelector("#pessoasModal form").submit();
-                            } else s_alert(erro);
+                                aux = document.getElementById("admissao").value;
+                                if (aux) {
+                                    if (!erro && eFuturo(aux)) erro = "A admissão não pode ser no futuro";
+                                }
+
+                                $.get(URL + "/colaboradores/consultar/", {
+                                    cpf : _cpf.value.replace(/\D/g, ""),
+                                    email : _email.value,
+                                    empresa : document.getElementById("pessoa-empresa").value,
+                                    id_empresa : document.getElementById("pessoa-id_empresa").value,
+                                    setor : document.getElementById("pessoa-setor").value,
+                                    id_setor : document.getElementById("pessoa-id_setor").value
+                                }, function(data) {
+                                    if (typeof data == "string") data = $.parseJSON(data);
+                                    if (!erro && data.tipo == "invalido") {
+                                        erro = data.dado + " não encontrad" + (data.dado == "Empresa" ? "a" : "o");
+                                        document.getElementById("pessoa-" + data.dado.toLowerCase() + "-select").classList.add("invalido");
+                                    }
+                                    if (!erro && data.tipo == "duplicado" && !parseInt(document.getElementById("pessoa-id").value)) {
+                                        erro = "Já existe um registro com esse " + data.dado;
+                                        document.getElementById(data.dado == "CPF" ? "cpf" : "email").classList.add("invalido");
+                                    }
+                                    if (!erro && !alterou && !document.querySelector("#pessoasModal input[type=file]").value) erro = "Altere pelo menos um campo para salvar";
+                                    if (!erro) {
+                                        _cpf.value = _cpf.value.replace(/\D/g, "");
+                                        document.querySelector("#pessoasModal form").submit();
+                                    } else s_alert(erro.replace("Setor", "Centro de custo"));
+                                });
+                            });
                         });
                     });
+                }
+
+                this.alterarEmpresa = function(callback) {
+                    setTimeout(function() {
+                        document.getElementById("pessoa-empresa").value = document.querySelector("#pessoa-empresa-select option[value='" + document.getElementById("pessoa-id_empresa").value + "']").innerHTML;
+                        document.getElementById("pessoa-id_empresa").value = document.getElementById("pessoa-empresa-select").value;
+                        if (callback !== undefined) callback();
+                    }, 0);
+                }
+
+                this.alterarSetor = function(callback) {
+                    setTimeout(function() {
+                        document.getElementById("pessoa-setor").value = document.querySelector("#pessoa-setor-select option[value='" + document.getElementById("pessoa-id_setor").value + "']").innerHTML;
+                        document.getElementById("pessoa-id_setor").value = document.getElementById("pessoa-setor-select").value; 
+                        if (callback !== undefined) callback();
+                    }, 0);                    
                 }
 
                 let titulo = id ? "Editando" : "Cadastrando";
@@ -344,15 +370,21 @@
                         ["nome", "cpf", "pessoa-setor", "pessoa-empresa", "pessoa-id_setor", "pessoa-id_empresa", "email", "funcao", "admissao", "supervisor"].forEach((_id) => {
                             document.getElementById(_id).value = data[_id.replace("pessoa-", "")];
                         });
+                        ant_id_setor = parseInt(document.getElementById("pessoa-id_setor").value);
+                        ant_id_empresa = parseInt(document.getElementById("pessoa-id_empresa").value);
                         setTimeout(function() {
                             modal("pessoasModal", id, function() {
                                 that.toggle_user(parseInt(data.id_setor));
                                 estilo_bloco_senha.display = id != USUARIO && document.getElementById("pessoasModalLabel").innerHTML.indexOf("administrador") > -1 ? "none" : "";
-                                document.getElementById("pessoa-setor").disabled = id == USUARIO;
+                                document.getElementById("pessoa-setor-select").disabled = id == USUARIO;
                                 document.getElementById("supervisor-chk").checked = parseInt(data.supervisor) == 1;
                                 Array.from(document.getElementsByClassName("pessoa-senha")).forEach((el) => {
                                     el.innerHTML = "Senha:";
                                 });
+                                document.getElementById("pessoa-setor-select").value = data.id_setor;
+                                document.getElementById("pessoa-empresa-select").value = data.id_empresa;
+                                that.alterarEmpresa();
+                                that.alterarSetor();
                                 document.querySelector("#pessoasModal .user-pic").parentElement.classList.remove("d-none");
                                 if (!data.foto) {
                                     let nome = data.nome.toUpperCase().replace("DE ", "").split(" ");
@@ -370,7 +402,7 @@
                         modal("pessoasModal", id, function() {
                             that.toggle_user(id);
                             estilo_bloco_senha.removeProperty("display");
-                            document.getElementById("pessoa-setor").disabled = false;
+                            document.getElementById("pessoa-setor-select").disabled = false;
                             Array.from(document.getElementsByClassName("pessoa-senha")).forEach((el) => {
                                 el.innerHTML = "Senha: *";
                             });
@@ -380,13 +412,20 @@
                             if (tipo == "A" || tipo == "U") {
                                 $.get(URL + "/setores/primeiro-admin", function(data) {
                                     if (typeof data == "string") data = $.parseJSON(data);
-                                    document.getElementById("pessoa-setor").value = data.descr;
+                                    document.getElementById("pessoa-setor-select").value = data.id;
                                     document.getElementById("pessoa-id_setor").value = data.id;
                                     that.toggle_user(data.id);
+                                    that.alterarEmpresa();
+                                    that.alterarSetor();
                                 });
                             } else if (tipo == "S") {
                                 document.getElementById("supervisor-chk").checked = true;
                                 document.getElementById("supervisor").value = 1;
+                                that.alterarEmpresa();
+                                that.alterarSetor();
+                            } else {
+                                that.alterarEmpresa();
+                                that.alterarSetor();
                             }
                         });
                     }, 0);
