@@ -320,7 +320,7 @@
                                     cpf : _cpf.value.replace(/\D/g, ""),
                                     email : _email.value,
                                     empresa : document.getElementById("pessoa-empresa").value,
-                                    id_empresa : document.getElementById("pessoa-id_empresa").value,
+                                    id_empresa : document.getElementById("pessoa-id_empresa").value.replace("-", "").trim(),
                                     setor : document.getElementById("pessoa-setor").value,
                                     id_setor : document.getElementById("pessoa-id_setor").value
                                 }, function(data) {
