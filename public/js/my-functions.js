@@ -254,7 +254,7 @@ function modal(nome, id, callback) {
     if (callback === undefined) callback = function() {}
     if (id) document.getElementById(nome == "pessoasModal" ? "pessoa-id" : "id").value = id;
     Array.from(document.querySelectorAll("#" + nome + " input, #" + nome + " textarea")).forEach((el) => {
-        if (!id && el.name != "_token") el.value = "";
+        if (!id && el.name != "_token" && (!(nome == "pessoasModal" && el.name == "tipo"))) el.value = "";
         if (!$(el).hasClass("autocomplete")) $(el).trigger("keyup");
         anteriores[el.id] = el.value;
     });
