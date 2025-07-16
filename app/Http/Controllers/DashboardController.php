@@ -77,7 +77,7 @@ class DashboardController extends ControllerKX {
                                      ->on("ret.id_atribuicao", "atribuicoes.id");
                             }
                     )
-                    ->whereRaw("(ret.id_pessoa IS NULL OR (DATE_ADD(ret.data, INTERVAL atribuicoes.validade DAY) >= CURDATE()))")
+                    ->whereRaw("(ret.id_pessoa IS NULL OR (DATE_ADD(ret.data, INTERVAL atribuicoes.validade DAY) < CURDATE()))")
                     ->whereRaw($where)
                     ->where("atribuicoes.obrigatorio", 1)
                     ->where("produtos.lixeira", 0)
