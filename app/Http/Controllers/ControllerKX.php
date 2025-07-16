@@ -292,4 +292,16 @@ class ControllerKX extends Controller {
                 ->saldo
         );
     }
+
+    protected function produtos_visiveis($id_pessoa) {
+        return DB::table("produtos")
+                    ->select("produtos.id")
+                    ->join("maquinas_produtos AS mp", "mp.id_produto", "produtos.id")
+                    ->join("vestoque", "vestoque.id_mp", "mp.id")
+                    ->where("vestoque.qtd", ">", 0)
+                    ->whereRaw("mp.id_maquina IN (".join(",", $this->minhas_maquinas()->where("id_pessoa", $id_pessoa)->pluck("id_maquina")->toArray()).")")
+                    ->groupby("produtos.id")
+                    ->pluck("id")
+                    ->toArray();
+    }
 }

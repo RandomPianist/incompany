@@ -44,21 +44,7 @@ class HomeController extends ControllerKX {
                     if ($request->filter_col) $where .= " AND cria_usuario = 0";
                     break;
                 case "produtos":
-                    $pode_retornar = array();
-                    $mmtexto = $this->minhas_maquinas()
-                        ->where("id_pessoa", Auth::user()->id_pessoa)
-                        ->pluck("id_maquina")
-                        ->toArray();
-                    $pode_retornar = DB::table("produtos")
-                                        ->select("produtos.id")
-                                        ->join("maquinas_produtos AS mp", "mp.id_produto", "produtos.id")
-                                        ->join("vestoque", "vestoque.id_mp", "mp.id")
-                                        ->where("vestoque.qtd", ">", 0)
-                                        ->whereRaw("mp.id_maquina IN (".join(",", $mmtexto).")")
-                                        ->groupby("produtos.id")
-                                        ->pluck("id")
-                                        ->toArray();
-                    $where .= " AND produtos.id IN (".join(",", $pode_retornar).")";
+                    $where .= " AND produtos.id IN (".join(",", $this->produtos_visiveis(Auth::user()->id_pessoa)).")";
                     break;
             }
         }
