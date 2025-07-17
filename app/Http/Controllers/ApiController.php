@@ -279,7 +279,8 @@ class ApiController extends ControllerKX {
         );
     }
 
-    public function produtos_por_pessoa(Request $request) {
+    private function produtos_por_pessoa_main(Request $request, $grade) {
+        $id_pessoa = DB::table("pessoas")->where("cpf", $request->cpf)->value("id");
         $consulta = $this->info_atb("
             produtos.id,
             produtos.referencia,
@@ -293,8 +294,9 @@ class ApiController extends ControllerKX {
             (atribuicoes.qtd - IFNULL(ret.qtd, 0)) AS qtd,
             IFNULL(ret.ultima_retirada, '') AS ultima_retirada,
             DATE_FORMAT(IFNULL(ret.proxima_retirada, CURDATE()), '%d/%m/%Y') AS proxima_retirada
-        ", "pessoas.cpf = '".$request->cpf."'")->where(function($sql) use($request) {
-            $sql->whereRaw("produtos.id IN (".join(",", $this->produtos_visiveis(DB::table("pessoas")->where("cpf", $request->cpf)->value("id"))).")");
+        ", "pessoas.cpf = '".$request->cpf."'")->where(function($sql) use($request, $grade) {
+            $sql->whereRaw("produtos.id IN (".join(",", $this->produtos_visiveis(DB::table("pessoas")->where("cpf", $request->cpf)->value("id"))).")")
+                ->whereRaw("produtos.referencia ".($grade ? "IS NOT" : "IS")." NULL");
         })->get();
         $resultado = array();
         foreach ($consulta as $linha) {
@@ -304,9 +306,9 @@ class ApiController extends ControllerKX {
             }
             array_push($resultado, $linha);
         }
-        return json_encode(collect($resultado)->groupBy("referencia")->map(function($itens) use($request) {
+        return collect($resultado)->groupBy($grade ? "referencia" : "id")->map(function($itens) use($id_pessoa) {
             return [
-                "id_pessoa" => DB::table("pessoas")->where("cpf", $request->cpf)->value("id"),
+                "id_pessoa" => $id_pessoa,
                 "nome" => $itens[0]->nome,
                 "foto" => $itens[0]->foto,
                 "referencia" => $itens[0]->referencia,
@@ -315,10 +317,10 @@ class ApiController extends ControllerKX {
                 "ultima_retirada" => $itens[0]->ultima_retirada,
                 "proxima_retirada" => $itens[0]->proxima_retirada,
                 "obrigatorio" => $itens[0]->obrigatorio,
-                "tamanhos" => $itens->map(function($tamanho) use($request) {
+                "tamanhos" => $itens->map(function($tamanho) use($id_pessoa) {
                     return [
                         "id" => $tamanho->id,
-                        "id_pessoa" => DB::table("pessoas")->where("cpf", $request->cpf)->value("id"),
+                        "id_pessoa" => $id_pessoa,
                         "id_atribuicao" => $tamanho->id_atribuicao,
                         "selecionado" => false,
                         "codbar" => $tamanho->codbar,
@@ -326,7 +328,14 @@ class ApiController extends ControllerKX {
                     ];
                 })->values()->all()
             ];
-        })->sortBy("nome")->values()->all());
+        })->sortBy("nome")->values()->all();
+    }
+
+    public function produtos_por_pessoa(Request $request) {
+        return json_encode(array_merge(
+            $this->produtos_por_pessoa_main($request, true),
+            $this->produtos_por_pessoa_main($request, false)
+        ));
     }
 
     public function retirar(Request $request) {
