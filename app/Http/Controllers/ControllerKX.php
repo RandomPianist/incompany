@@ -12,6 +12,20 @@ use App\Models\Retiradas;
 use App\Models\MaquinasProdutos;
 
 class ControllerKX extends Controller {
+    private function retirada_consultar_main($id_atribuicao) {
+        $resultado = new \stdClass;
+        $resultado->qtd = floatval(Atribuicoes::find($id_atribuicao)->qtd);
+        $consulta = DB::table("retiradas")
+                        ->selectRaw("IFNULL(SUM(retiradas.qtd), 0) AS qtd")
+                        ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
+                        ->whereRaw("DATE_ADD(retiradas.data, INTERVAL atribuicoes.validade DAY) >= CURDATE()")
+                        ->where("atribuicoes.id", $id_atribuicao)
+                        ->whereNull("retiradas.id_supervisor")
+                        ->get();
+        $resultado->ja_retirados = sizeof($consulta) ? floatval($consulta[0]->qtd) : 0;
+        return $resultado;
+    }
+
     protected function empresa_consultar(Request $request) {
         return (!sizeof(
             DB::table("empresas")
@@ -135,15 +149,21 @@ class ControllerKX extends Controller {
     }
 
     protected function retirada_consultar($id_atribuicao, $qtd) {
+        $consulta = $this->retirada_consultar_main($id_atribuicao);
+        $qtd = $consulta->qtd;
+        $ja_retirados = $consulta->ja_retirados;
         $atribuicao = Atribuicoes::find($id_atribuicao);
-        $ja_retirados = DB::table("retiradas")
-                            ->selectRaw("IFNULL(SUM(retiradas.qtd), 0) AS qtd")
-                            ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
-                            ->whereRaw("DATE_ADD(retiradas.data, INTERVAL atribuicoes.validade DAY) >= CURDATE()")
-                            ->where("atribuicoes.id", $id_atribuicao)
-                            ->get();
-        if (floatval($atribuicao->qtd) < (floatval($qtd) + (sizeof($ja_retirados) ? floatval($ja_retirados[0]->qtd) : 0))) return 0;
-        return 1;
+        $consulta = $this->retirada_consultar_main(
+            DB::table("atribuicoes")
+                ->where("pessoa_ou_setor_chave", "S")
+                ->where("pessoa_ou_setor_valor", Pessoas::find($atribuicao->pessoa_ou_setor_chave)->id_setor)
+                ->where("produto_ou_referencia_chave", $atribuicao->produto_ou_referencia_chave)
+                ->where("produto_ou_referencia_valor", $atribuicao->produto_ou_referencia_valor)
+                ->value("id")
+        );
+        $qtd += $consulta->qtd;
+        $ja_retirados += $consulta->ja_retirados;
+        return $qtd < $ja_retirados ? 0 : 1;
     }
 
     protected function retirada_salvar($json) {
