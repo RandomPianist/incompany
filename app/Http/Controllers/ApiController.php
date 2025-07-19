@@ -295,6 +295,7 @@ class ApiController extends ControllerKX {
                                     DB::raw("DATE_ADD(MAX(retiradas.data), INTERVAL MIN(atribuicoes.validade) DAY) AS proxima_retirada")
                                 )
                                 ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
+                                ->whereNull("retiradas.id_supervisor")
                                 ->groupby("id_atribuicao"),
                         "ret", "ret.id_atribuicao", "atribuicoes.id")
                         ->where(function($sql) use($id_pessoa) {
