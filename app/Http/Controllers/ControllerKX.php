@@ -126,8 +126,8 @@ class ControllerKX extends Controller {
                     ON estoque.id_mp = mp.id
 
                 WHERE (log.tabela = 'valores' AND main.id IS NOT NULL)
-                OR (log.tabela = 'maquinas_produtos' AND mp.id IS NOT NULL)
-                OR (log.tabela = 'estoque' AND estoque.id IS NOT NULL)
+                   OR (log.tabela = 'maquinas_produtos' AND mp.id IS NOT NULL)
+                   OR (log.tabela = 'estoque' AND estoque.id IS NOT NULL)
             ";
         } else if ($tabela == "setores") {
             $query .= "
