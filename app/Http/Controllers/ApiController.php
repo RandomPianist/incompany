@@ -100,7 +100,7 @@ class ApiController extends ControllerKX {
             $id_atribuicao = 0;
             $id_atribuicao_arr = explode(",", $linha->id_atribuicao);
             for ($i = 0; $i < sizeof($id_atribuicao_arr); $i++) {
-                if (!$id_atribuicao && DB::table("atribuicoes")->where("id", $id_atribuicao_arr[$i])->value("pessoa_ou_setor_chave") == "P") $id_atribuicao = $id_atribuicao_arr[$i];
+                if (!$id_atribuicao && Atribuicoes::find($id_atribuicao_arr[$i])->pessoa_ou_setor_chave == "P") $id_atribuicao = $id_atribuicao_arr[$i];
             }
             if (!$id_atribuicao) $id_atribuicao = $id_atribuicao_arr[0];
             $linha->id_atribuicao = $id_atribuicao;

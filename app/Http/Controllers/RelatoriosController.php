@@ -7,6 +7,7 @@ use Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
+use App\Models\Empresas;
 
 class RelatoriosController extends ControllerKX {
     private function consultar_maquina(Request $request) {
@@ -138,10 +139,7 @@ class RelatoriosController extends ControllerKX {
                     }
                     $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
                     if ($request->id_pessoa) {
-                        $pessoa = DB::table("pessoas")
-                                        ->where("id", $request->id_pessoa)
-                                        ->value("nome");
-                        array_push($criterios, "Colaborador: ".$pessoa);
+                        array_push($criterios, "Colaborador: ".Pessoas::find($request->id_pessoa)->nome);
                         $sql->where("retiradas.id_pessoa", $request->id_pessoa);
                     } else if ($id_emp) {
                         $sql->where(function($query) use($id_emp) {
@@ -395,7 +393,7 @@ class RelatoriosController extends ControllerKX {
                     if ($id_emp) {
                         $sql->where(function($query) use($id_emp) {
                             $query->where(function($query2) use($id_emp) {
-                                $query2->whereIn("id_empresa", DB::table("empresas")->where("id", $id_emp)->pluck("id_matriz")->toArray());
+                                $query2->where("id_empresa", Empresas::find($id_emp)->id_matriz);
                             })->orWhere("id_empresa", $id_emp);
                         })->orWhere(function($query) use($id_emp) {
                             $query->whereIn("id_empresa", DB::table("empresas")->where("id_matriz", $id_emp)->pluck("id")->toArray());
@@ -458,7 +456,7 @@ class RelatoriosController extends ControllerKX {
                         array_push($criterios, $periodo);
                     }
                     if ($request->id_pessoa) {
-                        array_push($criterios, "Colaborador: ".DB::table("pessoas")->where("id", $request->id_pessoa)->value("nome"));
+                        array_push($criterios, "Colaborador: ".Pessoas::find($request->id_pessoa)->nome);
                         $sql->where("pessoas.id", $request->id_pessoa);
                     }
                     if ($request->id_setor) {
@@ -470,7 +468,7 @@ class RelatoriosController extends ControllerKX {
                             $query->where("empresas.id", $request->id_empresa)
                                 ->orWhere("empresas.id_matriz", $request->id_empresa);
                         });
-                        $empresa = DB::table("empresas")->where("id", $request->id_empresa)->value("razao_social");
+                        $empresa = Empresas::find($request->id_empresa)->razao_social;
                         if (sizeof(
                             DB::table("empresas")
                                 ->where("id_matriz", $request->id_empresa)
