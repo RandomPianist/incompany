@@ -313,15 +313,24 @@ class ControllerKX extends Controller {
         );
     }
 
-    protected function produtos_visiveis($id_pessoa) {
-        return DB::table("produtos")
-                    ->select("produtos.id")
-                    ->join("maquinas_produtos AS mp", "mp.id_produto", "produtos.id")
-                    ->join("vestoque", "vestoque.id_mp", "mp.id")
-                    ->where("vestoque.qtd", ">", 0)
-                    ->whereRaw("mp.id_maquina IN (".join(",", $this->minhas_maquinas()->where("id_pessoa", $id_pessoa)->pluck("id_maquina")->toArray()).")")
-                    ->groupby("produtos.id")
-                    ->pluck("id")
-                    ->toArray();
+    protected function joincomum($query) {
+        return $query->join("pessoas", function($join) {
+                $join->on(function($sql) {
+                    $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id")
+                        ->where("atribuicoes.pessoa_ou_setor_chave", "P");
+                })->orOn(function($sql) {
+                    $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id_setor")
+                        ->where("atribuicoes.pessoa_ou_setor_chave", "S");
+                });
+            })
+            ->join("produtos", function($join) {
+                $join->on(function($sql) {
+                    $sql->on("atribuicoes.produto_ou_referencia_valor", "produtos.cod_externo")
+                        ->where("atribuicoes.produto_ou_referencia_chave", "P");
+                })->orOn(function($sql) {
+                    $sql->on("atribuicoes.produto_ou_referencia_valor", "produtos.referencia")
+                        ->where("atribuicoes.produto_ou_referencia_chave", "R");
+                });
+            });
     }
 }

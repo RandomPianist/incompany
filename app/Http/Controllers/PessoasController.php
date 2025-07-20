@@ -234,8 +234,10 @@ class PessoasController extends ControllerKX {
 
     public function salvar(Request $request) {
         $linha = 0;
+        $setores = [$request->id_setor];
         if ($request->id) {
             $setor_ant = Pessoas::find($request->id)->id_setor;
+            array_push($setores, $setor_ant);
             if ($setor_ant != $request->id_setor) {
                 if ($this->cria_usuario($setor_ant)) $this->deletar_usuario($request->id);    
                 else if ($this->cria_usuario($request->id_setor)) $this->criar_usuario($request->id, $request);
@@ -279,6 +281,15 @@ class PessoasController extends ControllerKX {
             if (intval(Pessoas::find($modelo->id)->supervisor)) $tipo = "S";
             if (!intval(Pessoas::find($modelo->id)->id_empresa)) $tipo = "A";
         }
+
+        $lista = DB::table("pessoas")
+                    ->where("lixeira", 0)
+                    ->whereRaw("id_setor IN (".join(",", $setores).")")
+                    ->pluck("id")
+                    ->toArray();
+        DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
+        DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
+
         return redirect("/colaboradores/pagina/".$tipo);
     }
 

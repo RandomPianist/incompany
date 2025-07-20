@@ -63,6 +63,15 @@ class AtribuicoesController extends ControllerKX {
         $linha->id_empresa = Pessoas::find(Auth::user()->id_pessoa)->id_empresa;
         $linha->save();
         $this->log_inserir($request->id ? "E" : "C", "atribuicoes", $linha->id);
+        
+        $lista = DB::table("pessoas")
+                    ->where("lixeira", 0)
+                    ->where($request->pessoa_ou_setor_chave = "S" ? "id_setor" : "id", $request->pessoa_ou_setor_valor)
+                    ->pluck("id")
+                    ->toArray();
+        DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
+        DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
+        
         return 201;
     }
 

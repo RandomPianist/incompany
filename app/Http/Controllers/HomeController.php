@@ -44,7 +44,11 @@ class HomeController extends ControllerKX {
                     if ($request->filter_col) $where .= " AND cria_usuario = 0";
                     break;
                 case "produtos":
-                    $where .= " AND produtos.id IN (".join(",", $this->produtos_visiveis(Auth::user()->id_pessoa)).")";
+                    $where .= " AND produtos.id IN (
+                        SELECT id_produto
+                        FROM vprodutos
+                        WHERE id_pessoa = ".Auth::user()->id_pessoa.
+                    ")";
                     break;
             }
         }

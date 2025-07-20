@@ -9,26 +9,7 @@ use App\Models\Pessoas;
 
 class DashboardController extends ControllerKX {
     private function consulta($select, $where, $groupby, $maquinas) {
-        return DB::table("pessoas")
-                    ->select(DB::raw($select))
-                    ->join("atribuicoes", function($join) {
-                        $join->on(function($sql) {
-                            $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id")
-                                ->where("atribuicoes.pessoa_ou_setor_chave", "P");
-                        })->orOn(function($sql) {
-                            $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id_setor")
-                                ->where("atribuicoes.pessoa_ou_setor_chave", "S");
-                        });
-                    })
-                    ->join("produtos", function($join) {
-                        $join->on(function($sql) {
-                            $sql->on("atribuicoes.produto_ou_referencia_valor", "produtos.cod_externo")
-                                ->where("atribuicoes.produto_ou_referencia_chave", "P");
-                        })->orOn(function($sql) {
-                            $sql->on("atribuicoes.produto_ou_referencia_valor", "produtos.referencia")
-                                ->where("atribuicoes.produto_ou_referencia_chave", "R");
-                        });
-                    })
+        return $this->joincomum(DB::table("atribuicoes")->select(DB::raw($select)))
                     ->joinsub(
                         $maquinas,
                         "minhas_maquinas",
