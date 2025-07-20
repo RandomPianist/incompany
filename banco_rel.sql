@@ -220,6 +220,18 @@ CREATE VIEW vestoque AS (
 	GROUP BY id_mp
 );
 
+CREATE VIEW vmp AS (
+    SELECT
+        mp.id_produto,
+        mp.id_maquina,
+        IFNULL(vestoque.qtd, 0) AS qtd
+
+    FROM maquinas_produtos AS mp
+
+    LEFT JOIN vestoque
+        ON vestoque.id_mp = mp.id
+);
+
 CREATE VIEW vprodutos AS (
     SELECT
         minhas_empresas.id_pessoa,

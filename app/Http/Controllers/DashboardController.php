@@ -8,87 +8,232 @@ use Illuminate\Http\Request;
 use App\Models\Pessoas;
 
 class DashboardController extends ControllerKX {
-    private function consulta($select, $where, $groupby, $maquinas) {
-        return $this->joincomum(DB::table("atribuicoes")->select(DB::raw($select)))
-                    ->joinsub(
-                        $maquinas,
-                        "minhas_maquinas",
-                        "minhas_maquinas.id_pessoa",
-                        "pessoas.id"
-                    )
-                    ->joinsub(
-                        DB::table("maquinas_produtos AS mp")
-                            ->select(
-                                "mp.id_produto",
-                                "mp.id_maquina",
-                                DB::raw("
-                                    IFNULL(SUM(
-                                        CASE
-                                            WHEN estoque.es = 'E' THEN estoque.qtd
-                                            ELSE estoque.qtd * -1
-                                        END
-                                    ), 0) AS quantidade
-                                ")
-                            )
-                            ->leftjoin("estoque", "estoque.id_mp", "mp.id")
-                            ->groupby(
-                                "id_produto",
-                                "id_maquina"
-                            ),
-                        "estq",
-                        function($join) {
-                            $join->on("estq.id_maquina", "minhas_maquinas.id_maquina")
-                                 ->on("estq.id_produto", "produtos.id");
-                        }
-                    )
-                    ->leftjoinsub(
-                        DB::table("retiradas")
-                            ->select(
-                                "id_pessoa",
-                                "id_atribuicao",
-                                DB::raw("MAX(data) AS data")
-                            )
-                            ->groupby(
-                                "id_pessoa",
-                                "id_atribuicao"
-                            ),
-                            "ret",
-                            function($join) {
-                                $join->on("ret.id_pessoa", "pessoas.id")
-                                     ->on("ret.id_atribuicao", "atribuicoes.id");
-                            }
-                    )
-                    ->whereRaw("(ret.id_pessoa IS NULL OR (DATE_ADD(ret.data, INTERVAL atribuicoes.validade DAY) < CURDATE()))")
-                    ->whereRaw($where)
-                    ->where("atribuicoes.obrigatorio", 1)
-                    ->where("produtos.lixeira", 0)
-                    ->where("atribuicoes.lixeira", 0)
-                    ->groupby(DB::raw($groupby))
-                    ->havingRaw("SUM(estq.quantidade) > ?", [0])
-                    ->get();
-    }
+    private function retorna_atrasos($resumo, $where) {
+        $query = "SELECT";
+        $query .= $resumo ? "
+            pessoas.id,
+            pessoas.nome,
+            pessoas.foto,
+            dashboard.qtd AS total
 
-    private function produtos_main($id_pessoa, $maquinas) {
-        return $this->consulta("
+            FROM (
+                SELECT
+                    principal.id_pessoa,
+                    ROUND(SUM(LEAST(principal.qtd, estq.qtd, estqgrp.qtd))) AS qtd
+        " : "
             produtos.id,
-            atribuicoes.validade,
+            principal.validade,
             CASE
-                WHEN atribuicoes.qtd < SUM(estq.quantidade) THEN ROUND(atribuicoes.qtd)
-                ELSE ROUND(SUM(estq.quantidade))
+                WHEN principal.tipo = 'NORMAL' THEN ROUND(SUM(LEAST(principal.qtd, estq.qtd)))
+                ELSE ROUND(SUM(LEAST(principal.qtd, estqgrp.qtd)))
             END AS qtd,
             CASE
-                WHEN atribuicoes.produto_ou_referencia_chave = 'P' THEN produtos.descr
-                ELSE produtos.referencia
+                WHEN principal.tipo = 'NORMAL' THEN
+                    CASE
+                        WHEN principal.produto_ou_referencia_chave = 'P' THEN produtos.descr
+                        ELSE produtos.referencia
+                    END
+                ELSE
+                    CASE
+                        WHEN principal.produto_ou_referencia_chave = 'P' THEN produtosgrp.descr
+                        ELSE produtosgrp.referencia
+                    END
             END AS produto
-        ", "pessoas.id = ".$id_pessoa, "
-            produtos.id,
-            atribuicoes.validade,
-            atribuicoes.qtd,
-            CASE
-                WHEN atribuicoes.produto_ou_referencia_chave = 'P' THEN produtos.descr
-                ELSE produtos.referencia
-            END
-        ", $maquinas);
+        ";
+        $query .= "
+            FROM (
+                SELECT
+                    pessoas.id AS id_pessoa,
+                    atribuicoes.qtd,
+                    CONCAT('|', GROUP_CONCAT(DISTINCT produtos.id SEPARATOR '|'), '|') AS produtos,
+                    atbgrp.produtos AS produtosgrp
+        ";
+        if (!$resumo) {
+            $query .= ",
+                CASE
+                    WHEN (DATE_ADD(ret.data, INTERVAL atribuicoes.validade DAY) < CURDATE() OR ret.data IS NULL) THEN atribuicoes.validade
+                    ELSE atbgrp.validade
+                END AS validade,
+                CASE
+                    WHEN (DATE_ADD(ret.data, INTERVAL atribuicoes.validade DAY) < CURDATE() OR ret.data IS NULL) THEN 'NORMAL'
+                    ELSE 'ASSOCIADO'
+                END AS tipo,
+                atribuicoes.produto_ou_referencia_chave
+            ";
+        }
+        $query .= "
+            FROM pessoas
+
+            JOIN (
+                SELECT atribuicoes_associadas.*
+                FROM atribuicoes_associadas
+                ".($resumo ? "
+                    JOIN pessoas
+                        ON pessoas.id = atribuicoes_associadas.id_pessoa
+                    WHERE ".$where."
+                " : "WHERE id_pessoa = ".$id_pessoa)."
+            ) AS aa ON aa.id_pessoa = pessoas.id
+
+            JOIN atribuicoes
+                ON atribuicoes.id = aa.id_atribuicao
+                
+            JOIN produtos
+                ON (produtos.cod_externo = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'P')
+                    OR (produtos.referencia = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'R')
+                
+            LEFT JOIN (
+                SELECT
+                    id_atribuicao,
+                    id_pessoa,
+                    MAX(data) AS data
+
+                FROM retiradas
+
+                WHERE id_supervisor IS NULL
+
+                GROUP BY
+                    id_atribuicao,
+                    id_pessoa
+            ) AS ret ON ret.id_atribuicao = atribuicoes.id AND ret.id_pessoa = pessoas.id
+
+            LEFT JOIN (
+                SELECT
+                    tab.id_atribuicao,
+                    tab.id_pessoa,
+                    tab.associados,
+                    CONCAT('|', GROUP_CONCAT(DISTINCT produtos.id SEPARATOR '|'), '|') AS produtos,
+                    ".(!$resumo ? "MIN(atribuicoes.validade) AS validade," : "")."
+                    MIN(ret.proxima_retirada) AS proxima_retirada
+                
+                FROM (
+                    ".($resumo ? "SELECT aa.*" : "SELECT *")."
+                    ".($resumo ? "FROM atribuicoes_associadas AS aa" : "FROM atribuicoes_associadas")."
+                    ".($resumo ? "
+                        JOIN pessoas
+                            ON pessoas.id = aa.id_pessoa
+                        WHERE ".$where."
+                    " : "WHERE id_pessoa = ".$id_pessoa)."
+                ) AS tab
+                
+                JOIN atribuicoes
+                    ON REPLACE(tab.associados, CONCAT('|', atribuicoes.id, '|'), '') <> tab.associados
+                
+                JOIN produtos
+                    ON (produtos.cod_externo = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'P')
+                        OR (produtos.referencia = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'R')
+
+                LEFT JOIN (
+                    SELECT
+                        retiradas.id_atribuicao,
+                        retiradas.id_pessoa,
+                        DATE_ADD(MAX(retiradas.data), INTERVAL MIN(atribuicoes.validade) DAY) AS proxima_retirada
+
+                    FROM retiradas
+
+                    JOIN atribuicoes
+                        ON atribuicoes.id = retiradas.id_atribuicao
+                    
+                    WHERE retiradas.id_supervisor IS NULL
+
+                    GROUP BY
+                        retiradas.id_atribuicao,
+                        retiradas.id_pessoa
+                ) AS ret ON ret.id_atribuicao = atribuicoes.id AND ret.id_pessoa = tab.id_pessoa
+
+                GROUP BY
+                    tab.id_atribuicao,
+                    tab.id_pessoa,
+                    tab.associados
+            ) AS atbgrp ON atbgrp.id_atribuicao = atribuicoes.id AND atbgrp.id_pessoa = pessoas.id
+
+            WHERE atribuicoes.obrigatorio = 1 AND ((DATE_ADD(ret.data, INTERVAL atribuicoes.validade DAY) < CURDATE() OR ret.data IS NULL) OR (atbgrp.proxima_retirada IS NULL OR (atbgrp.proxima_retirada < CURDATE())))
+
+            GROUP BY
+                pessoas.id,
+                atribuicoes.qtd,
+                atbgrp.produtos
+        ";
+        if (!$resumo) {
+            $query .= ",
+                atribuicoes.validade,
+                ret.data,
+                atbgrp.validade,
+                atribuicoes.produto_ou_referencia_chave
+            ";
+        }
+        $query .= ") AS principal
+            JOIN (
+                SELECT
+                    minhas_empresas.id_pessoa,
+                    comodatos.id_maquina
+
+                FROM comodatos
+
+                JOIN (
+                    SELECT
+                        id AS id_pessoa,
+                        id_empresa
+                    
+                    FROM pessoas
+
+                    UNION ALL (
+                        SELECT
+                            pessoas.id AS id_pessoa,
+                            filiais.id AS id_empresa
+
+                        FROM pessoas
+
+                        JOIN empresas AS filiais
+                            ON filiais.id_matriz = pessoas.id_empresa
+                    )
+                ) AS minhas_empresas ON minhas_empresas.id_empresa = comodatos.id_empresa
+
+                WHERE ((DATE(CONCAT(YEAR(CURDATE()), '-', MONTH(CURDATE()), '-01')) BETWEEN comodatos.inicio AND comodatos.fim) OR (CURDATE() BETWEEN comodatos.inicio AND comodatos.fim))
+            ) AS minhas_maquinas ON minhas_maquinas.id_pessoa = principal.id_pessoa
+
+            JOIN vmp AS estq
+                ON estq.id_maquina = minhas_maquinas.id_maquina AND REPLACE(principal.produtos, CONCAT('|', estq.id_produto, '|'), '') <> principal.produtos
+        ";
+        if (!$resumo) {
+            $query .= "
+                JOIN produtos
+                    ON produtos.id = estq.id_produto
+            ";
+        }
+        $query .= "
+            LEFT JOIN vmp AS estqgrp
+                ON estqgrp.id_maquina = minhas_maquinas.id_maquina AND REPLACE(principal.produtosgrp, CONCAT('|', estqgrp.id_produto, '|'), '') <> principal.produtosgrp
+        ";
+        $query .= !$resumo ? "
+            LEFT JOIN produtos AS produtosgrp
+                ON produtosgrp.id = estqgrp.id_produto
+
+            GROUP BY
+                produtos.id,
+                principal.validade,
+                principal.tipo,
+                CASE
+                    WHEN principal.tipo = 'NORMAL' THEN
+                        CASE
+                            WHEN principal.produto_ou_referencia_chave = 'P' THEN produtos.descr
+                            ELSE produtos.referencia
+                        END
+                    ELSE
+                        CASE
+                            WHEN principal.produto_ou_referencia_chave = 'P' THEN produtosgrp.descr
+                            ELSE produtosgrp.referencia
+                        END
+                END
+        " : "
+                GROUP BY principal.id_pessoa
+            ) AS dashboard
+
+            JOIN pessoas
+                ON pessoas.id = dashboard.id_pessoa
+                
+            ORDER BY dashboard.qtd DESC
+        ";
+        return DB::select(DB::raw($query));
     }
 
     private function ultimas_retiradas_main($where, $inicio = "", $fim = "") {
@@ -172,27 +317,10 @@ class DashboardController extends ControllerKX {
         })->values()->all();
     }
 
-    private function retiradas_em_atraso_main($where, $maquinas) {
-        $atrasos = $this->consulta("
-            pessoas.id,
-            pessoas.nome,
-            pessoas.foto,
-            ROUND(SUM(atribuicoes.qtd)) AS total
-        ", $where, "
-            pessoas.id,
-            pessoas.nome,
-            pessoas.foto 
-        ", $maquinas);
-        foreach ($atrasos as $pessoa) {
-            $total = 0;
-            $aux = $this->produtos_main($pessoa->id, $maquinas);
-            if ($aux !== null) {
-                foreach ($aux as $linha) $total += $linha->qtd;
-                $pessoa->total = number_format($total, 0);
-            }
-            $pessoa->total = number_format($pessoa->total, 0);
-            $pessoa->foto = asset("storage/".$pessoa->foto);
-        }
+    private function retiradas_em_atraso_main($where) {
+        $atrasos = $this->retorna_atrasos(true, $where);
+
+        foreach ($atrasos as $pessoa) $pessoa->foto = asset("storage/".$pessoa->foto);
         return $atrasos;
     }
 
@@ -208,10 +336,6 @@ class DashboardController extends ControllerKX {
         $resultado = new \stdClass;
 
         $where = $this->obter_where(Auth::user()->id_pessoa);
-
-        $maquinas = $this->minhas_maquinas($inicio, $fim);
-        
-        $atrasos = $this->retiradas_em_atraso_main($where, $maquinas);
 
         $retiradas_por_setor = new \stdClass;
         $aux = $this->retiradas_por_setor_main($where, $inicio, $fim);
@@ -249,7 +373,7 @@ class DashboardController extends ControllerKX {
                     ->get();
         foreach ($ranking as $pessoa) $pessoa->foto = asset("storage/".$pessoa->foto);
 
-        $resultado->atrasos = $atrasos;
+        $resultado->atrasos = $this->retiradas_em_atraso_main($where);
         $resultado->ultimasRetiradas = $this->ultimas_retiradas_main($where, $inicio, $fim);
         $resultado->retiradasPorSetor = $retiradas_por_setor;
         $resultado->ranking = $ranking;
@@ -260,10 +384,33 @@ class DashboardController extends ControllerKX {
                                 )
                                 ->whereIn(
                                     "id",
-                                    $maquinas
-                                         ->where("id_pessoa", Auth::user()->id_pessoa)
-                                         ->pluck("id_maquina")
-                                         ->toArray()
+                                    DB::table("comodatos")
+                                        ->select(
+                                            "minhas_empresas.id_pessoa",
+                                            "comodatos.id_maquina"
+                                        )
+                                        ->joinsub(
+                                            DB::table("pessoas")
+                                                ->select(
+                                                    "id AS id_pessoa",
+                                                    "id_empresa"
+                                                )
+                                                ->unionAll(
+                                                    DB::table("pessoas")
+                                                        ->select(
+                                                            "pessoas.id AS id_pessoa",
+                                                            "filiais.id AS id_empresa"
+                                                        )
+                                                        ->join("empresas AS filiais", "filiais.id_matriz", "pessoas.id_empresa")
+                                                ),
+                                            "minhas_empresas",
+                                            "minhas_empresas.id_empresa",
+                                            "comodatos.id_empresa"
+                                        )
+                                        ->whereRaw("(('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim) OR ('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim))")
+                                        ->where("id_pessoa", Auth::user()->id_pessoa)
+                                        ->pluck("id_maquina")
+                                        ->toArray()
                                 )
                                 ->get();
         return json_encode($resultado);
@@ -390,7 +537,7 @@ class DashboardController extends ControllerKX {
 
     // API
     public function produtos_em_atraso($id_pessoa) {
-        return json_encode($this->produtos_main($id_pessoa, $this->minhas_maquinas()));
+        return json_encode($this->retorna_atrasos(false, $id_pessoa));
     }
 
     public function ultimas_retiradas($id_pessoa) {
@@ -402,6 +549,6 @@ class DashboardController extends ControllerKX {
     }
 
     public function retiradas_em_atraso($id_pessoa) {
-        return json_encode($this->retiradas_em_atraso_main($this->obter_where($id_pessoa), $this->minhas_maquinas()));
+        return json_encode($this->retiradas_em_atraso_main($this->obter_where($id_pessoa)));
     }
 }
