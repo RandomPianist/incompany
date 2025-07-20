@@ -237,8 +237,8 @@ class PessoasController extends ControllerKX {
         $setores = [$request->id_setor];
         if ($request->id) {
             $setor_ant = Pessoas::find($request->id)->id_setor;
-            array_push($setores, $setor_ant);
             if ($setor_ant != $request->id_setor) {
+                array_push($setores, $setor_ant);
                 if ($this->cria_usuario($setor_ant)) $this->deletar_usuario($request->id);    
                 else if ($this->cria_usuario($request->id_setor)) $this->criar_usuario($request->id, $request);
             } else if (
