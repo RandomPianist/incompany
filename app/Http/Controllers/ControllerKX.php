@@ -283,25 +283,4 @@ class ControllerKX extends Controller {
                 ->saldo
         );
     }
-
-    protected function joincomum($query) {
-        return $query->join("pessoas", function($join) {
-                $join->on(function($sql) {
-                    $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id")
-                        ->where("atribuicoes.pessoa_ou_setor_chave", "P");
-                })->orOn(function($sql) {
-                    $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id_setor")
-                        ->where("atribuicoes.pessoa_ou_setor_chave", "S");
-                });
-            })
-            ->join("produtos", function($join) {
-                $join->on(function($sql) {
-                    $sql->on("atribuicoes.produto_ou_referencia_valor", "produtos.cod_externo")
-                        ->where("atribuicoes.produto_ou_referencia_chave", "P");
-                })->orOn(function($sql) {
-                    $sql->on("atribuicoes.produto_ou_referencia_valor", "produtos.referencia")
-                        ->where("atribuicoes.produto_ou_referencia_chave", "R");
-                });
-            });
-    }
 }
