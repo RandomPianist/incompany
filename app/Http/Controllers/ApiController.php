@@ -16,144 +16,142 @@ use App\Models\Log;
 
 class ApiController extends ControllerKX {
     private function info_atb($id_pessoa, $obrigatorios, $grade) {
-        $joincomum = "
-            JOIN produtos
-                ON (produtos.cod_externo = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'P')
-                    OR (produtos.referencia = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'R')
-
-            JOIN pessoas
-                ON (pessoas.id = atribuicoes.pessoa_ou_setor_valor AND atribuicoes.pessoa_ou_setor_chave = 'P')
-                    OR (pessoas.id_setor = atribuicoes.pessoa_ou_setor_valor AND atribuicoes.pessoa_ou_setor_chave = 'S')
-        ";
-
-        $query = "SELECT ".($obrigatorios ? "
-            atribuicoes.produto_ou_referencia_chave,
-            CASE
-                WHEN atribuicoes.produto_ou_referencia_chave = 'R' THEN produtos.referencia
-                ELSE produtos.id
-            END AS chave,
-            CASE
-                WHEN atribuicoes.produto_ou_referencia_chave = 'R' THEN produtos.referencia
-                ELSE produtos.descr
-            END AS nome
-        " : "
-            atribuicoes.id AS id_atribuicao,
-            atribuicoes.obrigatorio,
-            produtos.id,
-            produtos.referencia,
-            produtos.descr AS nome,
-            produtos.detalhes,
-            produtos.cod_externo AS cod_bar,
-            IFNULL(produtos.tamanho, '') AS tamanho,
-            IFNULL(produtos.foto, '') AS foto,
-            (atribuicoes.qtd - IFNULL(ret.qtd, 0)) AS qtd,
-            IFNULL(DATE_FORMAT(ret.ultima_retirada, '%d/%m/%Y'), '') AS ultima_retirada,
-            DATE_FORMAT(
-                CASE
-                    WHEN (atribuicoes.qtd - IFNULL(ret.qtd, 0)) > 0 THEN CURDATE()
-                    ELSE ret.proxima_retirada
-                END,
-                '%d/%m/%Y'
-            ) AS proxima_retirada,
-            atbgrp.qtd AS qtdgrp,
-            atbgrp.proxima_retirada AS proxima_retirada_grp,
-            atbgrp.ultima_retirada AS ultima_retirada_grp
-        ")."
-            FROM atribuicoes
-
-            ".$joincomum."
-
-            JOIN (
-                SELECT id_atribuicao FROM atribuicoes_associadas WHERE id_pessoa = ".$id_pessoa."
-            ) AS lim1 ON lim1.id_atribuicao = atribuicoes.id
-
-            JOIN (
-                SELECT id_produto FROM vprodutos WHERE id_pessoa = ".$id_pessoa."
-            ) AS lim2 ON lim2.id_produto = produtos.id
-
-            LEFT JOIN (
-                SELECT
-                    retiradas.id_atribuicao,
-                    retiradas.id_pessoa,
-                    SUM(retiradas.qtd) AS qtd,
-                    ".(!$obrigatorios ? "MAX(retiradas.data) AS ultima_retirada," : "")."
-                    DATE_ADD(MAX(retiradas.data), INTERVAL atribuicoes.validade DAY) AS proxima_retirada
-
-                FROM retiradas
-
-                JOIN atribuicoes
-                    ON atribuicoes.id = retiradas.id_atribuicao
-
-                WHERE retiradas.id_supervisor IS NULL
-
-                GROUP BY
-                    retiradas.id_atribuicao,
-                    retiradas.id_pessoa,
-                    atribuicoes.validade
-            ) AS ret ON ret.id_atribuicao = atribuicoes.id AND ret.id_pessoa = pessoas.id
-
-            LEFT JOIN (
-                SELECT
-                    tab.id_atribuicao,
-                    (MIN(atribuicoes.qtd) - IFNULL(SUM(ret.qtd), 0)) AS qtd,
-                    ".(!$obrigatorios ? "IFNULL(DATE_FORMAT(MAX(ret.ultima_retirada), '%d/%m/%Y'), '') AS ultima_retirada," : "")."
-                    ".(!$obrigatorios ? "DATE_FORMAT(" : "")."
-                        CASE
-                            WHEN (MIN(atribuicoes.qtd) - IFNULL(SUM(ret.qtd), 0)) > 0 THEN CURDATE()
-                            ELSE MIN(ret.proxima_retirada)
-                        END
-                    ".(!$obrigatorios ? ",'%d/%m/%Y')" : "")."
-                    AS proxima_retirada
-                
-                FROM (
-                    SELECT * FROM atribuicoes_associadas WHERE id_pessoa = ".$id_pessoa."
-                ) AS tab
-
-                JOIN atribuicoes
-                    ON REPLACE(tab.associados, CONCAT('|', atribuicoes.id, '|'), '') <> tab.associados
-
-                ".$joincomum."
-
-                JOIN (
-                    SELECT id_produto FROM vprodutos WHERE id_pessoa = ".$id_pessoa."
-                ) AS lim ON lim.id_produto = produtos.id
-
-                LEFT JOIN (
-                    SELECT
-                        retiradas.id_atribuicao,
-                        retiradas.id_pessoa,
-                        SUM(retiradas.qtd) AS qtd,
-                        ".(!$obrigatorios ? "MAX(retiradas.data) AS ultima_retirada," : "")."
-                        DATE_ADD(MAX(retiradas.data), INTERVAL MIN(atribuicoes.validade) DAY) AS proxima_retirada
-
-                    FROM retiradas
-
-                    JOIN atribuicoes
-                        ON atribuicoes.id = retiradas.id_atribuicao
-
-                    WHERE retiradas.id_supervisor IS NULL
-
-                    GROUP BY
-                        retiradas.id_atribuicao,
-                        retiradas.id_pessoa
-                ) AS ret ON ret.id_atribuicao = atribuicoes.id AND ret.id_pessoa = pessoas.id
-
-                ".(!$obrigatorios ? "WHERE produtos.referencia IS ".($grade ? "NOT" : "")." NULL" : "")."
-
-                GROUP BY tab.id_atribuicao
-            ) AS atbgrp ON atbgrp.id_atribuicao = atribuicoes.id
-
-            ".(!$obrigatorios ? "WHERE produtos.referencia IS ".($grade ? "NOT" : "")." NULL" : "
-                (atbgrp.proxima_retirada <= CURDATE() OR (
-                    CASE
-                        WHEN (atribuicoes.qtd - IFNULL(ret.qtd, 0)) > 0 THEN CURDATE()
-                        ELSE ret.proxima_retirada
-                    END
-                ) <= CURDATE()) AND atribuicoes.obrigatorio = 1"
-            )."
-
-            GROUP BY
-                ".(!$obrigatorios ? "
+        return $this->joincomum(
+                    DB::table("atribuicoes")
+                        ->select(DB::raw($obrigatorios ? "
+                            atribuicoes.produto_ou_referencia_chave,
+                            CASE
+                                WHEN atribuicoes.produto_ou_referencia_chave = 'R' THEN produtos.referencia
+                                ELSE produtos.id
+                            END AS chave,
+                            CASE
+                                WHEN atribuicoes.produto_ou_referencia_chave = 'R' THEN produtos.referencia
+                                ELSE produtos.descr
+                            END AS nome
+                        " : "
+                            atribuicoes.id AS id_atribuicao,
+                            atribuicoes.obrigatorio,
+                            produtos.id,
+                            produtos.referencia,
+                            produtos.descr AS nome,
+                            produtos.detalhes,
+                            produtos.cod_externo AS cod_bar,
+                            IFNULL(produtos.tamanho, '') AS tamanho,
+                            IFNULL(produtos.foto, '') AS foto,
+                            (atribuicoes.qtd - IFNULL(ret.qtd, 0)) AS qtd,
+                            IFNULL(DATE_FORMAT(ret.ultima_retirada, '%d/%m/%Y'), '') AS ultima_retirada,
+                            DATE_FORMAT(
+                                CASE
+                                    WHEN (atribuicoes.qtd - IFNULL(ret.qtd, 0)) > 0 THEN CURDATE()
+                                    ELSE ret.proxima_retirada
+                                END,
+                                '%d/%m/%Y'
+                            ) AS proxima_retirada,
+                            atbgrp.qtd AS qtdgrp,
+                            atbgrp.proxima_retirada AS proxima_retirada_grp,
+                            atbgrp.ultima_retirada AS ultima_retirada_grp
+                        "))
+                )->joinSub(
+                    DB::table("atribuicoes_associadas")
+                        ->select("id_atribuicao")
+                        ->where("id_pessoa", $id_pessoa),
+                    "lim1",
+                    "lim1.id_atribuicao",
+                    "atribuicoes.id"
+                )->joinSub(
+                    DB::table("vprodutos")
+                        ->select("id_produto")
+                        ->where("id_pessoa", $id_pessoa),
+                    "lim2",
+                    "lim2.id_produto",
+                    "produtos.id"
+                )->leftjoinSub(
+                    DB::table("retiradas")
+                        ->select(DB::raw("
+                            retiradas.id_atribuicao,
+                            retiradas.id_pessoa,
+                            SUM(retiradas.qtd) AS qtd,
+                            ".(!$obrigatorios ? "MAX(retiradas.data) AS ultima_retirada," : "")."
+                            DATE_ADD(MAX(retiradas.data), INTERVAL atribuicoes.validade DAY) AS proxima_retirada
+                        "))
+                        ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
+                        ->whereNull("retiradas.id_supervisor")
+                        ->groupby(
+                            "retiradas.id_atribuicao",
+                            "retiradas.id_pessoa",
+                            "atribuicoes.validade"
+                        ),
+                    "ret",
+                    function($join) {
+                        $join->on("ret.id_pessoa", "pessoas.id")
+                                ->on("ret.id_atribuicao", "atribuicoes.id");
+                    }
+                )->leftjoinSub(
+                        $this->joincomum(
+                            DB::table(DB::raw("(
+                                SELECT * FROM atribuicoes_associadas WHERE id_pessoa = ".$id_pessoa."
+                            ) AS tab"))
+                                ->select(DB::raw("
+                                    tab.id_atribuicao,
+                                    (MIN(atribuicoes.qtd) - IFNULL(SUM(ret.qtd), 0)) AS qtd,
+                                    ".(!$obrigatorios ? "IFNULL(DATE_FORMAT(MAX(ret.ultima_retirada), '%d/%m/%Y'), '') AS ultima_retirada," : "")."
+                                    ".(!$obrigatorios ? "DATE_FORMAT(" : "")."
+                                        CASE
+                                            WHEN (MIN(atribuicoes.qtd) - IFNULL(SUM(ret.qtd), 0)) > 0 THEN CURDATE()
+                                            ELSE MIN(ret.proxima_retirada)
+                                        END
+                                    ".(!$obrigatorios ? ",'%d/%m/%Y')" : "")."
+                                    AS proxima_retirada
+                                "))
+                                ->join("atribuicoes", function ($join) {
+                                    $join->on(DB::raw("REPLACE(tab.associados, CONCAT('|', atribuicoes.id, '|'), '')"), "<>", DB::raw("tab.associados"));
+                                })
+                        )->joinSub(
+                            DB::table("vprodutos")
+                                ->select("id_produto")
+                                ->where("id_pessoa", $id_pessoa),
+                            "lim",
+                            "lim.id_produto",
+                            "produtos.id"
+                        )->leftjoinSub(
+                            DB::table("retiradas")
+                                ->select(DB::raw("
+                                    retiradas.id_atribuicao,
+                                    retiradas.id_pessoa,
+                                    SUM(retiradas.qtd) AS qtd,
+                                    ".(!$obrigatorios ? "MAX(retiradas.data) AS ultima_retirada," : "")."
+                                    DATE_ADD(MAX(retiradas.data), INTERVAL MIN(atribuicoes.validade) DAY) AS proxima_retirada
+                                "))
+                                ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
+                                ->whereNull("retiradas.id_supervisor")
+                                ->groupby(
+                                    "retiradas.id_atribuicao",
+                                    "retiradas.id_pessoa"
+                                ),
+                            "ret",
+                            function($join) {
+                                $join->on("ret.id_pessoa", "pessoas.id")
+                                    ->on("ret.id_atribuicao", "atribuicoes.id");
+                            }
+                        )
+                        ->groupby("tab.id_atribuicao"),
+                    "atbgrp",
+                    "atbgrp.id_atribuicao",
+                    "atribuicoes.id"
+                )->where(function($sql) use($obrigatorios, $grade) {
+                    if ($obrigatorios) {
+                        $sql->where("atribuicoes.obrigatorio", 1);
+                        $sql->whereRaw("
+                            atbgrp.proxima_retirada <= CURDATE() OR (
+                                CASE
+                                    WHEN (atribuicoes.qtd - IFNULL(ret.qtd, 0)) > 0 THEN CURDATE()
+                                    ELSE ret.proxima_retirada
+                                END
+                            ) <= CURDATE()
+                        ");
+                    } else if ($grade) $sql->whereNotNull("produtos.referencia");
+                    else $sql->whereNull("produtos.referencia");
+                })->groupby(DB::raw(!$obrigatorios ? "
                     atribuicoes.id,
                     atribuicoes.obrigatorio,
                     produtos.id,
@@ -175,9 +173,7 @@ class ApiController extends ControllerKX {
                     produtos.id,
                     produtos.descr,
                     produtos.referencia
-                ");
-
-        return DB::select(DB::raw($query));
+                "))->get();
     }
 
     private function produtos_por_pessoa_main($id_pessoa, $grade) {
