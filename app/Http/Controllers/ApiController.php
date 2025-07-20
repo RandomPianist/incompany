@@ -95,11 +95,11 @@ class ApiController extends ControllerKX {
             LEFT JOIN (
                 SELECT
                     tab.id_atribuicao,
-                    (SUM(atribuicoes.qtd) - IFNULL(SUM(ret.qtd), 0)) AS qtd,
+                    (MIN(atribuicoes.qtd) - IFNULL(SUM(ret.qtd), 0)) AS qtd,
                     ".(!$obrigatorios ? "IFNULL(DATE_FORMAT(MAX(ret.ultima_retirada), '%d/%m/%Y'), '') AS ultima_retirada," : "")."
                     ".(!$obrigatorios ? "DATE_FORMAT(" : "")."
                         CASE
-                            WHEN (SUM(atribuicoes.qtd) - IFNULL(SUM(ret.qtd), 0)) > 0 THEN CURDATE()
+                            WHEN (MIN(atribuicoes.qtd) - IFNULL(SUM(ret.qtd), 0)) > 0 THEN CURDATE()
                             ELSE MIN(ret.proxima_retirada)
                         END
                     ".(!$obrigatorios ? ",'%d/%m/%Y')" : "")."
