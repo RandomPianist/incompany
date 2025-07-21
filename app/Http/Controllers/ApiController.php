@@ -220,14 +220,14 @@ class ApiController extends ControllerKX {
                 "ultima_retirada" => $itens[0]->ultima_retirada,
                 "proxima_retirada" => $itens[0]->proxima_retirada,
                 "obrigatorio" => $itens[0]->obrigatorio,
-                "tamanhos" => $itens->map(function($tamanho) use($id_pessoa) {
+                "tamanhos" => $itens->groupBy("id")->map(function($tamanho) use($id_pessoa) {
                     return [
-                        "id" => $tamanho->id,
+                        "id" => $tamanho[0]->id,
                         "id_pessoa" => $id_pessoa,
-                        "id_atribuicao" => $tamanho->id_atribuicao,
+                        "id_atribuicao" => $tamanho[0]->id_atribuicao,
                         "selecionado" => false,
-                        "codbar" => $tamanho->codbar,
-                        "numero" => $tamanho->tamanho ? $tamanho->tamanho : "UN"
+                        "codbar" => $tamanho[0]->codbar,
+                        "numero" => $tamanho[0]->tamanho ? $tamanho[0]->tamanho : "UN"
                     ];
                 })->values()->all()
             ];
