@@ -100,7 +100,7 @@
     </style>
 
     <script type="text/javascript" language="JavaScript">
-        async function gerarSelect() {
+        async function gerarSelect(callback) {
             const selectElement = document.getElementById('dashboard-select');
             const meses = [
                 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -137,6 +137,7 @@
                 } else i = 12;
             }
             selectElement.appendChild(option);
+            callback();
         }
 
         function getMesSelecionado() {
@@ -195,7 +196,7 @@
             const mesSelecionado = dataInicial.split("-")[1] - 1;
             const cardRetiradaAtrasoElement = document.getElementById("card-retirada-atraso");
             const cardUltimasRetiradasElement = document.getElementById("card-ult-retirada");
-
+        
             if(mesAtual !== mesSelecionado) {
                 cardRetiradaAtrasoElement.style.display = "none";
                 cardUltimasRetiradasElement.style.display = "none";
@@ -395,8 +396,9 @@
         }
 
         function listar() {
-            gerarSelect();
-            getDadosCards();
+            gerarSelect(function() {
+                getDadosCards();
+            });
         }
 
         function gerarGraficoRetiradasCentro(retiradasPorSetor) {
