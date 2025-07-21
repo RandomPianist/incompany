@@ -8,6 +8,18 @@ use Illuminate\Http\Request;
 use App\Models\Pessoas;
 
 class DashboardController extends ControllerKX {
+    private function formatar_data($data) {
+        $arr = explode("-", $data);
+        $resultado = $arr[0];
+        for ($i = 1; $i < sizeof($arr); $i++) {
+            $aux = "";
+            if (strlen($arr[$i]) == 1) $aux = "0";
+            $aux .= $arr[$i];
+            $resultado .= "-".$aux;
+        }
+        return $resultado;
+    }
+
     private function retorna_atrasos($resumo, $where) {
         $query = "SELECT";
         $query .= $resumo ? "
@@ -337,8 +349,8 @@ class DashboardController extends ControllerKX {
     public function dados(Request $request) {
         $inicio = date("Y-m")."-01";
         $fim = date("Y-m-d");
-        if (isset($request->inicio)) $inicio = $request->inicio;
-        if (isset($request->fim)) $fim = $request->fim;
+        if (isset($request->inicio)) $inicio = $this->formatar_data($request->inicio);
+        if (isset($request->fim)) $fim = $this->formatar_data($request->fim);
         $resultado = new \stdClass;
 
         $where = $this->obter_where(Auth::user()->id_pessoa);
@@ -378,9 +390,9 @@ class DashboardController extends ControllerKX {
                     ->orderby("pessoas.nome")
                     ->get();
         foreach ($ranking as $pessoa) $pessoa->foto = asset("storage/".$pessoa->foto);
-
-        $resultado->atrasos = $this->retiradas_em_atraso_main($where);
-        $resultado->ultimasRetiradas = $this->ultimas_retiradas_main($where, $inicio, $fim);
+        
+        $resultado->atrasos = $inicio == date("Y-m")."-01" ? $this->retiradas_em_atraso_main($where) : [];
+        $resultado->ultimasRetiradas = $inicio == date("Y-m")."-01" ? $this->ultimas_retiradas_main($where, $inicio, $fim) : [];
         $resultado->retiradasPorSetor = $retiradas_por_setor;
         $resultado->ranking = $ranking;
         $resultado->maquinas = DB::table("valores")
