@@ -93,6 +93,15 @@
             margin-top: calc(25% - 60px)
         }
 
+        .header-card-dashboard {
+            position: sticky;
+            top: 0; 
+            background-color: white; 
+            z-index: 2; 
+            padding: 10px 0; 
+            border-bottom: 1px solid #eee; 
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -173,6 +182,7 @@
 
         async function getDadosCards() {
             document.querySelector(".loader-container").classList.remove("d-none");
+            document.querySelector(".header-card-dashboard").classList.add("d-none");
 
             const dataSelecionada = getMesSelecionado();
             const dataInicial = dataSelecionada.split(" ")[0];
@@ -393,6 +403,7 @@
             cardMinhasMaquinas.innerHTML += minhasMaquinasHTML;
 
             document.querySelector(".loader-container").classList.add("d-none");
+            document.querySelector(".header-card-dashboard").classList.remove("d-none");
         }
 
         function listar() {
