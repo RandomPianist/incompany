@@ -128,13 +128,14 @@ class ProdutosController extends ControllerKX {
         $linha->save();
         $this->log_inserir("D", "produtos", $linha->id);
         $lista = array();
+        $prod = DB::table("produtos")->where("id", $request->id);
         $consulta = DB::table("atribuicoes")
                         ->where(function($sql) use ($request) {
-                            $sql->whereIn("produto_ou_referencia_valor", DB::table("produtos")->where("id", $request->id)->pluck("cod_externo")->toArray())
+                            $sql->whereIn("produto_ou_referencia_valor", $prod->pluck("cod_externo")->toArray())
                                 ->where("produto_ou_referencia_chave", "P");
                         })
                         ->orWhere(function($sql) use ($request) {
-                            $sql->whereIn("produto_ou_referencia_valor", DB::table("produtos")->where("id", $request->id)->pluck("referencia")->toArray())
+                            $sql->whereIn("produto_ou_referencia_valor", $prod->pluck("referencia")->toArray())
                                 ->where("produto_ou_referencia_chave", "R");
                         })
                         ->pluck("id");

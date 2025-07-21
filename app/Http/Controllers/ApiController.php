@@ -56,7 +56,7 @@ class ApiController extends ControllerKX {
                             produtos.referencia,
                             produtos.descr AS nome,
                             produtos.detalhes,
-                            produtos.cod_externo AS cod_bar,
+                            produtos.cod_externo AS codbar,
                             IFNULL(produtos.tamanho, '') AS tamanho,
                             IFNULL(produtos.foto, '') AS foto,
                             (atribuicoes.qtd - IFNULL(ret.qtd, 0)) AS qtd,
@@ -200,6 +200,7 @@ class ApiController extends ControllerKX {
     private function produtos_por_pessoa_main($id_pessoa, $grade) {
         $consulta = $this->info_atb($id_pessoa, false, $grade);
 
+        $resultado = array();
         foreach ($consulta as $linha) {
             if ($linha->foto) {
                 $foto = explode("/", $linha->foto);

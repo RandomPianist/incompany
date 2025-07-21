@@ -71,7 +71,7 @@ class DashboardController extends ControllerKX {
                     JOIN pessoas
                         ON pessoas.id = atribuicoes_associadas.id_pessoa
                     WHERE ".$where."
-                " : "WHERE id_pessoa = ".$id_pessoa)."
+                " : "WHERE id_pessoa = ".$where)."
             ) AS aa ON aa.id_pessoa = pessoas.id
 
             JOIN atribuicoes
@@ -112,7 +112,7 @@ class DashboardController extends ControllerKX {
                         JOIN pessoas
                             ON pessoas.id = aa.id_pessoa
                         WHERE ".$where."
-                    " : "WHERE id_pessoa = ".$id_pessoa)."
+                    " : "WHERE id_pessoa = ".$where)."
                 ) AS tab
                 
                 JOIN atribuicoes
@@ -224,6 +224,12 @@ class DashboardController extends ControllerKX {
                             ELSE produtosgrp.referencia
                         END
                 END
+
+            HAVING
+                CASE
+                    WHEN principal.tipo = 'NORMAL' THEN ROUND(SUM(LEAST(principal.qtd, estq.qtd)))
+                    ELSE ROUND(SUM(LEAST(principal.qtd, estqgrp.qtd)))
+                END > 0
         " : "
                 GROUP BY principal.id_pessoa
             ) AS dashboard
