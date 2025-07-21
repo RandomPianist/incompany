@@ -66,9 +66,41 @@
             </div>
         </div>
     </div>
+    
+    <div class = "loader-container">
+        <div class = "loader"></div>
+    </div>
+
+    <style>
+        .loader-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            background: #DDD
+        }
+
+        .loader {
+            border: 8px solid #f3f3f3; /* Light grey */
+            border-top: 8px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 1.5s linear infinite;
+            margin: auto;
+            margin-top: calc(25% - 60px)
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 
     <script type="text/javascript" language="JavaScript">
-        function gerarSelect() {
+        async function gerarSelect() {
             const selectElement = document.getElementById('dashboard-select');
             const meses = [
                 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -78,9 +110,9 @@
             const dataAtual = new Date(); 
             let mesAtual = dataAtual.getMonth(); 
             let anoAtual = dataAtual.getFullYear(); 
-
+            let option;
             for (let i = 0; i < 12; i++) {
-                const option = document.createElement('option');
+                option = document.createElement('option');
 
                 if (mesAtual < 0) {
                     mesAtual = 11; // Dezembro
@@ -91,11 +123,20 @@
 
                 option.value = `${anoAtual}-${mesAtual + 1}-1 ${anoAtual}-${mesAtual + 1}-${ultimoDia}`;
                 option.textContent = `${meses[mesAtual]} de ${anoAtual}`;
-
-                selectElement.appendChild(option);
-
-                mesAtual--;
+                
+                const dataInicial = option.value.split(" ")[0];
+                const dataFinal = option.value.split(" ")[1];
+                resp = await $.get(URL + "/dashboard/maquinas", {
+                    inicio: dataInicial,
+                    fim: dataFinal
+                });
+                const parsedResp = JSON.parse(resp);
+                if (parsedResp.length) {
+                    selectElement.appendChild(option);
+                    mesAtual--;
+                } else i = 12;
             }
+            selectElement.appendChild(option);
         }
 
         function getMesSelecionado() {
@@ -129,7 +170,9 @@
             link.click();
         }
 
-        async function getDadosCards() {   
+        async function getDadosCards() {
+            document.querySelector(".loader-container").classList.remove("d-none");
+
             const dataSelecionada = getMesSelecionado();
             const dataInicial = dataSelecionada.split(" ")[0];
             const dataFinal = dataSelecionada.split(" ")[1];
@@ -347,6 +390,8 @@
             cardConsumosCentro.innerHTML += consumosCentroHTML; 
             cardRetiradasColab.innerHTML += retiradasColabHTML; 
             cardMinhasMaquinas.innerHTML += minhasMaquinasHTML;
+
+            document.querySelector(".loader-container").classList.add("d-none");
         }
 
         function listar() {

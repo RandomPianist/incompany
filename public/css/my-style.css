@@ -133,7 +133,7 @@ main {
     top: 0;
     height: 80px;
     width: 100%;
-    z-index: 3;
+    z-index: 4;
     
 }
 
@@ -715,7 +715,7 @@ span, label, table, h1, h2, h3, h4, h5, h6, .texto-tabela {
     border: none;
 }
 
-.clickable td {
+.clickable * {
     cursor: pointer
 }
 
@@ -784,7 +784,7 @@ footer {
     bottom:0;
     background-color:#FFF;
     width: 100%;
-    z-index: 1000;
+    z-index: 2;
     border-top: 1px solid #DDDDDD;
 }
 

@@ -30,6 +30,7 @@ Route::middleware("auth")->group(function () {
 
     Route::group(["prefix" => "dashboard"], function() {
         Route::get("/dados",                           [DashboardController::class, "dados"]);
+        Route::get("/maquinas",                        [DashboardController::class, "maquinas"]);
         Route::get("/ultimas-retiradas",               [DashboardController::class, "det_ultimas_retiradas"]);
         Route::get("/retiradas-por-setor",             [DashboardController::class, "det_retiradas_por_setor"]);
         Route::get("/retiradas-por-pessoa",            [DashboardController::class, "det_retiradas_por_pessoa"]);

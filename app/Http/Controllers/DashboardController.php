@@ -335,6 +335,45 @@ class DashboardController extends ControllerKX {
         })->values()->all();
     }
 
+    private function maquinas_main($inicio, $fim) {
+        return DB::table("valores")
+                    ->select(
+                        "id",
+                        "descr"
+                    )
+                    ->whereIn(
+                        "id",
+                        DB::table("comodatos")
+                            ->select(
+                                "minhas_empresas.id_pessoa",
+                                "comodatos.id_maquina"
+                            )
+                            ->joinsub(
+                                DB::table("pessoas")
+                                    ->select(
+                                        "id AS id_pessoa",
+                                        "id_empresa"
+                                    )
+                                    ->unionAll(
+                                        DB::table("pessoas")
+                                            ->select(
+                                                "pessoas.id AS id_pessoa",
+                                                "filiais.id AS id_empresa"
+                                            )
+                                            ->join("empresas AS filiais", "filiais.id_matriz", "pessoas.id_empresa")
+                                    ),
+                                "minhas_empresas",
+                                "minhas_empresas.id_empresa",
+                                "comodatos.id_empresa"
+                            )
+                            ->whereRaw("(('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim) OR ('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim))")
+                            ->where("id_pessoa", Auth::user()->id_pessoa)
+                            ->pluck("id_maquina")
+                            ->toArray()
+                    )
+                    ->get();
+    }
+
     private function retiradas_em_atraso_main($where) {
         $atrasos = $this->retorna_atrasos(true, $where);
 
@@ -344,6 +383,10 @@ class DashboardController extends ControllerKX {
 
     public function iniciar() {
         return view("dashboard");
+    }
+
+    public function maquinas(Request $request) {
+        return json_encode($this->maquinas_main($request->inicio, $request->fim));
     }
 
     public function dados(Request $request) {
@@ -395,42 +438,7 @@ class DashboardController extends ControllerKX {
         $resultado->ultimasRetiradas = $inicio == date("Y-m")."-01" ? $this->ultimas_retiradas_main($where, $inicio, $fim) : [];
         $resultado->retiradasPorSetor = $retiradas_por_setor;
         $resultado->ranking = $ranking;
-        $resultado->maquinas = DB::table("valores")
-                                ->select(
-                                    "id",
-                                    "descr"
-                                )
-                                ->whereIn(
-                                    "id",
-                                    DB::table("comodatos")
-                                        ->select(
-                                            "minhas_empresas.id_pessoa",
-                                            "comodatos.id_maquina"
-                                        )
-                                        ->joinsub(
-                                            DB::table("pessoas")
-                                                ->select(
-                                                    "id AS id_pessoa",
-                                                    "id_empresa"
-                                                )
-                                                ->unionAll(
-                                                    DB::table("pessoas")
-                                                        ->select(
-                                                            "pessoas.id AS id_pessoa",
-                                                            "filiais.id AS id_empresa"
-                                                        )
-                                                        ->join("empresas AS filiais", "filiais.id_matriz", "pessoas.id_empresa")
-                                                ),
-                                            "minhas_empresas",
-                                            "minhas_empresas.id_empresa",
-                                            "comodatos.id_empresa"
-                                        )
-                                        ->whereRaw("(('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim) OR ('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim))")
-                                        ->where("id_pessoa", Auth::user()->id_pessoa)
-                                        ->pluck("id_maquina")
-                                        ->toArray()
-                                )
-                                ->get();
+        $resultado->maquinas = $this->maquinas_main($inicio, $fim);
         return json_encode($resultado);
     }
 
