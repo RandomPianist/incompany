@@ -15,7 +15,7 @@ class ProdutosController extends ControllerKX {
                         DB::raw("produtos.*"),
                         DB::raw("
                             CASE
-                                WHEN valores.descr IS NULL OR valores.descr = '' THEN 'A CLASSIFICAR'
+                                WHEN (IFNULL(valores.descr, '') = '') THEN 'A CLASSIFICAR'
                                 ELSE valores.descr
                             END AS categoria
                         ")

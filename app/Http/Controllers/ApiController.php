@@ -160,19 +160,19 @@ class ApiController extends ControllerKX {
                     "atbgrp.id_atribuicao",
                     "atribuicoes.id"
                 )->where(function($sql) use($obrigatorios, $grade) {
-                    if ($obrigatorios) {
-                        $sql->where("atribuicoes.obrigatorio", 1);
-                        $sql->whereRaw("
-                            atbgrp.proxima_retirada <= CURDATE() OR (
-                                CASE
-                                    WHEN (atribuicoes.qtd - IFNULL(ret.qtd, 0)) > 0 THEN CURDATE()
-                                    ELSE ret.proxima_retirada
-                                END
-                            ) <= CURDATE()
-                        ");
-                    } else if ($grade) $sql->whereNotNull("produtos.referencia");
+                    if ($obrigatorios) $sql->where("atribuicoes.obrigatorio", 1);
+                    else if ($grade) $sql->whereNotNull("produtos.referencia");
                     else $sql->whereNull("produtos.referencia");
-                })->groupby(DB::raw(!$obrigatorios ? "
+                })->whereRaw("(
+                    atbgrp.proxima_retirada <= CURDATE() OR (
+                        CASE
+                            WHEN (atribuicoes.qtd - IFNULL(ret.qtd, 0)) > 0 THEN CURDATE()
+                            ELSE ret.proxima_retirada
+                        END
+                    ) <= CURDATE()
+                )")->whereRaw("(
+                    (atribuicoes.qtd - IFNULL(ret.qtd, 0)) > 0
+                )")->groupby(DB::raw(!$obrigatorios ? "
                     atribuicoes.id,
                     atribuicoes.obrigatorio,
                     produtos.id,
