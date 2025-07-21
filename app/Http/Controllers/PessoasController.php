@@ -299,6 +299,7 @@ class PessoasController extends ControllerKX {
         $linha->save();
         $this->log_inserir("D", "pessoas", $linha->id);
         if ($this->cria_usuario($linha->id_setor)) $this->deletar_usuario($linha->id);
+        DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa = ".$linha->id);
     }
 
     public function supervisor(Request $request) {

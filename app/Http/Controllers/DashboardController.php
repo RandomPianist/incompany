@@ -24,8 +24,8 @@ class DashboardController extends ControllerKX {
             produtos.id,
             principal.validade,
             CASE
-                WHEN principal.tipo = 'NORMAL' THEN ROUND(SUM(LEAST(principal.qtd, estq.qtd)))
-                ELSE ROUND(SUM(LEAST(principal.qtd, estqgrp.qtd)))
+                WHEN principal.tipo = 'NORMAL' THEN ROUND(SUM(LEAST(principal.qtd, estq.qtd, estqgrp.qtd)))
+                ELSE ROUND(SUM(LEAST(principal.qtd, estq.qtd, estqgrp.qtd)))
             END AS qtd,
             CASE
                 WHEN principal.tipo = 'NORMAL' THEN

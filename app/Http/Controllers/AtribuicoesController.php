@@ -9,6 +9,16 @@ use App\Models\Atribuicoes;
 use App\Models\Pessoas;
 
 class AtribuicoesController extends ControllerKX {
+    private function atualizar_aa(Atribuicoes $atribuicao) {
+        $lista = DB::table("pessoas")
+                    ->where("lixeira", 0)
+                    ->where($atribuicao->pessoa_ou_setor_chave = "S" ? "id_setor" : "id", $atribuicao->pessoa_ou_setor_valor)
+                    ->pluck("id")
+                    ->toArray();
+        DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
+        DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
+    }
+
     private function consulta_main($select) {
         return DB::table("produtos")
                     ->select(DB::raw($select))
@@ -63,15 +73,7 @@ class AtribuicoesController extends ControllerKX {
         $linha->id_empresa = Pessoas::find(Auth::user()->id_pessoa)->id_empresa;
         $linha->save();
         $this->log_inserir($request->id ? "E" : "C", "atribuicoes", $linha->id);
-        
-        $lista = DB::table("pessoas")
-                    ->where("lixeira", 0)
-                    ->where($request->pessoa_ou_setor_chave = "S" ? "id_setor" : "id", $request->pessoa_ou_setor_valor)
-                    ->pluck("id")
-                    ->toArray();
-        DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
-        DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
-        
+        $this->atualizar_aa($linha);
         return 201;
     }
 
@@ -80,6 +82,7 @@ class AtribuicoesController extends ControllerKX {
         $linha->lixeira = 1;
         $linha->save();
         $this->log_inserir("D", "atribuicoes", $linha->id);
+        $this->atualizar_aa($linha);
     }
 
     public function listar(Request $request) {
