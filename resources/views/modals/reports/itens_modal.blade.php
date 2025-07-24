@@ -12,6 +12,19 @@
                 <input type = "hidden" name = "resumo" id = "resumo" />
                 <div class = "modal-body">
                     <div class = "container">
+                        <div class = "row d-none" id = "rel-modo-resumo">
+                            <div class = "col-6">
+                                <label for = "rel-tipo" class = "custom-label-form">Tipo:</label>
+                                <select id = "rel-tipo" name = "tipo" class = "form-control" onchange = "document.getElementById('rel-dias').disabled = this.value == 'M'">
+                                    <option value = "G">Por giro de estoque</option>
+                                    <option value = "M">Por quantidade mínima</option>
+                                </select>
+                            </div>
+                            <div class = "col-6">
+                                <label for = "rel-dias" class = "custom-label-form">Sugerir para x dias:</label>
+                                <input id = "rel-dias" name = "dias" class = "form-control text-right" autocomplete = "off" type = "number" onkeyup = "$(this).trigger('change')" onchange = "limitar(this)" />
+                            </div>
+                        </div>
                         <div class = "row">
                             <div class = "col-12 form-search">
                                 <label for = "rel-maquina2" class = "custom-label-form">Máquina:</label>

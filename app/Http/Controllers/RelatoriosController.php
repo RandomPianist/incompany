@@ -324,7 +324,7 @@ class RelatoriosController extends ControllerKX {
                         $sugeridos = 0;
                         $minimo = 0;
                         $giro = 0;
-                        if ($request->inicio && $request->fim) {
+                        if ($request->tipo == "G" && $request->resumo == "S") {
                             $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio);
                             $fim = Carbon::createFromFormat('d/m/Y', $request->fim);
                             $giro = floatval(
@@ -337,7 +337,7 @@ class RelatoriosController extends ControllerKX {
                                                 if ($request->id_maquina) $sql->where("comodatos.id_maquina", $request->id_maquina);
                                             })->value("qtd")
                                         );
-                            $sugeridos = intval((($giro / $inicio->diffInDays($fim)) * 30) - ($saldo_ant + $itens2->sum("qtd")));
+                            $sugeridos = intval((($giro / $inicio->diffInDays($fim)) * intval($request->dias)) - ($saldo_ant + $itens2->sum("qtd")));
                         } else {
                             $minimo = intval($itens2[0]->minimo);
                             $saldo_ant = intval($itens2[0]->saldo);
@@ -369,7 +369,10 @@ class RelatoriosController extends ControllerKX {
                 ]
             ];
         })->sortBy("descr")->values()->all();
-        if ($lm && $resumo) array_push($criterios, "Apenas produtos cuja compra é sugerida");
+        if ($resumo) {
+            if ($request->tipo == "G") array_push($criterios, "Compra sugerida para ".$request->dias." dias");
+            if ($lm) array_push($criterios, "Apenas produtos cuja compra é sugerida");
+        }
         $criterios = join(" | ", $criterios);
         $mostrar_giro = $request->inicio && $request->fim;
         if (sizeof($resultado)) return view("reports/".($resumo ? "saldo" : "extrato"), compact("resultado", "lm", "criterios", "mostrar_giro"));

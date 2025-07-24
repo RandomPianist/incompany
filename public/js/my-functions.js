@@ -585,6 +585,13 @@ function RelatorioItens(resumido) {
     this.validar = function() {
         limpar_invalido();
         let erro = "";
+        if (resumido && (!(elementos.inicio.value && elementos.fim.value)) && document.getElementById("rel-tipo").value == "G") {
+            if (!elementos.inicio.value) elementos.inicio.classList.add("invalido");
+            if (!elementos.fim.value) elementos.fim.classList.add("invalido");
+            s_alert("Preencha as datas");
+            return;
+        }
+
         if (elementos.inicio.value && elementos.fim.value) erro = validar_datas(elementos.inicio, elementos.fim, false);
         $.get(URL + "/relatorios/extrato/consultar", relObterElementosValor(elementos, ["produto", "maquina"]), function(data) {
             if (data && !erro) {
@@ -599,6 +606,7 @@ function RelatorioItens(resumido) {
     limpar_invalido();
     setTimeout(function() {
         modal("relatorioItensModal", 0, function() {
+            let modo_resumo = document.getElementById("rel-modo-resumo").classList;
             document.getElementById("rel-lm").value = "N";
             elementos.inicio.value = hoje();
             elementos.fim.value = hoje();
@@ -606,6 +614,8 @@ function RelatorioItens(resumido) {
             document.getElementById("resumo").value = resumido ? "S" : "N";
             document.getElementById("rel-lm-chk").checked = false;
             document.querySelector("label[for='rel-lm-chk']").innerHTML = resumido ? "Listar apenas produtos cuja compra é sugerida" : "Listar movimentação";
+            if (resumido) modo_resumo.remove("d-none");
+            else modo_resumo.add("d-none");
         });
     }, 0);
 }
