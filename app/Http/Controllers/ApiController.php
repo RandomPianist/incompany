@@ -15,186 +15,50 @@ use App\Models\Pessoas;
 use App\Models\Log;
 
 class ApiController extends ControllerKX {
-    private function joincomum($query) {
-        return $query->join("pessoas", function($join) {
-                $join->on(function($sql) {
-                    $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id")
-                        ->where("atribuicoes.pessoa_ou_setor_chave", "P");
-                })->orOn(function($sql) {
-                    $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id_setor")
-                        ->where("atribuicoes.pessoa_ou_setor_chave", "S");
-                });
-            })
-            ->join("produtos", function($join) {
-                $join->on(function($sql) {
-                    $sql->on("atribuicoes.produto_ou_referencia_valor", "produtos.cod_externo")
-                        ->where("atribuicoes.produto_ou_referencia_chave", "P");
-                })->orOn(function($sql) {
-                    $sql->on("atribuicoes.produto_ou_referencia_valor", "produtos.referencia")
-                        ->where("atribuicoes.produto_ou_referencia_chave", "R");
-                });
-            });
-    }
-
     private function info_atb($id_pessoa, $obrigatorios, $grade) {
-        return $this->joincomum(
-                    DB::table("atribuicoes")
-                        ->select(DB::raw($obrigatorios ? "
-                            atribuicoes.produto_ou_referencia_chave,
-                            CASE
-                                WHEN atribuicoes.produto_ou_referencia_chave = 'R' THEN produtos.referencia
-                                ELSE produtos.id
-                            END AS chave,
-                            CASE
-                                WHEN atribuicoes.produto_ou_referencia_chave = 'R' THEN produtos.referencia
-                                ELSE produtos.descr
-                            END AS nome
-                        " : "
-                            atribuicoes.id AS id_atribuicao,
-                            atribuicoes.obrigatorio,
-                            produtos.id,
-                            produtos.referencia,
-                            produtos.descr AS nome,
-                            produtos.detalhes,
-                            produtos.cod_externo AS codbar,
-                            IFNULL(produtos.tamanho, '') AS tamanho,
-                            IFNULL(produtos.foto, '') AS foto,
-                            (atribuicoes.qtd - IFNULL(ret.qtd, 0)) AS qtd,
-                            IFNULL(DATE_FORMAT(ret.ultima_retirada, '%d/%m/%Y'), '') AS ultima_retirada,
-                            DATE_FORMAT(
-                                CASE
-                                    WHEN (atribuicoes.qtd - IFNULL(ret.qtd, 0)) > 0 THEN CURDATE()
-                                    ELSE ret.proxima_retirada
-                                END,
-                                '%d/%m/%Y'
-                            ) AS proxima_retirada,
-                            atbgrp.qtd AS qtdgrp,
-                            atbgrp.proxima_retirada AS proxima_retirada_grp,
-                            atbgrp.ultima_retirada AS ultima_retirada_grp
-                        "))
-                )->joinSub(
-                    DB::table("atribuicoes_associadas")
-                        ->select("id_atribuicao")
-                        ->where("id_pessoa", $id_pessoa),
-                    "lim1",
-                    "lim1.id_atribuicao",
-                    "atribuicoes.id"
-                )->joinSub(
-                    DB::table("vprodutos")
-                        ->select("id_produto")
-                        ->where("id_pessoa", $id_pessoa),
-                    "lim2",
-                    "lim2.id_produto",
-                    "produtos.id"
-                )->leftjoinSub(
-                    DB::table("retiradas")
-                        ->select(DB::raw("
-                            retiradas.id_atribuicao,
-                            retiradas.id_pessoa,
-                            SUM(retiradas.qtd) AS qtd,
-                            ".(!$obrigatorios ? "MAX(retiradas.data) AS ultima_retirada," : "")."
-                            DATE_ADD(MAX(retiradas.data), INTERVAL atribuicoes.validade DAY) AS proxima_retirada
-                        "))
-                        ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
-                        ->whereNull("retiradas.id_supervisor")
-                        ->groupby(
-                            "retiradas.id_atribuicao",
-                            "retiradas.id_pessoa",
-                            "atribuicoes.validade"
-                        ),
-                    "ret",
-                    function($join) {
-                        $join->on("ret.id_pessoa", "pessoas.id")
-                                ->on("ret.id_atribuicao", "atribuicoes.id");
-                    }
-                )->leftjoinSub(
-                        $this->joincomum(
-                            DB::table(DB::raw("(
-                                SELECT * FROM atribuicoes_associadas WHERE id_pessoa = ".$id_pessoa."
-                            ) AS tab"))
-                                ->select(DB::raw("
-                                    tab.id_atribuicao,
-                                    (MIN(atribuicoes.qtd) - IFNULL(SUM(ret.qtd), 0)) AS qtd,
-                                    ".(!$obrigatorios ? "IFNULL(DATE_FORMAT(MAX(ret.ultima_retirada), '%d/%m/%Y'), '') AS ultima_retirada," : "")."
-                                    ".(!$obrigatorios ? "DATE_FORMAT(" : "")."
-                                        CASE
-                                            WHEN (MIN(atribuicoes.qtd) - IFNULL(SUM(ret.qtd), 0)) > 0 THEN CURDATE()
-                                            ELSE MIN(ret.proxima_retirada)
-                                        END
-                                    ".(!$obrigatorios ? ",'%d/%m/%Y')" : "")."
-                                    AS proxima_retirada
-                                "))
-                                ->join("atribuicoes", function ($join) {
-                                    $join->on(DB::raw("REPLACE(tab.associados, CONCAT('|', atribuicoes.id, '|'), '')"), "<>", DB::raw("tab.associados"));
-                                })
-                        )->joinSub(
-                            DB::table("vprodutos")
-                                ->select("id_produto")
-                                ->where("id_pessoa", $id_pessoa),
-                            "lim",
-                            "lim.id_produto",
-                            "produtos.id"
-                        )->leftjoinSub(
-                            DB::table("retiradas")
-                                ->select(DB::raw("
-                                    retiradas.id_atribuicao,
-                                    retiradas.id_pessoa,
-                                    SUM(retiradas.qtd) AS qtd,
-                                    ".(!$obrigatorios ? "MAX(retiradas.data) AS ultima_retirada," : "")."
-                                    DATE_ADD(MAX(retiradas.data), INTERVAL MIN(atribuicoes.validade) DAY) AS proxima_retirada
-                                "))
-                                ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
-                                ->whereNull("retiradas.id_supervisor")
-                                ->groupby(
-                                    "retiradas.id_atribuicao",
-                                    "retiradas.id_pessoa"
-                                ),
-                            "ret",
-                            function($join) {
-                                $join->on("ret.id_pessoa", "pessoas.id")
-                                    ->on("ret.id_atribuicao", "atribuicoes.id");
-                            }
-                        )
-                        ->groupby("tab.id_atribuicao"),
-                    "atbgrp",
-                    "atbgrp.id_atribuicao",
-                    "atribuicoes.id"
-                )->where(function($sql) use($obrigatorios, $grade) {
-                    if ($obrigatorios) $sql->where("atribuicoes.obrigatorio", 1);
-                    else if ($grade) $sql->whereNotNull("produtos.referencia");
-                    else $sql->whereNull("produtos.referencia");
-                })->whereRaw("(
-                    atbgrp.proxima_retirada <= CURDATE() OR (
-                        CASE
-                            WHEN (atribuicoes.qtd - IFNULL(ret.qtd, 0)) > 0 THEN CURDATE()
-                            ELSE ret.proxima_retirada
-                        END
-                    ) <= CURDATE()
-                )")->whereRaw("(
-                    (atribuicoes.qtd - IFNULL(ret.qtd, 0)) > 0
-                )")->groupby(DB::raw(!$obrigatorios ? "
-                    atribuicoes.id,
-                    atribuicoes.obrigatorio,
-                    produtos.id,
-                    produtos.referencia,
-                    produtos.descr,
-                    produtos.detalhes,
-                    produtos.cod_externo,
-                    produtos.tamanho,
-                    produtos.foto,
-                    atribuicoes.qtd,
-                    ret.qtd,
-                    ret.ultima_retirada,
-                    ret.proxima_retirada,
-                    atbgrp.qtd,
-                    atbgrp.proxima_retirada,
-                    atbgrp.ultima_retirada
-                " : "
-                    atribuicoes.produto_ou_referencia_chave,
-                    produtos.id,
-                    produtos.descr,
-                    produtos.referencia
-                "))->get();
+        return DB::table("vpendentes")
+                    ->select(DB::raw($obrigatorios ? "
+                        produto_ou_referencia_chave,
+                        chave_produto AS chave,
+                        nome_produto AS nome
+                    " : "
+                        id_atribuicao,
+                        obrigatorio,
+                        id_produto AS id,
+                        referencia,
+                        descr AS nome,
+                        detalhes,
+                        codbar,
+                        tamanho,
+                        foto,
+                        qtd,
+                        ultima_retirada,
+                        proxima_retirada
+                    "))
+                    ->where(function($sql) use($obrigatorios, $grade) {
+                        if ($obrigatorios) $sql->where("obrigatorio", 1);
+                        else if ($grade) $sql->whereNotNull("referencia");
+                        else $sql->whereNull("referencia");
+                    })
+                    ->where("id_pessoa", $id_pessoa)
+                    ->groupby(DB::raw($obrigatorios ? "
+                        produto_ou_referencia_chave,
+                        chave_produto,
+                        nome_produto
+                    " : "
+                        id_atribuicao,
+                        obrigatorio,
+                        id_produto,
+                        referencia,
+                        descr,
+                        detalhes,
+                        codbar,
+                        tamanho,
+                        foto,
+                        qtd,
+                        ultima_retirada,
+                        proxima_retirada
+                    "));
     }
 
     private function produtos_por_pessoa_main($id_pessoa, $grade) {
@@ -312,7 +176,10 @@ class ApiController extends ControllerKX {
                             DB::raw("GROUP_CONCAT(retiradas.id) AS ids")
                         )
                         ->leftjoin("produtos", "produtos.id", "retiradas.id_produto")
-                        ->leftjoin("pessoas", "pessoas.id", "retiradas.id_pessoa")
+                        ->leftjoin("pessoas", function($join) {
+                            $join->on("pessoas.id", "retiradas.id_pessoa")
+                                ->on("pessoas.id_empresa", "retiradas.id_empresa");
+                        })
                         ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
                         ->leftjoin("comodatos", "comodatos.id", "retiradas.id_comodato")
                         ->whereRaw("data BETWEEN '".$request->dini."' AND '".$request->dfim."'")
@@ -470,7 +337,8 @@ class ApiController extends ControllerKX {
     public function retirar(Request $request) {
         $resultado = new \stdClass;
         $cont = 0;
-        $excluir = array();
+        $excluir_log = array();
+        $excluir_ret = array();
         $produtos_ids = array();
         $produtos_refer = array();
         while (isset($request[$cont]["id_atribuicao"])) {
@@ -526,7 +394,7 @@ class ApiController extends ControllerKX {
                 ];
             }
             if (isset($retirada["biometria_ou_senha"])) $salvar += ["biometria_ou_senha" => $retirada["biometria_ou_senha"]];
-            $this->retirada_salvar($salvar);
+            array_push($excluir_ret, $this->retirada_salvar($salvar));
             $linha = new Estoque;
             $linha->es = "S";
             $linha->descr = "RETIRADA";
@@ -536,7 +404,7 @@ class ApiController extends ControllerKX {
                                 ->where("id_maquina", $maquinas[0]->id)
                                 ->value("id");
             $linha->save();
-            array_push($excluir, $this->log_inserir("C", "estoque", $linha->id, true));
+            array_push($excluir_log, $this->log_inserir("C", "estoque", $linha->id, true));
             array_push($produtos_ids, intval($retirada["id_produto"]));
             array_push($produtos_refer, strval(
                 DB::table("produtos")
@@ -553,10 +421,11 @@ class ApiController extends ControllerKX {
                 ($linha->produto_ou_referencia_chave == "R" && !in_array($linha->chave, $produtos_refer)) ||
                 ($linha->produto_ou_referencia_chave == "P" && !in_array(intval($linha->chave), $produtos_ids))
             ) {
-                foreach ($excluir as $aux) {
+                foreach ($excluir_log as $aux) {
                     Estoque::find($aux->fk)->delete();
                     Log::find($aux->id)->delete();
                 }
+                foreach ($excluir_ret as $aux) Retiradas::find($aux->id)->delete();
                 $msg = "Há um produto obrigatório que não foi retirado: ";
                 if ($linha->produto_ou_referencia_chave == "R") $msg .= "referência ";
                 $msg .= $linha->nome;

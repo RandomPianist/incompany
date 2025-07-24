@@ -320,12 +320,31 @@ class RelatoriosController extends ControllerKX {
             return [
                 "maquina" => [
                     "descr" => $itens1[0]->maquina,
-                    "produtos" => collect($itens1)->groupBy("id_produto")->map(function($itens2) {
-                        $minimo = intval($itens2[0]->minimo);
-                        $saldo_ant = intval($itens2[0]->saldo);
-                        $saldo_res = $saldo_ant + $itens2->sum("qtd");
-                        $sugeridos = $minimo - $saldo_res;
-                        if ($sugeridos < 0) $sugeridos = 0;
+                    "produtos" => collect($itens1)->groupBy("id_produto")->map(function($itens2) use($request) {
+                        $sugeridos = 0;
+                        $minimo = 0;
+                        $giro = 0;
+                        if ($request->inicio && $request->fim) {
+                            $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio);
+                            $fim = Carbon::createFromFormat('d/m/Y', $request->fim);
+                            $giro = floatval(
+                                        DB::table("retiradas")
+                                            ->select(DB::raw("IFNULL(SUM(qtd), 0) AS qtd"))
+                                            ->leftjoin("comodatos", "comodatos.id", "retiradas.id_comodato")
+                                            ->whereDate("retiradas.data", ">=", $inicio->format('Y-m-d'))
+                                            ->whereDate("retiradas.data", "<=", $fim->format('Y-m-d'))
+                                            ->where(function($sql) use($request) {
+                                                if ($request->id_maquina) $sql->where("comodatos.id_maquina", $request->id_maquina);
+                                            })->value("qtd")
+                                        );
+                            $sugeridos = intval((($giro / $inicio->diffInDays($fim)) * 30) - ($saldo_ant + $itens2->sum("qtd")));
+                        } else {
+                            $minimo = intval($itens2[0]->minimo);
+                            $saldo_ant = intval($itens2[0]->saldo);
+                            $saldo_res = $saldo_ant + $itens2->sum("qtd");
+                            $sugeridos = $minimo - $saldo_res;
+                            if ($sugeridos < 0) $sugeridos = 0;
+                        }
                         return [
                             "descr" => $itens2[0]->produto,
                             "preco" => $itens2[0]->preco,
@@ -334,7 +353,7 @@ class RelatoriosController extends ControllerKX {
                             "entradas" => $itens2->sum("entradas"),
                             "saidas" => $itens2->sum("saidas"),
                             "sugeridos" => $sugeridos,
-                            "minimo" => $minimo,
+                            "minimo" => ($request->inicio && $request->fim) ? intval($giro) : $sugeridos,
                             "movimentacao" => $itens2->map(function($movimento) {
                                 $qtd = floatval($movimento->qtd);
                                 return [
@@ -352,7 +371,8 @@ class RelatoriosController extends ControllerKX {
         })->sortBy("descr")->values()->all();
         if ($lm && $resumo) array_push($criterios, "Apenas produtos cuja compra é sugerida");
         $criterios = join(" | ", $criterios);
-        if (sizeof($resultado)) return view("reports/".($resumo ? "saldo" : "extrato"), compact("resultado", "lm", "criterios"));
+        $mostrar_giro = $request->inicio && $request->fim;
+        if (sizeof($resultado)) return view("reports/".($resumo ? "saldo" : "extrato"), compact("resultado", "lm", "criterios", "mostrar_giro"));
         return view("nada");
     }
 
@@ -429,8 +449,13 @@ class RelatoriosController extends ControllerKX {
                     ")
                 )
                 ->join("pessoas", function($join) {
-                    $join->on("pessoas.id", "retiradas.id_pessoa")
-                         ->on("pessoas.id_empresa", "retiradas.id_empresa");
+                    $join->on(function($sql) {
+                        $sql->on("pessoas.id", "retiradas.id_pessoa")
+                            ->where("pessoas.id_empresa", 0);
+                    })->orOn(function($sql) {
+                        $join->on("pessoas.id", "retiradas.id_pessoa")
+                            ->on("pessoas.id_empresa", "retiradas.id_empresa");
+                    });
                 })
                 ->join("setores", "setores.id", "pessoas.id_setor")
                 ->join("produtos", "produtos.id", "retiradas.id_produto")
@@ -550,8 +575,13 @@ class RelatoriosController extends ControllerKX {
                         DB::raw("SUM(qtd) AS retirados")
                     )
                     ->join("pessoas", function($join) {
-                        $join->on("pessoas.id", "retiradas.id_pessoa")
-                             ->on("pessoas.id_empresa", "retiradas.id_empresa");
+                        $join->on(function($sql) {
+                            $sql->on("pessoas.id", "retiradas.id_pessoa")
+                                ->where("pessoas.id_empresa", 0);
+                        })->orOn(function($sql) {
+                            $join->on("pessoas.id", "retiradas.id_pessoa")
+                                ->on("pessoas.id_empresa", "retiradas.id_empresa");
+                        });
                     })
                     ->join("setores", "setores.id", "pessoas.id_setor")
                     ->where(function($sql) use($request, &$criterios) {

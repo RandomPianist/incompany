@@ -34,11 +34,13 @@
             <thead>
                 <tr class = "report-row">
                     <td width = "40%">Produto</td>
-                    <td width = "10%" class = "text-right">Saldo Ant.</td>
+                    <td width = "10%" class = "text-right">Saldo Anterior</td>
                     <td width = "10%" class = "text-right">Entradas</td>
                     <td width = "10%" class = "text-right">Saídas</td>
                     <td width = "10%" class = "text-right">Saldo Final</td>
-                    <td width = "10%" class = "text-right">Qtde. Mínima</td>
+                    <td width = "10%" class = "text-right">
+                        @if ($mostrar_giro) Giro de estoque @else Qtde. Mínima @endif
+                    </td>
                     <td width = "10%" class = "text-right">Qtde. Sugerida</td>
                 </tr>
             </thead>

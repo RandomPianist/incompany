@@ -35,18 +35,22 @@ class PessoasController extends ControllerKX {
                         DB::raw("IFNULL(empresas.nome_fantasia, 'A CLASSIFICAR') AS empresa"),
                         DB::raw("
                             CASE
-                                WHEN ret.id_pessoa IS NULL THEN 0
+                                WHEN retiradas.id_pessoa IS NULL THEN 0
                                 ELSE 1
                             END AS possui_retiradas
                         ")
                     )
                     ->leftjoin("setores", "setores.id", "pessoas.id_setor")
                     ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
-                    ->leftjoinSub(
-                        DB::table("retiradas")
-                            ->select("id_pessoa")
-                            ->groupby("id_pessoa"),
-                    "ret", "ret.id_pessoa", "pessoas.id")
+                    ->leftjoin("retiradas", function($join) {
+                        $join->on(function($sql) {
+                            $sql->on("pessoas.id", "retiradas.id_pessoa")
+                                ->where("pessoas.id_empresa", 0);
+                        })->orOn(function($sql) {
+                            $join->on("pessoas.id", "retiradas.id_pessoa")
+                                ->on("pessoas.id_empresa", "retiradas.id_empresa");
+                        });
+                    })
                     ->where(function($sql) use($tipo) {
                         $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
                         if ($id_emp) $sql->whereRaw($id_emp." IN (empresas.id, empresas.id_matriz)");

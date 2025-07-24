@@ -235,7 +235,8 @@ CREATE VIEW vmp AS (
 CREATE VIEW vprodutos AS (
     SELECT
         minhas_empresas.id_pessoa,
-        produtos.id AS id_produto
+        produtos.id AS id_produto,
+        mp.id AS id_mp
     
     FROM produtos
     
@@ -281,7 +282,35 @@ CREATE VIEW vprodutos AS (
 
     GROUP BY
         minhas_empresas.id_pessoa,
-        produtos.id
+        produtos.id,
+        mp.id
+
+    UNION ALL (
+        SELECT
+            pessoas.id AS id_pessoa,
+            produtos.id AS id_produto,
+            mp.id AS id_mp
+
+        FROM pessoas
+
+        CROSS JOIN maquinas_produtos AS mp
+
+        JOIN produtos
+            ON produtos.id = mp.id_produto
+
+        JOIN vestoque
+            ON vestoque.id_mp = mp.id
+
+        WHERE pessoas.id_empresa = 0
+          AND pessoas.lixeira = 0
+          AND produtos.lixeira = 0
+          AND vestoque.qtd > 0
+
+        GROUP BY
+            pessoas.id,
+            produtos.id,
+            mp.id
+    )
 );
 
 CREATE VIEW vatbaux AS (
@@ -368,7 +397,7 @@ CREATE VIEW vatribuicoes AS (
     SELECT
         f.id_pessoa,
         f.id_atribuicao,
-        assoc.associados
+        assoc.id_associado
     
     FROM (
         SELECT
@@ -465,7 +494,7 @@ CREATE VIEW vatribuicoes AS (
         SELECT
             pai.id_pessoa,
             pai.id_atribuicao,
-            CONCAT('|', GROUP_CONCAT(filho.id_atribuicao ORDER BY CASE WHEN pai.id_atribuicao = filho.id_atribuicao THEN 0 ELSE 1 END, filho.id_atribuicao SEPARATOR '|'), '|') AS associados
+            filho.id_atribuicao AS id_associado
 
         FROM vatbaux AS pai
 
@@ -480,10 +509,6 @@ CREATE VIEW vatribuicoes AS (
 
         WHERE a1.lixeira = 0
           AND a2.lixeira = 0
-
-        GROUP BY
-            pai.id_pessoa,
-            pai.id_atribuicao
     ) AS assoc ON f.id_pessoa = assoc.id_pessoa AND f.id_atribuicao = assoc.id_atribuicao
 
     JOIN pessoas
@@ -497,3 +522,134 @@ CREATE VIEW vatribuicoes AS (
 );
 
 CREATE TABLE atribuicoes_associadas AS SELECT * FROM vatribuicoes;
+
+CREATE VIEW vpendentes AS (
+    SELECT
+        aa.id_pessoa,
+
+        atribuicoes.validade,
+        atribuicoes.id AS id_atribuicao,
+        atribuicoes.obrigatorio,
+        atribuicoes.produto_ou_referencia_chave,
+        
+        produtos.id AS id_produto,
+        CASE
+            WHEN atribuicoes.produto_ou_referencia_chave = 'R' THEN produtos.referencia
+            ELSE produtos.id
+        END AS chave_produto,
+        CASE
+            WHEN atribuicoes.produto_ou_referencia_chave = 'R' THEN produtos.referencia
+            ELSE produtos.descr
+        END AS nome_produto,
+        produtos.referencia,
+        produtos.descr,
+        produtos.detalhes,
+        produtos.cod_externo AS codbar,
+        IFNULL(produtos.tamanho, '') AS tamanho,
+        IFNULL(produtos.foto, '') AS foto,
+        
+        CASE
+            WHEN DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY) <= CURDATE() THEN
+                ROUND(CASE
+                    WHEN vestoque.qtd < (atribuicoes.qtd - calc_qtd.valor) THEN vestoque.qtd
+                    ELSE (atribuicoes.qtd - calc_qtd.valor)
+                END)
+            ELSE 0
+        END AS qtd,
+        IFNULL(DATE_FORMAT(atbgrp.data, '%d/%m/%Y'), '') AS ultima_retirada,
+        DATE_FORMAT(IFNULL(DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY), CURDATE()), '%d/%m/%Y') AS proxima_retirada
+        
+    FROM atribuicoes
+
+    JOIN atribuicoes_associadas AS aa
+        ON aa.id_atribuicao = atribuicoes.id
+        
+    JOIN produtos
+        ON (produtos.cod_externo = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'P')
+            OR (produtos.referencia = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'R')
+
+    JOIN vprodutos
+        ON vprodutos.id_produto = produtos.id AND vprodutos.id_pessoa = aa.id_pessoa
+        
+    JOIN vestoque
+        ON vestoque.id_mp = vprodutos.id_mp
+
+    JOIN (
+        SELECT
+            aa.id_atribuicao,
+            (atribuicoes.qtd - IFNULL(SUM(retiradas.qtd), 0)) AS valor
+            
+        FROM atribuicoes
+        
+        JOIN atribuicoes_associadas AS aa
+            ON aa.id_atribuicao = atribuicoes.id
+            
+        JOIN pessoas
+            ON pessoas.id = aa.id_pessoa
+        
+        LEFT JOIN retiradas
+            ON retiradas.id_atribuicao = atribuicoes.id
+                AND retiradas.id_pessoa = pessoas.id
+                AND retiradas.id_empresa = pessoas.id_empresa
+                AND retiradas.data > DATE_SUB(CURDATE(), INTERVAL atribuicoes.validade DAY)
+                AND retiradas.id_supervisor IS NULL
+        
+        GROUP BY
+            aa.id_atribuicao,
+            atribuicoes.qtd
+    ) AS calc_qtd ON calc_qtd.id_atribuicao = atribuicoes.id
+
+    JOIN (
+        SELECT
+            aa.id_atribuicao,
+            MAX(retiradas.data) AS data
+            
+        FROM atribuicoes
+        
+        JOIN atribuicoes_associadas AS aa
+            ON aa.id_atribuicao = atribuicoes.id
+            
+        JOIN atribuicoes AS associadas
+            ON associadas.id = aa.id_associado
+            
+        JOIN pessoas
+            ON pessoas.id = aa.id_pessoa
+            
+        LEFT JOIN retiradas
+            ON retiradas.id_atribuicao = associadas.id
+                AND retiradas.id_pessoa = pessoas.id
+                AND retiradas.id_empresa = pessoas.id_empresa
+                AND retiradas.id_supervisor IS NULL
+                
+        GROUP BY aa.id_atribuicao
+    ) AS atbgrp ON atbgrp.id_atribuicao = atribuicoes.id
+
+    WHERE DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY) <= CURDATE()
+      AND (atribuicoes.qtd - calc_qtd.valor) > 0
+
+    GROUP BY
+        aa.id_pessoa,
+        atribuicoes.id,
+        atribuicoes.obrigatorio,
+        atribuicoes.validade,
+        atribuicoes.qtd,
+        produtos.id,
+        produtos.referencia,
+        produtos.descr,
+        produtos.detalhes,
+        produtos.cod_externo,
+        produtos.tamanho,
+        produtos.foto,
+        atbgrp.data,
+        vestoque.qtd,
+        calc_qtd.valor,
+        atribuicoes.produto_ou_referencia_chave,
+        CASE
+            WHEN atribuicoes.produto_ou_referencia_chave = 'R' THEN produtos.referencia
+            ELSE produtos.id
+        END,
+        CASE
+            WHEN atribuicoes.produto_ou_referencia_chave = 'R' THEN produtos.referencia
+            ELSE produtos.descr
+        END
+);
