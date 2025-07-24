@@ -119,7 +119,7 @@ class ControllerKX extends Controller {
             ";
         } else $query .= " WHERE log.tabela = '".$tabela."'";
 
-        $query .= " AND log.origem IS NOT NULL ORDER BY log.id DESC";
+        $query .= " AND log.origem IS NOT NULL ORDER BY log.data DESC";
 
         $consulta = DB::select(DB::raw($query));
         return !intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa) ? sizeof($consulta) ? "Última atualização feita por ".$consulta[0]->nome." em ".$consulta[0]->data : "Nenhuma atualização feita" : "";

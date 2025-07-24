@@ -309,7 +309,7 @@ class RelatoriosController extends ControllerKX {
                 ->where("log.tabela", "estoque")
                 ->where("produtos.lixeira", 0)
                 ->where("valores.lixeira", 0)
-                ->orderby("log.id")
+                ->orderby("log.data")
                 ->get()
         )->groupBy("id_maquina")->map(function($itens1) use($request) {
             return [
