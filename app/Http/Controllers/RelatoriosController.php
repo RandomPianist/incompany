@@ -456,7 +456,7 @@ class RelatoriosController extends ControllerKX {
                         $sql->on("pessoas.id", "retiradas.id_pessoa")
                             ->where("pessoas.id_empresa", 0);
                     })->orOn(function($sql) {
-                        $join->on("pessoas.id", "retiradas.id_pessoa")
+                        $sql->on("pessoas.id", "retiradas.id_pessoa")
                             ->on("pessoas.id_empresa", "retiradas.id_empresa");
                     });
                 })
@@ -582,7 +582,7 @@ class RelatoriosController extends ControllerKX {
                             $sql->on("pessoas.id", "retiradas.id_pessoa")
                                 ->where("pessoas.id_empresa", 0);
                         })->orOn(function($sql) {
-                            $join->on("pessoas.id", "retiradas.id_pessoa")
+                            $sql->on("pessoas.id", "retiradas.id_pessoa")
                                 ->on("pessoas.id_empresa", "retiradas.id_empresa");
                         });
                     })
