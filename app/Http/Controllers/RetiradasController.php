@@ -26,7 +26,8 @@ class RetiradasController extends ControllerKX {
     }
 
     public function desfazer(Request $request) {
-        $this->log_inserir2("D", "retiradas", "id_pessoa = ".$request->id_pessoa, "NULL");
-        DB::statement("DELETE FROM retiradas WHERE id_pessoa = ".$request->id_pessoa);
+        $where = "id_pessoa = ".$request->id_pessoa;
+        $this->log_inserir_lote("D", "WEB", "retiradas", $where);
+        DB::statement("DELETE FROM retiradas WHERE ".$where);
     }
 }

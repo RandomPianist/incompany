@@ -213,9 +213,9 @@ class ApiController extends ControllerKX {
             ) + 1;
         }
         $linha->save();
-        $modelo = $this->log_inserir($request->id ? "E" : "C", "valores", $linha->id, true);
-        if (isset($request->usu)) $modelo->nome = $request->usu;
-        $modelo->save();
+        $nome = "";
+        if (isset($request->usu)) $nome = $request->usu;
+        $this->log_inserir($request->id ? "E" : "C", "categorias", $linha->id, "ERP", $nome);
         $resultado = new \stdClass;
         $resultado->id = $linha->id;
         $resultado->descr = $linha->descr;
@@ -224,7 +224,7 @@ class ApiController extends ControllerKX {
 
     public function produtos(Request $request) {
         $linha = Produtos::firstOrNew(["id" => $request->id]);
-        $nome = "NULL";
+        $nome = "";
         if (isset($request->usu)) $nome = $request->usu;
         $this->atribuicao_atualiza_ref($request->id, $linha->referencia, $request->refer, $nome, true);
         $linha->descr = mb_strtoupper($request->descr);
@@ -243,10 +243,10 @@ class ApiController extends ControllerKX {
         $linha->save();
         $letra_log = $request->id ? "E" : "C";
         if (intval($request->lixeira)) $letra_log = "D";
-        $modelo = $this->log_inserir($letra_log, "produtos", $linha->id, true);
-        if (isset($request->usu)) $modelo->nome = $request->usu;
-        $modelo->save();
-        $this->mov_estoque($linha->id, true, $request->usu);
+        $nome = "";
+        if (isset($request->usu)) $nome = $request->usu;
+        $this->log_inserir($letra_log, "produtos", $linha->id, "ERP", $nome);
+        $this->mov_estoque($linha->id, true, $nome);
         $consulta = DB::table("produtos")
                         ->select(
                             "id",
@@ -283,9 +283,9 @@ class ApiController extends ControllerKX {
                                 ->where("id_maquina", $request->idMaquina)
                                 ->value("id");
             $linha->save();
-            $modelo = $this->log_inserir("C", "estoque", $linha->id, true);
-            if (isset($request->usu)) $modelo->nome = $request->usu;
-            $modelo->save();
+            $nome = "";
+            if (isset($request->usu)) $nome = $request->usu;
+            $this->log_inserir("C", "estoque", $linha->id, "ERP", $nome);
         }
         return 200;
     }
@@ -295,7 +295,6 @@ class ApiController extends ControllerKX {
         if (isset($request->preco)) {
             if (floatval($request->preco) > 0) $precoProd = floatval($request->preco);
         }
-        $nome = "NULL";
         $where = "id_produto = ".$request->idProduto." AND id_maquina = ".$request->idMaquina;
         DB::statement("
             UPDATE maquinas_produtos SET
@@ -304,8 +303,9 @@ class ApiController extends ControllerKX {
                 preco = ".$precoProd."
             WHERE ".$where
         );
+        $nome = "";
         if (isset($request->usu)) $nome = $request->usu;
-        $this->log_inserir2("E", "maquinas_produtos", $where, $nome, true);
+        $this->log_inserir_lote("E", "APP", "maquinas_produtos", $where, $nome);
     }
 
     public function validar_app(Request $request) {
@@ -404,7 +404,11 @@ class ApiController extends ControllerKX {
                                 ->where("id_maquina", $maquinas[0]->id)
                                 ->value("id");
             $linha->save();
-            array_push($excluir_log, $this->log_inserir("C", "estoque", $linha->id, true));
+            $reg_log = $this->log_inserir("C", "estoque", $linha->id, "APP");
+            $reg_log->id_pessoa = $retirada["id_pessoa"];
+            $reg_log->nome = Pessoas::find($retirada["id_pessoa"])->nome;
+            $reg_log->save();
+            array_push($excluir_log, $reg_log);
             array_push($produtos_ids, intval($retirada["id_produto"]));
             array_push($produtos_refer, strval(
                 DB::table("produtos")
@@ -455,9 +459,12 @@ class ApiController extends ControllerKX {
     }
 
     public function associar_empresa(Request $request) {
-        $empresa = Empresas::firstOrNew(["id" => $request->idemp]);
+        $empresa = Empresas::find($request->idemp);
         $empresa->cod_externo = $request->cod_cli;
         $empresa->save();
+        $nome = "";
+        if (isset($request->usu)) $nome = $request->usu;
+        $this->log_inserir("E", "empresas", $empresa->id, "APP", $nome);
         return $empresa->id;
     }
 
@@ -480,7 +487,7 @@ class ApiController extends ControllerKX {
         if ($pessoa == null) return [];
         $pessoa->biometria = $request->biometria;
         $pessoa->save();
-        $this->log_inserir("E", "pessoas", $pessoa->id, true);
+        $this->log_inserir("E", "pessoas", $pessoa->id, "APP");
         return 200;
     }
 

@@ -140,7 +140,10 @@ CREATE TABLE retiradas (
 CREATE TABLE log (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	id_pessoa INT,
-	nome VARCHAR(32),
+	nome VARCHAR(64),
+    origem VARCHAR(4),
+    data DATE,
+    hms VARCHAR(8),
 	acao CHAR,
 	tabela VARCHAR(32),
 	fk INT,
@@ -544,7 +547,7 @@ CREATE VIEW vpendentes AS (
         LEFT JOIN retiradas
             ON retiradas.id_atribuicao = atribuicoes.id
                 AND retiradas.id_pessoa = pessoas.id
-                AND retiradas.id_empresa = pessoas.id_empresa
+                AND (retiradas.id_empresa = pessoas.id_empresa OR pessoas.id_empresa = 0)
                 AND retiradas.data > DATE_SUB(CURDATE(), INTERVAL atribuicoes.validade DAY)
                 AND retiradas.id_supervisor IS NULL
         
@@ -572,7 +575,7 @@ CREATE VIEW vpendentes AS (
         LEFT JOIN retiradas
             ON retiradas.id_atribuicao = associadas.id
                 AND retiradas.id_pessoa = pessoas.id
-                AND retiradas.id_empresa = pessoas.id_empresa
+                AND (retiradas.id_empresa = pessoas.id_empresa OR pessoas.id_empresa = 0)
                 AND retiradas.id_supervisor IS NULL
                 
         GROUP BY aa.id_atribuicao

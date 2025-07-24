@@ -127,12 +127,12 @@ class RelatoriosController extends ControllerKX {
                         $periodo = "Período";
                         if ($request->inicio) {
                             $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
-                            $sql->whereDate("retiradas.data", ">=", $inicio);
+                            $sql->whereRaw("retiradas.data >= '".$inicio."'");
                             $periodo .= " de ".$request->inicio;
                         }
                         if ($request->fim) {
                             $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-                            $sql->whereDate("retiradas.data", "<=", $fim);
+                            $sql->whereRaw("retiradas.data <= '".$fim."'");
                             $periodo .= " até ".$request->fim;
                         }
                         array_push($criterios, $periodo);
@@ -227,7 +227,7 @@ class RelatoriosController extends ControllerKX {
                     DB::raw("IFNULL(mp.preco, produtos.preco) AS preco"),
 
                     // DETALHES
-                    DB::raw("DATE_FORMAT(log.created_at, '%d/%m/%Y %H:%i') AS data"),
+                    DB::raw("CONCAT(DATE_FORMAT(log.data, '%d/%m/%Y'), CASE WHEN log.hms IS NOT NULL CONCAT(' ', log.hms) ELSE '' END) AS data"),
                     "mp.minimo",
                     "estoque.es",
                     "estoque.descr AS estoque_descr",
@@ -249,12 +249,7 @@ class RelatoriosController extends ControllerKX {
                             ELSE 0
                         END AS saidas
                     "),
-                    DB::raw("
-                        IFNULL(pessoas.nome, CONCAT(
-                            'API',
-                            IFNULL(CONCAT(' - ', log.nome), '')
-                        )) AS autor
-                    ")
+                    "IFNULL(log.nome, IFNULL(log.origem, 'DESCONHECIDO')) AS autor"
                 )
                 ->join("estoque", "estoque.id", "log.fk")
                 ->join("maquinas_produtos AS mp", "mp.id", "estoque.id_mp")
@@ -286,12 +281,12 @@ class RelatoriosController extends ControllerKX {
                         $periodo = "Período";
                         if ($request->inicio) {
                             $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
-                            $sql->whereRaw("DATE(log.created_at) >= '".$inicio."'");
+                            $sql->whereRaw("log.data >= '".$inicio."'");
                             $periodo .= " de ".$request->inicio;
                         }
                         if ($request->fim) {
                             $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-                            $sql->whereRaw("DATE(log.created_at) <= '".$fim."'");
+                            $sql->whereRaw("log.data <= '".$fim."'");
                             $periodo .= " até ".$request->fim;
                         }
                         array_push($criterios, $periodo);
@@ -316,35 +311,23 @@ class RelatoriosController extends ControllerKX {
                 ->where("valores.lixeira", 0)
                 ->orderby("log.id")
                 ->get()
-        )->groupBy("id_maquina")->map(function($itens1) {
+        )->groupBy("id_maquina")->map(function($itens1) use($request) {
             return [
                 "maquina" => [
                     "descr" => $itens1[0]->maquina,
                     "produtos" => collect($itens1)->groupBy("id_produto")->map(function($itens2) use($request) {
                         $sugeridos = 0;
-                        $minimo = 0;
                         $giro = 0;
+                        $minimo = intval($itens2[0]->minimo);
+                        $saldo_ant = intval($itens2[0]->saldo);
+                        $saldo_res = $saldo_ant + $itens2->sum("qtd");
                         if ($request->tipo == "G" && $request->resumo == "S") {
                             $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio);
                             $fim = Carbon::createFromFormat('d/m/Y', $request->fim);
-                            $giro = floatval(
-                                        DB::table("retiradas")
-                                            ->select(DB::raw("IFNULL(SUM(qtd), 0) AS qtd"))
-                                            ->leftjoin("comodatos", "comodatos.id", "retiradas.id_comodato")
-                                            ->whereDate("retiradas.data", ">=", $inicio->format('Y-m-d'))
-                                            ->whereDate("retiradas.data", "<=", $fim->format('Y-m-d'))
-                                            ->where(function($sql) use($request) {
-                                                if ($request->id_maquina) $sql->where("comodatos.id_maquina", $request->id_maquina);
-                                            })->value("qtd")
-                                        );
-                            $sugeridos = intval((($giro / $inicio->diffInDays($fim)) * intval($request->dias)) - ($saldo_ant + $itens2->sum("qtd")));
-                        } else {
-                            $minimo = intval($itens2[0]->minimo);
-                            $saldo_ant = intval($itens2[0]->saldo);
-                            $saldo_res = $saldo_ant + $itens2->sum("qtd");
-                            $sugeridos = $minimo - $saldo_res;
-                            if ($sugeridos < 0) $sugeridos = 0;
-                        }
+                            $giro = $itens2->sum("saidas") / $inicio->diffInDays($fim);
+                            $sugeridos = intval(($giro * intval($request->dias)) - $saldo_res);
+                        } else $sugeridos = $minimo - $saldo_res;
+                        if ($sugeridos < 0) $sugeridos = 0;
                         return [
                             "descr" => $itens2[0]->produto,
                             "preco" => $itens2[0]->preco,
@@ -353,7 +336,7 @@ class RelatoriosController extends ControllerKX {
                             "entradas" => $itens2->sum("entradas"),
                             "saidas" => $itens2->sum("saidas"),
                             "sugeridos" => $sugeridos,
-                            "minimo" => ($request->inicio && $request->fim) ? intval($giro) : $sugeridos,
+                            "minimo" => ($request->inicio && $request->fim) ? number_format($giro, 2) : $minimo,
                             "movimentacao" => $itens2->map(function($movimento) {
                                 $qtd = floatval($movimento->qtd);
                                 return [
@@ -473,12 +456,12 @@ class RelatoriosController extends ControllerKX {
                         $periodo = "Período";
                         if ($request->inicio) {
                             $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
-                            $sql->whereDate("retiradas.data", ">=", $inicio);
+                            $sql->whereRaw("retiradas.data >= '".$inicio."'");
                             $periodo .= " de ".$request->inicio;
                         }
                         if ($request->fim) {
                             $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-                            $sql->whereDate("retiradas.data", "<=", $fim);
+                            $sql->whereRaw("retiradas.data ,= '".$fim."'");
                             $periodo .= " até ".$request->fim;
                         }
                         array_push($criterios, $periodo);
@@ -592,12 +575,12 @@ class RelatoriosController extends ControllerKX {
                             $periodo = "Período";
                             if ($request->inicio) {
                                 $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
-                                $sql->whereDate("retiradas.data", ">=", $inicio);
+                                $sql->whereRaw("retiradas.data >= '".$inicio."'");
                                 $periodo .= " de ".$request->inicio;
                             }
                             if ($request->fim) {
                                 $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-                                $sql->whereDate("retiradas.data", "<=", $fim);
+                                $sql->whereRaw("retiradas.data <= '".$fim."'");
                                 $periodo .= " até ".$request->fim;
                             }
                             array_push($criterios, $periodo);

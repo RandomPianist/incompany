@@ -103,7 +103,7 @@ class ProdutosController extends ControllerKX {
 
     public function salvar(Request $request) {
         $linha = Produtos::firstOrNew(["id" => $request->id]);
-        $this->atribuicao_atualiza_ref($request->id, $linha->referencia, $request->referencia, "NULL");
+        $this->atribuicao_atualiza_ref($request->id, $linha->referencia, $request->referencia);
         $linha->descr = mb_strtoupper($request->descr);
         $linha->preco = $request->preco;
         $linha->validade = $request->validade;

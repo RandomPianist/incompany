@@ -35,8 +35,8 @@ class DashboardController extends ControllerKX {
                                             "id_pessoa",
                                             "id_empresa"
                                         )
-                                        ->whereDate("retiradas.data", ">=", $inicio)
-                                        ->whereDate("retiradas.data", "<=", $fim)
+                                        ->whereRaw("retiradas.data >= '".$inicio."'")
+                                        ->whereRaw("retiradas.data <= '".$fim."'")
                                         ->groupby(
                                             "id_pessoa",
                                             "id_empresa"
@@ -47,7 +47,7 @@ class DashboardController extends ControllerKX {
                                             $sql->on("pessoas.id", "ret.id_pessoa")
                                                 ->where("pessoas.id_empresa", 0);
                                         })->orOn(function($sql) {
-                                            $join->on("pessoas.id", "ret.id_pessoa")
+                                            $sql->on("pessoas.id", "ret.id_pessoa")
                                                 ->on("pessoas.id_empresa", "ret.id_empresa");
                                         });
                                     }
@@ -235,8 +235,8 @@ class DashboardController extends ControllerKX {
                         });
                     })
                     ->whereRaw($this->obter_where(Auth::user()->id_pessoa))
-                    ->whereDate("retiradas.data", ">=", $inicio)
-                    ->whereDate("retiradas.data", "<=", $fim)
+                    ->whereRaw("retiradas.data >= '".$inicio."'")
+                    ->whereRaw("retiradas.data <= '".$fim."'")
                     ->groupby(
                         "pessoas.id",
                         "pessoas.nome",
@@ -277,8 +277,8 @@ class DashboardController extends ControllerKX {
                     ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
                     ->join("produtos", "produtos.id", "retiradas.id_produto")
                     ->where("retiradas.id_pessoa", $id_pessoa)
-                    ->whereDate("retiradas.data", ">=", $inicio)
-                    ->whereDate("retiradas.data", "<=", $fim)
+                    ->whereRaw("retiradas.data >= '".$inicio."'")
+                    ->whereRaw("retiradas.data <= '".$fim."'")
                     ->groupby(
                         "produtos.id",
                         DB::raw("
@@ -317,8 +317,8 @@ class DashboardController extends ControllerKX {
                     ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
                     ->join("produtos", "produtos.id", "retiradas.id_produto")
                     ->where("retiradas.id_pessoa", $id_pessoa)
-                    ->whereDate("retiradas.data", ">=", $inicio)
-                    ->whereDate("retiradas.data", "<=", $fim)
+                    ->whereRaw("retiradas.data >= '".$inicio."'")
+                    ->whereRaw("retiradas.data <= '".$fim."'")
                     ->get()
             )->sortBy("id_retirada")->values()->all()
         );
@@ -358,8 +358,8 @@ class DashboardController extends ControllerKX {
                         $join->on("mp.id_produto", "produtos.id")
                             ->on("mp.id_maquina", "comodatos.id_maquina");
                     })
-                    ->whereDate("retiradas.data", ">=", $inicio)
-                    ->whereDate("retiradas.data", "<=", $fim)
+                    ->whereRaw("retiradas.data >= '".$inicio."'")
+                    ->whereRaw("retiradas.data <= '".$fim."'")
                     ->where("pessoas.lixeira", 0)
                     ->where("pessoas.id_setor", $id_setor)
                     ->groupby(

@@ -22,44 +22,35 @@ class ControllerKX extends Controller {
         ));
     }
 
-    protected function log_inserir($acao, $tabela, $fk, $api = false) {
+    protected function log_inserir($acao, $tabela, $fk, $origem = "WEB", $nome = "") {
         $linha = new Log;
         $linha->acao = $acao;
+        $linha->origem = $origem;
         $linha->tabela = $tabela;
         $linha->fk = $fk;
-        if (!$api) $linha->id_pessoa = Auth::user()->id_pessoa;
+        if ($origem == "WEB") {
+            $linha->id_pessoa = Auth::user()->id_pessoa;
+            $linha->nome = Pessoas::find($linha->id_pessoa)->nome;
+        } else if ($nome) $linha->nome = $linha->nome;
+        $linha->data = date("Y-m-d");
+        $linha->hms = date("H:i:s");
         $linha->save();
         return $linha;
     }
 
-    protected function log_inserir2($acao, $tabela, $where, $nome, $api = false) {
-        if ($nome != "NULL") $nome = "'".$nome."'";
-        $sql = "INSERT INTO log (acao, tabela, nome, ";
-        if (!$api) $sql .= "id_pessoa, ";
-        $sql .= "fk) SELECT
-            '".$acao."',
-            '".$tabela."',
-            ".$nome.",
-        ";
-        if (!$api) $sql .= Auth::user()->id_pessoa.",";
-        $sql .= "
-            id
-
-            FROM ".$tabela."
-
-            WHERE ".$where;
-        DB::statement($sql);
+    protected function log_inserir_lote($acao, $origem, $tabela, $where, $nome = "") {
+        $lista = DB::table($tabela)
+                    ->whereRaw($where)
+                    ->pluck("id")
+                    ->toArray();
+        foreach ($lista as $fk) $this->log_inserir($acao, $tabela, $fk, $origem, $nome);
     }
 
     protected function log_consultar($tabela, $param = "") {
         $query = "
             SELECT
-                IFNULL(pessoas.nome, CONCAT(
-                    'API',
-                    IFNULL(CONCAT(' - ', log.nome), '')
-                )) AS nome,
-                DATE_FORMAT(log.created_at, '%d/%m/%Y') AS data
-                /*DATE_FORMAT(log.created_at, '%d/%m/%Y às %H:%i') AS data*/
+                IFNULL(log.nome, log.origem) AS nome,
+                CONCAT(DATE_FORMAT(log.data, '%d/%m/%Y'), CASE WHEN log.hms IS NOT NULL CONCAT(' às ', log.hms) ELSE '' END) AS data
 
             FROM log
 
@@ -94,8 +85,8 @@ class ControllerKX extends Controller {
                 LEFT JOIN retiradas
                     ON retiradas.id_atribuicao = atb.id AND retiradas.id_comodato = 0
 
-                WHERE (log.tabela = 'pessoas' AND ".$param.")
-                    OR (".$param2." AND (log.tabela = 'atribuicoes' OR (log.tabela = 'retiradas' AND retiradas.id IS NOT NULL)))
+                WHERE ((log.tabela = 'pessoas' AND ".$param.")
+                    OR (".$param2." AND (log.tabela = 'atribuicoes' OR (log.tabela = 'retiradas' AND retiradas.id IS NOT NULL))))
             ";
         } else if ($tabela == "valores") {
             $query .= "
@@ -111,9 +102,9 @@ class ControllerKX extends Controller {
                 LEFT JOIN estoque
                     ON estoque.id_mp = mp.id
 
-                WHERE (log.tabela = 'valores' AND main.id IS NOT NULL)
+                WHERE ((log.tabela = 'valores' AND main.id IS NOT NULL)
                    OR (log.tabela = 'maquinas_produtos' AND mp.id IS NOT NULL)
-                   OR (log.tabela = 'estoque' AND estoque.id IS NOT NULL)
+                   OR (log.tabela = 'estoque' AND estoque.id IS NOT NULL))
             ";
         } else if ($tabela == "setores") {
             $query .= "
@@ -123,12 +114,12 @@ class ControllerKX extends Controller {
                     WHERE pessoa_ou_setor_chave = 'S'
                 ) AS atb ON atb.id = log.fk
 
-                WHERE log.tabela = 'setores'
-                  OR (log.tabela = 'atribuicoes' AND atb.id IS NOT NULL)
+                WHERE (log.tabela = 'setores'
+                  OR (log.tabela = 'atribuicoes' AND atb.id IS NOT NULL))
             ";
         } else $query .= " WHERE log.tabela = '".$tabela."'";
 
-        $query .= " ORDER BY log.id DESC";
+        $query .= " AND log.origem IS NOT NULL ORDER BY log.id DESC";
 
         $consulta = DB::select(DB::raw($query));
         return !intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa) ? sizeof($consulta) ? "Última atualização feita por ".$consulta[0]->nome." em ".$consulta[0]->data : "Nenhuma atualização feita" : "";
@@ -159,10 +150,11 @@ class ControllerKX extends Controller {
         $linha->id_empresa = Pessoas::find($json["id_pessoa"])->id_empresa;
         $linha->save();
         $api = $json["id_comodato"] > 0;
-        $modelo = $this->log_inserir("C", "retiradas", $linha->id, $api);
+        $reg_log = $this->log_inserir("C", "retiradas", $linha->id, $api ? "APP" : "WEB");
         if ($api) {
-            $modelo->nome = "APP";
-            $modelo->save();
+            $reg_log->id_pessoa = $json["id_pessoa"];
+            $reg_log->nome = Pessoas::find($json["id_pessoa"])->nome;
+            $reg_log->save();
         }
         return $linha;
     }
@@ -210,16 +202,12 @@ class ControllerKX extends Controller {
                 $gestor->id_maquina = $maquina;
                 $gestor->id_produto = $id_produto;
                 $gestor->save();
-                $modelo = $this->log_inserir("C", "maquinas_produtos", $gestor->id, $api);
-                if ($nome) {
-                    $modelo->nome = $nome;
-                    $modelo->save();
-                }
+                $this->log_inserir("C", "maquinas_produtos", $gestor->id, $api ? "APP" : "WEB", $nome);
             }
         }
     }
 
-    protected function atribuicao_atualiza_ref($id, $antigo, $novo, $nome, $api = false) {
+    protected function atribuicao_atualiza_ref($id, $antigo, $novo, $nome = "", $api = false) {
         if ($id) {
             $novo = trim($novo);
             $where = "produto_ou_referencia_valor = '".$antigo."' AND produto_ou_referencia_chave = 'R'";
@@ -228,7 +216,7 @@ class ControllerKX extends Controller {
                 SET ".($novo ? "produto_ou_referencia_valor = '".$novo."'" : "lixeira = 1")."
                 WHERE ".$where
             );
-            $this->log_inserir2($novo ? "E" : "D", "atribuicoes", $where, $nome, $api);
+            $this->log_inserir_lote($novo ? "E" : "D", $api ? "ERP" : "WEB", "atribuicoes", $where, $nome);
         }
     }
 
