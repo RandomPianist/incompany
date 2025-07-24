@@ -126,12 +126,12 @@ class ControllerKX extends Controller {
     }
 
     protected function retirada_consultar($id_atribuicao, $qtd) {
-        return floatval(
-            DB::table("vpendentes")
-                ->where("id_atribuicao", $id_atribuicao)
-                ->where("id_pessoa", Atribuicoes::find($id_atribuicao)->pessoa_ou_setor_valor)
-                ->value("qtd")
-        ) > floatval($qtd) ? 0 : 1;
+        $consulta = DB::table("vpendentes")
+                        ->where("id_atribuicao", $id_atribuicao)
+                        ->where("id_pessoa", Atribuicoes::find($id_atribuicao)->pessoa_ou_setor_valor)
+                        ->value("qtd");
+        if ($consulta === null) return 0;
+        return floatval($consulta) > floatval($qtd) ? 0 : 1;
     }
 
     protected function retirada_salvar($json) {
