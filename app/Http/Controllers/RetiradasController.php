@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use DB;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\Atribuicoes;
 
 class RetiradasController extends ControllerKX {
     public function consultar(Request $request) {
