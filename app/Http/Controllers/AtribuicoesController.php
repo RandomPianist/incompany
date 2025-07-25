@@ -12,7 +12,7 @@ class AtribuicoesController extends ControllerKX {
     private function atualizar_aa(Atribuicoes $atribuicao) {
         $lista = DB::table("pessoas")
                     ->where("lixeira", 0)
-                    ->where($atribuicao->pessoa_ou_setor_chave = "S" ? "id_setor" : "id", $atribuicao->pessoa_ou_setor_valor)
+                    ->where($atribuicao->pessoa_ou_setor_chave == "S" ? "id_setor" : "id", $atribuicao->pessoa_ou_setor_valor)
                     ->pluck("id")
                     ->toArray();
         DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
