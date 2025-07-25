@@ -506,7 +506,7 @@ CREATE VIEW vpendentes AS (
         IFNULL(produtos.foto, '') AS foto,
         
         CASE
-            WHEN DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY) <= CURDATE() THEN
+            WHEN ((DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY) <= CURDATE()) OR (atbgrp.data IS NULL)) THEN
                 ROUND(CASE
                     WHEN vestoque.qtd < (atribuicoes.qtd - calc_qtd.valor) THEN vestoque.qtd
                     ELSE (atribuicoes.qtd - calc_qtd.valor)
@@ -534,7 +534,7 @@ CREATE VIEW vpendentes AS (
     JOIN (
         SELECT
             aa.id_atribuicao,
-            (atribuicoes.qtd - IFNULL(SUM(retiradas.qtd), 0)) AS valor
+            IFNULL(SUM(retiradas.qtd), 0) AS valor
             
         FROM atribuicoes
         
@@ -581,7 +581,7 @@ CREATE VIEW vpendentes AS (
         GROUP BY aa.id_atribuicao
     ) AS atbgrp ON atbgrp.id_atribuicao = atribuicoes.id
 
-    WHERE DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY) <= CURDATE()
+    WHERE ((DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY) <= CURDATE()) OR (atbgrp.data IS NULL))
       AND (atribuicoes.qtd - calc_qtd.valor) > 0
 
     GROUP BY
