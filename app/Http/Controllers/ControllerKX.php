@@ -49,7 +49,7 @@ class ControllerKX extends Controller {
         $query = "
             SELECT
                 IFNULL(log.nome, log.origem) AS nome,
-                CONCAT(DATE_FORMAT(log.data, '%d/%m/%Y'), CASE WHEN log.hms IS NOT NULL CONCAT(' às ', log.hms) ELSE '' END) AS data
+                CONCAT(DATE_FORMAT(log.data, '%d/%m/%Y'), CASE WHEN log.hms IS NOT NULL THEN CONCAT(' às ', log.hms) ELSE '' END) AS data
 
             FROM log
 
