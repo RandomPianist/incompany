@@ -246,7 +246,7 @@ class ApiController extends ControllerKX {
         $nome = "";
         if (isset($request->usu)) $nome = $request->usu;
         $this->log_inserir($letra_log, "produtos", $linha->id, "ERP", $nome);
-        $this->mov_estoque($linha->id, true, $nome);
+        $this->criar_mp($linha->id, "valores.id", true, $nome);
         $consulta = DB::table("produtos")
                         ->select(
                             "id",

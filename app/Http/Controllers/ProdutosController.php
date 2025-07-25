@@ -118,7 +118,7 @@ class ProdutosController extends ControllerKX {
         if ($request->file("foto")) $linha->foto = $request->file("foto")->store("uploads", "public");
         $linha->save();
         $this->log_inserir($request->id ? "E" : "C", "produtos", $linha->id);
-        $this->mov_estoque($linha->id, false);
+        $this->criar_mp($linha->id, "valores.id");
         return redirect("/produtos");
     }
 

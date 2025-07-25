@@ -7,7 +7,6 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
 use App\Models\Valores;
-use App\Models\MaquinasProdutos;
 
 class ValoresController extends ControllerKX {
     private function busca($alias, $where) {
@@ -183,24 +182,7 @@ class ValoresController extends ControllerKX {
             ) + 1;
         }
         $linha->save();
-        if ($alias == "maquinas") {
-            $produtos = DB::table("produtos")
-                            ->pluck("id");
-            foreach ($produtos as $produto) {
-                if (!sizeof(
-                    DB::table("maquinas_produtos")
-                        ->where("id_produto", $produto)
-                        ->where("id_maquina", $linha->id)
-                        ->get()
-                )) {
-                    $gestor = new MaquinasProdutos;
-                    $gestor->id_maquina = $linha->id;
-                    $gestor->id_produto = $produto;
-                    $gestor->save();
-                    $this->log_inserir("C", "maquinas_produtos", $gestor->id);
-                }
-            }
-        }
+        if ($alias == "maquinas") $this->criar_mp("produtos.id", $linha->id);
         $this->log_inserir($request->id ? "E" : "C", "valores", $linha->id);
         return redirect("/valores/$alias");
     }

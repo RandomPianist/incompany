@@ -9,7 +9,6 @@ use App\Models\Log;
 use App\Models\Pessoas;
 use App\Models\Atribuicoes;
 use App\Models\Retiradas;
-use App\Models\MaquinasProdutos;
 
 class ControllerKX extends Controller {
     protected function empresa_consultar(Request $request) {
@@ -187,24 +186,45 @@ class ControllerKX extends Controller {
         return $resultado;
     }
 
-    protected function mov_estoque($id_produto, $api, $nome = "") {
-        $maquinas = DB::table("valores")
-                        ->where("alias", "maquinas")
-                        ->pluck("id");
-        foreach ($maquinas as $maquina) {
-            if (!sizeof(
-                DB::table("maquinas_produtos")
-                    ->where("id_produto", $id_produto)
-                    ->where("id_maquina", $maquina)
-                    ->get()
-            )) {
-                $gestor = new MaquinasProdutos;
-                $gestor->id_maquina = $maquina;
-                $gestor->id_produto = $id_produto;
-                $gestor->save();
-                $this->log_inserir("C", "maquinas_produtos", $gestor->id, $api ? "APP" : "WEB", $nome);
-            }
-        }
+    protected function criar_mp($id_produto, $id_maquina, $api = false, $nome = "") {
+        $id_produto = strval($id_produto);
+        $id_maquina = strval($id_maquina);
+        $tabela = strpos(".", $id_maquina) !== false ? "valores" : "produtos";
+        DB::statement("
+            INSERT INTO maquinas_produtos (id_produto, id_maquina) (
+                SELECT
+                    ".$id_produto.",
+                    ".$id_maquina."
+
+                FROM ".$tabela."
+
+                LEFT JOIN maquinas_produtos AS mp
+                    ON mp.id_produto = ".$id_produto." AND mp.id_maquina = ".$id_maquina."
+                
+                WHERE mp.id IS NULL ".($tabela == "valores" ? " AND valores.alias = 'maquinas'" : "")."
+            )
+        ");
+        $id_pessoa = $api ? "NULL" : Auth::user()->id_pessoa;
+        if (!$api) $nome = Pessoas::find($id_pessoa)->nome;
+        DB::statement("
+            INSERT INTO log (id_pessoa, nome, origem, acao, tabela, fk, data) (
+                SELECT
+                    ".$id_pessoa.",
+                    ".($nome ? "'".$nome."'" : "NULL").",
+                    '".($api ? "ERP" : "WEB")."',
+                    'C',
+                    'maquinas_produtos',
+                    mp.id,
+                    CURDATE()
+
+                FROM maquinas_produtos AS mp
+
+                LEFT JOIN log
+                    ON log.tabela = 'maquinas_produtos' AND log.fk = mp.id
+
+                WHERE log.id IS NULL
+            )
+        ");
     }
 
     protected function atribuicao_atualiza_ref($id, $antigo, $novo, $nome = "", $api = false) {
