@@ -338,7 +338,7 @@ class RelatoriosController extends ControllerKX {
                             "entradas" => $itens2->sum("entradas"),
                             "saidas" => $itens2->sum("saidas"),
                             "sugeridos" => $sugeridos,
-                            "minimo" => ($request->inicio && $request->fim) ? number_format($giro, 2) : $minimo,
+                            "minimo" => ($request->tipo == "G" && $request->resumo == "S") ? number_format($giro, 2) : $minimo,
                             "movimentacao" => $itens2->map(function($movimento) {
                                 $qtd = floatval($movimento->qtd);
                                 return [
