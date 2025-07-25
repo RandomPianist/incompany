@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use DB;
+use Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Models\Pessoas;
 use App\Models\Produtos;
 use App\Models\Atribuicoes;
 
@@ -127,23 +129,56 @@ class ProdutosController extends ControllerKX {
         $linha->lixeira = 1;
         $linha->save();
         $this->log_inserir("D", "produtos", $linha->id);
-        $lista = array();
-        $prod = DB::table("produtos")->where("id", $request->id);
-        $consulta = DB::table("atribuicoes")
-                        ->where(function($sql) use ($request) {
-                            $sql->whereIn("produto_ou_referencia_valor", $prod->pluck("cod_externo")->toArray())
+        
+        $lista_atb = DB::table("atribuicoes")
+                        ->where(function($sql) use($linha) {
+                            $sql->where("produto_ou_referencia_valor", $linha->cod_externo)
                                 ->where("produto_ou_referencia_chave", "P");
                         })
-                        ->orWhere(function($sql) use ($request) {
-                            $sql->whereIn("produto_ou_referencia_valor", $prod->pluck("referencia")->toArray())
+                        ->orWhere(function($sql) use($linha) {
+                            $sql->where("produto_ou_referencia_valor", $linha->referencia)
                                 ->where("produto_ou_referencia_chave", "R");
                         })
-                        ->pluck("id");
-        foreach ($consulta as $atb) {
-            $modelo = Atribuicoes::find($atb);
-            $modelo->lixeira = 1;
-            $modelo->save();
-            $this->log_inserir("D", "atribuicoes", $atb);
+                        ->pluck("id")
+                        ->toArray();
+        
+        if (sizeof($lista_atb)) {
+            $pessoa = Pessoas::find(Auth::user()->id_pessoa);
+            DB::statement("UPDATE atribuicoes SET lixeira = 1 WHERE id IN (".join(",", $lista_atb).")");
+            DB::statement("
+                INSERT INTO log (id_pessoa, nome, origem, acao, tabela, fk, data) (
+                    SELECT
+                        ".$pessoa->id.",
+                        '".$pessoa->nome."',
+                        'WEB',
+                        'D',
+                        'atribuicoes',
+                        id,
+                        CURDATE()
+
+                    FROM atribuicoes
+
+                    WHERE id IN (".join(",", $lista_atb).")
+                )
+            ");
+            $lista_pessoas = DB::table("pessoas")
+                                ->selectRaw("DISTINCTROW pessoas.id")
+                                ->join("atribuicoes", function($join) {
+                                    $join->on(function($sql) {
+                                        $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoa.id")
+                                            ->where("atribuicoes.pessoa_ou_setor_chave", "P");
+                                    })->orOn(function($sql) {
+                                        $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoa.id_setor")
+                                            ->where("atribuicoes.pessoa_ou_setor_chave", "S");
+                                    });
+                                })
+                                ->whereIn("atribuicoes.id", $lista_atb)
+                                ->pluck("pessoas.id")
+                                ->toArray();
+            if (sizeof($lista_pessoas)) {
+                DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista_pessoas).")");
+                DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista_pessoas).")");
+            }
         }
     }
 }
