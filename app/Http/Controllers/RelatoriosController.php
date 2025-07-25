@@ -324,7 +324,9 @@ class RelatoriosController extends ControllerKX {
                         if ($request->tipo == "G" && $request->resumo == "S") {
                             $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio);
                             $fim = Carbon::createFromFormat('d/m/Y', $request->fim);
-                            $giro = $itens2->sum("saidas") / $inicio->diffInDays($fim);
+                            $diferenca = $inicio->diffInDays($fim);
+                            if (!$diferenca) $diferenca = 1;
+                            $giro = $itens2->sum("saidas") / $diferenca;
                             $sugeridos = intval(($giro * intval($request->dias)) - $saldo_res);
                         } else $sugeridos = $minimo - $saldo_res;
                         if ($sugeridos < 0) $sugeridos = 0;
