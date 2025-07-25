@@ -111,7 +111,8 @@
                 if (!erro) {
                     $.get(URL + "/retiradas/consultar", {
                         atribuicao : id,
-                        qtd : document.getElementById("quantidade2").value
+                        qtd : document.getElementById("quantidade2").value,
+                        pessoa : pessoa_atribuindo
                     }, function(ok) {
                         if (!parseInt(ok)) modal2("supervisorModal", ["cpf2", "senha2"]);
                         else retirarMain(id);

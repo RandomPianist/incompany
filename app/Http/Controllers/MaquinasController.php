@@ -7,7 +7,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Comodatos;
 use App\Models\Estoque;
-use App\Models\MaquinasProdutos;
 
 class MaquinasController extends ControllerKX {
     public function estoque(Request $request) {

@@ -9,7 +9,7 @@ use App\Models\Atribuicoes;
 
 class RetiradasController extends ControllerKX {
     public function consultar(Request $request) {
-        return $this->retirada_consultar($request->atribuicao, $request->qtd);
+        return $this->retirada_consultar($request->atribuicao, $request->qtd, $request->pessoa);
     }
 
     public function salvar(Request $request) {

@@ -7,7 +7,6 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Log;
 use App\Models\Pessoas;
-use App\Models\Atribuicoes;
 use App\Models\Retiradas;
 
 class ControllerKX extends Controller {
@@ -124,10 +123,10 @@ class ControllerKX extends Controller {
         return !intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa) ? sizeof($consulta) ? "Última atualização feita por ".$consulta[0]->nome." em ".$consulta[0]->data : "Nenhuma atualização feita" : "";
     }
 
-    protected function retirada_consultar($id_atribuicao, $qtd) {
+    protected function retirada_consultar($id_atribuicao, $qtd, $id_pessoa) {
         $consulta = DB::table("vpendentes")
                         ->where("id_atribuicao", $id_atribuicao)
-                        ->where("id_pessoa", Atribuicoes::find($id_atribuicao)->pessoa_ou_setor_valor)
+                        ->where("id_pessoa", $id_pessoa)
                         ->value("qtd");
         if ($consulta === null) return 0;
         return floatval($consulta) > floatval($qtd) ? 0 : 1;
