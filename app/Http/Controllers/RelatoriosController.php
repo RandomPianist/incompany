@@ -227,7 +227,7 @@ class RelatoriosController extends ControllerKX {
                     DB::raw("IFNULL(mp.preco, produtos.preco) AS preco"),
 
                     // DETALHES
-                    DB::raw("CONCAT(DATE_FORMAT(log.data, '%d/%m/%Y'), CASE WHEN log.hms IS NOT NULL CONCAT(' ', log.hms) ELSE '' END) AS data"),
+                    DB::raw("CONCAT(DATE_FORMAT(log.data, '%d/%m/%Y'), CASE WHEN log.hms IS NOT NULL THEN CONCAT(' ', log.hms) ELSE '' END) AS data"),
                     "mp.minimo",
                     "estoque.es",
                     "estoque.descr AS estoque_descr",
@@ -249,7 +249,7 @@ class RelatoriosController extends ControllerKX {
                             ELSE 0
                         END AS saidas
                     "),
-                    "IFNULL(log.nome, IFNULL(log.origem, 'DESCONHECIDO')) AS autor"
+                    DB::raw("IFNULL(log.nome, IFNULL(log.origem, 'DESCONHECIDO')) AS autor")
                 )
                 ->join("estoque", "estoque.id", "log.fk")
                 ->join("maquinas_produtos AS mp", "mp.id", "estoque.id_mp")
@@ -353,7 +353,7 @@ class RelatoriosController extends ControllerKX {
             ];
         })->sortBy("descr")->values()->all();
         if ($resumo) {
-            if ($request->tipo == "G") array_push($criterios, "Compra sugerida para ".$request->dias." dias");
+            if ($request->tipo == "G") array_push($criterios, "Compra sugerida para ".$request->dias." dia".(intval($request->dias) > 1 ? "s" : ""));
             if ($lm) array_push($criterios, "Apenas produtos cuja compra é sugerida");
         }
         $criterios = join(" | ", $criterios);
