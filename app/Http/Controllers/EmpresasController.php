@@ -20,22 +20,9 @@ class EmpresasController extends ControllerKX {
                         $id_emp = Pessoas::find(Auth::user()->id_pessoa)->id_empresa;
                         if (intval($id_emp)) {
                             $empresa_usuario = Empresas::find($id_emp);
-                            if ($param == "matriz") {
-                                if (!intval($empresa_usuario->id_matriz)) 
-                                    $sql->where("id", $empresa_usuario->id);
-                                else 
-                                    $sql->where("id", $empresa_usuario->id_matriz);
-                            } else {
-                                if (!intval($empresa_usuario->id_matriz)) 
-                                    $sql->where("id_matriz", $empresa_usuario->id);
-                                else 
-                                    $sql->where("id", $empresa_usuario->id);
-                            }
-                        } else if ($param == "matriz") {
-                            $sql->where("id_matriz", 0);
-                        } else {
-                            $sql->where("id_matriz", ">", 0);
-                        }
+                            if ($param == "filial" && !intval($empresa_usuario->id_matriz)) $sql->where("id_matriz", $empresa_usuario->id);
+                            else $sql->where("id", $param == "matriz" ? !intval($empresa_usuario->id_matriz) ? $empresa_usuario->id : $empresa_usuario->id_matriz : $empresa_usuario->id);
+                        } else $sql->where("id_matriz", $param == "matriz" ? "=" : ">", 0);
                     })
                     ->where("lixeira", 0)
                     ->orderBy("nome_fantasia")
