@@ -58,7 +58,8 @@ class ApiController extends ControllerKX {
                         qtd,
                         ultima_retirada,
                         proxima_retirada
-                    "));
+                    "))
+                    ->get();
     }
 
     private function produtos_por_pessoa_main($id_pessoa, $grade) {
