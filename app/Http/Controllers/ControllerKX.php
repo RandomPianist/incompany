@@ -239,11 +239,11 @@ class ControllerKX extends Controller {
         }
     }
 
-    protected function obter_where($id_pessoa) {
+    protected function obter_where($id_pessoa, $coluna = "pessoas.id_empresa") {
         $id_emp = Pessoas::find($id_pessoa)->id_empresa;
-        $where = "pessoas.lixeira = 0";
+        $where = $coluna == "pessoas.id_empresa" ? "pessoas.lixeira = 0" : "1";
         if (intval($id_emp)) {
-            $where .= " AND pessoas.id_empresa IN (
+            $where .= " AND ".$coluna." IN (
                 SELECT id
                 FROM empresas
                 WHERE empresas.id = ".$id_emp."

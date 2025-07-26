@@ -39,6 +39,7 @@ class RelatoriosController extends ControllerKX {
                     ->join("valores", "valores.id", "comodatos.id_maquina")
                     ->join("empresas", "empresas.id", "comodatos.id_empresa")
                     ->select(DB::raw($select))
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "empresas.id"))
                     ->where("valores.lixeira", 0)
                     ->where("empresas.lixeira", 0);
     }
