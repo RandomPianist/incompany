@@ -10,6 +10,39 @@ use App\Models\Pessoas;
 use App\Models\Empresas;
 
 class RelatoriosController extends ControllerKX {
+    private function maquinas_periodo($inicio, $fim) {
+        $where = "";
+        if ($inicio) $where .= "('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim)";
+        if ($fim) {
+            if ($where) $where .= " OR ";
+            $where .= "('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim)";
+        }
+        $where = $where ? "(".$where.")" : "1";    
+        return DB::table("comodatos")
+                    ->joinsub(
+                        DB::table("pessoas")
+                            ->select(
+                                "id AS id_pessoa",
+                                "id_empresa"
+                            )
+                            ->unionAll(
+                                DB::table("pessoas")
+                                    ->select(
+                                        "pessoas.id AS id_pessoa",
+                                        "filiais.id AS id_empresa"
+                                    )
+                                    ->join("empresas AS filiais", "filiais.id_matriz", "pessoas.id_empresa")
+                            ),
+                        "minhas_empresas",
+                        "minhas_empresas.id_empresa",
+                        "comodatos.id_empresa"
+                    )
+                    ->whereRaw($where)
+                    ->where("minhas_empresas.id_empresa", Pessoas::find(Auth::user()->id_pessoa)->id_empresa)                    
+                    ->pluck("comodatos.id_maquina")
+                    ->toArray();
+    }
+
     private function consultar_maquina(Request $request) {
         return ((!sizeof(
             DB::table("valores")
@@ -167,12 +200,12 @@ class RelatoriosController extends ControllerKX {
                 "cnpj" => $itens[0]->cnpj,
                 "retiradas" => $itens->map(function($retirada) {
                     return [
-                        "produto"     => $retirada->produto,
-                        "data"        => $retirada->data,
-                        "obs"         => $retirada->obs,
-                        "ca"          => $retirada->ca,
+                        "produto" => $retirada->produto,
+                        "data" => $retirada->data,
+                        "obs" => $retirada->obs,
+                        "ca" => $retirada->ca,
                         "validade_ca" => $retirada->validade_ca,
-                        "qtd"         => $retirada->qtd,
+                        "qtd" => $retirada->qtd,
                     ];
                 })->values()->all()
             ];
@@ -278,15 +311,18 @@ class RelatoriosController extends ControllerKX {
                     "tot", "tot.id_mp", "mp.id"
                 )
                 ->where(function($sql) use($request, &$criterios) {
+                    $inicio = "";
+                    $fim = "";
+                    if ($request->inicio) $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
+                    if ($request->fim) $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
+                    
                     if ($request->inicio || $request->fim) {
                         $periodo = "Período";
                         if ($request->inicio) {
-                            $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
                             $sql->whereRaw("log.data >= '".$inicio."'");
                             $periodo .= " de ".$request->inicio;
                         }
                         if ($request->fim) {
-                            $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
                             $sql->whereRaw("log.data <= '".$fim."'");
                             $periodo .= " até ".$request->fim;
                         }
@@ -306,6 +342,7 @@ class RelatoriosController extends ControllerKX {
                         array_push($criterios, "Produto: ".$produto);
                         $sql->where("mp.id_produto", $request->id_produto);
                     }
+                    if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) $sql->whereIn("mp.id_maquina", $this->maquinas_periodo($inicio, $fim));
                 })
                 ->where("log.tabela", "estoque")
                 ->where("produtos.lixeira", 0)
@@ -343,10 +380,10 @@ class RelatoriosController extends ControllerKX {
                             "movimentacao" => $itens2->map(function($movimento) {
                                 $qtd = floatval($movimento->qtd);
                                 return [
-                                    "data"  => $movimento->data,
-                                    "es"    => $movimento->es,
+                                    "data" => $movimento->data,
+                                    "es" => $movimento->es,
                                     "descr" => $movimento->estoque_descr,
-                                    "qtd"   => ($qtd < 0 ? ($qtd * -1) : $qtd),
+                                    "qtd" => ($qtd < 0 ? ($qtd * -1) : $qtd),
                                     "autor" => $movimento->autor
                                 ];
                             })->values()->all()
@@ -455,16 +492,19 @@ class RelatoriosController extends ControllerKX {
                          ->on("mp.id_maquina", "comodatos.id_maquina");
                 })
                 ->where(function($sql) use($request, &$criterios) {
+                    $inicio = "";
+                    $fim = "";
+                    if ($request->inicio) $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
+                    if ($request->fim) $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
+                    
                     if ($request->inicio || $request->fim) {
                         $periodo = "Período";
                         if ($request->inicio) {
-                            $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
-                            $sql->whereRaw("retiradas.data >= '".$inicio."'");
+                            $sql->whereRaw("log.data >= '".$inicio."'");
                             $periodo .= " de ".$request->inicio;
                         }
                         if ($request->fim) {
-                            $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-                            $sql->whereRaw("retiradas.data ,= '".$fim."'");
+                            $sql->whereRaw("log.data <= '".$fim."'");
                             $periodo .= " até ".$request->fim;
                         }
                         array_push($criterios, $periodo);
@@ -493,6 +533,16 @@ class RelatoriosController extends ControllerKX {
                     if ($request->consumo != "todos") {
                         $sql->where("produtos.consumo", $request->consumo == "epi" ? 0 : 1);
                         array_push($criterios, "Apenas ".($request->consumo == "epi" ? "EPI" : "produtos de consumo"));
+                    }
+
+                    if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) {
+                        $sql->where(function($where) use($inicio, $fim) {
+                            $where->where(function($w) use($inicio, $fim) {
+                                $w->whereIn("comodatos.id_maquina", $this->maquinas_periodo($inicio, $fim));
+                            })->orWhere(function($w) {
+                                $w->whereNull("comodatos.id_maquina");
+                            });
+                        });
                     }
                 })
                 ->groupby(
