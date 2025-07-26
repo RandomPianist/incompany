@@ -78,7 +78,7 @@ class ProdutosController extends ControllerKX {
                         ->where("produtos.id", $id)
                         ->first();
         if ($produto->foto == null) $produto->foto = "";
-        else if (!stripos($produto->foto, "//")) $produto->foto = asset("storage/".$produto->foto);
+        else if (stripos($produto->foto, "//") === false) $produto->foto = asset("storage/".$produto->foto);
         return json_encode($produto);
     }
 
