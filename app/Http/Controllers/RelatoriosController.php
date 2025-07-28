@@ -406,7 +406,7 @@ class RelatoriosController extends ControllerKX {
                     "saidas_totais" => number_format($saidas_totais, 0),
                     "saldo_res" => number_format($saldo_res, 0),
                     "giro" => number_format($giro, 2),
-                    "sugeridos" => number_format($sugeridos, 0)
+                    "sugeridos" => ceil($sugeridos)
                 ];
             })->filter(function($produto) use ($lm) {
                 return !$lm || intval($produto["sugeridos"]);
