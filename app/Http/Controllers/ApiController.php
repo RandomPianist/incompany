@@ -306,7 +306,7 @@ class ApiController extends ControllerKX {
         );
         $nome = "";
         if (isset($request->usu)) $nome = $request->usu;
-        $this->log_inserir_lote("E", "APP", "maquinas_produtos", $where, $nome);
+        $this->log_inserir_lote("E", "ERP", "maquinas_produtos", $where, $nome);
     }
 
     public function validar_app(Request $request) {
