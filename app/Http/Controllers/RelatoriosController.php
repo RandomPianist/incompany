@@ -363,11 +363,11 @@ class RelatoriosController extends ControllerKX {
             WHERE ".$where_produto."
 
             GROUP BY
-                mq.id AS id_maquina,
-                mq.descr AS maquina,
+                mq.id,
+                mq.descr,
 
-                produtos.id AS id_produto,
-                produtos.descr AS produto,
+                produtos.id,
+                produtos.descr,
                 mp.minimo
         ")))->groupBy("id_maquina")->map(function($maquinas) use($dias, $diferenca, $tipo, $lm) {
             $produtos = $maquinas->map(function($produto) use($dias, $diferenca, $tipo) {
