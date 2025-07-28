@@ -21,6 +21,7 @@ class RelatoriosController extends ControllerKX {
         }
         $where = $where ? "(".$where.")" : "1";
         return DB::table("comodatos")
+                    ->selectRaw("DISTINCTROW comodatos.id_maquina")
                     ->joinsub(
                         DB::table("pessoas")
                             ->select(
@@ -345,7 +346,7 @@ class RelatoriosController extends ControllerKX {
                             "id_maquina",
                             "inicio"
                         )
-                        ->whereRaw("'".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim) OR ('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim"),
+                        ->whereRaw("('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim) OR ('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim)"),
                     "cm",
                     "cm.id_maquina",
                     "mp.id_maquina"
