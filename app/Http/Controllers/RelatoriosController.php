@@ -257,19 +257,6 @@ class RelatoriosController extends ControllerKX {
         $inicio = $dtinicio->format('Y-m-d');
         $fim = $dtfim->format('Y-m-d');
         if (!$diferenca) $diferenca = 1;
-        $where_maquina = "alias = 'maquinas' AND lixeira = 0";
-        if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) $where_maquina .= " AND id IN (".join(",", $this->maquinas_periodo($inicio, $fim)).")";
-        if ($request->id_maquina) {
-            $maquina = Valores::find($request->id_maquina);
-            array_push($criterios, "Máquina: ".$maquina->descr);
-            $where_maquina .= " AND id = ".$maquina->id;
-        }
-        $where_produto = "produtos.lixeira = 0";
-        if ($request->id_produto) {
-            $produto = Produtos::find($request->id_produto);
-            array_push($criterios, "Produto: ".$produto->descr);
-            $where_produto .= " AND produtos.id = ".$produto->id;
-        }
         
         $resultado = collect(
             DB::table("maquinas_produtos AS mp")
@@ -381,9 +368,11 @@ class RelatoriosController extends ControllerKX {
                     "mp.id"
                 )
                 ->where(function($sql) use($request, &$criterios) {
-                    $produto = Produtos::find($request->id_produto);
-                    array_push($criterios, "Produto: ".$produto->descr);
-                    $sql->where("produtos.id", $produto->id);
+                    if ($request->id_produto) {
+                        $produto = Produtos::find($request->id_produto);
+                        array_push($criterios, "Produto: ".$produto->descr);
+                        $sql->where("produtos.id", $produto->id);
+                    }
                 })
                 ->where("produtos.lixeira", 0)
                 ->groupby(
