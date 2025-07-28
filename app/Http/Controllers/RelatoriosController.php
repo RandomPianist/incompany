@@ -8,6 +8,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
 use App\Models\Empresas;
+use App\Models\Valores;
+use App\Models\Produtos;
 
 class RelatoriosController extends ControllerKX {
     private function maquinas_periodo($inicio, $fim) {
@@ -17,7 +19,7 @@ class RelatoriosController extends ControllerKX {
             if ($where) $where .= " OR ";
             $where .= "('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim)";
         }
-        $where = $where ? "(".$where.")" : "1";    
+        $where = $where ? "(".$where.")" : "1";
         return DB::table("comodatos")
                     ->joinsub(
                         DB::table("pessoas")
@@ -243,6 +245,173 @@ class RelatoriosController extends ControllerKX {
         return sizeof($resultado) ? view("reports/comodatos", compact("resultado")) : view("nada");
     }
 
+    public function sugestao(Request $request) {
+        $criterios = array();
+        array_push($criterios, "Período de ".$request->inicio." até ".$request->fim);
+        $lm = $request->lm == "S";
+        $tipo = $request->tipo;
+        $dias = intval($request->dias);
+        $dtinicio = Carbon::createFromFormat('d/m/Y', $request->inicio);
+        $dtfim = Carbon::createFromFormat('d/m/Y', $request->fim);
+        $diferenca = $dtinicio->diffInDays($dtfim);
+        $inicio = $dtinicio->format('Y-m-d');
+        $fim = $dtfim->format('Y-m-d');
+        if (!$diferenca) $diferenca = 1;
+        $where_maquina = "alias = 'maquinas' AND lixeira = 0";
+        if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) $where_maquina .= " AND id IN (".join(",", $this->maquinas_periodo($inicio, $fim)).")";
+        if ($request->id_maquina) {
+            $maquina = Valores::find($request->id_maquina);
+            array_push($criterios, "Máquina: ".$maquina->descr);
+            $where_maquina .= " AND id = ".$maquina->id;
+        }
+        $where_produto = "produtos.lixeira = 0";
+        if ($request->id_produto) {
+            $produto = Produtos::find($request->id_produto);
+            array_push($criterios, "Produto: ".$produto->descr);
+            $where_produto .= " AND produtos.id = ".$produto->id;
+        }
+        
+        $resultado = collect(DB::select(DB::raw("
+            SELECT
+                mq.id AS id_maquina,
+                mq.descr AS maquina,
+
+                produtos.id AS id_produto,
+                produtos.descr AS produto,
+                mp.minimo,
+                SUM(
+                    CASE
+                        WHEN (estq.data >= cm.inicio AND estq.data < '".$inicio."') THEN
+                            CASE
+                                WHEN estq.es = 'E' THEN estq.qtd
+                                ELSE estq.qtd * -1
+                            END
+                        ELSE 0
+                    END
+                ) AS saldo_ant,
+                SUM(
+                    CASE
+                        WHEN (estq.data >= '".$inicio."' AND estq.data <= '".$fim."') THEN
+                            CASE
+                                WHEN estq.es = 'E' THEN estq.qtd
+                                ELSE 0
+                            END
+                        ELSE 0
+                    END
+                ) AS entradas,
+                SUM(
+                    CASE
+                        WHEN (estq.data >= '".$inicio."' AND estq.data <= '".$fim."' AND estq.origem = 'ERP') THEN
+                            CASE
+                                WHEN estq.es = 'S' THEN estq.qtd
+                                ELSE 0
+                            END
+                        ELSE 0
+                    END
+                ) AS saidas_avulsas,
+                SUM(
+                    CASE
+                        WHEN (estq.data >= '".$inicio."' AND estq.data <= '".$fim."' AND estq.origem <> 'ERP') THEN
+                            CASE
+                                WHEN estq.es = 'S' THEN estq.qtd
+                                ELSE 0
+                            END
+                        ELSE 0
+                    END
+                ) AS retiradas
+
+            FROM (
+                SELECT
+                    id,
+                    descr
+
+                FROM valores
+
+                WHERE ".$where_maquina."
+            ) AS mq
+
+            JOIN (
+                SELECT
+                    id_maquina,
+                    inicio
+
+                FROM comodatos
+
+                WHERE ('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim) OR ('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim)
+            ) AS cm ON cm.id_maquina = mq.id
+
+            JOIN maquinas_produtos AS mp
+                ON mp.id_maquina = mq.id
+
+            JOIN (
+                SELECT
+                    estoque.id_mp,
+                    estoque.es,
+                    estoque.qtd,
+                    log.data,
+                    log.origem
+
+                FROM estoque
+
+                JOIN log
+                    ON log.tabela = 'estoque' AND log.fk = estoque.id
+            ) AS estq ON estq.id_mp = mp.id
+
+            JOIN produtos
+                ON produtos.id = mp.id_produto
+
+            WHERE ".$where_produto."
+
+            GROUP BY
+                mq.id AS id_maquina,
+                mq.descr AS maquina,
+
+                produtos.id AS id_produto,
+                produtos.descr AS produto,
+                mp.minimo
+        ")))->groupBy("id_maquina")->map(function($maquinas) use($dias, $diferenca, $tipo, $lm) {
+            $produtos = $maquinas->map(function($produto) use($dias, $diferenca, $tipo) {
+                $saldo_ant = floatval($produto->saldo_ant);
+                $entradas = floatval($produto->entradas);
+                $saidas_avulsas = floatval($produto->saidas_avulsas);
+                $retiradas = floatval($produto->retiradas);
+                $minimo = floatval($produto->minimo);
+                $saidas_totais = $saidas_avulsas + $retiradas;
+                $saldo_res = $saldo_ant + $entradas - $saidas_totais;
+                $giro = $retiradas / $diferenca;
+                $sugeridos = $tipo == "G" ? (($giro * $dias) - $saldo_res) : ($minimo - $retiradas);
+                if ($sugeridos < 0) $sugeridos = 0;
+                return [
+                    "descr" => $produto->produto,
+                    "saldo_ant" => number_format($saldo_ant, 0),
+                    "entradas" => number_format($entradas, 0),
+                    "saidas_avulsas" => number_format($saidas_avulsas, 0),
+                    "retiradas" => number_format($retiradas, 0),
+                    "minimo" => number_format($retiradas, 0),
+                    "saidas_totais" => number_format($saidas_totais, 0),
+                    "saldo_res" => number_format($saldo_res, 0),
+                    "giro" => number_format($giro, 2),
+                    "sugeridos" => number_format($sugeridos, 0)
+                ];
+            })->filter(function($produto) use ($lm) {
+                return !$lm || intval($produto["sugeridos"]);
+            })->sortBy("descr")->values();
+            if ($produtos->isEmpty()) return null;
+            return [
+                "maquina" => [
+                    "descr" => $maquinas[0]->maquina,
+                    "produtos" => $produtos->all()
+                ]
+            ];
+        })->filter()->sortBy(fn($m) => $m["maquina"]["descr"])->values()->all();
+        if ($tipo == "G") array_push($criterios, "Compra sugerida para ".$dias." dia".($dias > 1 ? "s" : ""));
+        if ($lm) array_push($criterios, "Apenas produtos cuja compra é sugerida");
+        $criterios = join(" | ", $criterios);
+        $mostrar_giro = $tipo == "G";
+        if (sizeof($resultado)) return view("reports/saldo", compact("resultado", "criterios", "mostrar_giro"));
+        return view("nada");
+    }
+
     public function extrato(Request $request) {
         $criterios = array();
         $lm = $request->lm == "S";
@@ -329,18 +498,14 @@ class RelatoriosController extends ControllerKX {
                         array_push($criterios, $periodo);
                     }
                     if ($request->id_maquina) {
-                        $maquina = DB::table("valores")
-                                        ->where("id", $request->id_maquina)
-                                        ->value("descr");
-                        array_push($criterios, "Máquina: ".$maquina);
-                        $sql->where("mp.id_maquina", $request->id_maquina);
+                        $maquina = Valores::find($request->id_maquina);
+                        array_push($criterios, "Máquina: ".$maquina->descr);
+                        $sql->where("mp.id_maquina", $maquina->id);
                     }
                     if ($request->id_produto) {
-                        $produto = DB::table("produtos")
-                                        ->where("id", $request->id_produto)
-                                        ->value("descr");
-                        array_push($criterios, "Produto: ".$produto);
-                        $sql->where("mp.id_produto", $request->id_produto);
+                        $produto = Produtos::find($request->id_produto);
+                        array_push($criterios, "Produto: ".$produto->descr);
+                        $sql->where("mp.id_produto", $produto->id);
                     }
                     if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) $sql->whereIn("mp.id_maquina", $this->maquinas_periodo($inicio, $fim));
                 })
@@ -397,7 +562,7 @@ class RelatoriosController extends ControllerKX {
             if ($lm) array_push($criterios, "Apenas produtos cuja compra é sugerida");
         }
         $criterios = join(" | ", $criterios);
-        $mostrar_giro = $request->inicio && $request->fim;
+        $mostrar_giro = $request->tipo == "G";
         if (sizeof($resultado)) return view("reports/".($resumo ? "saldo" : "extrato"), compact("resultado", "lm", "criterios", "mostrar_giro"));
         return view("nada");
     }

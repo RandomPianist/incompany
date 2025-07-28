@@ -33,15 +33,17 @@
         <table class = "report-body table table-sm table-bordered table-striped px-5">
             <thead>
                 <tr class = "report-row">
-                    <td width = "40%">Produto</td>
-                    <td width = "10%" class = "text-right">Saldo Anterior</td>
-                    <td width = "10%" class = "text-right">Entradas</td>
-                    <td width = "10%" class = "text-right">Saídas</td>
-                    <td width = "10%" class = "text-right">Saldo Final</td>
-                    <td width = "10%" class = "text-right">
-                        @if ($mostrar_giro) Giro de estoque @else Qtde. Mínima @endif
+                    <td width = "36%">Produto</td>
+                    <td width = "8%" class = "text-right">Saldo anterior</td>
+                    <td width = "8%" class = "text-right">Entradas</td>
+                    <td width = "8%" class = "text-right">Saídas avulsas</td>
+                    <td width = "8%" class = "text-right">Retiradas</td>
+                    <td width = "8%" class = "text-right">Saídas totais</td>
+                    <td width = "8%" class = "text-right">Saldo final</td>
+                    <td width = "8%" class = "text-right">
+                        @if ($mostrar_giro) Giro de estoque @else Qtde. mínima @endif
                     </td>
-                    <td width = "10%" class = "text-right">Qtde. Sugerida</td>
+                    <td width = "8%" class = "text-right">Qtde. Sugerida</td>
                 </tr>
             </thead>
         </table>
@@ -49,17 +51,21 @@
             <table class = "report-body table table-sm table-bordered table-striped">
                 <tbody>
                     @foreach ($item["maquina"]["produtos"] as $produto)
-                        @if (($lm && $produto["sugeridos"] > 0) || !$lm)
-                            <tr class = "report-row">
-                                <td width = "40%">{{ $produto["descr"] }}</td>
-                                <td width = "10%" class = "text-right">{{ $produto["saldo_ant"] }}</td>
-                                <td width = "10%" class = "text-right">{{ $produto["entradas"] }}</td>
-                                <td width = "10%" class = "text-right">{{ $produto["saidas"] }}</td>
-                                <td width = "10%" class = "text-right">{{ $produto["saldo_res"] }}</td>
-                                <td width = "10%" class = "text-right">{{ $produto["minimo"] }}</td>
-                                <td width = "10%" class = "text-right">{{ $produto["sugeridos"] }}</td>
-                            </tr>
-                        @endif
+                        <tr class = "report-row">
+                            <td width = "36%">{{ $produto["descr"] }}</td>
+                            <td width = "8%" class = "text-right">{{ $produto["saldo_ant"] }}</td>
+                            <td width = "8%" class = "text-right">{{ $produto["entradas"] }}</td>
+                            <td width = "8%" class = "text-right">{{ $produto["saidas_avulsas"] }}</td>
+                            <td width = "8%" class = "text-right">{{ $produto["retiradas"] }}</td>
+                            <td width = "8%" class = "text-right">{{ $produto["saidas_totais"] }}</td>
+                            <td width = "8%" class = "text-right">{{ $produto["saldo_res"] }}</td>
+                            @if ($mostrar_giro)
+                                <td width = "8%" class = "text-right">{{ $produto["giro"] }}</td>
+                            @else
+                                <td width = "8%" class = "text-right">{{ $produto["minimo"] }}</td>
+                            @endif
+                            <td width = "8%" class = "text-right">{{ $produto["sugeridos"] }}</td>
+                        </tr>
                     @endforeach
                 </tbody>
             </table>

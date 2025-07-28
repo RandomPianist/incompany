@@ -124,6 +124,7 @@ Route::middleware("auth")->group(function () {
     Route::group(["prefix" => "relatorios"], function() {
         Route::get("/comodatos", [RelatoriosController::class, "comodatos"]);
         Route::get("/ranking",   [RelatoriosController::class, "ranking"]);
+        Route::get("/sugestao",  [RelatoriosController::class, "sugestao"]);
         Route::group(["prefix" => "bilateral"], function() {
             Route::get("/",          [RelatoriosController::class, "bilateral"]);
             Route::get("/consultar", [RelatoriosController::class, "bilateral_consultar"]);

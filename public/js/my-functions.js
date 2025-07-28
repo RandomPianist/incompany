@@ -607,6 +607,7 @@ function RelatorioItens(resumido) {
     setTimeout(function() {
         modal("relatorioItensModal", 0, function() {
             let modo_resumo = document.getElementById("rel-modo-resumo").classList;
+            let formulario = document.querySelector("#relatorioItensModal form");
             document.getElementById("rel-lm").value = "N";
             elementos.inicio.value = hoje();
             elementos.fim.value = hoje();
@@ -614,8 +615,13 @@ function RelatorioItens(resumido) {
             document.getElementById("resumo").value = resumido ? "S" : "N";
             document.getElementById("rel-lm-chk").checked = false;
             document.querySelector("label[for='rel-lm-chk']").innerHTML = resumido ? "Listar apenas produtos cuja compra é sugerida" : "Listar movimentação";
-            if (resumido) modo_resumo.remove("d-none");
-            else modo_resumo.add("d-none");
+            if (resumido) {
+                modo_resumo.remove("d-none");
+                formulario.action = URL + "/relatorios/sugestao";
+            } else {
+                modo_resumo.add("d-none");
+                formulario.action = URL + "/relatorios/extrato";
+            }
         });
     }, 0);
 }
