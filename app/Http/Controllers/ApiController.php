@@ -451,10 +451,13 @@ class ApiController extends ControllerKX {
 
     public function marcar_gerou_pedido(Request $request) {
         foreach ($request->ids as $id) {
-            $retirada = Retiradas::firstOrNew(["id" => $id]);
+            $retirada = Retiradas::find($id);
             $retirada->gerou_pedido = "S";
             $retirada->numero_ped = $request->numped;
             $retirada->save();
+            $nome = "";
+            if (isset($request->usu)) $nome = $request->usu;
+            $this->log_inserir("E", "retiradas", $id, "ERP", $nome);
         }
         return "salvou";
     }
