@@ -394,7 +394,7 @@ class RelatoriosController extends ControllerKX {
                 $saidas_totais = $saidas_avulsas + $retiradas;
                 $saldo_res = $saldo_ant + $entradas - $saidas_totais;
                 $giro = $retiradas / $diferenca;
-                $sugeridos = $tipo == "G" ? (($giro * $dias) - $saldo_res) : ($minimo - $retiradas);
+                $sugeridos = $tipo == "G" ? (($giro * $dias) - $saldo_res) : ($minimo - $saldo_res);
                 if ($sugeridos < 0) $sugeridos = 0;
                 return [
                     "descr" => $produto->produto,
@@ -402,7 +402,7 @@ class RelatoriosController extends ControllerKX {
                     "entradas" => number_format($entradas, 0),
                     "saidas_avulsas" => number_format($saidas_avulsas, 0),
                     "retiradas" => number_format($retiradas, 0),
-                    "minimo" => number_format($retiradas, 0),
+                    "minimo" => number_format($minimo, 0),
                     "saidas_totais" => number_format($saidas_totais, 0),
                     "saldo_res" => number_format($saldo_res, 0),
                     "giro" => number_format($giro, 2),
