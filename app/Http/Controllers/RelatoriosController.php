@@ -271,105 +271,130 @@ class RelatoriosController extends ControllerKX {
             $where_produto .= " AND produtos.id = ".$produto->id;
         }
         
-        $resultado = collect(DB::select(DB::raw("
-            SELECT
-                mq.id AS id_maquina,
-                mq.descr AS maquina,
+        $resultado = collect(
+            DB::table("maquinas_produtos AS mp")
+                ->select(
+                    // GRUPO
+                    "mq.id AS id_maquina",
+                    "mq.descr AS maquina",
 
-                produtos.id AS id_produto,
-                produtos.descr AS produto,
-                mp.minimo,
-                SUM(
-                    CASE
-                        WHEN (estq.data >= cm.inicio AND estq.data < '".$inicio."') THEN
+                    // DETALHES
+                    "produtos.id AS id_produto",
+                    "produtos.descr AS produto",
+                    "mp.minimo",
+
+                    DB::raw("
+                        SUM(
                             CASE
-                                WHEN estq.es = 'E' THEN estq.qtd
-                                ELSE estq.qtd * -1
-                            END
-                        ELSE 0
-                    END
-                ) AS saldo_ant,
-                SUM(
-                    CASE
-                        WHEN (estq.data >= '".$inicio."' AND estq.data <= '".$fim."') THEN
-                            CASE
-                                WHEN estq.es = 'E' THEN estq.qtd
+                                WHEN (estq.data >= cm.inicio AND estq.data < '".$inicio."') THEN
+                                    CASE
+                                        WHEN estq.es = 'E' THEN estq.qtd
+                                        ELSE estq.qtd * -1
+                                    END
                                 ELSE 0
                             END
-                        ELSE 0
-                    END
-                ) AS entradas,
-                SUM(
-                    CASE
-                        WHEN (estq.data >= '".$inicio."' AND estq.data <= '".$fim."' AND estq.origem = 'ERP') THEN
+                        ) AS saldo_ant
+                    "),
+                    DB::raw("
+                        SUM(
                             CASE
-                                WHEN estq.es = 'S' THEN estq.qtd
+                                WHEN (estq.data >= '".$inicio."' AND estq.data <= '".$fim."') THEN
+                                    CASE
+                                        WHEN estq.es = 'E' THEN estq.qtd
+                                        ELSE 0
+                                    END
                                 ELSE 0
                             END
-                        ELSE 0
-                    END
-                ) AS saidas_avulsas,
-                SUM(
-                    CASE
-                        WHEN (estq.data >= '".$inicio."' AND estq.data <= '".$fim."' AND estq.origem <> 'ERP') THEN
+                        ) AS entradas
+                    "),
+                    DB::raw("
+                        SUM(
                             CASE
-                                WHEN estq.es = 'S' THEN estq.qtd
+                                WHEN (estq.data >= '".$inicio."' AND estq.data <= '".$fim."' AND estq.origem = 'ERP') THEN
+                                    CASE
+                                        WHEN estq.es = 'S' THEN estq.qtd
+                                        ELSE 0
+                                    END
                                 ELSE 0
                             END
-                        ELSE 0
-                    END
-                ) AS retiradas
-
-            FROM (
-                SELECT
-                    id,
-                    descr
-
-                FROM valores
-
-                WHERE ".$where_maquina."
-            ) AS mq
-
-            JOIN (
-                SELECT
-                    id_maquina,
-                    inicio
-
-                FROM comodatos
-
-                WHERE ('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim) OR ('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim)
-            ) AS cm ON cm.id_maquina = mq.id
-
-            JOIN maquinas_produtos AS mp
-                ON mp.id_maquina = mq.id
-
-            JOIN (
-                SELECT
-                    estoque.id_mp,
-                    estoque.es,
-                    estoque.qtd,
-                    log.data,
-                    log.origem
-
-                FROM estoque
-
-                JOIN log
-                    ON log.tabela = 'estoque' AND log.fk = estoque.id
-            ) AS estq ON estq.id_mp = mp.id
-
-            JOIN produtos
-                ON produtos.id = mp.id_produto
-
-            WHERE ".$where_produto."
-
-            GROUP BY
-                mq.id,
-                mq.descr,
-
-                produtos.id,
-                produtos.descr,
-                mp.minimo
-        ")))->groupBy("id_maquina")->map(function($maquinas) use($dias, $diferenca, $tipo, $lm) {
+                        ) AS saidas_avulsas
+                    "),
+                    DB::raw("
+                        SUM(
+                            CASE
+                                WHEN (estq.data >= '".$inicio."' AND estq.data <= '".$fim."' AND estq.origem <> 'ERP') THEN
+                                    CASE
+                                        WHEN estq.es = 'S' THEN estq.qtd
+                                        ELSE 0
+                                    END
+                                ELSE 0
+                            END
+                        ) AS retiradas
+                    ")
+                )
+                ->join("produtos", "produtos.id", "mp.id_produto")
+                ->joinSub(
+                    DB::table("valores")
+                        ->select(
+                            "id",
+                            "descr"
+                        )
+                        ->where(function($sql) use($request, $inicio, $fim, &$criterios) {
+                            if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) $sql->whereIn("id", $this->maquinas_periodo($inicio, $fim));
+                            if ($request->id_maquina) {
+                                $maquina = Valores::find($request->id_maquina);
+                                array_push($criterios, "Máquina: ".$maquina->descr);
+                                $sql->where("id", $maquina->id);
+                            }
+                        })
+                        ->where("lixeira", 0),
+                    "mq",
+                    "mq.id",
+                    "mp.id_maquina"
+                )
+                ->joinSub(
+                    DB::table("comodatos")
+                        ->select(
+                            "id_maquina",
+                            "inicio"
+                        )
+                        ->whereRaw("'".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim) OR ('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim"),
+                    "cm",
+                    "cm.id_maquina",
+                    "mp.id_maquina"
+                )
+                ->joinSub(
+                    DB::table("estoque")
+                        ->select(
+                            "estoque.id_mp",
+                            "estoque.es",
+                            "estoque.qtd",
+                            "log.data",
+                            "log.origem"
+                        )
+                        ->join("log", function($join) {
+                            $join->on("log.fk", "estoque.id")
+                                ->where("log.tabela", "estoque");
+                        }),
+                    "estq",
+                    "estq.id_mp",
+                    "mp.id"
+                )
+                ->where(function($sql) use($request, &$criterios) {
+                    $produto = Produtos::find($request->id_produto);
+                    array_push($criterios, "Produto: ".$produto->descr);
+                    $sql->where("produtos.id", $produto->id);
+                })
+                ->where("produtos.lixeira", 0)
+                ->groupby(
+                    "mq.id",
+                    "mq.descr",
+                    "produtos.id",
+                    "produtos.descr",
+                    "mp.minimo"
+                )
+                ->get()
+        )->groupBy("id_maquina")->map(function($maquinas) use($dias, $diferenca, $tipo, $lm) {
             $produtos = $maquinas->map(function($produto) use($dias, $diferenca, $tipo) {
                 $saldo_ant = floatval($produto->saldo_ant);
                 $entradas = floatval($produto->entradas);
