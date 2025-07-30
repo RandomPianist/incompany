@@ -579,6 +579,7 @@ CREATE VIEW vpendentes AS (
 
     JOIN (
         SELECT
+            aa.id_pessoa,
             aa.id_atribuicao,
             IFNULL(SUM(retiradas.qtd), 0) AS valor
             
@@ -598,12 +599,13 @@ CREATE VIEW vpendentes AS (
                 AND retiradas.id_supervisor IS NULL
         
         GROUP BY
-            aa.id_atribuicao,
-            atribuicoes.qtd
-    ) AS calc_qtd ON calc_qtd.id_atribuicao = atribuicoes.id
+            aa.id_pessoa,
+            aa.id_atribuicao
+    ) AS calc_qtd ON calc_qtd.id_atribuicao = atribuicoes.id AND calc_qtd.id_pessoa = aa.id_pessoa
 
     JOIN (
         SELECT
+            aa.id_pessoa,
             aa.id_atribuicao,
             MAX(retiradas.data) AS data
             
@@ -624,8 +626,10 @@ CREATE VIEW vpendentes AS (
                 AND (retiradas.id_empresa = pessoas.id_empresa OR pessoas.id_empresa = 0)
                 AND retiradas.id_supervisor IS NULL
                 
-        GROUP BY aa.id_atribuicao
-    ) AS atbgrp ON atbgrp.id_atribuicao = atribuicoes.id
+        GROUP BY
+            aa.id_atribuicao,
+            aa.id_pessoa
+    ) AS atbgrp ON atbgrp.id_atribuicao = atribuicoes.id AND atbgrp.id_pessoa = aa.id_pessoa
 
     WHERE ((DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY) <= CURDATE()) OR (atbgrp.data IS NULL))
       AND (atribuicoes.qtd - calc_qtd.valor) > 0
