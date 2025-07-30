@@ -116,31 +116,39 @@
             const aux = verifica_vazios(["cod_externo", "descr", "ca", "validade", "categoria", "tamanho", "validade_ca"]);
             let erro = aux.erro;
             let alterou = aux.alterou;
-            let preco = document.getElementById("preco");
-            if (!erro && parseInt(preco.value.replace(/\D/g, "")) <= 0) {
+            let el_cod_externo = document.getElementById("cod_externo");
+            let el_categoria = document.getElementById("categoria");
+            let el_preco = document.getElementById("preco");
+            const _preco = parseInt(el_preco.value.replace(/\D/g, ""));
+            if (!erro && _preco <= 0) {
                 erro = "Valor inválido";
-                preco.classList.add("invalido");
+                el_preco.classList.add("invalido");
             }
-            if (preco.value.trim() != dinheiro(anteriores.preco.toString()) || document.getElementById("consumo-chk").checked != ant_consumo) alterou = true;
+            if (el_preco.value.trim() != dinheiro(anteriores.preco.toString()) || document.getElementById("consumo-chk").checked != ant_consumo) alterou = true;
             $.get(URL + "/produtos/consultar/", {
                 id : document.getElementById("id").value,
-                cod_externo : document.getElementById("cod_externo").value,
-                categoria : document.getElementById("categoria").value,
+                cod_externo : el_cod_externo.value,
+                categoria : el_categoria.value,
                 id_categoria : document.getElementById("id_categoria").value,
-                referencia : document.getElementById("referencia").value
+                referencia : document.getElementById("referencia").value,
+                preco : _preco
             }, function(data) {
                 if (!erro && data == "invalido") {
                     erro = "Categoria não encontrada";
-                    document.getElementById("categoria").classList.add("invalido");
+                    el_categoria.classList.add("invalido");
                 }
                 if (!erro && data == "duplicado") {
                     erro = "Já existe um registro com esse código";
-                    document.getElementById("cod_externo").classList.add("invalido");
+                    el_cod_externo.classList.add("invalido");
+                }
+                if (!erro && data.indexOf("preco") > -1) {
+                    erro = "O preço do produto não pode ser menor que o preço mínimo de " + dinheiro(data.replace("preco", ""));
+                    el_preco.classList.add("invalido");
                 }
                 if (!erro && !alterou && !document.querySelector("#produtosModal input[type=file]").value) erro = "Altere pelo menos um campo para salvar";
                 if (!erro) {
                     const fn = function() {
-                        preco.value = parseInt(preco.value.replace(/\D/g, "")) / 100;
+                        el_preco.value = _preco / 100;
                         document.querySelector("#produtosModal form").submit();
                     }
                     if (data == "aviso") s_confirm("Prosseguir apagará atribuições.<br>Deseja continuar?", fn);

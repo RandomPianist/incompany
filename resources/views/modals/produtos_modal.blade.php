@@ -1,7 +1,7 @@
 
 <!-- Modal -->
 <div class = "modal fade" id = "produtosModal" aria-labelledby = "produtosModalLabel" aria-hidden = "true">
-    <div class = "modal-dialog modal-xl modal-dialog-centered" role = "document">
+    <div class = "modal-dialog modal-xl modal-xl-kx modal-dialog-centered" role = "document">
         <div class = "modal-content">
             <div class = "modal-header">
                 <h6 class = "modal-title header-color" id = "produtosModalLabel"></h6>

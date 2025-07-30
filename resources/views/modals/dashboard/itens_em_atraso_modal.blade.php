@@ -1,7 +1,7 @@
 
 <!-- Modal -->
 <div class = "modal fade" id = "itensEmAtrasoModal" aria-labelledby = "itensEmAtrasoModalLabel" aria-hidden = "true">
-    <div class = "modal-dialog modal-xl" role = "document">
+    <div class = "modal-dialog modal-xl modal-xl-kx" role = "document">
         <div class = "modal-content">
             <div class = "modal-header">
                 <h4 class = "modal-title header-color" id = "itensEmAtrasoModalLabel">Produtos em atraso</h4>

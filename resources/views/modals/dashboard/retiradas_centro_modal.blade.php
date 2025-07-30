@@ -1,7 +1,7 @@
 
 <!-- Modal -->
 <div class = "modal fade" id = "retiradasCentroModal" aria-labelledby = "retiradasCentroModalLabel" aria-hidden = "true">
-    <div class = "modal-dialog modal-xl" role = "document">
+    <div class = "modal-dialog modal-xl modal-xl-kx" role = "document">
         <div class = "modal-content">
             <div class = "modal-header">
                 <h4 class = "modal-title header-color" id = "retiradasCentroModalLabel">Consumo por centro de custo</h4>

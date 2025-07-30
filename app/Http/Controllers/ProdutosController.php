@@ -57,6 +57,16 @@ class ProdutosController extends ControllerKX {
                 ->where("cod_externo", $request->cod_externo)
                 ->get()
         ) && !$request->id) return "duplicado";
+        if ($request->id) {
+            $prmin = floatval(
+                DB::table("produtos")
+                    ->selectRaw("IFNULL(prmin, 0) AS prmin")
+                    ->where("id", $request->id)
+                    ->value("prmin")
+            );
+            $preco = floatval($request->preco);
+            if ($prmin > 0 && $preco < $prmin) return "preco".strval($prmin);
+        }
         if (sizeof(
             DB::table("atribuicoes")
                 ->where("produto_ou_referencia_valor", Produtos::find($request->id)->referencia)
