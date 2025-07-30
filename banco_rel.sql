@@ -6,6 +6,7 @@ CREATE TABLE valores (
 	seq INT,
 	descr VARCHAR(32),
 	alias VARCHAR(16), -- categorias, maquinas
+    id_externo INT,
 	lixeira TINYINT DEFAULT 0,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -79,6 +80,7 @@ CREATE TABLE produtos (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	descr VARCHAR(256),
 	preco NUMERIC(8,2),
+    prmin NUMERIC(8,2),
 	validade INT,
 	lixeira TINYINT DEFAULT 0,
 	ca VARCHAR(16),
@@ -118,6 +120,7 @@ CREATE TABLE estoque (
 	es CHAR,
 	descr VARCHAR(16),
 	qtd NUMERIC(10,5),
+    preco NUMERIC(8,2),
 	id_mp INT,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -176,6 +179,8 @@ CREATE TABLE retiradas (
 	gerou_pedido CHAR,
 	numero_ped INT,
 	biometria_ou_senha VARCHAR(1),
+    ca VARCHAR(16),
+    preco NUMERIC(8,2),
 	id_empresa INT,
 	FOREIGN KEY (id_atribuicao) REFERENCES atribuicoes(id),
 	FOREIGN KEY (id_comodato) REFERENCES comodatos(id),

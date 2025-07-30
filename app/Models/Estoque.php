@@ -33,7 +33,7 @@ class Estoque extends Model
      * @var array
      */
     protected $fillable = [
-        'created_at', 'descr', 'es', 'id_mp', 'qtd', 'updated_at'
+        'created_at', 'descr', 'es', 'id_mp', 'preco', 'qtd', 'updated_at'
     ];
 
     /**

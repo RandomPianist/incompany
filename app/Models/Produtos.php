@@ -44,7 +44,7 @@ class Produtos extends Model
      * @var array
      */
     protected $fillable = [
-        'ca', 'cod_externo', 'cod_fab', 'consumo', 'created_at', 'descr', 'detalhes', 'foto', 'id_categoria', 'lixeira', 'preco', 'referencia', 'tamanho', 'updated_at', 'validade', 'validade_ca'
+        'ca', 'cod_externo', 'cod_fab', 'consumo', 'created_at', 'descr', 'detalhes', 'foto', 'id_categoria', 'lixeira', 'preco', 'prmin', 'referencia', 'tamanho', 'updated_at', 'validade', 'validade_ca'
     ];
 
     /**
