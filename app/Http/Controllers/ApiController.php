@@ -329,10 +329,15 @@ class ApiController extends ControllerKX {
 
     public function produtos_por_pessoa(Request $request) {
         $id_pessoa = DB::table("pessoas")->where("cpf", $request->cpf)->value("id");
-        return json_encode(array_merge(
-            $this->produtos_por_pessoa_main($id_pessoa, true),
-            $this->produtos_por_pessoa_main($id_pessoa, false)
-        ));
+        return json_encode(collect(
+            array_merge(
+                $this->produtos_por_pessoa_main($id_pessoa, true),
+                $this->produtos_por_pessoa_main($id_pessoa, false)
+            )
+        )->sortBy([
+            ["obrigatorio", "desc"],
+            ["nome", "asc"]
+        ])->values()->all());
     }
 
     public function retirar(Request $request) {
