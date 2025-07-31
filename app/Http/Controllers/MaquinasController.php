@@ -180,7 +180,7 @@ class MaquinasController extends ControllerKX {
                         CASE
                             WHEN log.origem = 'WEB' THEN autor.nome
                             ELSE ''
-                        END
+                        END AS autor
                     "),
                     DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data"),
                     DB::raw("ROUND(retiradas.qtd) AS qtd")
