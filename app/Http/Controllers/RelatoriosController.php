@@ -711,7 +711,10 @@ class RelatoriosController extends ControllerKX {
                         $sql->where("produtos.consumo", $request->consumo == "epi" ? 0 : 1);
                         array_push($criterios, "Apenas ".($request->consumo == "epi" ? "EPI" : "produtos de consumo"));
                     }
-                    if ($request->tipo_colab != "todos") $sql->where("pessoas.lixeira", $request->tipo_colab == "ativos" ? 0 : 1);
+                    if ($request->rel_grupo != "pessoa") {
+                        $sql->where("pessoas.lixeira", 0)
+                            ->where("setores.lixeira", 0);
+                    } else if ($request->tipo_colab != "todos") $sql->where("pessoas.lixeira", $request->tipo_colab == "ativos" ? 0 : 1);
 
                     if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) {
                         $sql->where(function($where) use($inicio, $fim) {

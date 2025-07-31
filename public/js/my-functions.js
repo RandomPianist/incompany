@@ -720,16 +720,29 @@ function RelatorioRetiradas(quebra) {
     limpar_invalido();
     setTimeout(function() {
         modal("relatorioRetiradasModal", 0, function() {
+            ["rel-pessoa-tipo", "rel-consumo2", "rel-tipo"].forEach((id) => {
+                let el = document.getElementById(id).parentElement.classList;
+                if (quebra == "pessoa") {
+                    el.add("col-4");
+                    el.remove("col-6");
+                } else {
+                    el.add("col-6");
+                    el.remove("col-4");
+                }
+            });
+            let el_tipo = document.getElementById("rel-pessoa-tipo");
             elementos.inicio.value = hoje();
             elementos.fim.value = hoje();
             if (quebra == "setor") {
                 elementos.pessoa.parentElement.classList.add("d-none");
                 elementos.setor.parentElement.classList.remove("d-none");
+                el_tipo.parentElement.classList.add("d-none");
             } else {
                 elementos.setor.parentElement.classList.add("d-none");
                 elementos.pessoa.parentElement.classList.remove("d-none");
+                el_tipo.parentElement.classList.remove("d-none");
             }
-            document.getElementById("rel-pessoa-tipo").value = "todos";
+            el_tipo.value = "todos";
             elementos.consumo.value = "todos";
             elementos.tipo.value = "A";
             let titulo = "Consumo por ";
