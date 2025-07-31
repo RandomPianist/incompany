@@ -79,7 +79,10 @@ class Api2Controller extends ControllerKX {
             if ($this->comparar($empresa->cnpj, $cnpj)) $continua = true;
             if ($this->comparar($empresa->razao_social, $request->emp_razao)) $continua = true;
             if ($this->comparar($empresa->nome_fantasia, $request->emp_fantasia)) $continua = true;   
-        } else $empresa = new Empresas;
+        } else {
+            $empresa = new Empresas;
+            $continua = true;
+        }
         if ($continua) {
             $empresa->cnpj = $cnpj;
             $empresa->razao_social = $request->emp_razao;
