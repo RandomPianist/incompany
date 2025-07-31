@@ -106,6 +106,32 @@ class Api2Controller extends ControllerKX {
 
     public function produtos(Request $request) {
         if ($request->token != config("app.key")) return 401;
+        $consulta = DB::table("produtos")
+                        ->select(
+                            DB::raw("IFNULL(produtos.descr, '') AS descr"),
+                            DB::raw("IFNULL(produtos.preco, 0) AS preco"),
+                            DB::raw("IFNULL(produtos.ca, '') AS ca"),
+                            DB::raw("IFNULL(produtos.validade, 0) AS validade"),
+                            DB::raw("DATE_FORMAT(produtos.validade_ca, '%d/%m/%Y') AS validade_ca"),
+                            DB::raw("IFNULL(produtos.referencia, '') AS refer"),
+                            DB::raw("
+                                CASE
+                                    WHEN IFNULL(produtos.consumo, 0) = 0 THEN ''
+                                    ELSE 'S'
+                                END AS consumo
+                            "),
+                            DB::raw("IFNULL(produtos.cod_fab, '') AS fab"),
+                            DB::raw("IFNULL(produtos.tamanho, '') AS tamanho"),
+                            DB::raw("IFNULL(produtos.foto, '') AS foto"),
+                            DB::raw("IFNULL(valores.id, 0) AS iCdp"),
+                            DB::raw("IFNULL(valores.descr, '') AS categoria"),
+                            "produtos.lixeira"
+                        )
+                        ->leftjoin("valores", "valores.id", "produtos.id_categoria")
+                        ->where("produtos.cod_externo", $request->itm)
+                        ->first();
+        if ($consulta === null) return "";
+        return json_encode($consulta);
     }
 
     public function sincronizar(Request $request) {
