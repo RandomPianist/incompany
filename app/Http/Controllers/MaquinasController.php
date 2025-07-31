@@ -195,6 +195,8 @@ class MaquinasController extends ControllerKX {
                 ->leftjoin("pessoas AS supervisor", "supervisor.id", "retiradas.id_supervisor")
                 ->leftjoin("pessoas AS autor", "autor.id", "log.id_pessoa")
                 ->whereRaw("((CURDATE() BETWEEN comodatos.inicio AND comodatos.fim) OR (CURDATE() BETWEEN comodatos.inicio AND comodatos.fim))")
+                ->whereRaw("retiradas.data >= '".$inicio."'")
+                ->whereRaw("retiradas.data <= '".$fim."'")
                 ->where("comodatos.id_maquina", $request->id_maquina)
                 ->where("retiradas.id_produto", $request->id_produto)
         :
