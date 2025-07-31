@@ -108,6 +108,7 @@ class Api2Controller extends ControllerKX {
         if ($request->token != config("app.key")) return 401;
         $consulta = DB::table("produtos")
                         ->select(
+                            "produtos.id",
                             DB::raw("IFNULL(produtos.descr, '') AS descr"),
                             DB::raw("IFNULL(produtos.preco, 0) AS preco"),
                             DB::raw("IFNULL(produtos.ca, '') AS ca"),
