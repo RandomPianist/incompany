@@ -14,8 +14,8 @@
                     <div class = "container">
                         <div class = "row d-none" id = "rel-modo-resumo">
                             <div class = "col-6">
-                                <label for = "rel-tipo" class = "custom-label-form">Tipo:</label>
-                                <select id = "rel-tipo" name = "tipo" class = "form-control" onchange = "document.getElementById('rel-dias').disabled = this.value == 'M'">
+                                <label for = "rel-tipo2" class = "custom-label-form">Tipo:</label>
+                                <select id = "rel-tipo2" name = "tipo" class = "form-control" onchange = "document.getElementById('rel-dias').disabled = this.value == 'M'">
                                     <option value = "G">Por giro de estoque</option>
                                     <option value = "M">Por quantidade mínima</option>
                                 </select>
