@@ -519,7 +519,12 @@ CREATE VIEW vpendentes AS (
             ELSE 0
         END AS qtd,
         IFNULL(DATE_FORMAT(atbgrp.data, '%d/%m/%Y'), '') AS ultima_retirada,
-        DATE_FORMAT(IFNULL(DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY), CURDATE()), '%d/%m/%Y') AS proxima_retirada
+        DATE_FORMAT(IFNULL(DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY), CURDATE()), '%d/%m/%Y') AS proxima_retirada,
+        DATE(IFNULL(DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY), atribuicoes.created_at)) AS proxima_retirada_real,
+        CASE
+            WHEN ((DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY) <= CURDATE()) OR (atbgrp.data IS NULL)) THEN 1
+            ELSE 0
+        END AS esta_pendente
         
     FROM atribuicoes
 
@@ -590,8 +595,7 @@ CREATE VIEW vpendentes AS (
             aa.id_pessoa
     ) AS atbgrp ON atbgrp.id_atribuicao = atribuicoes.id AND atbgrp.id_pessoa = aa.id_pessoa
 
-    WHERE ((DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY) <= CURDATE()) OR (atbgrp.data IS NULL))
-      AND (atribuicoes.qtd - calc_qtd.valor) > 0
+    WHERE (atribuicoes.qtd - calc_qtd.valor) > 0
 
     GROUP BY
         aa.id_pessoa,
@@ -599,6 +603,7 @@ CREATE VIEW vpendentes AS (
         atribuicoes.obrigatorio,
         atribuicoes.validade,
         atribuicoes.qtd,
+        atribuicoes.created_at,
         produtos.id,
         produtos.referencia,
         produtos.descr,

@@ -125,6 +125,7 @@ class ControllerKX extends Controller {
 
     protected function retirada_consultar($id_atribuicao, $qtd, $id_pessoa) {
         $consulta = DB::table("vpendentes")
+                        ->where("esta_pendente", 1)
                         ->where("id_atribuicao", $id_atribuicao)
                         ->where("id_pessoa", $id_pessoa)
                         ->value("qtd");

@@ -166,6 +166,8 @@ class DashboardController extends ControllerKX {
                                     qtd
                                     
                                 FROM vpendentes
+
+                                WHERE esta_pendente = 1
                                 
                                 GROUP BY
                                     id_atribuicao,
@@ -242,7 +244,7 @@ class DashboardController extends ControllerKX {
                         "pessoas.nome",
                         "pessoas.foto"
                     )
-                    ->orderby("retirados", "desc")
+                    ->orderby("retirados", "DESC")
                     ->orderby("pessoas.nome")
                     ->get();
         foreach ($ranking as $pessoa) $pessoa->foto = asset("storage/".$pessoa->foto);
@@ -390,6 +392,7 @@ class DashboardController extends ControllerKX {
                     "nome_produto AS produto"
                 )
                 ->where("id_pessoa", $id_pessoa)
+                ->where("esta_pendente", 1)
                 ->groupby(
                     "id_produto",
                     "validade",

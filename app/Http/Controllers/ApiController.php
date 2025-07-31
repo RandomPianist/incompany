@@ -41,6 +41,7 @@ class ApiController extends ControllerKX {
                         else $sql->whereNull("referencia");
                     })
                     ->where("id_pessoa", $id_pessoa)
+                    ->where("esta_pendente", 1)
                     ->groupby(DB::raw($obrigatorios ? "
                         produto_ou_referencia_chave,
                         chave_produto,

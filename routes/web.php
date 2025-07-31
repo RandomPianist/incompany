@@ -104,9 +104,10 @@ Route::middleware("auth")->group(function () {
     });
 
     Route::group(["prefix" => "retiradas"], function() {
-        Route::get ("/consultar", [RetiradasController::class, "consultar"]);
-        Route::post("/salvar",    [RetiradasController::class, "salvar"]);
-        Route::post("/desfazer",  [RetiradasController::class, "desfazer"]);
+        Route::get ("/consultar",            [RetiradasController::class, "consultar"]);
+        Route::get ("/proximas/{id_pessoa}", [RetiradasController::class, "proximas"]);
+        Route::post("/salvar",               [RetiradasController::class, "salvar"]);
+        Route::post("/desfazer",             [RetiradasController::class, "desfazer"]);
     });
 
     Route::group(["prefix" => "maquinas"], function() {

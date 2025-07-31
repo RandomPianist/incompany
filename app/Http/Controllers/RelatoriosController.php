@@ -827,7 +827,7 @@ class RelatoriosController extends ControllerKX {
                         "pessoas.nome",
                         "setores.descr",
                     )
-                    ->orderby("retirados", "desc")
+                    ->orderby("retirados", "DESC")
                     ->orderby("pessoas.nome")
                     ->get()
         )->groupBy("id_setor")->map(function($itens) use($request, &$qtd_total) {
