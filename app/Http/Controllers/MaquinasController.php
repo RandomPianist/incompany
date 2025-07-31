@@ -151,17 +151,7 @@ class MaquinasController extends ControllerKX {
     }
 
     public function criar_comodato(Request $request) {
-        $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
-        $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-        
-        $linha = new Comodatos;
-        $linha->id_maquina = $request->id_maquina;
-        $linha->id_empresa = $request->id_empresa;
-        $linha->inicio = $inicio;
-        $linha->fim = $fim;
-        $linha->fim_orig = $fim;
-        $linha->save();
-        $this->log_inserir("C", "comodatos", $linha->id);
+        $this->criar_comodato_main($request->id_maquina, $request->id_empresa, $request->inicio, $request->fim);
         return redirect("/valores/maquinas");
     }
 

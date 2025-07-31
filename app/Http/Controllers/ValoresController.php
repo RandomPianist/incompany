@@ -182,8 +182,8 @@ class ValoresController extends ControllerKX {
             ) + 1;
         }
         $linha->save();
-        if ($alias == "maquinas") $this->criar_mp("produtos.id", $linha->id);
         $this->log_inserir($request->id ? "E" : "C", "valores", $linha->id);
+        if ($alias == "maquinas") $this->criar_mp("produtos.id", $linha->id);
         return redirect("/valores/$alias");
     }
 

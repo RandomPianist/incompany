@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use DB;
 use App\Models\Empresas;
+use App\Models\Valores;
 use Illuminate\Http\Request;
 
 class Api2Controller extends ControllerKX {
@@ -68,14 +69,39 @@ class Api2Controller extends ControllerKX {
         $cnpj = filter_var($str, $request->cnpj);
         $id_empresa = DB::table("empresas")
                         ->where("cnpj", $cnpj)
+                        ->orWhere("cod_externo", $request->emp_cod)
                         ->value("id");
+        $continua = false;
+        $empresa = null;
         if ($id_empresa !== null) {
             $empresa = Empresas::find($id_empresa);
-            $alterou = false;
-            if ($this->comparar($empresa->nome_fantasia, $request->emp_fantasia)) $alterou = true;
-            if ($this->comparar($empresa->razao_social, $request->razao)) $alterou = true;
-            
+            if (intval($empresa->lixeira)) return "EXCLUIDO";
+            if ($this->comparar($empresa->cnpj, $cnpj)) $continua = true;
+            if ($this->comparar($empresa->razao_social, $request->emp_razao)) $continua = true;
+            if ($this->comparar($empresa->nome_fantasia, $request->emp_fantasia)) $continua = true;   
+        } else $empresa = new Empresas;
+        if ($continua) {
+            $empresa->cnpj = $cnpj;
+            $empresa->razao_social = $request->emp_razao;
+            $empresa->nome_fantasia = $request->emp_fantasia;
+            $empresa->cod_externo = $request->emp_cod;
+            $empresa->save();
+            $this->log_inserir($id_empresa !== null ? "E" : "C", "empresas", $empresa->id, "ERP", $request->usu);
         }
+        $maquina = new Valores;
+        $maquina->descr = mb_strtoupper($request->maq);
+        $maquina->alias = "maquinas";
+        $maquina->seq = intval(
+            DB::table("valores")
+                ->selectRaw("IFNULL(MAX(seq), 0) AS ultimo")
+                ->where("alias", "maquinas")
+                ->value("ultimo")
+        ) + 1;
+        $maquina->save();
+        $this->log_inserir("C", "valores", $maquina->id);
+        $this->criar_mp("produtos.id", $maquina->id, true, $request->usu);
+        $this->criar_comodato_main($maquina->id, $empresa->id, $request->ini, $request->fim);
+        return $empresa->id;
     }
 
     public function produtos(Request $request) {

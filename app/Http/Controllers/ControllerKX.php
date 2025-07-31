@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Log;
 use App\Models\Pessoas;
 use App\Models\Retiradas;
+use App\Models\Comodatos;
 
 class ControllerKX extends Controller {
     protected function empresa_consultar(Request $request) {
@@ -226,6 +227,13 @@ class ControllerKX extends Controller {
                 WHERE mp.id IS NULL ".($tabela == "valores" ? " AND valores.alias = 'maquinas'" : "")."
             )
         ");
+        DB::statement("
+            UPDATE maquinas_produtos AS mp
+            JOIN produtos
+                ON produtos.id = mp.id_produto
+            SET mp.preco = produtos.preco
+            WHERE mp.preco IS NULL
+        ");
         $id_pessoa = $api ? "NULL" : Auth::user()->id_pessoa;
         if (!$api) $nome = Pessoas::find($id_pessoa)->nome;
         DB::statement("
@@ -290,5 +298,19 @@ class ControllerKX extends Controller {
                 ->first()
                 ->saldo
         );
+    }
+
+    protected function criar_comodato_main($id_maquina, $id_empresa, $inicio, $fim) {
+        $dtinicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
+        $dtfim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
+        
+        $linha = new Comodatos;
+        $linha->id_maquina = $request->id_maquina;
+        $linha->id_empresa = $request->id_empresa;
+        $linha->inicio = $dtinicio;
+        $linha->fim = $dtfim;
+        $linha->fim_orig = $dtfim;
+        $linha->save();
+        $this->log_inserir("C", "comodatos", $linha->id);
     }
 }
