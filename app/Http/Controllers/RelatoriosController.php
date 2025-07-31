@@ -60,12 +60,14 @@ class RelatoriosController extends ControllerKX {
         return ($this->empresa_consultar($request) && trim($request->empresa)) || (trim($request->id_empresa) && !trim($request->empresa));
     }
 
-    private function consultar_pessoa(Request $request) {
+    private function consultar_pessoa(Request $request, $considerar_lixeira) {
         return (!sizeof(
             DB::table("pessoas")
                 ->where("id", $request->id_pessoa)
                 ->where("nome", $request->pessoa)
-                ->where("lixeira", 0)
+                ->where(function($sql) use($considerar_lixeira) {
+                    if ($considerar_lixeira) $sql->where("lixeira", 0);
+                })
                 ->get()
         ) && trim($request->pessoa)) || (!trim($request->pessoa) && trim($request->id_pessoa));
     }
@@ -604,7 +606,7 @@ class RelatoriosController extends ControllerKX {
     }
 
     public function controle_consultar(Request $request) {
-        return $this->consultar_pessoa($request) ? "erro" : "";
+        return $this->consultar_pessoa($request, true) ? "erro" : "";
     }
 
     public function controle_existe(Request $request) {
@@ -763,7 +765,7 @@ class RelatoriosController extends ControllerKX {
 
     public function retiradas_consultar(Request $request) {
         if ($this->consultar_empresa($request)) return "empresa";
-        if ($this->consultar_pessoa($request)) return "pessoa";
+        if ($this->consultar_pessoa($request, false)) return "pessoa";
         if ((!sizeof(
             DB::table("setores")
                 ->where("id", $request->id_setor)

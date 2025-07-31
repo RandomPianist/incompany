@@ -13,12 +13,13 @@ class HomeController extends ControllerKX {
         return redirect("/valores/categorias");
     }
 
-    public function autocomplete(Request $request) {        
+    public function autocomplete(Request $request) {
+        $tabela = str_replace("_todos", "", $request->table);     
         $where = " AND ".$request->column." LIKE '%".$request->search."%'";
         
         $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
         if ($id_emp) {
-            switch ($request->table) {
+            switch ($tabela) {
                 case "empresas":
                     $where .= " AND (id = ".$id_emp;
                     if (sizeof(
@@ -54,7 +55,7 @@ class HomeController extends ControllerKX {
         }
 
         if ($request->filter_col) {
-            if ($request->table == "setores") {
+            if ($tabela == "setores") {
                 $colunas = explode(",", $request->filter_col);
                 $filtros = explode(",", $request->filter);
                 for ($i = 0; $i < sizeof($colunas); $i++) {
@@ -73,8 +74,8 @@ class HomeController extends ControllerKX {
         $query = "SELECT ";
         if ($request->column == "referencia") $query .= "MIN(id) AS ";
         $query .= "id, ".$request->column;
-        $query .= " FROM ".$request->table;
-        $query .= " WHERE lixeira = 0".$where;
+        $query .= " FROM ".$tabela;
+        $query .= " WHERE ".($request->table == $tabela ? "lixeira = 0" : "1").$where;
         if ($request->column == "referencia") $query .= " GROUP BY referencia";
         $query .= " ORDER BY ".$request->column;
         $query .= " LIMIT 30";

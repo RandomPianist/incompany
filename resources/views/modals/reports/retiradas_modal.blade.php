@@ -36,7 +36,7 @@
                                     name = "pessoa"
                                     class = "form-control autocomplete"
                                     data-input = "#rel-id_pessoa2"
-                                    data-table = "pessoas"
+                                    data-table = "pessoas_todos"
                                     data-column = "nome"
                                     data-filter_col = ""
                                     data-filter = ""
