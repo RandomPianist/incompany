@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Models\Empresas;
 use App\Models\Valores;
 use App\Models\Produtos;
+use App\Models\Estoque;
 use Illuminate\Http\Request;
 
 class Api2Controller extends ControllerKX {
@@ -157,6 +158,7 @@ class Api2Controller extends ControllerKX {
         foreach ($request->produtos as $req_produto) {
             $produto = Produtos::find($req_produto->id);
             $continua = false;
+            $inserir_log = true;
             $validade_ca = Carbon::createFromFormat('d/m/Y', $req_produto->validade_ca)->format('Y-m-d');
             if ($produto !== null) {
                 if ($this->comparar_texto($req_produto->cod, $produto->cod_externo)) $continua = true;
@@ -189,16 +191,17 @@ class Api2Controller extends ControllerKX {
                 $produto->validade = $req_produto->validade;
                 $produto->consumo = $req_produto->consumo;
                 $produto->save();
+                $inserir_log = false;
                 $this->log_inserir(intval($req_produto->id) ? "E" : "C", "produtos", $produto->id, "ERP", $request->usu);
             }
+            $where_mp = "id_maquina = ".$request->maq." AND id_produto = ".$produto->id;
             if (!intval($req_produto->id)) {
                 $this->criar_mp($produto->id, "valores.id", true, $request->usu);
                 if ($this->comparar_num($req_produto->preco, $req_produto->prcad)) {
                     DB::statement("
                         UPDATE maquinas_produtos
                         SET preco = ".$req_produto->preco."
-                        WHERE id_maquina = ".$request->maq."
-                          AND id_produto = ".$produto->id
+                        WHERE ".$where_mp
                     );
                 }
                 array_push($ids_itm, $produto->id);
@@ -221,12 +224,15 @@ class Api2Controller extends ControllerKX {
                     $categoria->alias = "categorias";
                     $categoria->save();
                     $this->log_inserir(intval($req_categoria->id) ? "E" : "C", "valores", $categoria->id, "ERP", $request->usu);
-                    array_push($ids_cdp, $categoria->id);
-                    array_push($cods_cdp, $categoria->id_externo);
-                    if ($this->comparar_num($produto->id_categoria, $categoria->id)) {
-                        $produto->id_categoria = $categoria->id;
-                        $produto->save();
+                    if (!intval($req_categoria->id)) {
+                        array_push($ids_cdp, $categoria->id);
+                        array_push($cods_cdp, $categoria->id_externo);
                     }
+                }
+                if ($this->comparar_num($produto->id_categoria, $categoria->id)) {
+                    $produto->id_categoria = $categoria->id;
+                    $produto->save();
+                    if ($inserir_log || !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $request->usu);
                 }
             } else {
                 $id_cat = 0;
@@ -234,8 +240,17 @@ class Api2Controller extends ControllerKX {
                 if ($id_cat) {
                     $produto->id_categoria = 0;
                     $produto->save();
+                    if ($inserir_log || !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $request->usu);
                 }
             }
+            $estq = new Estoque;
+            $estq->es = "E";
+            $estq->qtd = $req_produto->qtd;
+            $estq->id_mp = DB::table("maquinas_produtos")
+                                ->whereRaw($where_mp)
+                                ->value("id");
+            $estq->save();
+            $this->log_inserir("C", "estoque", $estq->id, "ERP", $request->usu);
         }
         $resultado = new \stdClass;
         $resultado->ids_cdp = join("|", $ids_cdp);
