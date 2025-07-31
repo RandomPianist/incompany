@@ -94,61 +94,36 @@
             });
         }
 
-        function dinheiro(texto_final) {
-            texto_final = texto_final.replace(/\D/g, "");
-            if (texto_final.length > 2) {
-                let valor_inteiro = parseInt(texto_final.substring(0, texto_final.length - 2)).toString();
-                let resultado_pontuado = "";
-                let cont = 0;
-                for (var i = valor_inteiro.length - 1; i >= 0; i--) {
-                    if (cont % 3 == 0 && cont > 0) resultado_pontuado = "." + resultado_pontuado;
-                    resultado_pontuado = valor_inteiro[i] + resultado_pontuado;
-                    cont++;
-                }
-                texto_final = resultado_pontuado + "," + texto_final.substring(texto_final.length - 2).padStart(2, "0");
-            } else texto_final = "0," + texto_final.padStart(2, "0");
-            texto_final = "R$ " + texto_final;
-            return texto_final;
-        }
-
         function validar() {
             limpar_invalido();
             const aux = verifica_vazios(["cod_externo", "descr", "ca", "validade", "categoria", "tamanho", "validade_ca"]);
             let erro = aux.erro;
             let alterou = aux.alterou;
-            let el_cod_externo = document.getElementById("cod_externo");
-            let el_categoria = document.getElementById("categoria");
-            let el_preco = document.getElementById("preco");
-            const _preco = parseInt(el_preco.value.replace(/\D/g, ""));
-            if (!erro && _preco <= 0) {
+            let preco = document.getElementById("preco");
+            if (!erro && parseInt(preco.value.replace(/\D/g, "")) <= 0) {
                 erro = "Valor inválido";
-                el_preco.classList.add("invalido");
+                preco.classList.add("invalido");
             }
-            if (el_preco.value.trim() != dinheiro(anteriores.preco.toString()) || document.getElementById("consumo-chk").checked != ant_consumo) alterou = true;
+            if (preco.value.trim() != dinheiro(anteriores.preco.toString()) || document.getElementById("consumo-chk").checked != ant_consumo) alterou = true;
             $.get(URL + "/produtos/consultar/", {
                 id : document.getElementById("id").value,
-                cod_externo : el_cod_externo.value,
-                categoria : el_categoria.value,
+                cod_externo : document.getElementById("cod_externo").value,
+                categoria : document.getElementById("categoria").value,
                 id_categoria : document.getElementById("id_categoria").value,
-                referencia : document.getElementById("referencia").value,
-                preco : _preco
+                referencia : document.getElementById("referencia").value
             }, function(data) {
                 if (!erro && data == "invalido") {
                     erro = "Categoria não encontrada";
-                    el_categoria.classList.add("invalido");
+                    document.getElementById("categoria").classList.add("invalido");
                 }
                 if (!erro && data == "duplicado") {
                     erro = "Já existe um registro com esse código";
-                    el_cod_externo.classList.add("invalido");
-                }
-                if (!erro && data.indexOf("preco") > -1) {
-                    erro = "O preço do produto não pode ser menor que o preço mínimo de " + dinheiro(data.replace("preco", ""));
-                    el_preco.classList.add("invalido");
+                    document.getElementById("cod_externo").classList.add("invalido");
                 }
                 if (!erro && !alterou && !document.querySelector("#produtosModal input[type=file]").value) erro = "Altere pelo menos um campo para salvar";
                 if (!erro) {
                     const fn = function() {
-                        el_preco.value = _preco / 100;
+                        preco.value = parseInt(preco.value.replace(/\D/g, "")) / 100;
                         document.querySelector("#produtosModal form").submit();
                     }
                     if (data == "aviso") s_confirm("Prosseguir apagará atribuições.<br>Deseja continuar?", fn);

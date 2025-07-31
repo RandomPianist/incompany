@@ -792,3 +792,12 @@ footer {
     font-size: 12px;
     margin-bottom: 0;
 }
+
+.max-13 {
+    max-width: 13%
+}
+
+.col-preco {
+    max-width: 12%;
+    flex: 0 0 12%
+}

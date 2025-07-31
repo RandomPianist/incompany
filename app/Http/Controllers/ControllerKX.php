@@ -134,6 +134,27 @@ class ControllerKX extends Controller {
     }
 
     protected function retirada_salvar($json) {
+        $comodato = intval($json["id_comodato"]);
+        $api = $comodato > 0;
+
+        $consulta = !$api ?
+            DB::table("maquinas_produtos AS mp")
+                ->select(
+                    "produtos.ca",
+                    DB::raw("IFNULL(mp.preco, produtos.preco) AS preco")
+                )
+                ->join("produtos", "produtos.id", "mp.id_produto")
+                ->join("comodatos", "comodatos.id_maquina", "mp.id_maquina")
+                ->where("comodatos.id", $comodato)
+        :
+            DB::table("produtos")
+                ->select(
+                    "ca",
+                    "preco"
+                )
+        ;
+        $consulta_produto = $consulta->where("produtos.id", $json["id_produto"]);
+
         $linha = new Retiradas;
         if (isset($json["obs"])) $linha->obs = $json["obs"];
         if (isset($json["biometria_ou_senha"])) $linha->biometria_ou_senha = $json["biometria_ou_senha"];
@@ -143,12 +164,13 @@ class ControllerKX extends Controller {
         $linha->id_pessoa = $json["id_pessoa"];
         $linha->id_atribuicao = $json["id_atribuicao"];
         $linha->id_produto = $json["id_produto"];
-        $linha->id_comodato = $json["id_comodato"];
+        $linha->id_comodato = $comodato;
         $linha->qtd = $json["qtd"];
         $linha->data = $json["data"];
         $linha->id_empresa = Pessoas::find($json["id_pessoa"])->id_empresa;
+        $linha->preco = $consulta_produto->value("preco");
+        $linha->ca = $consulta_produto->value("ca");
         $linha->save();
-        $api = $json["id_comodato"] > 0;
         $reg_log = $this->log_inserir("C", "retiradas", $linha->id, $api ? "APP" : "WEB");
         if ($api) {
             $reg_log->id_pessoa = $json["id_pessoa"];

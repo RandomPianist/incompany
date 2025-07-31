@@ -37,16 +37,20 @@
                                     <option value = "A">AJUSTE</option>
                                 </select>
                             </div>
-                            <div class = "col-2 p-0 px-1">
+                            <div class = "col-1 p-0 px-1">
                                 <label for = "qtd-1" class = "custom-label-form">Quantidade: *</label>
                                 <input id = "qtd-1" name = "qtd[]" class = "form-control text-right qtd" autocomplete = "off" type = "number" onkeyup = "$(this).trigger('change')" onchange = "limitar(this)" />
+                            </div>
+                            <div class = "col-1 p-0 px-1 col-preco">
+                                <label for = "preco-1" class = "custom-label-form">Preço: *</label>
+                                <input id = "preco-1" name = "preco[]" class = "form-control dinheiro-editavel preco" autocomplete = "off" type = "text"/>
                             </div>
                             <div class = "col-2 p-0 px-1">
                                 <label for = "obs-1" class = "custom-label-form">Observação:</label>
                                 <input id = "obs-1" name = "obs[]" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 16)" />
                                 <span class = "custom-label-form tam-max"></span>
                             </div>
-                            <div class = "col-2 text-right">
+                            <div class = "col-2 text-right max-13">
                                 <button type = "button" class = "btn btn-target mx-auto px-3 mt-4 w-100" onclick = "adicionar_campo()">+</button>
                             </div>
                         </div>
@@ -78,7 +82,7 @@
         let obter_vetor = function(classe) {
             let resultado = new Array();
             Array.from(document.getElementsByClassName(classe)).forEach((el) => {
-                resultado.push(el.value);
+                resultado.push(classe == "preco" ? el.value.replace(/\D/g, "") : el.value);
             });
             return resultado.join(",");
         }
@@ -92,6 +96,7 @@
             produtos_id : obter_vetor("id-produto"),
             quantidades : obter_vetor("qtd"),
             es : obter_vetor("es"),
+            precos : obter_vetor("preco"),
             id_maquina : document.getElementsByClassName("id_maquina")[0].value
         }, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
@@ -99,12 +104,17 @@
                 for (let i = 0; i < data.campos.length; i++) {
                     let el = document.getElementById(data.campos[i]);
                     el.value = data.valores[i];
+                    $(el).trigger("keyup");
                     el.classList.add("invalido");
                 }
                 erro = data.texto;
             }
-            if (!erro) document.querySelector("#estoqueModal form").submit();
-            else s_alert(erro);
+            if (!erro) {
+                Array.from(document.getElementsByClassName("preco")).forEach((el) => {
+                    el.value = parseInt(el.value.replace(/\D/g, "")) / 100;
+                });
+                document.querySelector("#estoqueModal form").submit();
+            } else s_alert(erro);
         });
     }
 
@@ -131,13 +141,16 @@
         col_es.classList.add("col-2", "p-0", "px-1");
 
         let col_qtd = document.createElement("div");
-        col_qtd.classList.add("col-2", "p-0", "px-1");
+        col_qtd.classList.add("col-1", "p-0", "px-1");
+
+        let col_preco = document.createElement("div");
+        col_preco.classList.add("col-1", "p-0", "px-1", "col-preco");
 
         let col_obs = document.createElement("div");
         col_obs.classList.add("col-2", "p-0", "px-1");
 
         let col_btn = document.createElement("div");
-        col_btn.classList.add("col-2", "text-right");
+        col_btn.classList.add("col-2", "text-right", "max-13");
 
         const cont = document.querySelectorAll("#estoqueModal input[type=number]").length + 1;
 
@@ -180,6 +193,13 @@
             $(el_qtd).trigger("change");
         }
 
+        let el_preco = document.createElement("input");
+        el_preco.type = "text";
+        el_preco.id = "preco-" + cont;
+        el_preco.name = "preco[]";
+        el_preco.classList.add("form-control", "dinheiro-editavel", "preco");
+        el_preco.autocomplete = "off";
+
         let el_obs = document.createElement("input");
         el_obs.type = "text";
         el_obs.id = "obs-" + cont;
@@ -217,6 +237,7 @@
         col_prod.appendChild(el_prod_post);
         col_es.appendChild(el_es);
         col_qtd.appendChild(el_qtd);
+        col_preco.appendChild(el_preco);
         col_obs.appendChild(el_obs);
         col_obs.appendChild(el_obs_post);
         col_btn.appendChild(adicionar);
@@ -225,6 +246,7 @@
         linha.appendChild(col_prod);
         linha.appendChild(col_es);
         linha.appendChild(col_qtd);
+        linha.appendChild(col_preco);
         linha.appendChild(col_obs);
         linha.appendChild(col_btn);
         tudo.appendChild(linha);
@@ -235,6 +257,7 @@
         });
 
         carrega_autocomplete();
+        carrega_dinheiro();
         $(el_obs).trigger("keyup");
         $(el_qtd).trigger("keyup");
         $(el_es).trigger("change");

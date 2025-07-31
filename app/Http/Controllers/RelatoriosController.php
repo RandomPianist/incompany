@@ -442,7 +442,7 @@ class RelatoriosController extends ControllerKX {
                     "produtos.id AS id_produto",
                     "produtos.descr AS produto",
                     DB::raw("IFNULL(tot.qtd, 0) AS saldo"),
-                    DB::raw("IFNULL(mp.preco, produtos.preco) AS preco"),
+                    DB::raw("estoque.preco"),
 
                     // DETALHES
                     DB::raw("CONCAT(DATE_FORMAT(log.data, '%d/%m/%Y'), CASE WHEN log.hms IS NOT NULL THEN CONCAT(' ', log.hms) ELSE '' END) AS data"),
@@ -647,12 +647,7 @@ class RelatoriosController extends ControllerKX {
                     "produtos.descr AS produto",
                     "pessoas.nome",
                     DB::raw("SUM(retiradas.qtd) AS qtd"),
-                    DB::raw("
-                        CASE
-                            WHEN mp.preco IS NOT NULL THEN (mp.preco * SUM(retiradas.qtd))
-		                    ELSE (produtos.preco * SUM(retiradas.qtd))
-                        END AS valor
-                    ")
+                    DB::raw("SUM(retiradas.preco) AS valor")
                 )
                 ->join("pessoas", function($join) {
                     $join->on(function($sql) {
@@ -731,9 +726,7 @@ class RelatoriosController extends ControllerKX {
                     "setores.descr",
                     "retiradas.data",
                     "produtos.descr",
-                    "pessoas.nome",
-                    "mp.preco",
-                    "produtos.preco"
+                    "pessoas.nome"
                 )
                 ->orderby("retiradas.data")
                 ->get()

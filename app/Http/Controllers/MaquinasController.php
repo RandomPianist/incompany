@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Comodatos;
 use App\Models\Estoque;
+use App\Models\MaquinasProdutos;
 
 class MaquinasController extends ControllerKX {
     public function estoque(Request $request) {
@@ -31,12 +32,18 @@ class MaquinasController extends ControllerKX {
 
             if (!$ajusteIgualEstoque) {
                 $linha->descr = $request->obs[$i];
+                $linha->preco = $request->preco[$i];
                 $linha->id_mp = DB::table("maquinas_produtos")
                                     ->where("id_produto", $request->id_produto[$i])
                                     ->where("id_maquina", $request->id_maquina)
                                     ->value("id");
                 $linha->save();
                 $this->log_inserir("C", "estoque", $linha->id);
+                $gestor = MaquinasProdutos::find($linha->id_mp);
+                if ($gestor->preco != $linha->preco) {
+                    $gestor->preco = $linha->preco;
+                    $this->log_inserir("E", "maquinas_produtos", $gestor->id);
+                }
             }
         }
         return redirect("/valores/maquinas");
@@ -50,6 +57,7 @@ class MaquinasController extends ControllerKX {
         $produtos_id = explode(",", $request->produtos_id);
         $produtos_descr = explode(",", $request->produtos_descr);
         $quantidades = explode(",", $request->quantidades);
+        $precos = explode(",", $request->precos);
         $es = explode(",", $request->es);
 
         for ($i = 0; $i < sizeof($produtos_id); $i++) {
@@ -78,6 +86,16 @@ class MaquinasController extends ControllerKX {
                     $linha2 = $texto ? "Os campos foram corrigidos" : "O campo foi corrigido";
                     $linha2 .= " para zerar o estoque.<br>Por favor, verifique e tente novamente.";
                     $texto = "Essa movimentação de estoque provocaria estoque negativo.<br>".$linha2;
+                }
+            }
+        }
+
+        if (!$texto) {
+            for ($i = 0; $i < sizeof($produtos_id); $i++) {
+                if (!intval($precos[$i])) {
+                    $texto = $texto ? "Há preços zerados" : "Há um preço zerado";
+                    array_push($campos, "preco-".($i + 1));
+                    array_push($valores, "0");
                 }
             }
         }

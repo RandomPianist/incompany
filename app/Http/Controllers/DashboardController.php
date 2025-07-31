@@ -67,12 +67,7 @@ class DashboardController extends ControllerKX {
                     "setores.id",
                     "setores.descr",
                     DB::raw("SUM(qtd) AS retirados"),
-                    DB::raw("
-                        CASE
-                            WHEN mp.preco IS NOT NULL THEN (mp.preco * SUM(retiradas.qtd))
-                            ELSE (produtos.preco * SUM(retiradas.qtd))
-                        END AS valor
-                    ")
+                    DB::raw("SUM(retiradas.preco) AS valor")
                 )
                 ->join("pessoas", function($join) {
                     $join->on(function($sql) {
@@ -85,20 +80,13 @@ class DashboardController extends ControllerKX {
                 })
                 ->join("setores", "setores.id", "pessoas.id_setor")
                 ->join("produtos", "produtos.id", "retiradas.id_produto")
-                ->leftjoin("comodatos", "comodatos.id", "retiradas.id_comodato")
-                ->leftjoin("maquinas_produtos AS mp", function($join) {
-                    $join->on("mp.id_produto", "produtos.id")
-                        ->on("mp.id_maquina", "comodatos.id_maquina");
-                })
                 ->whereRaw("retiradas.data >= '".$inicio."'")
                 ->whereRaw("retiradas.data <= '".$fim."'")
                 ->where("setores.lixeira", 0)
                 ->whereRaw($where)
                 ->groupby(
                     "setores.id",
-                    "setores.descr",
-                    "mp.preco",
-                    "produtos.preco"
+                    "setores.descr"
                 )
                 ->get()
         )->groupBy("id")->map(function($itens) {
@@ -338,12 +326,7 @@ class DashboardController extends ControllerKX {
                         "pessoas.id",
                         "pessoas.nome",
                         DB::raw("SUM(qtd) AS retirados"),
-                        DB::raw("
-                            CASE
-                                WHEN mp.preco IS NOT NULL THEN (mp.preco * SUM(retiradas.qtd))
-                                ELSE (produtos.preco * SUM(retiradas.qtd))
-                            END AS valor
-                        ")
+                        DB::raw("SUM(retiradas.preco) AS valor")
                     )
                     ->join("pessoas", function($join) {
                         $join->on(function($sql) {
@@ -366,9 +349,7 @@ class DashboardController extends ControllerKX {
                     ->where("pessoas.id_setor", $id_setor)
                     ->groupby(
                         "pessoas.id",
-                        "pessoas.nome",
-                        "mp.preco",
-                        "produtos.preco"
+                        "pessoas.nome"
                     )
                     ->get()
         )->groupby("id")->map(function($itens) {

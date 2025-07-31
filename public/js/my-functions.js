@@ -106,17 +106,7 @@ window.onload = function() {
 
     carrega_autocomplete();
 
-    $(".dinheiro-editavel").each(function() {
-        $($(this)[0]).focus(function() {
-            if ($(this).val() == "") $(this).val("R$ 0,00");
-        });
-        $($(this)[0]).keyup(function() {
-            let texto_final = $(this).val();
-            if (texto_final == "") $(this).val("R$ 0,00");
-            $(this).val(dinheiro(texto_final));
-        });
-        $(this).addClass("text-right");
-    });
+    carrega_dinheiro();
 
     $("input.data").each(function() {
         $(this).datepicker({
@@ -242,6 +232,23 @@ function contar_char(el, max) {
     el.classList.remove("invalido");
     el.value = el.value.substring(0, max);
     el.nextElementSibling.innerHTML = el.value.length + "/" + max;
+}
+
+function dinheiro(texto_final) {
+    texto_final = texto_final.replace(/\D/g, "");
+    if (texto_final.length > 2) {
+        let valor_inteiro = parseInt(texto_final.substring(0, texto_final.length - 2)).toString();
+        let resultado_pontuado = "";
+        let cont = 0;
+        for (var i = valor_inteiro.length - 1; i >= 0; i--) {
+            if (cont % 3 == 0 && cont > 0) resultado_pontuado = "." + resultado_pontuado;
+            resultado_pontuado = valor_inteiro[i] + resultado_pontuado;
+            cont++;
+        }
+        texto_final = resultado_pontuado + "," + texto_final.substring(texto_final.length - 2).padStart(2, "0");
+    } else texto_final = "0," + texto_final.padStart(2, "0");
+    texto_final = "R$ " + texto_final;
+    return texto_final;
 }
 
 function modal(nome, id, callback) {
@@ -453,6 +460,21 @@ function seta_autocomplete(direcao, _this) {
         }
     }
     target.trigger(([38, 40].indexOf(direcao) > -1) ? "mouseover" : "click");
+}
+
+function carrega_dinheiro() {
+    $(".dinheiro-editavel").each(function() {
+        $($(this)[0]).focus(function() {
+            if ($(this).val() == "") $(this).val("R$ 0,00");
+        });
+        $($(this)[0]).keyup(function() {
+            let texto_final = $(this).val();
+            if (texto_final == "") $(this).val("R$ 0,00");
+            $(this).val(dinheiro(texto_final));
+        });
+        $(this).addClass("text-right");
+        $(this).trigger("keyup");
+    });
 }
 
 function verifica_vazios(arr, _erro) {
