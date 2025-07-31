@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\Api2Controller;
 use App\Http\Controllers\ProdutosController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Http\Request;
@@ -33,6 +34,17 @@ Route::group(["prefix" => "erp"], function() {
     Route::post("/gerenciar-estoque",    [ApiController::class, "gerenciar_estoque"]);
     Route::post("/marcar-gerou-pedido",  [ApiController::class, "marcar_gerou_pedido"]);
     Route::post("/associar-empresa",     [ApiController::class, "associar_empresa"]);
+
+    Route::group(["prefix" => "v2"], function() {
+        Route::group(["prefix" => "maquinas"], function() {
+            Route::post("/",          [Api2Controller::class, "maquinas_por_cliente"]);
+            Route::post("/consultar", [Api2Controller::class, "consultar_maquina"]);
+            Route::post("/criar",     [Api2Controller::class, "criar"]);
+        });
+        Route::post("/produtos",     [Api2Controller::class, "produtos"]);
+        Route::post("/sincronizar",  [Api2Controller::class, "sincronizar"]);
+        Route::post("/pode-faturar", [Api2Controller::class, "pode_faturar"]);
+    });
 });
 
 Route::group(["prefix" => "app"], function() {

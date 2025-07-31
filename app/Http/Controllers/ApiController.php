@@ -36,12 +36,13 @@ class ApiController extends ControllerKX {
                         proxima_retirada
                     "))
                     ->where(function($sql) use($obrigatorios, $grade) {
-                        if ($obrigatorios) $sql->where("obrigatorio", 1);
-                        else if ($grade) $sql->whereNotNull("referencia");
+                        if ($obrigatorios) {
+                            $sql->where("obrigatorio", 1)
+                                ->where("esta_pendente", 1);
+                        } else if ($grade) $sql->whereNotNull("referencia");
                         else $sql->whereNull("referencia");
                     })
                     ->where("id_pessoa", $id_pessoa)
-                    ->where("esta_pendente", 1)
                     ->groupby(DB::raw($obrigatorios ? "
                         produto_ou_referencia_chave,
                         chave_produto,
@@ -376,11 +377,11 @@ class ApiController extends ControllerKX {
                 $resultado->msg = "Máquina não comodatada para nenhuma empresa";
                 return json_encode($resultado);
             }
-            // if (!isset($retirada["id_supervisor"]) && !$this->retirada_consultar($retirada["id_atribuicao"], $retirada["qtd"], $retirada["id_pessoa"])) {
-            //     $resultado->code = 401;
-            //     $resultado->msg = "Essa quantidade de produtos não é permitida para essa pessoa";
-            //     return json_encode($resultado);
-            // }
+            if (!isset($retirada["id_supervisor"]) && !$this->retirada_consultar($retirada["id_atribuicao"], $retirada["qtd"], $retirada["id_pessoa"])) {
+                $resultado->code = 401;
+                $resultado->msg = "Essa quantidade de produtos não é permitida para essa pessoa";
+                return json_encode($resultado);
+            }
             if (floatval($retirada["qtd"]) > $this->retorna_saldo_mp($maquinas[0]->id, $retirada["id_produto"])) {
                 $resultado->code = 500;
                 $resultado->msg = "Essa quantidade de produtos não está disponível em estoque";
