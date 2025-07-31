@@ -156,26 +156,27 @@ class ControllerKX extends Controller {
         ;
         $consulta_produto = $consulta->where("produtos.id", $json["id_produto"]);
 
+        $pessoa = Pessoas::find($json["id_pessoa"]);
         $linha = new Retiradas;
         if (isset($json["obs"])) $linha->obs = $json["obs"];
         if (isset($json["biometria_ou_senha"])) $linha->biometria_ou_senha = $json["biometria_ou_senha"];
         if (isset($json["id_supervisor"])) {
             if (intval($json["id_supervisor"])) $linha->id_supervisor = $json["id_supervisor"];
         }
-        $linha->id_pessoa = $json["id_pessoa"];
+        $linha->id_pessoa = $pessoa->id;
         $linha->id_atribuicao = $json["id_atribuicao"];
         $linha->id_produto = $json["id_produto"];
         $linha->id_comodato = $comodato;
         $linha->qtd = $json["qtd"];
         $linha->data = $json["data"];
-        $linha->id_empresa = Pessoas::find($json["id_pessoa"])->id_empresa;
+        $linha->id_empresa = $pessoa->id_empresa;
         $linha->preco = $consulta_produto->value("preco");
         $linha->ca = $consulta_produto->value("ca");
         $linha->save();
         $reg_log = $this->log_inserir("C", "retiradas", $linha->id, $api ? "APP" : "WEB");
         if ($api) {
-            $reg_log->id_pessoa = $json["id_pessoa"];
-            $reg_log->nome = Pessoas::find($json["id_pessoa"])->nome;
+            $reg_log->id_pessoa = $pessoa->id;
+            $reg_log->nome = $pessoa->nome;
             $reg_log->save();
         }
         return $linha;
