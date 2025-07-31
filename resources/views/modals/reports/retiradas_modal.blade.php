@@ -62,7 +62,15 @@
                             </div>
                         </div>
                         <div class = "row">
-                            <div class = "col-6">
+                            <div class = "col-4">
+                                <label for = "rel-pessoa-tipo" class = "custom-label-form">Tipo de colaborador:</label>
+                                <select class = "form-control" id = "rel-pessoa-tipo" name = "tipo_colab" onchange = "relatorio.atualizarTabela(this.value)">
+                                    <option value = "todos">Todos</option>
+                                    <option value = "ativos">Ativos</option>
+                                    <option value = "inativos">Inativos</option>
+                                </select>
+                            </div>
+                            <div class = "col-4">
                                 <label for = "rel-consumo2" class = "custom-label-form">Tipo de produto:</label>
                                 <select class = "form-control" id = "rel-consumo2" name = "consumo">
                                     <option value = "todos">Todos</option>
@@ -70,7 +78,7 @@
                                     <option value = "epi">EPI</option>
                                 </select>
                             </div>
-                            <div class = "col-6">
+                            <div class = "col-4">
                                 <label for = "rel-tipo" class = "custom-label-form">Tipo de relatório:</label>
                                 <select class = "form-control" id = "rel-tipo" name = "tipo">
                                     <option value = "A">Analítico</option>

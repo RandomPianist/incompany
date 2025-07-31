@@ -14,7 +14,8 @@ class HomeController extends ControllerKX {
     }
 
     public function autocomplete(Request $request) {
-        $tabela = str_replace("_todos", "", $request->table);     
+        $tabela = str_replace("_todos", "", $request->table);
+        $tabela = str_replace("_lixeira", "", $tabela);
         $where = " AND ".$request->column." LIKE '%".$request->search."%'";
         
         $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
@@ -75,7 +76,11 @@ class HomeController extends ControllerKX {
         if ($request->column == "referencia") $query .= "MIN(id) AS ";
         $query .= "id, ".$request->column;
         $query .= " FROM ".$tabela;
-        $query .= " WHERE ".($request->table == $tabela ? "lixeira = 0" : "1").$where;
+        $query .= " WHERE ";
+        if (strpos("todos", $request->table) !== false) $query .= "1";
+        else if (strpos("lixeira", $request->table) !== false) $query .= "lixeira = 1";
+        else $query .= "lixeira = 0";
+        $query .= $where;
         if ($request->column == "referencia") $query .= " GROUP BY referencia";
         $query .= " ORDER BY ".$request->column;
         $query .= " LIMIT 30";

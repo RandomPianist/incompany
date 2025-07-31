@@ -679,6 +679,24 @@ function RelatorioControle() {
 function RelatorioRetiradas(quebra) {
     let elementos = relObterElementos(["inicio3", "fim3", "empresa2", "pessoa2", "setor", "consumo2", "tipo"]);
 
+    this.atualizarTabela = function(tipo) {
+        let tabela = "pessoas";
+        switch(tipo) {
+            case "inativos":
+                tabela += "_lixeira";
+                break;
+            case "todos":
+                tabela += "_todos";
+                break;
+        }
+
+        let elemento = document.getElementById("rel-pessoa2");
+        elemento.value = "";
+        elemento.dataset.table = tabela;
+
+        document.getElementById("rel-id_pessoa2").value = "";
+    }
+
     this.validar = function() {
         limpar_invalido();
         let erro = "";
@@ -711,6 +729,7 @@ function RelatorioRetiradas(quebra) {
                 elementos.setor.parentElement.classList.add("d-none");
                 elementos.pessoa.parentElement.classList.remove("d-none");
             }
+            document.getElementById("rel-pessoa-tipo").value = "todos";
             elementos.consumo.value = "todos";
             elementos.tipo.value = "A";
             let titulo = "Consumo por ";
