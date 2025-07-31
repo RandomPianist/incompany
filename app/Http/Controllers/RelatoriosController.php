@@ -677,11 +677,11 @@ class RelatoriosController extends ControllerKX {
                     if ($request->inicio || $request->fim) {
                         $periodo = "Período";
                         if ($request->inicio) {
-                            $sql->whereRaw("log.data >= '".$inicio."'");
+                            $sql->whereRaw("retiradas.data >= '".$inicio."'");
                             $periodo .= " de ".$request->inicio;
                         }
                         if ($request->fim) {
-                            $sql->whereRaw("log.data <= '".$fim."'");
+                            $sql->whereRaw("retiradas.data <= '".$fim."'");
                             $periodo .= " até ".$request->fim;
                         }
                         array_push($criterios, $periodo);
