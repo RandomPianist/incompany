@@ -193,7 +193,10 @@ CREATE TABLE solicitacoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     status VARCHAR(1), -- (A)berta, (C)ancelada, (E)m andamento, (R)ecusada, (F)inalizada
     avisou TINYINT DEFAULT 0,
-    prazo DATE,
+    data DATE,
+    usuario_erp VARCHAR(32),
+    usuario_erp2 VARCHAR(32),
+    usuario_web VARCHAR(64),
     id_comodato INT,
     id_externo INT, -- FTANTF.Recnum
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -205,8 +208,10 @@ CREATE TABLE solicitacoes_produtos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_produto_orig INT,
     qtd_orig NUMERIC(10,5),
+    preco_orig NUMERIC(8,2),
     id_produto INT,
     qtd NUMERIC(10,5),
+    preco NUMERIC(8,2),
     origem VARCHAR(4),
     obs VARCHAR(64),
     id_solicitacao INT,

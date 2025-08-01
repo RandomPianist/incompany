@@ -6,15 +6,18 @@ use DB;
 use Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Models\Pessoas;
+use App\Models\Comodatos;
 use App\Models\Solicitacoes;
+use App\Models\SolicitacoesProdutos;
 
 class SolicitacoesController extends ControllerKX {
-    private function autorizado($solicitacao) {
+    private function obter_autor($solicitacao) {
         return DB::table("log")
-                    ->where("fk", $solicitacao)
-                    ->where("tabela", "solicitacoes")
-                    ->where("acao", "C")
-                    ->value("id_pessoa") == Auth::user()->id_pessoa;
+                ->where("fk", $solicitacao)
+                ->where("tabela", "solicitacoes")
+                ->where("acao", "C")
+                ->value("id_pessoa");
     }
 
     public function ver(Request $request) {
@@ -27,26 +30,29 @@ class SolicitacoesController extends ControllerKX {
     }
 
     public function consultar($id_comodato) {
-        // pode_cancelar
+        $resultado = new \stdClass;
         $solicitacao = Solicitacoes::find(
             DB::table("solicitacoes")
                     ->selectRaw("MAX(id) AS id")
                     ->where("id_comodato", $id_comodato)
                     ->value("id")
         );
-        if ($solicitacao === null) return 200;
-        if ($solicitacao->status != "A" && $solicitacao->status != "E") return 200;
-        if ($solicitacao->status == "E" && Carbon::parse($solicitacao->prazo) < Carbon::parse(date('Y-m-d'))) {
-            if ($this->autorizado($solicitacao->id)) {
-                $solicitacao->status = "C";
-                $solicitacao->save();
-                $this->log_inserir("E", "solicitacoes", $solicitacao->id);
-                return 200;
-            }
-            return 400;
+        if ($solicitacao === null) {
+            $resultado->continuar = 1;
+            return json_encode($resultado);
         }
-        if ($solicitacao->status == "E") return Carbon::parse($solicitacao->prazo)->format("d/m/Y");
-        return 400;
+        if (!in_array($solicitacao->status, ["A", "E"])) {
+            $resultado->continuar = 1;
+            return json_encode($resultado);
+        }
+        $id_autor = $this->obter_autor($solicitacao->id);
+        $resultado->continuar = 0;
+        $resultado->status = $solicitacao->status;
+        if ($solicitacao->status == "E") $resultado->prazo = Carbon::parse($solicitacao->data)->format("d/m/Y");
+        $resultado->autor = Pessoas::find($id_autor)->nome;
+        $resultado->pode_cancelar = Auth::user()->id_pessoa == $id_autor ? 1 : 0;
+        $resultado->id = $solicitacao->id;
+        return json_encode($resultado);
     }
 
     public function mostrar(Request $request) {
@@ -120,12 +126,57 @@ class SolicitacoesController extends ControllerKX {
                     ->value("id")
         );
         if ($solicitacao === null) return 200;
-        if ($this->autorizado($solicitacao->id) && in_array($solicitacao->status, ["E", "R"]) && !intval($solicitacao->avisou)) {
+        if (
+            !intval($solicitacao->avisou) &&
+            in_array($solicitacao->status, ["E", "R", "F"]) &&
+            Auth::user()->id_pessoa == $this->obter_autor($solicitacao->id)
+        ) {
             $solicitacao->avisou = 1;
             $solicitacao->save();
             $this->log_inserir("E", "solicitacoes", $solicitacao->id);
-            return Carbon::parse($solicitacao->prazo)->format("d/m/Y");
+            return json_encode(array(
+                "id" => $solicitacao->id,
+                "data" => DB::table("log")
+                            ->selectRaw("DATE_FORMAT(log.data, '%d/%m/%Y') AS data")
+                            ->where("fk", $solicitacao)
+                            ->where("tabela", "solicitacoes")
+                            ->where("acao", "C")
+                            ->value("data"),
+                "usuario_erp" => $solicitacao->status != "F" ? $solicitacao->usuario_erp : $solicitacao->usuario_erp2,
+                "status" => $solicitacao->status,
+                "data" => Carbon::parse($solicitacao->data)->format("d/m/Y")
+            ));
         }
         return 200;
+    }
+    
+    public function criar(Request $request) {
+        $solicitacao = new Solicitacoes;
+        $solicitacao->status = "A";
+        $solicitacao->data = date("Y-m-d");
+        $solicitacao->id_comodato = $request->id_comodato;
+        $solicitacao->usuario_web = Pessoas::find(Auth::user()->id_pessoa)->nome;
+        $solicitacao->save();
+        $this->log_inserir("C", "solicitacoes", $solicitacao->id);
+        for ($i = 0; $i < sizeof($request->id_produto); $i++) {
+            $sp = new SolicitacoesProdutos;
+            $sp->id_produto_orig = $request->id_produto[$i];
+            $sp->qtd_orig = $request->qtd[$i];
+            $sp->origem = "WEB";
+            $sp->preco_orig = DB::table("maquinas_produtos")
+                                ->where("id_maquina", Comodatos::find($solicitacao->id_comodato)->id_maquina)
+                                ->where("id_produto", $sp->id_produto_orig)
+                                ->value("preco");
+            $sp->id_solicitacao = $solicitacao->id;
+            $sp->save();
+            $this->log_inserir("C", "solicitacoes_produtos", $solicitacao->id);
+        }
+    }
+
+    public function cancelar(Request $request) {
+        $solicitacao = Solicitacoes::find($request->id);
+        $solicitacao->status = "C";
+        $solicitacao->save();
+        $this->log_inserir("D", "solicitacoes", $solicitacao->id);
     }
 }

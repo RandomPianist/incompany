@@ -8,6 +8,9 @@ use App\Models\Empresas;
 use App\Models\Valores;
 use App\Models\Produtos;
 use App\Models\Estoque;
+use App\Models\Solicitacoes;
+use App\Models\SolicitacoesProdutos;
+use App\Models\Comodatos;
 use Illuminate\Http\Request;
 
 class Api2Controller extends ControllerKX {
@@ -149,13 +152,12 @@ class Api2Controller extends ControllerKX {
         return json_encode($consulta);
     }
 
-    public function sincronizar(Request $request) {
-        if ($request->token != config("app.key")) return 401;
+    private function sincronizar_produtos($maquina, $usuario, $produtos) {
         $ids_cdp = array();
         $cods_cdp = array();
         $ids_itm = array();
         $cods_itm = array();
-        foreach ($request->produtos as $req_produto) {
+        foreach ($produtos as $req_produto) {
             $produto = Produtos::find($req_produto->id);
             $continua = false;
             $inserir_log = true;
@@ -192,11 +194,11 @@ class Api2Controller extends ControllerKX {
                 $produto->consumo = $req_produto->consumo;
                 $produto->save();
                 $inserir_log = false;
-                $this->log_inserir(intval($req_produto->id) ? "E" : "C", "produtos", $produto->id, "ERP", $request->usu);
+                $this->log_inserir(intval($req_produto->id) ? "E" : "C", "produtos", $produto->id, "ERP", $usuario);
             }
-            $where_mp = "id_maquina = ".$request->maq." AND id_produto = ".$produto->id;
+            $where_mp = "id_maquina = ".$maquina." AND id_produto = ".$produto->id;
             if (!intval($req_produto->id)) {
-                $this->criar_mp($produto->id, "valores.id", true, $request->usu);
+                $this->criar_mp($produto->id, "valores.id", true, $usuario);
                 if ($this->comparar_num($req_produto->preco, $req_produto->prcad)) {
                     DB::statement("
                         UPDATE maquinas_produtos
@@ -223,7 +225,7 @@ class Api2Controller extends ControllerKX {
                     $categoria->descr = $req_categoria->descr;
                     $categoria->alias = "categorias";
                     $categoria->save();
-                    $this->log_inserir(intval($req_categoria->id) ? "E" : "C", "valores", $categoria->id, "ERP", $request->usu);
+                    $this->log_inserir(intval($req_categoria->id) ? "E" : "C", "valores", $categoria->id, "ERP", $usuario);
                     if (!intval($req_categoria->id)) {
                         array_push($ids_cdp, $categoria->id);
                         array_push($cods_cdp, $categoria->id_externo);
@@ -232,7 +234,7 @@ class Api2Controller extends ControllerKX {
                 if ($this->comparar_num($produto->id_categoria, $categoria->id)) {
                     $produto->id_categoria = $categoria->id;
                     $produto->save();
-                    if ($inserir_log || !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $request->usu);
+                    if ($inserir_log || !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario);
                 }
             } else {
                 $id_cat = 0;
@@ -240,7 +242,7 @@ class Api2Controller extends ControllerKX {
                 if ($id_cat) {
                     $produto->id_categoria = 0;
                     $produto->save();
-                    if ($inserir_log || !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $request->usu);
+                    if ($inserir_log || !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario);
                 }
             }
             $estq = new Estoque;
@@ -250,14 +252,25 @@ class Api2Controller extends ControllerKX {
                                 ->whereRaw($where_mp)
                                 ->value("id");
             $estq->save();
-            $this->log_inserir("C", "estoque", $estq->id, "ERP", $request->usu);
+            $this->log_inserir("C", "estoque", $estq->id, "ERP", $usuario);
         }
         $resultado = new \stdClass;
-        $resultado->ids_cdp = join("|", $ids_cdp);
-        $resultado->cods_cdp = join("|", $cods_cdp);
-        $resultado->ids_itm = join("|", $ids_itm);
-        $resultado->cods_itm = join("|", $cods_itm);
-        return json_encode($resultado);
+        $resultado->ids_cdp = $ids_cdp;
+        $resultado->cods_cdp = $cods_cdp;
+        $resultado->ids_itm = $ids_itm;
+        $resultado->cods_itm = $cods_itm;
+        return $resultado;
+    }
+
+    public function sincronizar(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        $resultado = $this->sincronizar_produtos($request->maq, $request->usu, $request->produtos);
+        return json_encode(array(
+            "ids_cdp" => join("|", $resultado->ids_cdp),
+            "cods_cdp" => join("|", $resultado->cods_cdp),
+            "ids_itm" => join("|", $resultado->ids_itm),
+            "cods_itm" => join("|", $resultado->cods_itm)
+        ));
     }
 
     public function pode_faturar(Request $request) {
@@ -268,5 +281,122 @@ class Api2Controller extends ControllerKX {
                     ->where("valores.id", $request->maq)
                     ->get()
         ) ? "OK" : "ERRO";
+    }
+
+    public function enviar_solicitacoes() {
+        if ($request->token != config("app.key")) return 401;
+        return json_encode(collect(
+            DB::table("solicitacoes")
+                ->select(
+                    "solicitacoes.id",
+                    "solicitacoes.usuario_web AS autor",
+                    "empresas.cod_externo AS cft",
+                    DB::raw("DATE_FORMAT(solicitacoes.data, '%d/%m/%Y') AS data"),
+                    "produtos.cod_externo AS cod",
+                    "mp.preco AS vunit",
+                    "sp.qtd_orig AS qtd"
+                )
+                ->join("comodatos", "comodatos.id", "solicitacoes.id_comodato")
+                ->join("empresas", "empresas.id", "comodatos.id_empresa")
+                ->join("solicitacoes_produtos AS sp", "sp.id_solicitacao", "solicitacoes.id")
+                ->join("produtos", "produtos.id", "sp.id_produto_orig")
+                ->join("maquinas_produtos AS mp", function($join) {
+                    $join->on("mp.id_produto", "produtos.id")
+                        ->on("mp.id_maquina", "comodatos.id_maquina");
+                })
+                ->whereRaw("((CURDATE() BETWEEN comodatos.inicio AND comodatos.fim) OR (CURDATE() BETWEEN comodatos.inicio AND comodatos.fim))")
+                ->where("empresas.lixeira", 0)
+                ->where("solicitacoes.status", "A")
+                ->whereNotNull("empresas.cod_externo")
+                ->get()
+        )->groupBy("id")->map(function($produtos) {
+            return [
+                "id" => $produtos[0]->id,
+                "cft" => $produtos[0]->cft,
+                "data" => $produtos[0]->data,
+                "produtos" => collect($produtos)->map(function($produto) {
+                    return [
+                        "cod" => $produto->cod,
+                        "qtd" => $produto->qtd,
+                        "vunit" => $produto->vunit
+                    ];
+                })->values()->all()
+            ];
+        })->values()->all());
+    }
+
+    public function aceitar_solicitacao(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        $solicitacao = Solicitacoes::find($request->id);
+        $solicitacao->data = Carbon::createFromFormat('d/m/Y', $request->prazo)->format('Y-m-d');
+        $solicitacao->status = "E";
+        $solicitacao->usuario_erp = $request->usu;
+        $solicitacao->save();
+        $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
+    }
+
+    public function recusar_solicitacao(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        $solicitacao = Solicitacoes::find($request->id);
+        $solicitacao->data = date("Y-m-d");
+        $solicitacao->status = "R";
+        $solicitacao->usuario_erp = $request->usu;
+        $solicitacao->save();
+        $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
+    }
+
+    public function receber_solicitacao(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        $ids_cdp = array();
+        $cods_cdp = array();
+        $ids_itm = array();
+        $cods_itm = array();
+        foreach ($request->solicitacoes as $req_solicitacao) {
+            $solicitacao = Solicitacoes::find($req_solicitacao->id);
+            $solicitacao->status = "F";
+            $solicitacao->avisou = 0;
+            $solicitacao->usuario_erp2 = $request->usu;
+            $solicitacao->data = Carbon::createFromFormat('d/m/Y', $request->data)->format('Y-m-d');
+            $solicitacao->save();
+            $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
+            $maquina = Comodatos::find($solicitacao->id_comodato)->id_maquina;
+            $sincronizacao = $this->sincronizar_produtos($maquina, $request->usu, $req_solicitacao->produtos);
+            $ids_cdp_tmp = $sincronizacao->ids_cdp;
+            $cods_cdp_tmp = $sincronizacao->cods_cdp;
+            $ids_itm_tmp = $sincronizacao->ids_itm;
+            $cods_itm_tmp = $sincronizacao->cods_itm;
+            foreach ($ids_cdp_tmp as $id_cdp) array_push($ids_cdp, $id_cdp);
+            foreach ($cods_cdp_tmp as $cod_cdp) array_push($cods_cdp, $cod_cdp);
+            foreach ($ids_itm_tmp as $id_itm) array_push($ids_itm, $id_itm);
+            foreach ($cods_itm_tmp as $cod_itm) array_push($cods_itm, $cod_itm);
+            foreach ($request->produtos as $req_produto) {
+                $id_sp = DB::table("solicitacoes_produtos AS sp")
+                            ->join("produtos", "produtos.id", "sp.id_produto_orig")
+                            ->where("sp.id_solicitacao", $solicitacao->id)
+                            ->where("produtos.cod_externo", $req_produto->cod)
+                            ->value("sp.id");
+                if ($id_sp === null) $id_sp = 0;
+                $sp = SolicitacoesProdutos::firstOrNew(["id" => $id_sp]);
+                $sp->id_produto = DB::table("produtos")
+                                        ->where("cod_externo", $req_produto->cod)
+                                        ->value("id");
+                $sp->id_solicitacao = $solicitacao->id;
+                $sp->obs = $req_produto->obs;
+                $sp->qtd = $req_produto->qtd;
+                $sp->preco = DB::table("maquinas_produtos")
+                                ->where("id_maquina", $maquina)
+                                ->where("id_produto", $sp->id_produto)
+                                ->value("preco");
+                if (!intval($id_sp)) $sp->origem = "ERP";
+                $sp->save();
+                $this->log_inserir(!intval($id_sp) ? "C" : "E", "solicitacoes_produtos", $sp->id, "ERP", $request->usu);
+            }
+        }
+        return json_encode(array(
+            "ids_cdp" => join("|", $ids_cdp),
+            "cods_cdp" => join("|", $cods_cdp),
+            "ids_itm" => join("|", $ids_itm),
+            "cods_itm" => join("|", $cods_itm)
+        ));
     }
 }

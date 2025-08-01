@@ -676,4 +676,23 @@ class RelatoriosController extends ControllerKX {
         $criterios = join(" | ", $criterios);
         return sizeof($resultado) ? view("reports/ranking", compact("resultado", "criterios", "qtd_total")) : view("nada");
     }
+
+    public function solicitacao($id) {
+        $consulta = DB::table("solicitacoes")
+                        ->select(
+                            "sp.id_produto",
+                            "sp.id_produto_orig",
+                            "produtos.descr AS produto",
+                            "prod_orig.descr AS produto_orig",
+                            "sp.preco",
+                            "sp.preco_orig",
+                            "sp.obs"
+                        )
+                        ->join("solicitacoes_produtos AS sp", "sp.id_solicitacao", "solicitacoes.id")
+                        ->join("produtos AS prod_orig", "prod_orig.id", "sp.id_produto_orig")
+                        ->join("produtos", "produtos.id", "sp.id_produto")
+                        ->where("solicitacoes.id", $id)
+                        ->get();
+        return view("reports/solicitacao", compact("consulta"));
+    }
 }

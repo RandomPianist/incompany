@@ -334,6 +334,9 @@ class ControllerKX extends Controller {
         $resultado = collect(
             DB::table("maquinas_produtos AS mp")
                 ->select(
+                    // CONTROLE
+                    "cm.id AS id_comodato",
+
                     // GRUPO
                     "mq.id AS id_maquina",
                     "mq.descr AS maquina",
@@ -415,6 +418,7 @@ class ControllerKX extends Controller {
                 ->joinSub(
                     DB::table("comodatos")
                         ->select(
+                            "id",
                             "id_maquina",
                             "inicio"
                         )
@@ -449,6 +453,7 @@ class ControllerKX extends Controller {
                 })
                 ->where("produtos.lixeira", 0)
                 ->groupby(
+                    "cm.id",
                     "mq.id",
                     "mq.descr",
                     "produtos.id",
@@ -487,6 +492,7 @@ class ControllerKX extends Controller {
             if ($produtos->isEmpty()) return null;
             return [
                 "maquina" => [
+                    "id_comodato" => $maquinas[0]->id_comodato,
                     "descr" => $maquinas[0]->maquina,
                     "produtos" => $produtos->all()
                 ]
