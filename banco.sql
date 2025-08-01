@@ -142,6 +142,30 @@ CREATE TABLE retiradas (
 	id_empresa INT
 );
 
+CREATE TABLE solicitacoes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    status VARCHAR(1), -- (A)berta, (C)ancelada, (E)m andamento, (R)ecusada, (F)inalizada
+    avisou TINYINT DEFAULT 0,
+    prazo DATE,
+    id_comodato INT,
+    id_externo INT, -- FTANTF.Recnum
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE solicitacoes_produtos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_produto_orig INT,
+    qtd_orig NUMERIC(10,5),
+    id_produto INT,
+    qtd NUMERIC(10,5),
+    origem VARCHAR(4),
+    obs VARCHAR(64),
+    id_solicitacao INT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 CREATE TABLE log (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	id_pessoa INT,

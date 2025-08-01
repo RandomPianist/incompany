@@ -189,6 +189,34 @@ CREATE TABLE retiradas (
 	FOREIGN KEY (id_produto) REFERENCES produtos(id)
 );
 
+CREATE TABLE solicitacoes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    status VARCHAR(1), -- (A)berta, (C)ancelada, (E)m andamento, (R)ecusada, (F)inalizada
+    avisou TINYINT DEFAULT 0,
+    prazo DATE,
+    id_comodato INT,
+    id_externo INT, -- FTANTF.Recnum
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_comodato) REFERENCES comodatos(id)
+);
+
+CREATE TABLE solicitacoes_produtos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_produto_orig INT,
+    qtd_orig NUMERIC(10,5),
+    id_produto INT,
+    qtd NUMERIC(10,5),
+    origem VARCHAR(4),
+    obs VARCHAR(64),
+    id_solicitacao INT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_produto) REFERENCES produtos(id),
+    FOREIGN KEY (id_produto_orig) REFERENCES produtos(id),
+    FOREIGN KEY (id_solicitacao) REFERENCES solicitacoes(id)
+);
+
 CREATE TABLE log (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	id_pessoa INT,
@@ -211,6 +239,8 @@ CREATE TABLE log (
 	FOREIGN KEY (fk) REFERENCES produtos(id),
 	FOREIGN KEY (fk) REFERENCES retiradas(id),
 	FOREIGN KEY (fk) REFERENCES setores(id),
+    FOREIGN KEY (fk) REFERENCES solicitacoes(id),
+    FOREIGN KEY (fk) REFERENCES solicitacoes_produtos(id),
 	FOREIGN KEY (fk) REFERENCES users(id),
 	FOREIGN KEY (fk) REFERENCES valores(id)
 );

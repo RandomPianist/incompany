@@ -3,7 +3,7 @@
     <head>
         <meta charset = "utf-8" />
         <meta name = "viewport" content = "width=device-width, initial-scale=1" />
-        <title>Kx-safe</title>
+        <title>Loja Incompany</title>
         <link rel = "icon shortcut" href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
         <link rel = "icon"          href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
         <link href = "{{ asset('css/my-style.css') }}" rel = "stylesheet" />
