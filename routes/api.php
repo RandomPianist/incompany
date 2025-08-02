@@ -47,6 +47,10 @@ Route::group(["prefix" => "erp"], function() {
             Route::post("/recusar", [Api2Controller::class, "recusar_solicitacao"]);
             Route::post("/enviar",  [Api2Controller::class, "receber_solicitacao"]);
         });
+        Route::group(["prefix" => "solicitacoes"], function() {
+            Route::post("/",       [Api2Controller::class, "obter_retiradas"]);
+            Route::post("/salvar", [Api2Controller::class, "salvar_retirada"]);
+        });
         Route::post("/produtos",     [Api2Controller::class, "produtos"]);
         Route::post("/sincronizar",  [Api2Controller::class, "sincronizar"]);
         Route::post("/pode-faturar", [Api2Controller::class, "pode_faturar"]);

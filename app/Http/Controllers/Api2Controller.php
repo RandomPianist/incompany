@@ -11,6 +11,7 @@ use App\Models\Estoque;
 use App\Models\Solicitacoes;
 use App\Models\SolicitacoesProdutos;
 use App\Models\Comodatos;
+use App\Models\Retiradas;
 use Illuminate\Http\Request;
 
 class Api2Controller extends ControllerKX {
@@ -402,5 +403,49 @@ class Api2Controller extends ControllerKX {
             "ids_itm" => join("|", $ids_itm),
             "cods_itm" => join("|", $cods_itm)
         ));
+    }
+
+    public function obter_retiradas(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        return json_encode(collect(
+            DB::table("retiradas")
+                ->select(
+                    "retiradas.id",
+                    "empresas.cod_externo AS cft",
+                    DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data"),
+                    "produtos.cod_externo AS cod",
+                    "retiradas.preco AS vunit",
+                    "retiradas.qtd"
+                )
+                ->join("empresas", "empresas.id", "retiradas.id_empresa")
+                ->join("produtos", "produtos.id", "retiradas.id_produto")
+                ->whereRaw("IFNULL(retiradas.num_ped, 0) = 0")
+                ->where("empresas.lixeira", 0)
+                ->whereNotNull("empresas.cod_externo")
+                ->get()
+        )->groupBy("cft")->map(function($retiradas) {
+            return [
+                "cft" => $retiradas[0]->cft,
+                "retiradas" => collect($retiradas)->map(function($retirada) {
+                    return [
+                        "id" => $retirada->id,
+                        "data" => $retirada->data,
+                        "cod" => $retirada->cod_itm,
+                        "qtd" => $retirada->qtd,
+                        "vunit" => $retirada->vunit
+                    ];
+                })->values()->all()
+            ];
+        })->values()->all());
+    }
+
+    public function salvar_retirada(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        foreach($request->retiradas as $req_retirada) {
+            $retirada = Retiradas::find($req_retirada->id);
+            $retirada->num_ped = $req_retirada->cod_ods;
+            $retirada->save();
+            $this->log_inserir("E", "retiradas", $retirada->id, "ERP", $request->usu);
+        }
     }
 }
