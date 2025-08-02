@@ -393,7 +393,8 @@ class ApiController extends ControllerKX {
                 "id_atribuicao" => $retirada["id_atribuicao"],
                 "id_comodato" => $comodato[0]->id,
                 "qtd" => $retirada["qtd"],
-                "data" => date("Y-m-d")
+                "data" => date("Y-m-d"),
+                "hora" => date("H:i:s")
             );
             if (isset($retirada["id_supervisor"])) {
                 $salvar += [

@@ -415,7 +415,8 @@ class Api2Controller extends ControllerKX {
                     DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data"),
                     "produtos.cod_externo AS cod_itm",
                     "retiradas.preco AS vunit",
-                    "retiradas.qtd"
+                    "retiradas.qtd",
+                    "retiradas.hora"
                 )
                 ->join("empresas", "empresas.id", "retiradas.id_empresa")
                 ->join("produtos", "produtos.id", "retiradas.id_produto")
@@ -432,7 +433,8 @@ class Api2Controller extends ControllerKX {
                         "data" => $retirada->data,
                         "cod_itm" => $retirada->cod_itm,
                         "qtd" => $retirada->qtd,
-                        "vunit" => $retirada->vunit
+                        "vunit" => $retirada->vunit,
+                        "hora" => $retirada->hora
                     ];
                 })->values()->all()
             ];

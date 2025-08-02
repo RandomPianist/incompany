@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $biometria_ou_senha
  * @property string $ca
  * @property string $gerou_pedido
+ * @property string $hora
  * @property string $observacao
  * @property Date   $data
  */
@@ -43,7 +44,7 @@ class Retiradas extends Model
      * @var array
      */
     protected $fillable = [
-        'biometria_ou_senha', 'ca', 'created_at', 'data', 'gerou_pedido', 'id_atribuicao', 'id_comodato', 'id_empresa', 'id_pessoa', 'id_produto', 'id_supervisor', 'numero_ped', 'observacao', 'preco', 'qtd', 'updated_at'
+        'biometria_ou_senha', 'ca', 'created_at', 'data', 'gerou_pedido', 'hora', 'id_atribuicao', 'id_comodato', 'id_empresa', 'id_pessoa', 'id_produto', 'id_supervisor', 'numero_ped', 'observacao', 'preco', 'qtd', 'updated_at'
     ];
 
     /**
@@ -61,7 +62,7 @@ class Retiradas extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'biometria_ou_senha' => 'string', 'ca' => 'string', 'created_at' => 'timestamp', 'data' => 'date', 'gerou_pedido' => 'string', 'id_atribuicao' => 'int', 'id_comodato' => 'int', 'id_empresa' => 'int', 'id_pessoa' => 'int', 'id_produto' => 'int', 'id_supervisor' => 'int', 'numero_ped' => 'int', 'observacao' => 'string', 'updated_at' => 'timestamp'
+        'id' => 'int', 'biometria_ou_senha' => 'string', 'ca' => 'string', 'created_at' => 'timestamp', 'data' => 'date', 'gerou_pedido' => 'string', 'hora' => 'string', 'id_atribuicao' => 'int', 'id_comodato' => 'int', 'id_empresa' => 'int', 'id_pessoa' => 'int', 'id_produto' => 'int', 'id_supervisor' => 'int', 'numero_ped' => 'int', 'observacao' => 'string', 'updated_at' => 'timestamp'
     ];
 
     /**
