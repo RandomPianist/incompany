@@ -369,7 +369,7 @@ class Api2Controller extends ControllerKX {
             foreach ($cods_cdp_tmp as $cod_cdp) array_push($cods_cdp, $cod_cdp);
             foreach ($ids_itm_tmp as $id_itm) array_push($ids_itm, $id_itm);
             foreach ($cods_itm_tmp as $cod_itm) array_push($cods_itm, $cod_itm);
-            foreach ($request->produtos as $req_produto) {
+            foreach ($req_solicitacao->produtos as $req_produto) {
                 $id_sp = DB::table("solicitacoes_produtos AS sp")
                             ->join("produtos", "produtos.id", "sp.id_produto_orig")
                             ->where("sp.id_solicitacao", $solicitacao->id)
