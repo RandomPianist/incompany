@@ -50,7 +50,7 @@ class SolicitacoesController extends ControllerKX {
         $resultado->status = $solicitacao->status;
         if ($solicitacao->status == "E") $resultado->prazo = Carbon::parse($solicitacao->data)->format("d/m/Y");
         $resultado->autor = Pessoas::find($id_autor)->nome;
-        $resultado->pode_cancelar = Auth::user()->id_pessoa == $id_autor ? 1 : 0;
+        $resultado->pode_cancelar = Auth::user()->id_pessoa == $id_autor && $solicitacao->status == "A" ? 1 : 0;
         $resultado->id = $solicitacao->id;
         return json_encode($resultado);
     }
