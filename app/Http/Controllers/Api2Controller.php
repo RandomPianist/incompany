@@ -289,6 +289,7 @@ class Api2Controller extends ControllerKX {
             DB::table("solicitacoes")
                 ->select(
                     "solicitacoes.id",
+                    "solicitacoes.status",
                     "solicitacoes.usuario_web AS autor",
                     "empresas.cod_externo AS cft",
                     DB::raw("DATE_FORMAT(solicitacoes.data, '%d/%m/%Y') AS data"),
@@ -306,7 +307,10 @@ class Api2Controller extends ControllerKX {
                 })
                 ->whereRaw("((CURDATE() BETWEEN comodatos.inicio AND comodatos.fim) OR (CURDATE() BETWEEN comodatos.inicio AND comodatos.fim))")
                 ->where("empresas.lixeira", 0)
-                ->where("solicitacoes.status", "A")
+                ->where(function($sql) {
+                    $sql->where("solicitacoes.status", "A")
+                        ->orWhere("solicitacoes.status", "C");
+                })
                 ->whereNotNull("empresas.cod_externo")
                 ->get()
         )->groupBy("id")->map(function($produtos) {
