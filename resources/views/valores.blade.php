@@ -63,6 +63,7 @@
                 filtro : document.getElementById("busca").value
             }, function(data) {
                 let resultado = "";
+                const emp = {{ intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa) }};
                 if (typeof data == "string") data = $.parseJSON(data);
                 data.forEach((linha) => {
                     resultado += "<tr>" +
@@ -73,7 +74,7 @@
                     } else resultado += "<td width = '75%'>" + linha.descr + "</td>";
 
                     resultado += "<td class = 'text-center btn-table-action' width = '15%'>";
-                    if (linha.alias != "maquinas" || !{{ intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa) }}) {
+                    if (linha.alias != "maquinas" || !emp) {
                         if (linha.alias == "maquinas") {
                             if (linha.tem_mov == "S") resultado += "<i class = 'my-icon fa-light fa-file' title = 'Extrato' onclick = 'extrato_maquina(" + linha.id + ")'></i>";
                             resultado += "<i class = 'my-icon fa-light fa-cubes' title = 'Estoque' onclick = 'estoque(" + linha.id + ")'></i>";
@@ -86,6 +87,7 @@
                         resultado += "<i class = 'my-icon far fa-edit' title = 'Editar' onclick = 'chamar_modal(" + linha.id + ")'></i>" +
                             "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/valores/{{ $alias }}"' + ")'></i>";
                     }
+                    if (linha.alias == "maquinas" && emp) resultado += "<i class = 'my-icon far fa-cart-arrow-down' title = 'Solicitar compra' onclick = 'relatorio = new RelatorioItens(true, " + linha.id + ")'></i>";
                     resultado += "</td></tr>";
                 });
                 document.getElementById("table-dados").innerHTML = resultado;

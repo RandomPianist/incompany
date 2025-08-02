@@ -601,7 +601,7 @@ function RelatorioBilateral(_grupo) {
     }, 0);
 }
 
-function RelatorioItens(resumido) {
+function RelatorioItens(resumido, maquina) {
     let elementos = relObterElementos(["inicio1", "fim1", "produto", "maquina2"]);
     
     this.validar = function() {
@@ -615,7 +615,9 @@ function RelatorioItens(resumido) {
         }
 
         if (elementos.inicio.value && elementos.fim.value) erro = validar_datas(elementos.inicio, elementos.fim, false);
-        $.get(URL + "/relatorios/extrato/consultar", relObterElementosValor(elementos, ["produto", "maquina"]), function(data) {
+        let req = ["produto"];
+        if (maquina === undefined) req.push("maquina");
+        $.get(URL + "/relatorios/extrato/consultar", relObterElementosValor(elementos, req), function(data) {
             if (data && !erro) {
                 elementos[data].classList.add("invalido");
                 erro == "maquina" ? "Máquina não encontrada" : "Produto não encontrado";
@@ -632,11 +634,15 @@ function RelatorioItens(resumido) {
             document.getElementById("rel-lm").value = "N";
             elementos.inicio.value = hoje();
             elementos.fim.value = hoje();
-            document.getElementById("relatorioItensModalLabel").innerHTML = resumido ? "Sugestão de compra" : "Extrato de itens";
+            document.getElementById("rel-id_maquina2").value = maquina !== undefined ? maquina : 0;
+            document.getElementById("relatorioItensModalLabel").innerHTML = resumido ? maquina === undefined ? "Sugestão de compra" : "Solicitação de compra" : "Extrato de itens";
             document.getElementById("resumo").value = resumido ? "S" : "N";
             document.getElementById("rel-lm-chk").checked = false;
             document.querySelector("label[for='rel-lm-chk']").innerHTML = resumido ? "Listar apenas produtos cuja compra é sugerida" : "Listar movimentação";
-            document.querySelector("#relatorioItensModal form").action = resumido ? URL + "/relatorios/sugestao" : URL + "/relatorios/extrato";
+            document.querySelector("#relatorioItensModal form").action = resumido ? maquina === undefined ? URL + "/relatorios/sugestao" : URL + "//solicitacoes" : URL + "/relatorios/extrato";
+            let el_maq = document.getElementById("rel-maquina2").parentElement.parentElement.classList;
+            if (maquina !== undefined) el_maq.add("d-none");
+            else el_maq.remove("d-none");
             if (resumido) modo_resumo.remove("d-none");
             else modo_resumo.add("d-none");
         });

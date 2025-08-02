@@ -12,40 +12,6 @@ use App\Models\Valores;
 use App\Models\Produtos;
 
 class RelatoriosController extends ControllerKX {
-    private function maquinas_periodo($inicio, $fim) {
-        $where = "";
-        if ($inicio) $where .= "('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim)";
-        if ($fim) {
-            if ($where) $where .= " OR ";
-            $where .= "('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim)";
-        }
-        $where = $where ? "(".$where.")" : "1";
-        return DB::table("comodatos")
-                    ->selectRaw("DISTINCTROW comodatos.id_maquina")
-                    ->joinsub(
-                        DB::table("pessoas")
-                            ->select(
-                                "id AS id_pessoa",
-                                "id_empresa"
-                            )
-                            ->unionAll(
-                                DB::table("pessoas")
-                                    ->select(
-                                        "pessoas.id AS id_pessoa",
-                                        "filiais.id AS id_empresa"
-                                    )
-                                    ->join("empresas AS filiais", "filiais.id_matriz", "pessoas.id_empresa")
-                            ),
-                        "minhas_empresas",
-                        "minhas_empresas.id_empresa",
-                        "comodatos.id_empresa"
-                    )
-                    ->whereRaw($where)
-                    ->where("minhas_empresas.id_empresa", Pessoas::find(Auth::user()->id_pessoa)->id_empresa)                    
-                    ->pluck("comodatos.id_maquina")
-                    ->toArray();
-    }
-
     private function consultar_maquina(Request $request) {
         return ((!sizeof(
             DB::table("valores")
@@ -413,7 +379,9 @@ class RelatoriosController extends ControllerKX {
     }
 
     public function extrato_consultar(Request $request) {
-        if ($this->consultar_maquina($request)) return "maquina";
+        if (isset($request->maquina)) {
+            if ($this->consultar_maquina($request)) return "maquina";
+        }
         if (((trim($request->produto) && !sizeof(
             DB::table("produtos")
                 ->where("id", $request->id_produto)
@@ -675,24 +643,5 @@ class RelatoriosController extends ControllerKX {
         })->values()->all();
         $criterios = join(" | ", $criterios);
         return sizeof($resultado) ? view("reports/ranking", compact("resultado", "criterios", "qtd_total")) : view("nada");
-    }
-
-    public function solicitacao($id) {
-        $consulta = DB::table("solicitacoes")
-                        ->select(
-                            "sp.id_produto",
-                            "sp.id_produto_orig",
-                            "produtos.descr AS produto",
-                            "prod_orig.descr AS produto_orig",
-                            "sp.preco",
-                            "sp.preco_orig",
-                            "sp.obs"
-                        )
-                        ->join("solicitacoes_produtos AS sp", "sp.id_solicitacao", "solicitacoes.id")
-                        ->join("produtos AS prod_orig", "prod_orig.id", "sp.id_produto_orig")
-                        ->join("produtos", "produtos.id", "sp.id_produto")
-                        ->where("solicitacoes.id", $id)
-                        ->get();
-        return view("reports/solicitacao", compact("consulta"));
     }
 }

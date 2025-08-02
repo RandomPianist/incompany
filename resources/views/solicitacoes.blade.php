@@ -54,9 +54,24 @@
                         <tr class = "report-row">
                             <td width = "36%">{{ $produto["descr"] }}</td>
                             <td width = "8%" class = "text-right">{{ $produto["saldo_ant"] }}</td>
-                            <td width = "8%" class = "text-right">{{ $produto["entradas"] }}</td>
-                            <td width = "8%" class = "text-right">{{ $produto["saidas_avulsas"] }}</td>
-                            <td width = "8%" class = "text-right">{{ $produto["retiradas"] }}</td>
+                            <td width = "8%" class = "text-right">
+                                {{ $produto["entradas"] }}
+                                @if ($produto["entradas"] > 0)
+                                    <i class = "my-icon fal fa-eye" title = "Detalhar" onclick = ""></i>
+                                @endif
+                            </td>
+                            <td width = "8%" class = "text-right">
+                                {{ $produto["saidas_avulsas"] }}
+                                @if ($produto["saidas_avulsas"] > 0)
+                                    <i class = "my-icon fal fa-eye" title = "Detalhar" onclick = ""></i>
+                                @endif
+                            </td>
+                            <td width = "8%" class = "text-right">
+                                <span>{{ $produto["retiradas"] }}<span>
+                                @if ($produto["retiradas"] > 0)
+                                    <i class = "my-icon fal fa-eye" title = "Detalhar" onclick = ""></i>
+                                @endif
+                            </td>
                             <td width = "8%" class = "text-right">{{ $produto["saidas_totais"] }}</td>
                             <td width = "8%" class = "text-right">{{ $produto["saldo_res"] }}</td>
                             @if ($mostrar_giro)

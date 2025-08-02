@@ -813,6 +813,11 @@ h5 {
 	white-space: nowrap
 }
 
+.my-icon {
+    cursor: pointer;
+    padding: 0 2px
+}
+
 @page {
 	size: A4;
 	margin: 0

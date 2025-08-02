@@ -14,6 +14,40 @@ use App\Models\Retiradas;
 use App\Models\Comodatos;
 
 class ControllerKX extends Controller {
+    protected function maquinas_periodo($inicio, $fim) {
+        $where = "";
+        if ($inicio) $where .= "('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim)";
+        if ($fim) {
+            if ($where) $where .= " OR ";
+            $where .= "('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim)";
+        }
+        $where = $where ? "(".$where.")" : "1";
+        return DB::table("comodatos")
+                    ->selectRaw("DISTINCTROW comodatos.id_maquina")
+                    ->joinsub(
+                        DB::table("pessoas")
+                            ->select(
+                                "id AS id_pessoa",
+                                "id_empresa"
+                            )
+                            ->unionAll(
+                                DB::table("pessoas")
+                                    ->select(
+                                        "pessoas.id AS id_pessoa",
+                                        "filiais.id AS id_empresa"
+                                    )
+                                    ->join("empresas AS filiais", "filiais.id_matriz", "pessoas.id_empresa")
+                            ),
+                        "minhas_empresas",
+                        "minhas_empresas.id_empresa",
+                        "comodatos.id_empresa"
+                    )
+                    ->whereRaw($where)
+                    ->where("minhas_empresas.id_empresa", Pessoas::find(Auth::user()->id_pessoa)->id_empresa)                    
+                    ->pluck("comodatos.id_maquina")
+                    ->toArray();
+    }
+
     protected function empresa_consultar(Request $request) {
         return (!sizeof(
             DB::table("empresas")
@@ -161,7 +195,6 @@ class ControllerKX extends Controller {
 
         $pessoa = Pessoas::find($json["id_pessoa"]);
         $linha = new Retiradas;
-        if (isset($json["hora"])) $linha->hora = $json["hora"];
         if (isset($json["obs"])) $linha->obs = $json["obs"];
         if (isset($json["biometria_ou_senha"])) $linha->biometria_ou_senha = $json["biometria_ou_senha"];
         if (isset($json["id_supervisor"])) {
@@ -335,9 +368,6 @@ class ControllerKX extends Controller {
         $resultado = collect(
             DB::table("maquinas_produtos AS mp")
                 ->select(
-                    // CONTROLE
-                    "cm.id AS id_comodato",
-
                     // GRUPO
                     "mq.id AS id_maquina",
                     "mq.descr AS maquina",
@@ -419,7 +449,6 @@ class ControllerKX extends Controller {
                 ->joinSub(
                     DB::table("comodatos")
                         ->select(
-                            "id",
                             "id_maquina",
                             "inicio"
                         )
@@ -454,7 +483,6 @@ class ControllerKX extends Controller {
                 })
                 ->where("produtos.lixeira", 0)
                 ->groupby(
-                    "cm.id",
                     "mq.id",
                     "mq.descr",
                     "produtos.id",
@@ -493,7 +521,6 @@ class ControllerKX extends Controller {
             if ($produtos->isEmpty()) return null;
             return [
                 "maquina" => [
-                    "id_comodato" => $maquinas[0]->id_comodato,
                     "descr" => $maquinas[0]->maquina,
                     "produtos" => $produtos->all()
                 ]
