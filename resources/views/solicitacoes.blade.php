@@ -28,62 +28,236 @@
         </div>
     </div>
     <div class = "mt-2 mb-3 linha"></div>
-    @foreach ($resultado AS $item)
-        <h5>{{ $item["maquina"]["descr"] }}</h5>
-        <table class = "report-body table table-sm table-bordered table-striped px-5">
-            <thead>
-                <tr class = "report-row">
-                    <td width = "36%">Produto</td>
-                    <td width = "8%" class = "text-right">Saldo anterior</td>
-                    <td width = "8%" class = "text-right">Entradas</td>
-                    <td width = "8%" class = "text-right">Saídas avulsas</td>
-                    <td width = "8%" class = "text-right">Retiradas</td>
-                    <td width = "8%" class = "text-right">Saídas totais</td>
-                    <td width = "8%" class = "text-right">Saldo final</td>
-                    <td width = "8%" class = "text-right">
-                        @if ($mostrar_giro) Giro de estoque @else Qtde. mínima @endif
-                    </td>
-                    <td width = "8%" class = "text-right">Qtde. Sugerida</td>
-                </tr>
-            </thead>
-        </table>
-        <div class = "mb-3">
-            <table class = "report-body table table-sm table-bordered table-striped">
-                <tbody>
-                    @foreach ($item["maquina"]["produtos"] as $produto)
-                        <tr class = "report-row">
-                            <td width = "36%">{{ $produto["descr"] }}</td>
-                            <td width = "8%" class = "text-right">{{ $produto["saldo_ant"] }}</td>
-                            <td width = "8%" class = "text-right">
-                                {{ $produto["entradas"] }}
-                                @if ($produto["entradas"] > 0)
-                                    <i class = "my-icon fal fa-eye" title = "Detalhar" onclick = ""></i>
-                                @endif
-                            </td>
-                            <td width = "8%" class = "text-right">
-                                {{ $produto["saidas_avulsas"] }}
-                                @if ($produto["saidas_avulsas"] > 0)
-                                    <i class = "my-icon fal fa-eye" title = "Detalhar" onclick = ""></i>
-                                @endif
-                            </td>
-                            <td width = "8%" class = "text-right">
-                                <span>{{ $produto["retiradas"] }}<span>
-                                @if ($produto["retiradas"] > 0)
-                                    <i class = "my-icon fal fa-eye" title = "Detalhar" onclick = ""></i>
-                                @endif
-                            </td>
-                            <td width = "8%" class = "text-right">{{ $produto["saidas_totais"] }}</td>
-                            <td width = "8%" class = "text-right">{{ $produto["saldo_res"] }}</td>
-                            @if ($mostrar_giro)
-                                <td width = "8%" class = "text-right">{{ $produto["giro"] }}</td>
-                            @else
-                                <td width = "8%" class = "text-right">{{ $produto["minimo"] }}</td>
-                            @endif
-                            <td width = "8%" class = "text-right">{{ $produto["sugeridos"] }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
+    <form action = "{{ config('app.root_url') }}/solicitacoes/criar" method = "POST">
+        @csrf
+        @foreach ($resultado AS $item)
+            <input type = "hidden" name = "id_comodato" id = "id_comodato" />
+            <input type = "hidden" id = "id_maquina" value = "{{ $item['maquina']['id'] }}" />
+            <h5>{{ $item["maquina"]["descr"] }}</h5>
+            <table class = "report-body table table-sm table-bordered table-striped px-5">
+                <thead>
+                    <tr class = "report-row">
+                        <td width = "28%">Produto</td>
+                        <td width = "8%" class = "text-right">Saldo anterior</td>
+                        <td width = "8%" class = "text-right">Entradas</td>
+                        <td width = "8%" class = "text-right">Saídas avulsas</td>
+                        <td width = "8%" class = "text-right">Retiradas</td>
+                        <td width = "8%" class = "text-right">Saídas totais</td>
+                        <td width = "8%" class = "text-right">Saldo final</td>
+                        <td width = "8%" class = "text-right">
+                            @if ($mostrar_giro) Giro de estoque @else Qtde. mínima @endif
+                        </td>
+                        <td width = "8%" class = "text-right">Qtde. Sugerida</td>
+                        <td width = "8%" class = "text-right">Solicitar</td>
+                    </tr>
+                </thead>
             </table>
-        </div>
-    @endforeach
+            <div class = "mb-3">
+                <table class = "report-body table table-sm table-bordered table-striped">
+                    <tbody>
+                        @foreach ($item["maquina"]["produtos"] as $produto)
+                            <tr class = "report-row">
+                                <td width = "28%">{{ $produto["descr"] }}</td>
+                                <td width = "8%" class = "text-right">{{ $produto["saldo_ant"] }}</td>
+                                <td width = "8%" class = "text-right">
+                                    {{ $produto["entradas"] }}
+                                    @if ($produto["entradas"] > 0)
+                                        <i
+                                            class = "my-icon fal fa-eye"
+                                            title = "Detalhar"
+                                            onclick = "detalhar('E', {{ $produto['id'] }})"
+                                        ></i>
+                                    @endif
+                                </td>
+                                <td width = "8%" class = "text-right">
+                                    {{ $produto["saidas_avulsas"] }}
+                                    @if ($produto["saidas_avulsas"] > 0)
+                                        <i
+                                            class = "my-icon fal fa-eye"
+                                            title = "Detalhar"
+                                            onclick = "detalhar('S', {{ $produto['id'] }})"
+                                        ></i>
+                                    @endif
+                                </td>
+                                <td width = "8%" class = "text-right">
+                                    {{ $produto["retiradas"] }}
+                                    @if ($produto["retiradas"] > 0)
+                                        <i
+                                            class = "my-icon fal fa-eye"
+                                            title = "Detalhar"
+                                            onclick = "detalhar('R', {{ $produto['id'] }})"
+                                        ></i>
+                                    @endif
+                                </td>
+                                <td width = "8%" class = "text-right">{{ $produto["saidas_totais"] }}</td>
+                                <td width = "8%" class = "text-right">{{ $produto["saldo_res"] }}</td>
+                                @if ($mostrar_giro)
+                                    <td width = "8%" class = "text-right">{{ $produto["giro"] }}</td>
+                                @else
+                                    <td width = "8%" class = "text-right">{{ $produto["minimo"] }}</td>
+                                @endif
+                                <td width = "8%" class = "text-right sugerido">{{ $produto["sugeridos"] }}</td>
+                                <td width = "8%" class = "text-right">
+                                    <i
+                                        class = "my-icon fal fa-minus"
+                                        onclick = "calcular(this, -1)"
+                                        @if ($produto["sugeridos"] == 0)
+                                            style = "visibility:hidden"
+                                        @endif
+                                    ></i>
+                                    <span class = "solicitado">{{ $produto["sugeridos"] }}</span>
+                                    <i class = "my-icon fal fa-plus" onclick = "calcular(this, 1)"></i>
+                                    <input type = "hidden" name = "id_produto[]" value = "{{ $produto['id'] }}" />
+                                    <input type = "hidden" class = "qtd" name = "qtd[]" value = "{{ $produto['sugeridos'] }}" />
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endforeach
+    </form>
+
+    <script type = "text/javascript" language = "JavaScript">
+        function recalcular() {
+            document.querySelectorAll("tbody .report-row").forEach((linha) => {
+                let qtd = linha.querySelector(".sugerido").innerHTML;
+                linha.querySelector(".solicitado").innerHTML = qtd;
+                linha.querySelector(".qtd").value = qtd;
+            });
+        }
+
+        function calcular(el, val) {
+            val += parseInt(el.parentElement.querySelector(".qtd").value);
+            let estilo = el.parentElement.querySelector(".fa-minus").style;
+            if (val == 0) estilo.visibility = "hidden";
+            else estilo.removeProperty("visibility");
+            el.parentElement.querySelector(".qtd").value = val;
+            el.parentElement.querySelector(".solicitado").innerHTML = val;
+        }
+
+        function detalhar(_tipo, _id_produto) {
+            $.get(URL + "/solicitacoes/mostrar", {
+                id_produto : _id_produto,
+                tipo : _tipo,
+                id_maquina : document.getElementById("id_maquina").value,
+                inicio : "{{ request('inicio') }}",
+                fim : "{{ request('fim') }}"
+            }, function(data) {
+                if (typeof data == "string") data = $.parseJSON(data);
+                let supervisor = false;
+                let autor = false;
+                let origem = false;
+                let resultado = "<table class = 'report-body table table-sm table-bordered table-striped px-5'>" +
+                    "<thead>" +
+                        "<tr class = 'report-row'>" +
+                            (_tipo == "R" ?
+                                "<td width = '28%'>Funcionário</td>" +
+                                "<td width = '27%' class = 'supervisor'>Supervisor</td>" +
+                                "<td width = '27%' class = 'autor'>Autor</td>" +
+                                "<td width = '10%'>Data</td>" +
+                                "<td width = '8%' class = 'text-right'>Qtde.</td>"
+                            :
+                                "<td width = '82%' class = 'origem'>Origem</td>" +
+                                "<td width = '10%'>Data</td>" +
+                                "<td width = '8%' class = 'text-right'>Qtde.</td>"
+                            ) +
+                        "</tr>" +
+                    "</thead>" +
+                "</table>" +
+                "<div class = 'mb-3'>" +
+                    "<table class = 'report-body table table-sm table-bordered table-striped'>" +
+                        "<tbody>";
+                data.forEach((linha) => {
+                    if (linha.supervisor) supervisor = true;
+                    if (linha.autor) autor = true;
+                    if (linha.origem) origem = true;
+                    resultado += "<tr class = 'report-row'>" +
+                        (_tipo == "R" ?
+                            "<td width = '28%'>" + linha.funcionario + "</td>" +
+                            "<td width = '27%' class = 'supervisor'>" + linha.supervisor + "</td>" +
+                            "<td width = '27%' class = 'autor'>" + linha.autor + "</td>" +
+                            "<td width = '10%'>" + linha.data + "</td>" +
+                            "<td width = '8%' class = 'text-right'>" + linha.qtd + "</td>"
+                        :
+                            "<td width = '82%' class = 'origem'>" + linha.origem + "</td>" +
+                            "<td width = '10%'>" + linha.data + "</td>" +
+                            "<td width = '8%' class = 'text-right'>" + linha.qtd + "</td>"
+                        ) +
+                    "</tr>";
+                });
+                resultado += "</tbody></table></div>";
+                switch (_tipo) {
+                    case "E":
+                        var titulo = "Entradas";
+                        break;
+                    case "S":
+                        var titulo = "Saídas avulsas";
+                        break;
+                    case "R":
+                        var titulo = "Retiradas";
+                        break;
+                }
+                Swal.fire({
+                    title : titulo,
+                    html : resultado,
+                    confirmButtonColor : "rgb(31, 41, 55)"
+                });
+                if (!autor) {
+                    Array.from(document.getElementsByClassName("autor")).forEach((el) => {
+                        el.style.display = "none";
+                    });
+                }
+                if (!supervisor) {
+                    Array.from(document.getElementsByClassName("supervisor")).forEach((el) => {
+                        el.style.display = "none";
+                    });
+                }
+                if (!origem) {
+                    Array.from(document.getElementsByClassName("origem")).forEach((el) => {
+                        el.style.display = "none";
+                    });
+                }
+            })
+        }
+
+        function solicitar() {
+            $.get(URL + "/solicitacoes/consultar/" + document.getElementById("id_comodato").value, function(data) {
+                if (typeof data == "string") data = $.parseJSON(data);
+                if (!parseInt(data.continuar)) {
+                    if (parseInt(data.sou_autor) && data.status == "A") {
+                        Swal.fire({
+                            icon : "warning",
+                            title: "Aviso",
+                            html : "Já há uma solicitação em aberto, feita no dia " + data.data + ", para a mesma máquina.<br>Gostaria de cancelar a última solicitação feita e sobrescrever por essa?",
+                            showDenyButton : true,
+                            confirmButtonText : "NÃO",
+                            confirmButtonColor : "rgb(31, 41, 55)",
+                            denyButtonText : "SIM"
+                        }).then((result) => {
+                            if (result.isDenied) {
+                                $.post(URL + "/solicitacoes/cancelar", {
+                                    _token : $("meta[name='csrf-token']").attr("content"),
+                                    id : data.id
+                                }, function() {
+                                    document.querySelector("form").submit();
+                                })
+                            }
+                        });
+                    } else {
+                        if (!parseInt(data.sou_autor)) {
+                            var texto = "Há uma solicitação em " + (data.status == "A" ? "aberto" : "andamento") + ", feita por " + data.autor + " no dia " + data.data + ", para a mesma máquina";
+                            if (data.status == "A") texto += ".<br />Entre em contato com " + data.autor + " para cancelá-la.";
+                        } else var texto = "A solicitação que você fez no dia " + data.data + " já está em andamento e não é possível cancelá-la";
+                        Swal.fire({
+                            icon : "warning",
+                            title : "Atenção",
+                            html : texto,
+                            confirmButtonColor : "rgb(31, 41, 55)"
+                        });
+                    }
+                } else document.querySelector("form").submit();
+            })
+        }
+    </script>
 @endsection

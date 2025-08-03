@@ -48,9 +48,12 @@ class SolicitacoesController extends ControllerKX {
         $id_autor = $this->obter_autor($solicitacao->id);
         $resultado->continuar = 0;
         $resultado->status = $solicitacao->status;
-        if ($solicitacao->status == "E") $resultado->prazo = Carbon::parse($solicitacao->data)->format("d/m/Y");
+        $resultado->data = DB::table("solicitacoes")
+                                ->selectRaw("DATE_FORMAT(DATE(solicitacoes.created_at), '%d/%m/%Y') AS data")
+                                ->where("id", $solicitacao->id)
+                                ->value("data");
         $resultado->autor = Pessoas::find($id_autor)->nome;
-        $resultado->pode_cancelar = Auth::user()->id_pessoa == $id_autor && $solicitacao->status == "A" ? 1 : 0;
+        $resultado->sou_autor = Auth::user()->id_pessoa == $id_autor ? 1 : 0;
         $resultado->id = $solicitacao->id;
         return json_encode($resultado);
     }
@@ -58,7 +61,7 @@ class SolicitacoesController extends ControllerKX {
     public function mostrar(Request $request) {
         $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
         $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-        $consulta = $request->tipo == "retirada" ?
+        $consulta = $request->tipo == "R" ?
             DB::table("retiradas")
                 ->select(
                     "funcionario.nome AS funcionario",
@@ -99,7 +102,7 @@ class SolicitacoesController extends ControllerKX {
                         ->where("log.tabela", "estoque");
                 })
                 ->where(function($sql) use ($request) {
-                    $sql->where("estoque.es", $request->tipo == "entrada" ? "E" : "S");
+                    $sql->where("estoque.es", $request->tipo);
                 })
                 ->whereRaw("log.data >= '".$inicio."'")
                 ->whereRaw("log.data <= '".$fim."'")
@@ -108,11 +111,14 @@ class SolicitacoesController extends ControllerKX {
         return json_encode($consulta->get());
     }
 
-    public function meus_comodatos() {
+    public function meus_comodatos(Request $request) {
         return json_encode(
             DB::table("comodatos")
                     ->whereRaw("((CURDATE() BETWEEN inicio AND fim) OR (CURDATE() BETWEEN inicio AND fim))")
                     ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "comodatos.id_empresa"))
+                    ->where(function($sql) use($request) {
+                        if (isset($request->id_maquina)) $sql->where("id_maquina", $request->id_maquina);
+                    })
                     ->pluck("id")
                     ->toArray()
         );
@@ -136,15 +142,21 @@ class SolicitacoesController extends ControllerKX {
             $this->log_inserir("E", "solicitacoes", $solicitacao->id);
             return json_encode(array(
                 "id" => $solicitacao->id,
-                "data" => DB::table("log")
-                            ->selectRaw("DATE_FORMAT(log.data, '%d/%m/%Y') AS data")
-                            ->where("fk", $solicitacao)
-                            ->where("tabela", "solicitacoes")
-                            ->where("acao", "C")
-                            ->value("data"),
+                "criacao" => DB::table("log")
+                                ->selectRaw("DATE_FORMAT(log.data, '%d/%m/%Y') AS data")
+                                ->where("fk", $solicitacao)
+                                ->where("tabela", "solicitacoes")
+                                ->where("acao", "C")
+                                ->value("data"),
                 "usuario_erp" => $solicitacao->status != "F" ? $solicitacao->usuario_erp : $solicitacao->usuario_erp2,
                 "status" => $solicitacao->status,
-                "data" => Carbon::parse($solicitacao->data)->format("d/m/Y")
+                "data" => Carbon::parse($solicitacao->data)->format("d/m/Y"),
+                "possui_inconsistencias" => $solicitacao->status == "F" ? 
+                                                DB::table("solicitacoes_produtos")
+                                                    ->whereNotNull("obs")
+                                                    ->where("id_solicitacao", $solicitacao->id)
+                                                    ->value("obs") !== null ? "a" : ""
+                                            : ""
             ));
         }
         return 200;
@@ -171,6 +183,7 @@ class SolicitacoesController extends ControllerKX {
             $sp->save();
             $this->log_inserir("C", "solicitacoes_produtos", $solicitacao->id);
         }
+        return view("sucesso");
     }
 
     public function cancelar(Request $request) {

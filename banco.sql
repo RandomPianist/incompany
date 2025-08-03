@@ -166,7 +166,7 @@ CREATE TABLE solicitacoes_produtos (
     qtd NUMERIC(10,5),
     preco NUMERIC(8,2),
     origem VARCHAR(4),
-    obs VARCHAR(64),
+    obs VARCHAR(256),
     id_solicitacao INT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

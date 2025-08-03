@@ -38,6 +38,12 @@ class PessoasController extends ControllerKX {
                                 WHEN ret.id_pessoa IS NULL THEN 0
                                 ELSE 1
                             END AS possui_retiradas
+                        "),
+                        DB::raw("
+                            CASE
+                                WHEN atb.id_pessoa IS NULL THEN 0
+                                ELSE 1
+                            END AS possui_atribuicoes
                         ")
                     )
                     ->leftjoin("setores", "setores.id", "pessoas.id_setor")
@@ -62,6 +68,13 @@ class PessoasController extends ControllerKX {
                                     ->on("pessoas.id_empresa", "ret.id_empresa");
                             });
                         }
+                    )
+                    ->leftjoinSub(
+                        DB::table("atribuicoes_associadas")
+                            ->selectRaw("DISTINCTROW id_pessoa"),
+                        "atb",
+                        "atb.id_pessoa",
+                        "pessoas.id"
                     )
                     ->where(function($sql) use($tipo) {
                         $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);

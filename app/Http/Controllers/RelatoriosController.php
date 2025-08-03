@@ -644,4 +644,19 @@ class RelatoriosController extends ControllerKX {
         $criterios = join(" | ", $criterios);
         return sizeof($resultado) ? view("reports/ranking", compact("resultado", "criterios", "qtd_total")) : view("nada");
     }
+
+    public function solicitacao($id) {
+        $consulta = DB::table("solicitacoes_produtos")
+                        ->where("id_solicitacao", $id)
+                        ->pluck("obs");
+        $resultado = array();
+        foreach ($consulta as $obs) {
+            $aux = explode("|", $obs);
+            $linha = new \stdClass;
+            $linha->inconsistencia = $aux[0];
+            $linha->justificativa = $aux[1];
+            array_push($resultado, $linha);
+        }
+        return view("solicitacao", compact("resultado"));
+    }
 }

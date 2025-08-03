@@ -87,6 +87,7 @@
                         resultado += "<i class = 'my-icon fa-light fa-file' title = 'Retiradas' onclick = 'retirada_pessoa(" + linha.id + ")'></i>" +
                             "<i class = 'my-icon fa-regular fa-clock-rotate-left' title = 'Desfazer retiradas' onclick = 'desfazer_retiradas(" + linha.id + ")'></i>";
                     }
+                    if (parseInt(linha.possui_atribuicoes)) resultado += "<i class = 'my-icon fal fa-calendar-alt' title = 'Próximas retiradas' onclick = 'proximas_retiradas(" + linha.id + ")'></i>";
                     resultado += "" +
                             "<i class = 'my-icon far fa-box'       title = 'Atribuir produto' onclick = 'atribuicao(false, " + linha.id + ")'></i>" +
                             "<i class = 'my-icon far fa-tshirt'    title = 'Atribuir grade'   onclick = 'atribuicao(true, " + linha.id + ")'></i>" +
@@ -97,6 +98,39 @@
                 });
                 document.getElementById("table-dados").innerHTML = resultado;
                 ordenar(coluna);
+            });
+        }
+
+        function proximas_retiradas(id_pessoa) {
+            $.get(URL + "/retiradas/proximas/" + id_pessoa, function(data) {
+                if (typeof data == "string") data = $.parseJSON(data);
+                let referencia = false;
+                let tamanho = false;
+                let resultado = "";
+                data.forEach((linha) => {
+                    let dias = parseInt(linha.dias);
+                    if (linha.tamanho) tamanho = true;
+                    if (linha.referencia) referencia = true;
+                    resultado += "<tr>" +
+                        "<td>" + linha.id_produto.toString.padStart(6, "0") + "</td>" +
+                        "<td>" + linha.descr + "</td>" +
+                        "<td>" + linha.tamanho + "</td>" +
+                        "<td class = 'text-right'>" + linha.qtd + "</td>" +
+                        "<td>" + linha.proximas_retiradas + "</td>" +
+                        "<td style = 'background:" + (dias < 0 ? "" : "") + "'>" + Math.abs(dias) + "</td>" +
+                    "</tr>";
+                });
+                document.getElementById("proximasRetiradasModalLabel").innerHTML = "Próximas retiradas (" + data[0].nome + ")"; 
+                document.getElementById("table-ret-dados").innerHTML = resultado;
+                Array.from(document.getElementsByClassName("tamanho")).forEach((el) => {
+                    if (!tamanho) el.classList.add("d-none");
+                    else el.classList.remove("d-none");
+                });
+                Array.from(document.getElementsByClassName("referencia")).forEach((el) => {
+                    if (!referencia) el.classList.add("d-none");
+                    else el.classList.remove("d-none");
+                });
+                modal("proximasRetiradasModal", 0);
             });
         }
 
@@ -130,4 +164,5 @@
     @include("modals.atribuicoes_modal")
     @include("modals.retiradas_modal")
     @include("modals.supervisor_modal")
+    @include("modals.proximas_retiradas_modal")
 @endsection

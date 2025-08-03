@@ -63,7 +63,7 @@
                 filtro : document.getElementById("busca").value
             }, function(data) {
                 let resultado = "";
-                const emp = {{ intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa) }};
+                const emp = parseInt(EMPRESA);
                 if (typeof data == "string") data = $.parseJSON(data);
                 data.forEach((linha) => {
                     resultado += "<tr>" +

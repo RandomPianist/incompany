@@ -34,25 +34,30 @@ class RetiradasController extends ControllerKX {
         $hoje = Carbon::createFromFormat('Y-m-d', date("Y-m-d"));
         $consulta = DB::table("vpendentes")
                         ->select(
-                            "id_produto",
-                            "descr",
-                            DB::raw("IFNULL(referencia, '') AS referencia"),
-                            "tamanho",
-                            "qtd",
-                            "proxima_retirada_real",
-                            "obrigatorio",
-                            "esta_pendente"
+                            "pessoas.nome",
+                            DB::raw("IFNULL(produtos.cod_externo, produtos.id) AS id_produto"),
+                            "vpendentes.descr",
+                            DB::raw("IFNULL(vpendentes.referencia, '') AS referencia"),
+                            "vpendentes.tamanho",
+                            "vpendentes.qtd",
+                            "vpendentes.proxima_retirada_real",
+                            "vpendentes.obrigatorio",
+                            "vpendentes.esta_pendente"
                         )
-                        ->where("id_pessoa", $id_pessoa)
+                        ->join("produtos", "produtos.id", "vpendentes.id_produto")
+                        ->join("pessoas", "pessoas.id", "vpendentes.id_pessoa")
+                        ->where("vpendentes.id_pessoa", $id_pessoa)
                         ->groupby(
-                            "id_produto",
-                            "descr",
-                            "referencia",
-                            "tamanho",
-                            "qtd",
-                            "proxima_retirada_real",
-                            "obrigatorio",
-                            "esta_pendente"
+                            "pessoas.nome",
+                            "produtos.id",
+                            "produtos.cod_externo",
+                            "vpendentes.descr",
+                            "vpendentes.referencia",
+                            "vpendentes.tamanho",
+                            "vpendentes.qtd",
+                            "vpendentes.proxima_retirada_real",
+                            "vpendentes.obrigatorio",
+                            "vpendentes.esta_pendente"
                         )
                         ->orderby(DB::raw("obrigatorio DESC", "DATE(proxima_retirada_real)"))
                         ->get();
@@ -69,6 +74,7 @@ class RetiradasController extends ControllerKX {
             $aux->qtd = $linha->qtd;
             $aux->proxima_retirada = $proxima_retirada->format("d/m/Y");
             $aux->dias = $dias;
+            $aux->nome = $nome;
             array_push($resultado, $aux);
         }
         return json_encode($resultado);

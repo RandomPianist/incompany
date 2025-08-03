@@ -218,6 +218,8 @@ window.onload = function() {
     }, 200);
     
     listar(location.href.indexOf("produtos") > -1 ? 1 : 0);
+
+    avisarSolicitacao();
 }
 
 function ordenar(coluna) {
@@ -1029,4 +1031,57 @@ function trocarEmpresaModal() {
         document.querySelector("#empresa-select option[value='" + EMPRESA + "']").selected = true;
         $("#trocarEmpresaModal").modal();    
     });
+}
+
+async function avisarSolicitacao() {
+    let comodatos = await $.get(URL + "/solicitacoes/meus_comodatos");
+    if (typeof comodatos == "string") comodatos = $.parseJSON(comodatos);
+
+    for (let i = 0; i < comodatos.length; i++) {
+        let retorno;
+        try {
+            retorno = await $.get(URL + "/solicitacoes/aviso/" + comodatos[i]);
+            if (typeof retorno == "string") retorno = $.parseJSON(retorno);
+        } catch (err) {
+            continue;
+        }
+        let texto = "Sua solicitação feita no dia " + retorno.criacao + " foi ";
+        switch (retorno.status) {
+            case "E":
+                texto += "aceita";
+                break;
+            case "F":
+                texto += "finalizada";
+                break;
+            case "R":
+                texto += "recusada";
+                break;
+        }
+        if (retorno.status != "E") texto += " no dia " + retorno.data;
+        texto += " por " + retorno.usuario_erp;
+        if (retorno.status == "E") texto += " e tem prazo para o dia " + retorno.data;
+        if (retorno.possui_inconsistencias) {
+            texto += ".<br>Deseja verificar as diferenças?";
+            let viz = await Swal.fire({
+                icon : "sucess",
+                html : texto,
+                showDenyButton : true,
+                confirmButtonText : "SIM",
+                confirmButtonColor : "rgb(31, 41, 55)",
+                denyButtonText : "NÃO"
+            })
+            if (viz.isConfirmed) {
+                let link = document.createElement("a");
+                link.href = URL + "/relatorios/solicitacao/" + retorno.id;
+                link.target = "_blank";
+                link.click();
+            }
+        } else {
+            await Swal.fire({
+                icon: "EF".indexOf(retorno.status) > -1 ? "success" : "warning",
+                text: texto,
+                confirmButtonColor: "rgb(31, 41, 55)"
+            });
+        }
+    }
 }

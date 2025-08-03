@@ -720,11 +720,11 @@ h5 {
 }
 
 .bold {
-	font-weight: 800;
+	font-weight: 800
 }
 
 .rep-tb-color-black {
-	color: #000;
+	color: #000
 }
 
 .rep-tb-header {
@@ -732,36 +732,36 @@ h5 {
 	color: #000;
 	background: silver;
 	text-align: center;
-	border: 1px solid #000;
+	border: 1px solid #000
 }
 
 .rep-tb-header span {
-	margin: auto;
+	margin: auto
 }
 
 .d-grid {
 	position: relative;
 	display: grid;
 	font-size: 12px;
-	color: #000;
+	color: #000
 }
 
 .d-grid .c-1 {
 	grid-column: 1;
 	border: 1px solid #000;
-	padding: 3px;
+	padding: 3px
 }
 
 .d-grid .c-2 {
 	grid-column: 2;
 	border: 1px solid #000;
-	padding: 3px;
+	padding: 3px
 }
 
 .d-grid .c-3 {
 	grid-column: 3;
 	border: 1px solid #000;
-	padding: 3px;
+	padding: 3px
 }
 
 .nome-rel {
@@ -769,18 +769,18 @@ h5 {
     background-color: black;
     color: white;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 14px
 }
 
 .rep-ret-rodape {
 	font-family: Arial;
 	font-size: 15px;
-	color: #000;
+	color: #000
 }
 
 .rep-ret-rodape .data-extenso {
 	display: grid;
-	justify-items: end;
+	justify-items: end
 }
 
 .assinatura {
@@ -789,24 +789,24 @@ h5 {
 	display: grid;
 	column-gap: 50px;
     grid-auto-columns: 450px;
-	padding-top: 45px;
+	padding-top: 45px
 }
 
 .assinatura .asn_1 {
-	grid-column: 1;
+	grid-column: 1
 }
 
 .assinatura .asn_2 {
-	grid-column: 2;
+	grid-column: 2
 }
 
 .assinatura div {
 	border-top: solid #000 1px;
-	display: inline-grid;
+	display: inline-grid
 }
 
 .assinatura div span {
-	margin: auto;
+	margin: auto
 }
 
 .manter-junto {
@@ -816,6 +816,63 @@ h5 {
 .my-icon {
     cursor: pointer;
     padding: 0 2px
+}
+
+.menu-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px
+}
+
+.menu-btn, .menu-item {
+    border-radius: 50%;
+    background: #084f96;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: transform 0.3s ease, opacity 0.3s ease, rotate 0.3 ease
+}
+
+.menu-btn {
+    width: 60px;
+    height: 60px
+}
+
+.menu-item {
+    width: 40px;
+    height: 40px
+}
+
+.menu-item {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    opacity: 0;
+    pointer-events: none
+}
+
+.menu-container.open .menu-item {
+    pointer-events: auto;
+    opacity: 1
+}
+
+.menu-container.open .menu-btn {
+    transform: rotate(90deg)
+}
+
+.menu-container.open .menu-item:nth-child(2) {
+    transform: translateY(-70px)
+}
+
+.menu-container.open .menu-item:nth-child(3) {
+    transform: translateY(-120px)
+}
+
+.menu-container.open .menu-item:nth-child(4) {
+    transform: translateY(-170px)
 }
 
 @page {
@@ -854,7 +911,7 @@ h5 {
 		page-break-after: auto
 	}
 
-	#btn-print {
+	#btn-print, .my-icon, #menu {
 		display: none
 	}
 
