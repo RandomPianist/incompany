@@ -641,7 +641,7 @@ function RelatorioItens(resumido, maquina) {
             document.getElementById("resumo").value = resumido ? "S" : "N";
             document.getElementById("rel-lm-chk").checked = false;
             document.querySelector("label[for='rel-lm-chk']").innerHTML = resumido ? "Listar apenas produtos cuja compra é sugerida" : "Listar movimentação";
-            document.querySelector("#relatorioItensModal form").action = resumido ? maquina === undefined ? URL + "/relatorios/sugestao" : URL + "//solicitacoes" : URL + "/relatorios/extrato";
+            document.querySelector("#relatorioItensModal form").action = resumido ? maquina === undefined ? URL + "/relatorios/sugestao" : URL + "/solicitacoes" : URL + "/relatorios/extrato";
             let el_maq = document.getElementById("rel-maquina2").parentElement.parentElement.classList;
             if (maquina !== undefined) el_maq.add("d-none");
             else el_maq.remove("d-none");

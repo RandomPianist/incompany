@@ -374,7 +374,10 @@ class RelatoriosController extends ControllerKX {
         }
         $criterios = join(" | ", $criterios);
         $mostrar_giro = $request->tipo == "G";
-        if (sizeof($resultado)) return view("reports/".($resumo ? "saldo" : "extrato"), compact("resultado", "lm", "criterios", "mostrar_giro"));
+        if (sizeof($resultado)) {
+            $v_extrato = $lm ? "extratoA" : "extratoS";
+            return view("reports/".($resumo ? "saldo" : $v_extrato), compact("resultado", "lm", "criterios", "mostrar_giro"));
+        }
         return view("nada");
     }
 
