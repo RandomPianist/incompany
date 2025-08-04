@@ -289,11 +289,12 @@
             });
             resp = $.parseJSON(resp);
             for (let i = 0; i < resp.length; i++) {
+                let qtd = parseInt(qtd);
                 let pai = document.getElementById("produto-" + resp[i].id_produto);
-                pai.querySelector(".qtd").value = resp[i].qtd;
-                pai.querySelector(".solicitado").innerHTML = resp[i].qtd;
+                pai.querySelector(".qtd").value = qtd;
+                pai.querySelector(".solicitado").innerHTML = qtd;
                 let estilo = pai.querySelector(".fa-minus").style;
-                if (!resp[i].qtd) estilo.visibility = "hidden";
+                if (!qtd) estilo.visibility = "hidden";
                 else estilo.removeProperty("visibility");
             }
             document.querySelector("form").classList.remove("d-none");
