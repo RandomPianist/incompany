@@ -330,6 +330,16 @@ class Api2Controller extends ControllerKX {
         })->values()->all());
     }
 
+    public function gravar_solicitacao(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        foreach($request->solicitacoes as $req_solicitacao) {
+            $solicitacao = Solicitacoes::find($req_solicitacao->id);
+            $solicitacao->id_externo = $req_solicitacao->recnum;
+            $solicitacao->save();
+            $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
+        }
+    }
+
     public function aceitar_solicitacao(Request $request) {
         if ($request->token != config("app.key")) return 401;
         $solicitacao = Solicitacoes::find($request->id);
