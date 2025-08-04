@@ -924,7 +924,7 @@ div:where(.swal2-container) div:where(.swal2-popup) {
 	}
 
 	#btn-print, .my-icon, #menu {
-		display: none
+		display: none !important
 	}
 
 	.report-row {
