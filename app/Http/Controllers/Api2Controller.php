@@ -306,7 +306,7 @@ class Api2Controller extends ControllerKX {
         ) ? "OK" : "ERRO";
     }
 
-    public function enviar_solicitacoes() {
+    public function enviar_solicitacoes(Request $request) {
         if ($request->token != config("app.key")) return 401;
         return json_encode(collect(
             DB::table("solicitacoes")
