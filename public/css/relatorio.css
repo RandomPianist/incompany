@@ -591,6 +591,10 @@ small,
 	margin-left: auto !important
 }
 
+.text-left {
+	text-align: left !important
+}
+
 .text-right {
 	text-align: right !important
 }
@@ -873,6 +877,14 @@ h5 {
 
 .menu-container.open .menu-item:nth-child(4) {
     transform: translateY(-170px)
+}
+
+div:where(.swal2-container) div:where(.swal2-popup) {
+	width: 62em !important
+}
+
+.d-none {
+	display: none !important
 }
 
 @page {

@@ -522,7 +522,7 @@ class ControllerKX extends Controller {
             if ($produtos->isEmpty()) return null;
             return [
                 "maquina" => [
-                    "id" => $maquinas[0]->id,
+                    "id" => $maquinas[0]->id_maquina,
                     "descr" => $maquinas[0]->maquina,
                     "produtos" => $produtos->all()
                 ]

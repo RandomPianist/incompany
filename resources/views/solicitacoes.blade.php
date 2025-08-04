@@ -48,7 +48,7 @@
                             @if ($mostrar_giro) Giro de estoque @else Qtde. mínima @endif
                         </td>
                         <td width = "8%" class = "text-right">Qtde. Sugerida</td>
-                        <td width = "8%" class = "text-right">Solicitar</td>
+                        <td width = "8%" class = "text-center">Solicitar</td>
                     </tr>
                 </thead>
             </table>
@@ -97,7 +97,7 @@
                                     <td width = "8%" class = "text-right">{{ $produto["minimo"] }}</td>
                                 @endif
                                 <td width = "8%" class = "text-right sugerido">{{ $produto["sugeridos"] }}</td>
-                                <td width = "8%" class = "text-right">
+                                <td width = "8%" class = "text-center">
                                     <i
                                         class = "my-icon fal fa-minus"
                                         onclick = "calcular(this, -1)"
@@ -124,7 +124,11 @@
                 let qtd = linha.querySelector(".sugerido").innerHTML;
                 linha.querySelector(".solicitado").innerHTML = qtd;
                 linha.querySelector(".qtd").value = qtd;
+                let estilo = linha.querySelector(".fa-minus").style;
+                if (!parseInt(qtd)) estilo.visibility = "hidden";
+                else estilo.removeProperty("visibility");
             });
+            
             $.post(URL + "/previas/excluir", {
                 _token : $("meta[name='csrf-token']").attr("content"),
                 id_comodato : document.getElementById("id_comodato").value
@@ -134,7 +138,7 @@
         function calcular(el, val) {
             val += parseInt(el.parentElement.querySelector(".qtd").value);
             let estilo = el.parentElement.querySelector(".fa-minus").style;
-            if (val == 0) estilo.visibility = "hidden";
+            if (!val) estilo.visibility = "hidden";
             else estilo.removeProperty("visibility");
             el.parentElement.querySelector(".qtd").value = val;
             el.parentElement.querySelector(".solicitado").innerHTML = val;
@@ -162,13 +166,13 @@
                     "<thead>" +
                         "<tr class = 'report-row'>" +
                             (_tipo == "R" ?
-                                "<td width = '28%'>Funcionário</td>" +
-                                "<td width = '27%' class = 'supervisor'>Supervisor</td>" +
-                                "<td width = '27%' class = 'autor'>Autor</td>" +
+                                "<td width = '28%' class = 'text-left'>Funcionário</td>" +
+                                "<td width = '27%' class = 'text-left supervisor'>Supervisor</td>" +
+                                "<td width = '27%' class = 'text-left autor'>Autor</td>" +
                                 "<td width = '10%'>Data</td>" +
                                 "<td width = '8%' class = 'text-right'>Qtde.</td>"
                             :
-                                "<td width = '82%' class = 'origem'>Origem</td>" +
+                                "<td width = '82%' class = 'text-left origem'>Origem</td>" +
                                 "<td width = '10%'>Data</td>" +
                                 "<td width = '8%' class = 'text-right'>Qtde.</td>"
                             ) +
@@ -184,13 +188,13 @@
                     if (linha.origem) origem = true;
                     resultado += "<tr class = 'report-row'>" +
                         (_tipo == "R" ?
-                            "<td width = '28%'>" + linha.funcionario + "</td>" +
-                            "<td width = '27%' class = 'supervisor'>" + linha.supervisor + "</td>" +
-                            "<td width = '27%' class = 'autor'>" + linha.autor + "</td>" +
+                            "<td width = '28%' class = 'text-left'>" + linha.funcionario + "</td>" +
+                            "<td width = '27%' class = 'text-left supervisor'>" + linha.supervisor + "</td>" +
+                            "<td width = '27%' class = 'text-left autor'>" + linha.autor + "</td>" +
                             "<td width = '10%'>" + linha.data + "</td>" +
                             "<td width = '8%' class = 'text-right'>" + linha.qtd + "</td>"
                         :
-                            "<td width = '82%' class = 'origem'>" + linha.origem + "</td>" +
+                            "<td width = '82%' class = 'text-left origem'>" + linha.origem + "</td>" +
                             "<td width = '10%'>" + linha.data + "</td>" +
                             "<td width = '8%' class = 'text-right'>" + linha.qtd + "</td>"
                         ) +
@@ -271,7 +275,7 @@
         }
         
         async function carregar() {
-            let data = $.get(URL + "/solicitacoes/meus_comodatos?id_maquina=" + document.getElementById("id_maquina").value);
+            let data = await $.get(URL + "/solicitacoes/meus-comodatos?id_maquina=" + document.getElementById("id_maquina").value);
             if (typeof data == "string") data = $.parseJSON(data);
             document.getElementById("id_comodato").value = data[0];
             let lista = Array.from(document.querySelectorAll("tbody .report-row"));
@@ -283,14 +287,13 @@
                 id_comodato : data[0],
                 produtos : _produtos.join(",")
             });
-            if (typeof data == "string") resp = $.parseJSON(resp);
+            resp = $.parseJSON(resp);
             for (let i = 0; i < resp.length; i++) {
-                let linha = resp[i];
-                let pai = document.getElementById("produto-" + linha.id_produto);
-                pai.querySelector(".qtd").value = linha.qtd;
-                pai.querySelector(".solicitado").innerHTML = linha.qtd;
+                let pai = document.getElementById("produto-" + resp[i].id_produto);
+                pai.querySelector(".qtd").value = resp[i].qtd;
+                pai.querySelector(".solicitado").innerHTML = resp[i].qtd;
                 let estilo = pai.querySelector(".fa-minus").style;
-                if (parseInt(linha.qtd) == 0) estilo.visibility = "hidden";
+                if (!resp[i].qtd) estilo.visibility = "hidden";
                 else estilo.removeProperty("visibility");
             }
             document.querySelector("form").classList.remove("d-none");

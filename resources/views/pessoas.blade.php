@@ -33,7 +33,7 @@
                             <th width = "10%" class = "text-right">
                                 <span>Código</span>
                             </th>
-                            <th width = "30%">
+                            <th width = "25%">
                                 <span>Nome</span>
                             </th>
                             <th width = "20%">
@@ -42,7 +42,7 @@
                             <th width = "20%">
                                 <span>Centro de custo</span>
                             </th>
-                            <th width = "15%" class = "text-center nao-ordena">
+                            <th width = "20%" class = "text-center nao-ordena">
                                 <span>Ações</span>
                             </th>
                         </tr>
@@ -79,15 +79,15 @@
                     resultado += "<tr>" +
                         biometria + 
                         "<td width = '10%' class = 'text-right'>" + linha.id.toString().padStart(4, "0") + "</td>" +
-                        "<td width = '30%'>" + linha.nome + "</td>" +
+                        "<td width = '25%'>" + linha.nome + "</td>" +
                         "<td width = '20%'>" + linha.empresa + "</td>" +
                         "<td width = '20%'>" + linha.setor + "</td>" +
-                        "<td class = 'text-center btn-table-action' width = '15%'>";
+                        "<td class = 'text-center btn-table-action' width = '20%'>";
                     if (parseInt(linha.possui_retiradas)) {
                         resultado += "<i class = 'my-icon fa-light fa-file' title = 'Retiradas' onclick = 'retirada_pessoa(" + linha.id + ")'></i>" +
                             "<i class = 'my-icon fa-regular fa-clock-rotate-left' title = 'Desfazer retiradas' onclick = 'desfazer_retiradas(" + linha.id + ")'></i>";
                     }
-                    if (parseInt(linha.possui_atribuicoes)) resultado += "<i class = 'my-icon fal fa-calendar-alt' title = 'Próximas retiradas' onclick = 'proximas_retiradas(" + linha.id + ")'></i>";
+                    if (parseInt(linha.possui_atribuicoes)) resultado += "<i class = 'my-icon far fa-calendar-alt' title = 'Próximas retiradas' onclick = 'proximas_retiradas(" + linha.id + ")'></i>";
                     resultado += "" +
                             "<i class = 'my-icon far fa-box'       title = 'Atribuir produto' onclick = 'atribuicao(false, " + linha.id + ")'></i>" +
                             "<i class = 'my-icon far fa-tshirt'    title = 'Atribuir grade'   onclick = 'atribuicao(true, " + linha.id + ")'></i>" +
@@ -107,20 +107,34 @@
                 let referencia = false;
                 let tamanho = false;
                 let resultado = "";
-                data.forEach((linha) => {
+                let maximo_verde = 0;
+                let maximo_vermelho = 0;
+                data.retiradas.forEach((linha) => {
+                    let dias = parseInt(linha.dias);
+                    if (dias > 0) {
+                        if (dias > maximo_verde) maximo_verde = dias;
+                    } else {
+                        if (Math.abs(dias) > maximo_vermelho) maximo_vermelho = Math.abs(dias);
+                    }
+                });
+                const hex = ["11", "22", "33", "44", "55", "66", "77", "88", "99", "AA", "BB", "CC", "DD", "EE", "FF"];
+                data.retiradas.forEach((linha) => {
                     let dias = parseInt(linha.dias);
                     if (linha.tamanho) tamanho = true;
                     if (linha.referencia) referencia = true;
+                    let op_verde = hex[parseInt((((dias / maximo_verde) * 100) * 14) / 100)];
+                    let op_vermelho = hex[parseInt((((Math.abs(dias) / maximo_vermelho) * 100) * 14) / 100)];
                     resultado += "<tr>" +
-                        "<td>" + linha.id_produto.toString.padStart(6, "0") + "</td>" +
-                        "<td>" + linha.descr + "</td>" +
-                        "<td>" + linha.tamanho + "</td>" +
-                        "<td class = 'text-right'>" + linha.qtd + "</td>" +
-                        "<td>" + linha.proximas_retiradas + "</td>" +
-                        "<td style = 'background:" + (dias < 0 ? "" : "") + "'>" + Math.abs(dias) + "</td>" +
+                        "<td class = 'align-middle'>" + linha.id_produto.toString().padStart(6, "0") + "</td>" +
+                        "<td class = 'align-middle'>" + linha.descr + "</td>" +
+                        "<td class = 'align-middle'>" + linha.referencia + "</td>" +
+                        "<td class = 'align-middle'>" + linha.tamanho + "</td>" +
+                        "<td class = 'align-middle text-right'>" + linha.qtd + "</td>" +
+                        "<td class = 'align-middle'>" + linha.proxima_retirada + "</td>" +
+                        "<td class = 'align-middle' style = 'background:" + (dias < 0 ? "#ff0000" + op_vermelho : "#00ff00" + op_verde) + "'>" + Math.abs(dias) + "</td>" +
                     "</tr>";
                 });
-                document.getElementById("proximasRetiradasModalLabel").innerHTML = "Próximas retiradas (" + data[0].nome + ")"; 
+                document.getElementById("proximasRetiradasModalLabel").innerHTML = "Próximas retiradas (" + data.nome + ")"; 
                 document.getElementById("table-ret-dados").innerHTML = resultado;
                 Array.from(document.getElementsByClassName("tamanho")).forEach((el) => {
                     if (!tamanho) el.classList.add("d-none");

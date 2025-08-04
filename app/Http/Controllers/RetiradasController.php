@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use DB;
 use Carbon\Carbon;
+use App\Models\Pessoas;
 use Illuminate\Http\Request;
 
 class RetiradasController extends ControllerKX {
@@ -34,7 +35,6 @@ class RetiradasController extends ControllerKX {
         $hoje = Carbon::createFromFormat('Y-m-d', date("Y-m-d"));
         $consulta = DB::table("vpendentes")
                         ->select(
-                            "pessoas.nome",
                             DB::raw("IFNULL(produtos.cod_externo, produtos.id) AS id_produto"),
                             "vpendentes.descr",
                             DB::raw("IFNULL(vpendentes.referencia, '') AS referencia"),
@@ -45,10 +45,8 @@ class RetiradasController extends ControllerKX {
                             "vpendentes.esta_pendente"
                         )
                         ->join("produtos", "produtos.id", "vpendentes.id_produto")
-                        ->join("pessoas", "pessoas.id", "vpendentes.id_pessoa")
                         ->where("vpendentes.id_pessoa", $id_pessoa)
                         ->groupby(
-                            "pessoas.nome",
                             "produtos.id",
                             "produtos.cod_externo",
                             "vpendentes.descr",
@@ -59,11 +57,12 @@ class RetiradasController extends ControllerKX {
                             "vpendentes.obrigatorio",
                             "vpendentes.esta_pendente"
                         )
-                        ->orderby(DB::raw("obrigatorio DESC", "DATE(proxima_retirada_real)"))
+                        ->orderby(DB::raw("obrigatorio DESC, DATE(proxima_retirada_real)"))
                         ->get();
-        $resultado = array();
+        $resultado = new \stdClass;
+        $retiradas = array();
         foreach ($consulta as $linha) {
-            $proxima_retirada = Carbon::createFromFormat('Y-m-d', $linha->proxima_retirada_real);
+            $proxima_retirada = Carbon::parse($linha->proxima_retirada_real);
             $dias = $proxima_retirada->diffInDays($hoje);
             if (intval($linha->esta_pendente)) $dias *= -1;
             $aux = new \stdClass;
@@ -74,9 +73,10 @@ class RetiradasController extends ControllerKX {
             $aux->qtd = $linha->qtd;
             $aux->proxima_retirada = $proxima_retirada->format("d/m/Y");
             $aux->dias = $dias;
-            $aux->nome = $nome;
-            array_push($resultado, $aux);
+            array_push($retiradas, $aux);
         }
+        $resultado->retiradas = $retiradas;
+        $resultado->nome = Pessoas::find($id_pessoa)->nome;
         return json_encode($resultado);
     }
 }
