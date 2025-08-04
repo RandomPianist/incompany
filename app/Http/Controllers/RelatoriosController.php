@@ -410,7 +410,6 @@ class RelatoriosController extends ControllerKX {
     public function extrato(Request $request) {
         $criterios = array();
         $lm = $request->lm == "S";
-        $resumo = $request->resumo == "S";
         $resultado = collect(
             DB::table("log")
                 ->select(
@@ -422,11 +421,10 @@ class RelatoriosController extends ControllerKX {
                     "produtos.id AS id_produto",
                     "produtos.descr AS produto",
                     DB::raw("IFNULL(tot.qtd, 0) AS saldo"),
-                    DB::raw("estoque.preco"),
+                    "estoque.preco",
 
                     // DETALHES
                     DB::raw("CONCAT(DATE_FORMAT(log.data, '%d/%m/%Y'), CASE WHEN log.hms IS NOT NULL THEN CONCAT(' ', log.hms) ELSE '' END) AS data"),
-                    "mp.minimo",
                     "estoque.es",
                     "estoque.descr AS estoque_descr",
                     DB::raw("
@@ -509,34 +507,18 @@ class RelatoriosController extends ControllerKX {
                 ->where("valores.lixeira", 0)
                 ->orderby("log.data")
                 ->get()
-        )->groupBy("id_maquina")->map(function($itens1) use($request) {
+        )->groupBy("id_maquina")->map(function($itens1) {
             return [
                 "maquina" => [
                     "descr" => $itens1[0]->maquina,
-                    "produtos" => collect($itens1)->groupBy("id_produto")->map(function($itens2) use($request) {
-                        $sugeridos = 0;
-                        $giro = 0;
-                        $minimo = intval($itens2[0]->minimo);
+                    "produtos" => collect($itens1)->groupBy("id_produto")->map(function($itens2) {
                         $saldo_ant = intval($itens2[0]->saldo);
                         $saldo_res = $saldo_ant + $itens2->sum("qtd");
-                        if ($request->tipo == "G" && $request->resumo == "S") {
-                            $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio);
-                            $fim = Carbon::createFromFormat('d/m/Y', $request->fim);
-                            $diferenca = $inicio->diffInDays($fim);
-                            if (!$diferenca) $diferenca = 1;
-                            $giro = $itens2->sum("saidas") / $diferenca;
-                            $sugeridos = intval(($giro * intval($request->dias)) - $saldo_res);
-                        } else $sugeridos = $minimo - $saldo_res;
-                        if ($sugeridos < 0) $sugeridos = 0;
                         return [
                             "descr" => $itens2[0]->produto,
                             "preco" => $itens2[0]->preco,
                             "saldo_ant" => $saldo_ant,
                             "saldo_res" => $saldo_res,
-                            "entradas" => $itens2->sum("entradas"),
-                            "saidas" => $itens2->sum("saidas"),
-                            "sugeridos" => $sugeridos,
-                            "minimo" => ($request->tipo == "G" && $request->resumo == "S") ? number_format($giro, 2) : $minimo,
                             "movimentacao" => $itens2->map(function($movimento) {
                                 $qtd = floatval($movimento->qtd);
                                 return [
@@ -552,16 +534,8 @@ class RelatoriosController extends ControllerKX {
                 ]
             ];
         })->sortBy("descr")->values()->all();
-        if ($resumo) {
-            if ($request->tipo == "G") array_push($criterios, "Compra sugerida para ".$request->dias." dia".(intval($request->dias) > 1 ? "s" : ""));
-            if ($lm) array_push($criterios, "Apenas produtos cuja compra é sugerida");
-        }
         $criterios = join(" | ", $criterios);
-        $mostrar_giro = $request->tipo == "G";
-        if (sizeof($resultado)) {
-            $v_extrato = $lm ? "extratoA" : "extratoS";
-            return view("reports/".($resumo ? "saldo" : $v_extrato), compact("resultado", "lm", "criterios", "mostrar_giro"));
-        }
+        if (sizeof($resultado)) return view("reports/extrato".($lm ? "A" : "S"), compact("resultado", "lm", "criterios"));
         return view("nada");
     }
 
