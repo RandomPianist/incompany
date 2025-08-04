@@ -31,15 +31,17 @@ class PreviasController extends ControllerKX {
     }
 
     public function preencher(Request $request) {
-        $qtd = DB::table("previas")
+        return json_encode(
+            DB::table("previas")
+                ->select(
+                    "id_produto",
+                    "qtd"
+                )
                 ->where("id_comodato", $request->id_comodato)
                 ->where("id_pessoa", Auth::user()->id_pessoa)
-                ->where("id_produto", $request->id_produto)
+                ->whereIn("id_produto", explode(",", $request->produtos))
                 ->where("confirmado", 0)
-                ->value("qtd");
-        $resultado = new \stdClass;
-        $resultado->qtd = $qtd !== null ? $qtd : 0;
-        $resultado->existe = $qtd !== null ? 1 : 0;
-        return json_encode($resultado);
+                ->get()
+        );
     }
 }

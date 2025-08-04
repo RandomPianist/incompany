@@ -56,7 +56,7 @@
                 <table class = "report-body table table-sm table-bordered table-striped">
                     <tbody>
                         @foreach ($item["maquina"]["produtos"] as $produto)
-                            <tr class = "report-row">
+                            <tr class = "report-row" id = "produto-{{ $produto['id'] }}">
                                 <td width = "28%">{{ $produto["descr"] }}</td>
                                 <td width = "8%" class = "text-right">{{ $produto["saldo_ant"] }}</td>
                                 <td width = "8%" class = "text-right">
@@ -275,19 +275,23 @@
             if (typeof data == "string") data = $.parseJSON(data);
             document.getElementById("id_comodato").value = data[0];
             let lista = Array.from(document.querySelectorAll("tbody .report-row"));
-            for (let i = 0; i < lista.length; i++) {
-                let resp = await $.get(URL + "/previas/preencher", {
-                    id_comodato : data[0],
-                    id_produto : lista[i].querySelector(".produto").value
-                });
-                if (typeof data == "string") resp = $.parseJSON(resp);
-                if (parseInt(resp.existe)) {
-                    lista[i].querySelector(".qtd").value = resp.qtd;
-                    lista[i].querySelector(".solicitado").innerHTML = resp.qtd;
-                    let estilo = linha[i].querySelector(".fa-minus").style;
-                    if (parseInt(resp.qtd) == 0) estilo.visibility = "hidden";
-                    else estilo.removeProperty("visibility");
-                }
+            let _produtos = new Array();
+            lista.forEach((linha) => {
+                _produtos.push(linha.querySelector(".produto").value);
+            });
+            let resp = await $.get(URL + "/previas/preencher", {
+                id_comodato : data[0],
+                produtos : _produtos.join(",")
+            });
+            if (typeof data == "string") resp = $.parseJSON(resp);
+            for (let i = 0; i < resp.length; i++) {
+                let linha = resp[i];
+                let pai = document.getElementById("produto-" + linha.id_produto);
+                pai.querySelector(".qtd").value = linha.qtd;
+                pai.querySelector(".solicitado").innerHTML = linha.qtd;
+                let estilo = pai.querySelector(".fa-minus").style;
+                if (parseInt(linha.qtd) == 0) estilo.visibility = "hidden";
+                else estilo.removeProperty("visibility");
             }
             document.querySelector("form").classList.remove("d-none");
         }
