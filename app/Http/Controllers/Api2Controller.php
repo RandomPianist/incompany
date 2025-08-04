@@ -466,8 +466,8 @@ class Api2Controller extends ControllerKX {
                         "id" => $retirada->id,
                         "data" => $retirada->data,
                         "cod_itm" => $retirada->cod_itm,
-                        "qtd" => $retirada->qtd,
-                        "vunit" => $retirada->vunit,
+                        "qtd" => intval($retirada->qtd),
+                        "vunit" => floatval($retirada->vunit),
                         "hora" => $retirada->hora
                     ];
                 })->values()->all()
