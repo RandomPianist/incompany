@@ -236,6 +236,19 @@
         }
 
         function solicitar() {
+            let total = 0;
+            Array.from(document.getElementsByClassName("qtd")).forEach((el) => {
+                total += parseInt(el.value);
+            });
+            if (total = 0) {
+                Swal.fire({
+                    icon : "warning",
+                    title : "Atenção",
+                    html : "Nenhum item foi solicitado",
+                    confirmButtonColor : "rgb(31, 41, 55)"
+                });
+                return;
+            }
             $.get(URL + "/solicitacoes/consultar/" + document.getElementById("id_comodato").value, function(data) {
                 if (typeof data == "string") data = $.parseJSON(data);
                 if (!parseInt(data.continuar)) {
