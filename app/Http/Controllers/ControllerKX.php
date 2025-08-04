@@ -340,8 +340,8 @@ class ControllerKX extends Controller {
     }
 
     protected function criar_comodato_main($id_maquina, $id_empresa, $inicio, $fim) {
-        $dtinicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
-        $dtfim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
+        $dtinicio = Carbon::createFromFormat('d/m/Y', $inicio)->format('Y-m-d');
+        $dtfim = Carbon::createFromFormat('d/m/Y', $fim)->format('Y-m-d');
         
         $linha = new Comodatos;
         $linha->id_maquina = $request->id_maquina;
