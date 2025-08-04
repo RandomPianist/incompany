@@ -315,7 +315,7 @@ class Api2Controller extends ControllerKX {
                     "solicitacoes.status",
                     "solicitacoes.usuario_web AS autor",
                     "empresas.cod_externo AS cft",
-                    DB::raw("DATE_FORMAT(solicitacoes.data, '%d/%m/%Y') AS data"),
+                    "solicitacoes.data",
                     "produtos.cod_externo AS cod",
                     "mp.preco AS vunit",
                     "sp.qtd_orig AS qtd"
@@ -446,7 +446,7 @@ class Api2Controller extends ControllerKX {
                 ->select(
                     "retiradas.id",
                     "empresas.cod_externo AS cft",
-                    DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data"),
+                    "retiradas.data",
                     "produtos.cod_externo AS cod_itm",
                     "retiradas.preco AS vunit",
                     "retiradas.qtd",
