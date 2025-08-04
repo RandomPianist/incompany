@@ -140,7 +140,8 @@ CREATE TABLE retiradas (
 	biometria_ou_senha VARCHAR(1),
     ca VARCHAR(16),
     preco NUMERIC(8,2),
-	id_empresa INT
+	id_empresa INT,
+    id_setor
 );
 
 CREATE TABLE solicitacoes (

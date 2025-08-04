@@ -207,6 +207,7 @@ class ControllerKX extends Controller {
         $linha->qtd = $json["qtd"];
         $linha->data = $json["data"];
         $linha->id_empresa = $pessoa->id_empresa;
+        $linha->id_setor = $pessoa->id_setor;
         $linha->preco = $consulta_produto->value("preco");
         $linha->ca = $consulta_produto->value("ca");
         $linha->save();

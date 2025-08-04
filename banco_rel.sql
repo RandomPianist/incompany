@@ -183,11 +183,13 @@ CREATE TABLE retiradas (
     ca VARCHAR(16),
     preco NUMERIC(8,2),
 	id_empresa INT,
+    id_setor INT,
 	FOREIGN KEY (id_atribuicao) REFERENCES atribuicoes(id),
 	FOREIGN KEY (id_comodato) REFERENCES comodatos(id),
 	FOREIGN KEY (id_pessoa) REFERENCES pessoas(id),
 	FOREIGN KEY (id_supervisor) REFERENCES pessoas(id),
-	FOREIGN KEY (id_produto) REFERENCES produtos(id)
+	FOREIGN KEY (id_produto) REFERENCES produtos(id),
+    FOREIGN KEY (id_setor) REFERENCES setores(id)
 );
 
 CREATE TABLE solicitacoes (
