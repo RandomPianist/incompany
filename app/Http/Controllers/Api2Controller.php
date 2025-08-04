@@ -28,7 +28,7 @@ class Api2Controller extends ControllerKX {
     }
 
     private function maquinas($cft) {
-        DB::table("valores")
+        return DB::table("valores")
                     ->select(
                         "valores.id",
                         "valores.seq",
@@ -60,7 +60,29 @@ class Api2Controller extends ControllerKX {
 
     public function maquinas_por_cliente(Request $request) {
         if ($request->token != config("app.key")) return 401;
-        return $this->maquinas($request->cft)->get();
+        return json_encode($this->maquinas($request->cft)->get());
+    }
+
+    public function maquinas_todas(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        $clientes = DB::table("empresas")
+                        ->where("lixeira", 0)
+                        ->whereNotNull("cod_externo")
+                        ->pluck("cod_externo");
+        $resultado = array();
+        foreach ($clientes as $cft) {
+            $consulta = $this->maquinas($cft)->get();
+            foreach ($consulta as $linha) {
+                $aux = new \stdClass;
+                $aux->cft = $cft;
+                $aux->id = $linha->id;
+                $aux->seq = $linha->seq;
+                $aux->descr = $linha->descr;
+                $aux->ativo = $linha->ativo;
+                array_push($resultado, $aux);
+            }
+        }
+        return json_encode($resultado);
     }
 
     public function consultar_maquina(Request $request) {

@@ -78,7 +78,7 @@ class DashboardController extends ControllerKX {
                             ->on("pessoas.id_empresa", "retiradas.id_empresa");
                     });
                 })
-                ->join("setores", "setores.id", "pessoas.id_setor")
+                ->join("setores", "setores.id", "retiradas.id_setor")
                 ->join("produtos", "produtos.id", "retiradas.id_produto")
                 ->whereRaw("retiradas.data >= '".$inicio."'")
                 ->whereRaw("retiradas.data <= '".$fim."'")
@@ -346,7 +346,7 @@ class DashboardController extends ControllerKX {
                     ->whereRaw("retiradas.data >= '".$inicio."'")
                     ->whereRaw("retiradas.data <= '".$fim."'")
                     ->where("pessoas.lixeira", 0)
-                    ->where("pessoas.id_setor", $id_setor)
+                    ->where("retiradas.id_setor", $id_setor)
                     ->groupby(
                         "pessoas.id",
                         "pessoas.nome"
