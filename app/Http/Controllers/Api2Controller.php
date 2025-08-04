@@ -103,7 +103,7 @@ class Api2Controller extends ControllerKX {
 
     public function criar(Request $request) {
         if ($request->token != config("app.key")) return 401;
-        $cnpj = filter_var($str, $request->cnpj);
+        $cnpj = filter_var($request->cnpj, FILTER_SANITIZE_NUMBER_INT);
         $id_empresa = DB::table("empresas")
                         ->where("cnpj", $cnpj)
                         ->orWhere("cod_externo", $request->emp_cod)
