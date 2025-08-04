@@ -346,8 +346,8 @@ class Api2Controller extends ControllerKX {
                 "produtos" => collect($produtos)->map(function($produto) {
                     return [
                         "cod" => $produto->cod,
-                        "qtd" => $produto->qtd,
-                        "vunit" => $produto->vunit
+                        "qtd" => (int) $produto->qtd,
+                        "vunit" => (float) $produto->vunit
                     ];
                 })->values()->all()
             ];
@@ -357,8 +357,8 @@ class Api2Controller extends ControllerKX {
     public function gravar_solicitacao(Request $request) {
         if ($request->token != config("app.key")) return 401;
         foreach($request->solicitacoes as $req_solicitacao) {
-            $solicitacao = Solicitacoes::find($req_solicitacao->id);
-            $solicitacao->id_externo = $req_solicitacao->recntf;
+            $solicitacao = Solicitacoes::find($req_solicitacao["id"]);
+            $solicitacao->id_externo = $req_solicitacao["recntf"];
             $solicitacao->save();
             $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
         }
@@ -466,8 +466,8 @@ class Api2Controller extends ControllerKX {
                         "id" => $retirada->id,
                         "data" => $retirada->data,
                         "cod_itm" => $retirada->cod_itm,
-                        "qtd" => intval($retirada->qtd),
-                        "vunit" => floatval($retirada->vunit),
+                        "qtd" => (int) $retirada->qtd,
+                        "vunit" => (float) $retirada->vunit,
                         "hora" => $retirada->hora
                     ];
                 })->values()->all()
