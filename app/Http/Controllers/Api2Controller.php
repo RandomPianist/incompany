@@ -341,6 +341,7 @@ class Api2Controller extends ControllerKX {
                 "id" => $produtos[0]->id,
                 "cft" => $produtos[0]->cft,
                 "data" => $produtos[0]->data,
+                "status" => $produtos[0]->status,
                 "autor" => $produtos[0]->autor,
                 "produtos" => collect($produtos)->map(function($produto) {
                     return [
