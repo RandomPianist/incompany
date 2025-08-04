@@ -289,7 +289,7 @@
             });
             resp = $.parseJSON(resp);
             for (let i = 0; i < resp.length; i++) {
-                let qtd = parseInt(qtd);
+                let qtd = parseInt(resp[i].qtd);
                 let pai = document.getElementById("produto-" + resp[i].id_produto);
                 pai.querySelector(".qtd").value = qtd;
                 pai.querySelector(".solicitado").innerHTML = qtd;
