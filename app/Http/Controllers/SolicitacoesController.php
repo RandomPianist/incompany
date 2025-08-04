@@ -183,6 +183,9 @@ class SolicitacoesController extends ControllerKX {
             $sp->save();
             $this->log_inserir("C", "solicitacoes_produtos", $solicitacao->id);
         }
+        $where = "id_comodato = ".$request->id_comodato;
+        DB::statement("UPDATE previas SET confirmado = 1 WHERE ".$where);
+        $this->log_inserir_lote("E", "WEB", "previas", $where);
         return view("sucesso");
     }
 

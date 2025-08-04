@@ -225,6 +225,20 @@ CREATE TABLE solicitacoes_produtos (
     FOREIGN KEY (id_solicitacao) REFERENCES solicitacoes(id)
 );
 
+CREATE TABLE previas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_comodato INT,
+    id_produto INT,
+    id_pessoa INT,
+    qtd NUMERIC(10,5),
+    confirmado TINYINT DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_comodato) REFERENCES comodatos(id),
+    FOREIGN KEY (id_produto) REFERENCES produtos(id),
+    FOREIGN KEY (id_pessoa) REFERENCES pessoas(id)
+);
+
 CREATE TABLE log (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	id_pessoa INT,
@@ -244,6 +258,7 @@ CREATE TABLE log (
 	FOREIGN KEY (fk) REFERENCES estoque(id),
 	FOREIGN KEY (fk) REFERENCES maquinas_produtos(id),
 	FOREIGN KEY (fk) REFERENCES pessoas(id),
+    FOREIGN KEY (fk) REFERENCES previas(id),
 	FOREIGN KEY (fk) REFERENCES produtos(id),
 	FOREIGN KEY (fk) REFERENCES retiradas(id),
 	FOREIGN KEY (fk) REFERENCES setores(id),

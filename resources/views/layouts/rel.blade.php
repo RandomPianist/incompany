@@ -59,10 +59,7 @@
                 });
                 if (location.href.indexOf("solicitacoes") > -1) {
                     document.getElementById("btn-print").classList.add("d-none");
-                    $.get(URL + "/solicitacoes/meus_comodatos?id_maquina=" + document.getElementById("id_maquina").value, function(data) {
-                        if (typeof data == "string") data = $.parseJSON(data);
-                        document.getElementById("id_comodato").value = data[0];
-                    });
+                    carregar();
                 } else document.getElementById("menu").classList.add("d-none");
             }
         </script>

@@ -28,7 +28,7 @@
         </div>
     </div>
     <div class = "mt-2 mb-3 linha"></div>
-    <form action = "{{ config('app.root_url') }}/solicitacoes/criar" method = "POST">
+    <form action = "{{ config('app.root_url') }}/solicitacoes/criar" method = "POST" class = "d-none">
         @csrf
         @foreach ($resultado AS $item)
             <input type = "hidden" name = "id_comodato" id = "id_comodato" />
@@ -107,7 +107,7 @@
                                     ></i>
                                     <span class = "solicitado">{{ $produto["sugeridos"] }}</span>
                                     <i class = "my-icon fal fa-plus" onclick = "calcular(this, 1)"></i>
-                                    <input type = "hidden" name = "id_produto[]" value = "{{ $produto['id'] }}" />
+                                    <input type = "hidden" class = "produto" name = "id_produto[]" value = "{{ $produto['id'] }}" />
                                     <input type = "hidden" class = "qtd" name = "qtd[]" value = "{{ $produto['sugeridos'] }}" />
                                 </td>
                             </tr>
@@ -125,6 +125,10 @@
                 linha.querySelector(".solicitado").innerHTML = qtd;
                 linha.querySelector(".qtd").value = qtd;
             });
+            $.post(URL + "/previas/excluir", {
+                _token : $("meta[name='csrf-token']").attr("content"),
+                id_comodato : document.getElementById("id_comodato").value
+            });
         }
 
         function calcular(el, val) {
@@ -134,6 +138,12 @@
             else estilo.removeProperty("visibility");
             el.parentElement.querySelector(".qtd").value = val;
             el.parentElement.querySelector(".solicitado").innerHTML = val;
+            $.post(URL + "/previas/salvar", {
+                _token : $("meta[name='csrf-token']").attr("content"),
+                id_comodato : document.getElementById("id_comodato").value,
+                id_produto : el.parentElement.querySelector(".produto").value,
+                qtd : val
+            });
         }
 
         function detalhar(_tipo, _id_produto) {
@@ -258,6 +268,25 @@
                     }
                 } else document.querySelector("form").submit();
             })
+        }
+        
+        async function carregar() {
+            let data = $.get(URL + "/solicitacoes/meus_comodatos?id_maquina=" + document.getElementById("id_maquina").value);
+            if (typeof data == "string") data = $.parseJSON(data);
+            document.getElementById("id_comodato").value = data[0];
+            let lista = Array.from(document.querySelectorAll("tbody .report-row"));
+            for (let i = 0; i < lista.length; i++) {
+                let resp = await $.get(URL + "/previas/preencher", {
+                    id_comodato : data[0],
+                    id_produto : lista[i].querySelector(".produto").value
+                });
+                if (typeof data == "string") resp = $.parseJSON(resp);
+                if (parseInt(resp.existe)) {
+                    lista[i].querySelector(".qtd").value = resp.qtd;
+                    lista[i].querySelector(".solicitado").innerHTML = resp.qtd;
+                }
+            }
+            document.querySelector("form").classList.remove("d-none");
         }
     </script>
 @endsection

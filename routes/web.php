@@ -11,6 +11,7 @@ use App\Http\Controllers\AtribuicoesController;
 use App\Http\Controllers\RetiradasController;
 use App\Http\Controllers\MaquinasController;
 use App\Http\Controllers\RelatoriosController;
+use App\Http\Controllers\PreviasController;
 use App\Http\Controllers\SolicitacoesController;
 use Illuminate\Support\Facades\Route;
 
@@ -56,6 +57,12 @@ Route::middleware("auth")->group(function () {
         Route::get ("/consultar/{id_comodato}", [SolicitacoesController::class, "consultar"]);
         Route::post("/criar",                   [SolicitacoesController::class, "criar"]);
         Route::post("/cancelar",                [SolicitacoesController::class, "cancelar"]);
+    });
+
+    Route::group(["prefix" => "previas"], function() {
+        Route::get ("/preencher", [PreviasController::class, "preencher"]);
+        Route::post("/salvar",    [PreviasController::class, "salvar"]);
+        Route::post("/excluir",   [PreviasController::class, "excluir"]);
     });
 
     Route::group(["prefix" => "setores"], function() {
