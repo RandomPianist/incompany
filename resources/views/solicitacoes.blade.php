@@ -284,6 +284,9 @@
                 if (parseInt(resp.existe)) {
                     lista[i].querySelector(".qtd").value = resp.qtd;
                     lista[i].querySelector(".solicitado").innerHTML = resp.qtd;
+                    let estilo = linha[i].querySelector(".fa-minus").style;
+                    if (parseInt(resp.qtd) == 0) estilo.visibility = "hidden";
+                    else estilo.removeProperty("visibility");
                 }
             }
             document.querySelector("form").classList.remove("d-none");
