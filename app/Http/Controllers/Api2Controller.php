@@ -334,7 +334,7 @@ class Api2Controller extends ControllerKX {
         if ($request->token != config("app.key")) return 401;
         foreach($request->solicitacoes as $req_solicitacao) {
             $solicitacao = Solicitacoes::find($req_solicitacao->id);
-            $solicitacao->id_externo = $req_solicitacao->recnum;
+            $solicitacao->id_externo = $req_solicitacao->recntf;
             $solicitacao->save();
             $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
         }
