@@ -240,7 +240,7 @@
             Array.from(document.getElementsByClassName("qtd")).forEach((el) => {
                 total += parseInt(el.value);
             });
-            if (total = 0) {
+            if (total == 0) {
                 Swal.fire({
                     icon : "warning",
                     title : "Atenção",
