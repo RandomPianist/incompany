@@ -171,17 +171,19 @@ class SolicitacoesController extends ControllerKX {
         $solicitacao->save();
         $this->log_inserir("C", "solicitacoes", $solicitacao->id);
         for ($i = 0; $i < sizeof($request->id_produto); $i++) {
-            $sp = new SolicitacoesProdutos;
-            $sp->id_produto_orig = $request->id_produto[$i];
-            $sp->qtd_orig = $request->qtd[$i];
-            $sp->origem = "WEB";
-            $sp->preco_orig = DB::table("maquinas_produtos")
-                                ->where("id_maquina", Comodatos::find($solicitacao->id_comodato)->id_maquina)
-                                ->where("id_produto", $sp->id_produto_orig)
-                                ->value("preco");
-            $sp->id_solicitacao = $solicitacao->id;
-            $sp->save();
-            $this->log_inserir("C", "solicitacoes_produtos", $solicitacao->id);
+            if (intval($request->qtd[$i])) {
+                $sp = new SolicitacoesProdutos;
+                $sp->id_produto_orig = $request->id_produto[$i];
+                $sp->qtd_orig = $request->qtd[$i];
+                $sp->origem = "WEB";
+                $sp->preco_orig = DB::table("maquinas_produtos")
+                                    ->where("id_maquina", Comodatos::find($solicitacao->id_comodato)->id_maquina)
+                                    ->where("id_produto", $sp->id_produto_orig)
+                                    ->value("preco");
+                $sp->id_solicitacao = $solicitacao->id;
+                $sp->save();
+                $this->log_inserir("C", "solicitacoes_produtos", $solicitacao->id);
+            }
         }
         $where = "id_comodato = ".$request->id_comodato;
         DB::statement("UPDATE previas SET confirmado = 1 WHERE ".$where);
