@@ -445,8 +445,9 @@ class Api2Controller extends ControllerKX {
                             ->join("produtos", "produtos.id", "sp.id_produto_orig")
                             ->where("sp.id_solicitacao", $solicitacao->id)
                             ->where("produtos.cod_externo", $req_produto->cod)
-                            ->get()[0]->id;
-                if ($id_sp === null) $id_sp = 0;
+                            ->get();
+                if (sizeof($id_sp)) $id_sp = $id_sp[0]->id;
+                else $id_sp = 0;
                 $sp = SolicitacoesProdutos::firstOrNew(["id" => $id_sp]);
                 $sp->id_produto = DB::table("produtos")
                                         ->where("cod_externo", $req_produto->cod)
