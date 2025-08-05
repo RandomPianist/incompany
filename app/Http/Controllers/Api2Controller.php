@@ -140,7 +140,7 @@ class Api2Controller extends ControllerKX {
         $maquina->save();
         $this->log_inserir("C", "valores", $maquina->id, "ERP", $request->usu);
         $this->criar_mp("produtos.id", $maquina->id, true, $request->usu);
-        $this->criar_comodato_main($maquina->id, $empresa->id, $request->ini, $request->fim);
+        $this->criar_comodato_main($maquina->id, $empresa->id, str_replace("-", "/", $request->ini), str_replace("-", "/", $request->fim));
         return $empresa->id;
     }
 
@@ -153,7 +153,7 @@ class Api2Controller extends ControllerKX {
                             DB::raw("IFNULL(produtos.preco, 0) AS preco"),
                             DB::raw("IFNULL(produtos.ca, '') AS ca"),
                             DB::raw("IFNULL(produtos.validade, 0) AS validade"),
-                            DB::raw("DATE_FORMAT(produtos.validade_ca, '%d/%m/%Y') AS validade_ca"),
+                            DB::raw("DATE_FORMAT(produtos.validade_ca, '%d-%m-%Y') AS validade_ca"),
                             DB::raw("IFNULL(produtos.referencia, '') AS refer"),
                             DB::raw("
                                 CASE
@@ -184,7 +184,7 @@ class Api2Controller extends ControllerKX {
             $produto = Produtos::find($req_produto->id);
             $continua = false;
             $inserir_log = true;
-            $validade_ca = Carbon::createFromFormat('d/m/Y', $req_produto->validade_ca)->format('Y-m-d');
+            $validade_ca = Carbon::createFromFormat('d-m-Y', $req_produto->validade_ca)->format('Y-m-d');
             if ($produto !== null) {
                 if ($this->comparar_texto($req_produto->cod, $produto->cod_externo)) $continua = true;
                 if ($this->comparar_texto($req_produto->descr, $produto->descr)) $continua = true;
@@ -315,7 +315,7 @@ class Api2Controller extends ControllerKX {
                     "solicitacoes.status",
                     "solicitacoes.usuario_web AS autor",
                     "empresas.cod_externo AS cft",
-                    DB::raw("DATE_FORMAT(solicitacoes.data, '%d/%m/%Y') AS data"),
+                    DB::raw("DATE_FORMAT(solicitacoes.data, '%d-%m-%Y') AS data"),
                     "produtos.cod_externo AS cod",
                     "mp.preco AS vunit",
                     "sp.qtd_orig AS qtd"
@@ -367,7 +367,7 @@ class Api2Controller extends ControllerKX {
     public function aceitar_solicitacao(Request $request) {
         if ($request->token != config("app.key")) return 401;
         $solicitacao = Solicitacoes::find($request->id);
-        $solicitacao->data = Carbon::createFromFormat('d/m/Y', $request->prazo)->format('Y-m-d');
+        $solicitacao->data = Carbon::createFromFormat('d-m-Y', $request->prazo)->format('Y-m-d');
         $solicitacao->status = "E";
         $solicitacao->usuario_erp = $request->usu;
         $solicitacao->save();
@@ -395,7 +395,7 @@ class Api2Controller extends ControllerKX {
             $solicitacao->status = "F";
             $solicitacao->avisou = 0;
             $solicitacao->usuario_erp2 = $request->usu;
-            $solicitacao->data = Carbon::createFromFormat('d/m/Y', $request->data)->format('Y-m-d');
+            $solicitacao->data = Carbon::createFromFormat('d-m-Y', $request->data)->format('Y-m-d');
             $solicitacao->save();
             $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
             $maquina = Comodatos::find($solicitacao->id_comodato)->id_maquina;
@@ -446,7 +446,7 @@ class Api2Controller extends ControllerKX {
                 ->select(
                     "retiradas.id",
                     "empresas.cod_externo AS cft",
-                    DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data"),
+                    DB::raw("DATE_FORMAT(retiradas.data, '%d-%m-%Y') AS data"),
                     "produtos.cod_externo AS cod_itm",
                     "retiradas.preco AS vunit",
                     "retiradas.qtd",
