@@ -514,7 +514,7 @@ class Api2Controller extends ControllerKX {
         foreach($request->retiradas as $req_retirada_arr) {
             $req_retirada = (object) $req_retirada_arr;
             $retirada = Retiradas::find($req_retirada->id);
-            $retirada->num_ped = $req_retirada->cod_ods;
+            $retirada->numero_ped = $req_retirada->cod_ods;
             $retirada->save();
             $this->log_inserir("E", "retiradas", $retirada->id, "ERP", $request->usu);
         }
