@@ -140,6 +140,16 @@ class SolicitacoesController extends ControllerKX {
             $solicitacao->avisou = 1;
             $solicitacao->save();
             $this->log_inserir("E", "solicitacoes", $solicitacao->id);
+            $possui_inconsistencias = "";
+            $consulta = DB::table("solicitacoes_produtos")
+                            ->whereNotNull("obs")
+                            ->where("id_solicitacao", $solicitacao->id)
+                            ->pluck("obs");
+            foreach ($consulta as $obs) {
+                $aux = explode("|", $obs);
+                if (($aux[1] == "O produto não existe no ERP TargetX" && $solicitacao->status == "A") || $aux[1] != "O produto não existe no ERP TargetX") $possui_inconsistencias = "A";
+            }
+            $resultado = array();
             return json_encode(array(
                 "id" => $solicitacao->id,
                 "criacao" => DB::table("log")
@@ -151,10 +161,7 @@ class SolicitacoesController extends ControllerKX {
                 "usuario_erp" => $solicitacao->status != "F" ? $solicitacao->usuario_erp : $solicitacao->usuario_erp2,
                 "status" => $solicitacao->status,
                 "data" => Carbon::parse($solicitacao->data)->format("d/m/Y"),
-                "possui_inconsistencias" => DB::table("solicitacoes_produtos")
-                                                ->whereNotNull("obs")
-                                                ->where("id_solicitacao", $solicitacao->id)
-                                                ->value("obs") !== null ? "a" : ""
+                "possui_inconsistencias" => $possui_inconsistencias
             ));
         }
         return 200;
