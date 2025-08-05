@@ -483,7 +483,7 @@ class Api2Controller extends ControllerKX {
                     "produtos.cod_externo AS cod_itm",
                     "retiradas.preco AS vunit",
                     "retiradas.qtd",
-                    DB:raw("IFNULL(retiradas.hora, '') AS hora")
+                    DB::raw("IFNULL(retiradas.hora, '') AS hora")
                 )
                 ->join("empresas", "empresas.id", "retiradas.id_empresa")
                 ->join("produtos", "produtos.id", "retiradas.id_produto")
