@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\Pessoas;
 use App\Models\Empresas;
 use App\Models\Valores;
+use App\Models\Solicitacoes;
 use App\Models\Produtos;
 
 class RelatoriosController extends ControllerKX {
@@ -627,13 +628,14 @@ class RelatoriosController extends ControllerKX {
                         ->whereNotNull("obs")
                         ->where("id_solicitacao", $id)
                         ->pluck("obs");
+        $solicitacao = Solicitacoes::find($id);
         $resultado = array();
         foreach ($consulta as $obs) {
             $aux = explode("|", $obs);
             $linha = new \stdClass;
             $linha->inconsistencia = $aux[0];
             $linha->justificativa = $aux[1];
-            array_push($resultado, $linha);
+            if (($aux[1] == "O produto não existe no ERP TargetX" && $solicitacao->status == "A") || $aux[1] != "O produto não existe no ERP TargetX") array_push($resultado, $linha);
         }
         return view("reports.solicitacao", compact("resultado"));
     }
