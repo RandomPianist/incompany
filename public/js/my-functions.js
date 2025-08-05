@@ -1066,7 +1066,7 @@ async function avisarSolicitacao() {
                     if (retorno.status != "A") texto += " as diferenças";
                     texto += "?";
                     let viz = await Swal.fire({
-                        icon : "sucess",
+                        icon : "success",
                         html : texto,
                         showDenyButton : true,
                         confirmButtonText : "SIM",
