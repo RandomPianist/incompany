@@ -386,7 +386,7 @@ class Api2Controller extends ControllerKX {
             if (intval($solicitacao->avisou)) {
                 $solicitacao->avisou = 0;
                 $solicitacao->save();
-                $this->log_inserir("E", "solicitacoes", $solicitacoes->id, "ERP", $request->usu);
+                $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
             }
         }
     }
