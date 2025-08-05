@@ -487,7 +487,7 @@ class Api2Controller extends ControllerKX {
                 )
                 ->join("empresas", "empresas.id", "retiradas.id_empresa")
                 ->join("produtos", "produtos.id", "retiradas.id_produto")
-                ->whereRaw("IFNULL(retiradas.num_ped, 0) = 0")
+                ->whereRaw("IFNULL(retiradas.numero_ped, 0) = 0")
                 ->where("empresas.lixeira", 0)
                 ->whereNotNull("empresas.cod_externo")
                 ->get()
