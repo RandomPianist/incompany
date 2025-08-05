@@ -624,6 +624,7 @@ class RelatoriosController extends ControllerKX {
 
     public function solicitacao($id) {
         $consulta = DB::table("solicitacoes_produtos")
+                        ->whereNotNull("obs")
                         ->where("id_solicitacao", $id)
                         ->pluck("obs");
         $resultado = array();
@@ -634,6 +635,6 @@ class RelatoriosController extends ControllerKX {
             $linha->justificativa = $aux[1];
             array_push($resultado, $linha);
         }
-        return view("solicitacao", compact("resultado"));
+        return view("reports.solicitacao", compact("resultado"));
     }
 }

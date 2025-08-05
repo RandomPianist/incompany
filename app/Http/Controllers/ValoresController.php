@@ -147,7 +147,7 @@ class ValoresController extends ControllerKX {
                                 ->whereRaw("CURDATE() < fim"),
                         "tab_comodatos", "tab_comodatos.id_maquina", "valores.id")
                         ->where("valores.id", $id)
-                        ->value("aviso");
+                        ->get()[0]->aviso;
             $vinculo = $aviso != "";
         } else {
             $vinculo = sizeof(

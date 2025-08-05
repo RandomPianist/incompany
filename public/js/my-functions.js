@@ -1042,43 +1042,50 @@ async function avisarSolicitacao() {
         retorno = await $.get(URL + "/solicitacoes/aviso/" + comodatos[i]);
         retorno = $.parseJSON(retorno);
         if (retorno !== 200) {
-            let texto = "Sua solicitação feita no dia " + retorno.criacao + " foi ";
-            switch (retorno.status) {
-                case "E":
-                    texto += "aceita";
-                    break;
-                case "F":
-                    texto += "finalizada";
-                    break;
-                case "R":
-                    texto += "recusada";
-                    break;
-            }
-            if (retorno.status != "E") texto += " no dia " + retorno.data;
-            texto += " por " + retorno.usuario_erp;
-            if (retorno.status == "E") texto += " e tem prazo para o dia " + retorno.data;
-            if (retorno.possui_inconsistencias) {
-                texto += ".<br>Deseja verificar as diferenças?";
-                let viz = await Swal.fire({
-                    icon : "sucess",
-                    html : texto,
-                    showDenyButton : true,
-                    confirmButtonText : "SIM",
-                    confirmButtonColor : "rgb(31, 41, 55)",
-                    denyButtonText : "NÃO"
-                })
-                if (viz.isConfirmed) {
-                    let link = document.createElement("a");
-                    link.href = URL + "/relatorios/solicitacao/" + retorno.id;
-                    link.target = "_blank";
-                    link.click();
+            let texto = "";
+            if (retorno.status != "A") {
+                texto = "Sua solicitação feita no dia " + retorno.criacao + " foi ";
+                switch (retorno.status) {
+                    case "E":
+                        texto += "aceita";
+                        break;
+                    case "F":
+                        texto += "finalizada";
+                        break;
+                    case "R":
+                        texto += "recusada";
+                        break;
                 }
-            } else {
-                await Swal.fire({
-                    icon: "EF".indexOf(retorno.status) > -1 ? "success" : "warning",
-                    text: texto,
-                    confirmButtonColor: "rgb(31, 41, 55)"
-                });
+                if (retorno.status != "E") texto += " no dia " + retorno.data;
+                texto += " por " + retorno.usuario_erp;
+                if (retorno.status == "E") texto += " e tem prazo para o dia " + retorno.data;
+            } else if (retorno.possui_inconsistencias) texto = "Sua solicitação feita no dia " + retorno.criacao + " teve alguns produtos marcados como inexistentes";
+            if (texto != "") {
+                if (retorno.possui_inconsistencias) {
+                    texto += ".<br>Deseja verificar";
+                    if (retorno.status != "A") texto += " as diferenças";
+                    texto += "?";
+                    let viz = await Swal.fire({
+                        icon : "sucess",
+                        html : texto,
+                        showDenyButton : true,
+                        confirmButtonText : "SIM",
+                        confirmButtonColor : "rgb(31, 41, 55)",
+                        denyButtonText : "NÃO"
+                    })
+                    if (viz.isConfirmed) {
+                        let link = document.createElement("a");
+                        link.href = URL + "/relatorios/solicitacao/" + retorno.id;
+                        link.target = "_blank";
+                        link.click();
+                    }
+                } else {
+                    await Swal.fire({
+                        icon: "EF".indexOf(retorno.status) > -1 ? "success" : "warning",
+                        text: texto,
+                        confirmButtonColor: "rgb(31, 41, 55)"
+                    });
+                }
             }
         }
     }

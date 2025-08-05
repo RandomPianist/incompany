@@ -180,7 +180,8 @@ class Api2Controller extends ControllerKX {
         $cods_cdp = array();
         $ids_itm = array();
         $cods_itm = array();
-        foreach ($produtos as $req_produto) {
+        foreach ($produtos as $req_produto_arr) {
+            $req_produto = (object) $req_produto_arr;
             $produto = Produtos::find($req_produto->id);
             $continua = false;
             $inserir_log = true;
@@ -203,7 +204,7 @@ class Api2Controller extends ControllerKX {
                 $continua = true;
             }
             if ($continua) {
-                $produto->cod_externo = $req_produto->cod_externo;
+                $produto->cod_externo = $req_produto->cod;
                 $produto->descr = $req_produto->descr;
                 $produto->ca = $req_produto->ca;
                 $produto->validade_ca = $validade_ca;
@@ -232,7 +233,7 @@ class Api2Controller extends ControllerKX {
                 array_push($ids_itm, $produto->id);
                 array_push($cods_itm, $produto->cod_externo);
             }
-            $req_categoria = $req_produto->categoria;
+            $req_categoria = (object) $req_produto->categoria;
             if (intval($req_categoria->cod)) {
                 $categoria = Valores::find($req_categoria->id);
                 $continua = false;
@@ -287,7 +288,8 @@ class Api2Controller extends ControllerKX {
 
     public function sincronizar(Request $request) {
         if ($request->token != config("app.key")) return 401;
-        $resultado = $this->sincronizar_produtos($request->maq, $request->usu, $request->produtos);
+        $produtos = (object) $produtos;
+        $resultado = $this->sincronizar_produtos($request->maq, $request->usu, $produtos);
         return json_encode(array(
             "ids_cdp" => join("|", $resultado->ids_cdp),
             "cods_cdp" => join("|", $resultado->cods_cdp),
@@ -364,11 +366,37 @@ class Api2Controller extends ControllerKX {
         }
     }
 
+    public function gravar_inexistentes(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        foreach($request->produtos as $req_sp) {
+            $consulta = DB::table("solicitacoes_produtos AS sp")
+                ->select(
+                    "sp.id",
+                    "produtos.descr"
+                )
+                ->join("produtos", "produtos.id", "sp.id_produto_orig")
+                ->where("produtos.cod_externo", $req_sp["cod"])
+                ->where("sp.id_solicitacao", $req_sp["id_solicitacao"])
+                ->get();
+            $sp = SolicitacoesProdutos::find($consulta[0]->id);
+            $sp->obs = "Item removido: ".$req_sp["cod"]." - ".$consulta[0]->descr."|O produto não existe no ERP TargetX";
+            $sp->save();
+            $this->log_inserir("E", "solicitacoes_produtos", $sp->id, "ERP", $request->usu);
+            $solicitacao = Solicitacoes::find($req_sp["id_solicitacao"]);
+            if (intval($solicitacao->avisou)) {
+                $solicitacao->avisou = 0;
+                $solicitacao->save();
+                $this->log_inserir("E", "solicitacoes", $solicitacoes->id, "ERP", $request->usu);
+            }
+        }
+    }
+
     public function aceitar_solicitacao(Request $request) {
         if ($request->token != config("app.key")) return 401;
         $solicitacao = Solicitacoes::find($request->id);
         $solicitacao->data = Carbon::createFromFormat('d-m-Y', $request->prazo)->format('Y-m-d');
         $solicitacao->status = "E";
+        $solicitacao->avisou = 0;
         $solicitacao->usuario_erp = $request->usu;
         $solicitacao->save();
         $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
@@ -379,6 +407,7 @@ class Api2Controller extends ControllerKX {
         $solicitacao = Solicitacoes::find($request->id);
         $solicitacao->data = date("Y-m-d");
         $solicitacao->status = "R";
+        $solicitacao->avisou = 0;
         $solicitacao->usuario_erp = $request->usu;
         $solicitacao->save();
         $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
@@ -390,12 +419,13 @@ class Api2Controller extends ControllerKX {
         $cods_cdp = array();
         $ids_itm = array();
         $cods_itm = array();
-        foreach ($request->solicitacoes as $req_solicitacao) {
+        foreach ($request->solicitacoes as $req_solicitacao_arr) {
+            $req_solicitacao = (object) $req_solicitacao_arr;
             $solicitacao = Solicitacoes::find($req_solicitacao->id);
             $solicitacao->status = "F";
             $solicitacao->avisou = 0;
             $solicitacao->usuario_erp2 = $request->usu;
-            $solicitacao->data = Carbon::createFromFormat('d-m-Y', $request->data)->format('Y-m-d');
+            $solicitacao->data = Carbon::createFromFormat('d-m-Y', $req_solicitacao->data)->format('Y-m-d');
             $solicitacao->save();
             $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
             $maquina = Comodatos::find($solicitacao->id_comodato)->id_maquina;
@@ -408,12 +438,14 @@ class Api2Controller extends ControllerKX {
             foreach ($cods_cdp_tmp as $cod_cdp) array_push($cods_cdp, $cod_cdp);
             foreach ($ids_itm_tmp as $id_itm) array_push($ids_itm, $id_itm);
             foreach ($cods_itm_tmp as $cod_itm) array_push($cods_itm, $cod_itm);
-            foreach ($req_solicitacao->produtos as $req_produto) {
+            foreach ($req_solicitacao->produtos as $req_produto_arr) {
+                $req_produto = (object) $req_produto_arr;
                 $id_sp = DB::table("solicitacoes_produtos AS sp")
+                            ->select("sp.id")
                             ->join("produtos", "produtos.id", "sp.id_produto_orig")
                             ->where("sp.id_solicitacao", $solicitacao->id)
                             ->where("produtos.cod_externo", $req_produto->cod)
-                            ->value("sp.id");
+                            ->get()[0]->id;
                 if ($id_sp === null) $id_sp = 0;
                 $sp = SolicitacoesProdutos::firstOrNew(["id" => $id_sp]);
                 $sp->id_produto = DB::table("produtos")
@@ -477,7 +509,8 @@ class Api2Controller extends ControllerKX {
 
     public function salvar_retirada(Request $request) {
         if ($request->token != config("app.key")) return 401;
-        foreach($request->retiradas as $req_retirada) {
+        foreach($request->retiradas as $req_retirada_arr) {
+            $req_retirada = (object) $req_retirada_arr;
             $retirada = Retiradas::find($req_retirada->id);
             $retirada->num_ped = $req_retirada->cod_ods;
             $retirada->save();

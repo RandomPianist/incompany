@@ -191,7 +191,7 @@ class ControllerKX extends Controller {
                     "preco"
                 )
         ;
-        $consulta_produto = $consulta->where("produtos.id", $json["id_produto"]);
+        $consulta_produto = $consulta->where("produtos.id", $json["id_produto"])->get();
 
         $pessoa = Pessoas::find($json["id_pessoa"]);
         $linha = new Retiradas;
@@ -208,8 +208,8 @@ class ControllerKX extends Controller {
         $linha->data = $json["data"];
         $linha->id_empresa = $pessoa->id_empresa;
         $linha->id_setor = $pessoa->id_setor;
-        $linha->preco = $consulta_produto->value("preco");
-        $linha->ca = $consulta_produto->value("ca");
+        $linha->preco = $consulta_produto->preco;
+        $linha->ca = $consulta_produto->ca;
         $linha->save();
         $reg_log = $this->log_inserir("C", "retiradas", $linha->id, $api ? "APP" : "WEB");
         if ($api) {

@@ -134,7 +134,7 @@ class SolicitacoesController extends ControllerKX {
         if ($solicitacao === null) return 200;
         if (
             !intval($solicitacao->avisou) &&
-            in_array($solicitacao->status, ["E", "R", "F"]) &&
+            $solicitacao->status <> "C" &&
             Auth::user()->id_pessoa == $this->obter_autor($solicitacao->id)
         ) {
             $solicitacao->avisou = 1;
@@ -144,19 +144,17 @@ class SolicitacoesController extends ControllerKX {
                 "id" => $solicitacao->id,
                 "criacao" => DB::table("log")
                                 ->selectRaw("DATE_FORMAT(log.data, '%d/%m/%Y') AS data")
-                                ->where("fk", $solicitacao)
+                                ->where("fk", $solicitacao->id)
                                 ->where("tabela", "solicitacoes")
                                 ->where("acao", "C")
                                 ->value("data"),
                 "usuario_erp" => $solicitacao->status != "F" ? $solicitacao->usuario_erp : $solicitacao->usuario_erp2,
                 "status" => $solicitacao->status,
                 "data" => Carbon::parse($solicitacao->data)->format("d/m/Y"),
-                "possui_inconsistencias" => $solicitacao->status == "F" ? 
-                                                DB::table("solicitacoes_produtos")
-                                                    ->whereNotNull("obs")
-                                                    ->where("id_solicitacao", $solicitacao->id)
-                                                    ->value("obs") !== null ? "a" : ""
-                                            : ""
+                "possui_inconsistencias" => DB::table("solicitacoes_produtos")
+                                                ->whereNotNull("obs")
+                                                ->where("id_solicitacao", $solicitacao->id)
+                                                ->value("obs") !== null ? "a" : ""
             ));
         }
         return 200;
@@ -165,6 +163,7 @@ class SolicitacoesController extends ControllerKX {
     public function criar(Request $request) {
         $solicitacao = new Solicitacoes;
         $solicitacao->status = "A";
+        $solicitacao->avisou = 1;
         $solicitacao->data = date("Y-m-d");
         $solicitacao->id_comodato = $request->id_comodato;
         $solicitacao->usuario_web = Pessoas::find(Auth::user()->id_pessoa)->nome;

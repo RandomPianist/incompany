@@ -43,11 +43,12 @@ Route::group(["prefix" => "erp"], function() {
             Route::post("/criar",     [Api2Controller::class, "criar"]);
         });
         Route::group(["prefix" => "solicitacoes"], function() {
-            Route::post("/",        [Api2Controller::class, "enviar_solicitacoes"]);
-            Route::post("/gravar",  [Api2Controller::class, "gravar_solicitacao"]);
-            Route::post("/aceitar", [Api2Controller::class, "aceitar_solicitacao"]);
-            Route::post("/recusar", [Api2Controller::class, "recusar_solicitacao"]);
-            Route::post("/enviar",  [Api2Controller::class, "receber_solicitacao"]);
+            Route::post("/",                    [Api2Controller::class, "enviar_solicitacoes"]);
+            Route::post("/gravar",              [Api2Controller::class, "gravar_solicitacao"]);
+            Route::post("/gravar-inexistentes", [Api2Controller::class, "gravar_inexistentes"]);
+            Route::post("/aceitar",             [Api2Controller::class, "aceitar_solicitacao"]);
+            Route::post("/recusar",             [Api2Controller::class, "recusar_solicitacao"]);
+            Route::post("/enviar",              [Api2Controller::class, "receber_solicitacao"]);
         });
         Route::group(["prefix" => "retiradas"], function() {
             Route::post("/",       [Api2Controller::class, "obter_retiradas"]);
