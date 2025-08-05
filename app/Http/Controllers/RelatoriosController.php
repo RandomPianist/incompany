@@ -435,7 +435,7 @@ class RelatoriosController extends ControllerKX {
                 })
                 ->join("setores", "setores.id", "retiradas.id_setor")
                 ->join("produtos", "produtos.id", "retiradas.id_produto")
-                ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
+                ->leftjoin("empresas", "empresas.id", "retiradas.id_empresa")
                 ->leftjoin("comodatos", "comodatos.id", "retiradas.id_comodato")
                 ->leftjoin("maquinas_produtos AS mp", function($join) {
                     $join->on("mp.id_produto", "produtos.id")
