@@ -142,7 +142,7 @@ class SolicitacoesController extends ControllerKX {
             $this->log_inserir("E", "solicitacoes", $solicitacao->id);
             $possui_inconsistencias = "";
             $consulta = DB::table("solicitacoes_produtos")
-                            ->whereNotNull("obs")
+                            ->whereRaw("IFNULL(obs, '') <> ''")
                             ->where("id_solicitacao", $solicitacao->id)
                             ->pluck("obs");
             foreach ($consulta as $obs) {

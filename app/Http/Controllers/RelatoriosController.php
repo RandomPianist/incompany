@@ -625,7 +625,7 @@ class RelatoriosController extends ControllerKX {
 
     public function solicitacao($id) {
         $consulta = DB::table("solicitacoes_produtos")
-                        ->whereNotNull("obs")
+                        ->whereRaw("IFNULL(obs, '') <> ''")
                         ->where("id_solicitacao", $id)
                         ->pluck("obs");
         $solicitacao = Solicitacoes::find($id);
