@@ -490,6 +490,7 @@ class Api2Controller extends ControllerKX {
                 ->whereRaw("IFNULL(retiradas.numero_ped, 0) = 0")
                 ->where("empresas.lixeira", 0)
                 ->whereNotNull("empresas.cod_externo")
+                ->limit(400)
                 ->get()
         )->groupBy("cft")->map(function($retiradas) {
             return [
