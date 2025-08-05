@@ -453,7 +453,7 @@ class Api2Controller extends ControllerKX {
                                         ->where("cod_externo", $req_produto->cod)
                                         ->value("id");
                 $sp->id_solicitacao = $solicitacao->id;
-                $sp->obs = $req_produto->obs ? $req_produto->obs."|".$req->produto->obs2 : "";
+                $sp->obs = $req_produto->obs ? $req_produto->obs."|".$req_produto->obs2 : "";
                 $sp->qtd = $req_produto->qtd;
                 $sp->preco = DB::table("maquinas_produtos")
                                 ->where("id_maquina", $maquina)
