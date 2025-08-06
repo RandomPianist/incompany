@@ -12,14 +12,6 @@ use App\Models\Solicitacoes;
 use App\Models\SolicitacoesProdutos;
 
 class SolicitacoesController extends ControllerKX {
-    private function obter_autor($solicitacao) {
-        return DB::table("log")
-                ->where("fk", $solicitacao)
-                ->where("tabela", "solicitacoes")
-                ->where("acao", "C")
-                ->value("id_pessoa");
-    }
-
     private function consultar_main($id_comodato) {
         $resultado = new \stdClass;
         $solicitacao = Solicitacoes::find(
@@ -36,7 +28,7 @@ class SolicitacoesController extends ControllerKX {
             $resultado->continuar = 1;
             return $resultado;
         }
-        $id_autor = $this->obter_autor($solicitacao->id);
+        $id_autor = $this->obter_autor_da_solicitacao($solicitacao->id);
         $resultado->continuar = 0;
         $resultado->status = $solicitacao->status;
         $resultado->data = DB::table("solicitacoes")
@@ -139,7 +131,7 @@ class SolicitacoesController extends ControllerKX {
         if (
             !intval($solicitacao->avisou) &&
             $solicitacao->status <> "C" &&
-            Auth::user()->id_pessoa == $this->obter_autor($solicitacao->id)
+            Auth::user()->id_pessoa == $this->obter_autor_da_solicitacao($solicitacao->id)
         ) {
             $solicitacao->avisou = 1;
             $solicitacao->save();
@@ -204,7 +196,7 @@ class SolicitacoesController extends ControllerKX {
 
     public function cancelar(Request $request) {
         $solicitacao = Solicitacoes::find($request->id);
-        if ($solicitacao->status != "A" || $this->obter_autor($solicitacao->id) != Auth::user()->id_pessoa) return 401;
+        if ($solicitacao->status != "A" || $this->obter_autor_da_solicitacao($solicitacao->id) != Auth::user()->id_pessoa) return 401;
         $solicitacao->status = "C";
         $solicitacao->save();
         $this->log_inserir("D", "solicitacoes", $solicitacao->id);

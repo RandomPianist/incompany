@@ -561,4 +561,12 @@ class ControllerKX extends Controller {
         $tela->mostrar_giro = $tipo == "G";
         return $tela;
     }
+
+    protected function obter_autor_da_solicitacao($solicitacao) {
+        return DB::table("log")
+                ->where("fk", $solicitacao)
+                ->where("tabela", "solicitacoes")
+                ->where("acao", "C")
+                ->value("id_pessoa");
+    }
 }

@@ -187,11 +187,6 @@ class RelatoriosController extends ControllerKX {
         return $retorno;
     }
 
-    public function bilateral(Request $request) {
-        if ($request->rel_grupo == "empresas-por-maquina") return $this->empresas_por_maquina($request);
-        return $this->maquinas_por_empresa($request);
-    }
-
     public function bilateral_consultar(Request $request) {
         $erro = "";
         if ($request->prioridade == "empresas") {
@@ -204,7 +199,14 @@ class RelatoriosController extends ControllerKX {
         return $erro;
     }
 
+    public function bilateral(Request $request) {
+        if ($this->bilateral_consultar($request)) return 401;
+        if ($request->rel_grupo == "empresas-por-maquina") return $this->empresas_por_maquina($request);
+        return $this->maquinas_por_empresa($request);
+    }
+
     public function comodatos() {
+        if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) return 401;
         $resultado = $this->comum("
             valores.descr AS maquina,
             empresas.nome_fantasia AS empresa,
@@ -214,7 +216,22 @@ class RelatoriosController extends ControllerKX {
         return sizeof($resultado) ? view("reports/comodatos", compact("resultado")) : view("nada");
     }
 
+    public function extrato_consultar(Request $request) {
+        if (isset($request->maquina)) {
+            if ($this->consultar_maquina($request)) return "maquina";
+        }
+        if (((trim($request->produto) && !sizeof(
+            DB::table("produtos")
+                ->where("id", $request->id_produto)
+                ->where("descr", $request->produto)
+                ->where("lixeira", 0)
+                ->get()
+        )) || (trim($request->id_produto) && !trim($request->produto)))) return "produto";
+        return "";
+    }
+
     public function sugestao(Request $request) {
+        if ($this->extrato_consultar($request)) return 401;
         $tela = $this->sugestao_main($request);
         $resultado = $tela->resultado;
         $criterios = $tela->criterios;
@@ -224,6 +241,7 @@ class RelatoriosController extends ControllerKX {
     }
 
     public function extrato(Request $request) {
+        if ($this->extrato_consultar($request)) return 401;
         $criterios = array();
         $lm = $request->lm == "S";
         $resultado = collect(
@@ -355,21 +373,8 @@ class RelatoriosController extends ControllerKX {
         return view("nada");
     }
 
-    public function extrato_consultar(Request $request) {
-        if (isset($request->maquina)) {
-            if ($this->consultar_maquina($request)) return "maquina";
-        }
-        if (((trim($request->produto) && !sizeof(
-            DB::table("produtos")
-                ->where("id", $request->id_produto)
-                ->where("descr", $request->produto)
-                ->where("lixeira", 0)
-                ->get()
-        )) || (trim($request->id_produto) && !trim($request->produto)))) return "produto";
-        return "";
-    }
-
     public function controle(Request $request) {
+        if ($this->consultar_pessoa($request, true)) return 401;
         $principal = $this->controleMain($request);
         $resultado = $principal->resultado;
         $criterios = $principal->criterios;
@@ -405,7 +410,21 @@ class RelatoriosController extends ControllerKX {
         );
     }
 
+    public function retiradas_consultar(Request $request) {
+        if ($this->consultar_empresa($request)) return "empresa";
+        if ($this->consultar_pessoa($request, false)) return "pessoa";
+        if ((!sizeof(
+            DB::table("setores")
+                ->where("id", $request->id_setor)
+                ->where("descr", $request->setor)
+                ->where("lixeira", 0)
+                ->get()
+        ) && trim($request->setor)) || (!trim($request->setor) && trim($request->id_setor))) return "setor";
+        return "";
+    }
+
     public function retiradas(Request $request) {
+        if ($this->retiradas_consultar($request)) return 401;
         $criterios = array();
         $qtd_total = 0;
         $val_total = 0;
@@ -523,19 +542,6 @@ class RelatoriosController extends ControllerKX {
         return sizeof($resultado) ? view("reports/retiradas".$request->tipo, compact("resultado", "criterios", "quebra", "val_total", "qtd_total", "titulo")) : view("nada");
     }
 
-    public function retiradas_consultar(Request $request) {
-        if ($this->consultar_empresa($request)) return "empresa";
-        if ($this->consultar_pessoa($request, false)) return "pessoa";
-        if ((!sizeof(
-            DB::table("setores")
-                ->where("id", $request->id_setor)
-                ->where("descr", $request->setor)
-                ->where("lixeira", 0)
-                ->get()
-        ) && trim($request->setor)) || (!trim($request->setor) && trim($request->id_setor))) return "setor";
-        return "";
-    }
-
     public function ranking(Request $request) {
         $qtd_total = 0;
         $criterios = array();
@@ -609,6 +615,7 @@ class RelatoriosController extends ControllerKX {
                         ->where("id_solicitacao", $id)
                         ->pluck("obs");
         $solicitacao = Solicitacoes::find($id);
+        if ($this->obter_autor_da_solicitacao($solicitacao->id) != Auth::user()->id_pessoa) return 401;
         $resultado = array();
         foreach ($consulta as $obs) {
             $aux = explode("|", $obs);

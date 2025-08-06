@@ -562,6 +562,7 @@ function RelatorioBilateral(_grupo) {
         let elementos = relObterElementos(["empresa1", "maquina1"]);
         let valores = relObterElementosValor(elementos, ["empresa", "maquina"]);
         valores.prioridade = grupo == "maquinas-por-empresa" ? "empresas" : "maquinas";
+        document.getElementById("rel-prioridade").value = valores.prioridade;
         $.get(URL + "/relatorios/bilateral/consultar", valores, function(erro) {
             if (erro) {
                 elementos[erro].classList.add("invalido");

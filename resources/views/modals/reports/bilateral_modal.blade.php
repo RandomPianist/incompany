@@ -10,6 +10,7 @@
                 </button>
             </div>
             <form action = "{{ config('app.root_url') }}/relatorios/bilateral" method = "GET" target = "_blank">
+                <input id = "rel-prioridade" name = "prioridade" type = "hidden" />
                 <input id = "rel-grupo1" name = "rel_grupo" type = "hidden" />
                 <div class = "modal-body">
                     <div class = "container">
