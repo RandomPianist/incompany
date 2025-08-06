@@ -28,23 +28,7 @@ class ProdutosController extends ControllerKX {
                     ->get();
     }
 
-    public function ver() {
-        $ultima_atualizacao = $this->log_consultar("produtos");
-        return view("produtos", compact("ultima_atualizacao"));
-    }
-
-    public function listar(Request $request) {
-        $filtro = trim($request->filtro);
-        if ($filtro) {
-            $busca = $this->busca("produtos.descr LIKE '".$filtro."%'");
-            if (sizeof($busca) < 3) $busca = $this->busca("produtos.descr LIKE '%".$filtro."%'");
-            if (sizeof($busca) < 3) $busca = $this->busca("(produtos.descr LIKE '%".implode("%' AND produtos.descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')");
-        } else $busca = $this->busca("1");
-        foreach($busca as $linha) $linha->foto = asset("storage/".$linha->foto);
-        return json_encode($busca);
-    }
-
-    public function consultar(Request $request) {
+    private function consultar_main(Request $request) {
         if (!sizeof(
             DB::table("valores")
                 ->where("id", $request->id_categoria)
@@ -74,6 +58,26 @@ class ProdutosController extends ControllerKX {
                 ->get()
         ) && !trim($request->referencia)) return "aviso";
         return "";
+    }
+
+    public function ver() {
+        $ultima_atualizacao = $this->log_consultar("produtos");
+        return view("produtos", compact("ultima_atualizacao"));
+    }
+
+    public function listar(Request $request) {
+        $filtro = trim($request->filtro);
+        if ($filtro) {
+            $busca = $this->busca("produtos.descr LIKE '".$filtro."%'");
+            if (sizeof($busca) < 3) $busca = $this->busca("produtos.descr LIKE '%".$filtro."%'");
+            if (sizeof($busca) < 3) $busca = $this->busca("(produtos.descr LIKE '%".implode("%' AND produtos.descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')");
+        } else $busca = $this->busca("1");
+        foreach($busca as $linha) $linha->foto = asset("storage/".$linha->foto);
+        return json_encode($busca);
+    }
+
+    public function consultar(Request $request) {
+        return $this->consultar_main($request);
     }
 
     public function mostrar($id) {
@@ -114,6 +118,7 @@ class ProdutosController extends ControllerKX {
     }
 
     public function salvar(Request $request) {
+        if ($this->consultar_main($request)) return 401;
         $linha = Produtos::firstOrNew(["id" => $request->id]);
         $this->atribuicao_atualiza_ref($request->id, $linha->referencia, $request->referencia);
         $linha->descr = mb_strtoupper($request->descr);

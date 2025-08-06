@@ -51,6 +51,7 @@
                                 <label for = "pessoa-empresa" class = "custom-label-form">Empresa: *</label>
                                 <select id = "pessoa-empresa-select" class = "form-control" onchange = "pessoa.alterarEmpresa()"></select>
                                 <input id = "pessoa-empresa"
+                                    name = "empresa"
                                     class = "form-control autocomplete"
                                     data-input = "#pessoa-id_empresa"
                                     data-table = "empresas"
@@ -78,6 +79,7 @@
                                 <label for = "pessoa-setor" class = "custom-label-form">Centro de custo: *</label>
                                 <select id = "pessoa-setor-select" class = "form-control" onchange = "pessoa.alterarSetor()"></select>
                                 <input id = "pessoa-setor"
+                                    name = "setor"
                                     class = "form-control autocomplete"
                                     data-input = "#pessoa-id_setor"
                                     data-table = "setores"

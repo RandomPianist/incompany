@@ -26,6 +26,50 @@ class SetoresController extends ControllerKX {
                     ->get();
     }
 
+    private function consultar_main(Request $request) {
+        $resultado = new \stdClass;
+
+        if ($this->empresa_consultar($request)) {
+            $resultado->msg = "Empresa não encontrada";
+            $resultado->el = "setor-empresa";
+            return $resultado;
+        }
+
+        if (sizeof(
+            DB::table("setores")
+                ->where("lixeira", 0)
+                ->where("descr", $request->descr)
+                ->where("id_empresa", $request->id_empresa)
+                ->get()
+        )) {
+            $resultado->msg = "Já existe um centro de custo de mesmo nome nessa empresa";
+            $resultado->el = "descr";
+            return $resultado;
+        }
+
+        $resultado->msg = "";
+        $resultado->el = "";
+        return $resultado;
+    }
+
+    private function aviso_main($id) {
+        $resultado = new \stdClass;
+        $nome = Setores::find($id)->descr;
+        if (sizeof(
+            DB::table("pessoas")
+                ->where("id_setor", $id)
+                ->where("lixeira", 0)
+                ->get()
+        )) {
+            $resultado->permitir = 0;
+            $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a esse setor";
+        } else {
+            $resultado->permitir = 1;
+            $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
+        }
+        return $resultado;
+    }
+
     public function ver() {
         $ultima_atualizacao = $this->log_consultar("setores");
         return view("setores", compact("ultima_atualizacao"));
@@ -46,29 +90,7 @@ class SetoresController extends ControllerKX {
     }
 
     public function consultar(Request $request) {
-        $resultado = new \stdClass;
-
-        if ($this->empresa_consultar($request)) {
-            $resultado->msg = "Empresa não encontrada";
-            $resultado->el = "setor-empresa";
-            return json_encode($resultado);
-        }
-
-        if (sizeof(
-            DB::table("setores")
-                ->where("lixeira", 0)
-                ->where("descr", $request->descr)
-                ->where("id_empresa", $request->id_empresa)
-                ->get()
-        )) {
-            $resultado->msg = "Já existe um centro de custo de mesmo nome nessa empresa";
-            $resultado->el = "descr";
-            return json_encode($resultado);
-        }
-
-        $resultado->msg = "";
-        $resultado->el = "";
-        return json_encode($resultado);
+        return json_encode($this->consultar_main($request));
     }
 
     public function usuarios($id) {
@@ -104,24 +126,11 @@ class SetoresController extends ControllerKX {
     }
 
     public function aviso($id) {
-        $resultado = new \stdClass;
-        $nome = Setores::find($id)->descr;
-        if (sizeof(
-            DB::table("pessoas")
-                ->where("id_setor", $id)
-                ->where("lixeira", 0)
-                ->get()
-        )) {
-            $resultado->permitir = 0;
-            $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a esse setor";
-        } else {
-            $resultado->permitir = 1;
-            $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
-        }
-        return json_encode($resultado);
+        return json_encode($this->aviso_main($id));
     }
 
     public function salvar(Request $request) {
+        if ($this->consultar_main($request)->msg) return 401;
         $cria_usuario = $request->cria_usuario == "S" ? 1 : 0;
         $linha = Setores::firstOrNew(["id" => $request->id]);
         if ($request->id) {
@@ -170,6 +179,7 @@ class SetoresController extends ControllerKX {
     }
 
     public function excluir(Request $request) {
+        if (!$this->aviso_main($request->id)->permitir) return 401;
         $linha = Setores::find($request->id);
         $linha->lixeira = 1;
         $linha->save();

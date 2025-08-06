@@ -63,6 +63,7 @@
                             <div class = "col-5 pr-0 form-search form-search-3">
                                 <label for = "categoria" class = "custom-label-form">Categoria: *</label>
                                 <input id = "categoria"
+                                    name = "categoria"
                                     class = "form-control autocomplete w-108"
                                     data-input = "#id_categoria"
                                     data-table = "valores"

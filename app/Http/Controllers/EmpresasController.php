@@ -29,6 +29,32 @@ class EmpresasController extends ControllerKX {
                     ->get();
     }
 
+    private function aviso_main($id) {
+        $resultado = new \stdClass;
+        $nome = Empresas::find($id)->nome_fantasia;
+        if (sizeof(
+            DB::table("pessoas")
+                ->where("id_empresa", $id)
+                ->where("lixeira", 0)
+                ->get()
+        )) {
+            $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a essa empresa.";
+            $resultado->permitir = 0;
+        } else if (sizeof(
+            DB::table("comodatos")
+                ->whereRaw("CURDATE() >= inicio AND CURDATE() < fim")
+                ->where("id_empresa", $id)
+                ->get()
+        )) {
+            $resultado->aviso = "Não é possível excluir ".$nome." porque existem máquinas comodatadas para essa empresa.";
+            $resultado->permitir = 0;
+        } else {
+            $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
+            $resultado->permitir = 1;
+        }
+        return $resultado;
+    }
+
     public function ver() {
         $ultima_atualizacao = $this->log_consultar("empresas");
         $pode_criar_matriz = !intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
@@ -76,32 +102,11 @@ class EmpresasController extends ControllerKX {
     }
 
     public function aviso($id) {
-        $resultado = new \stdClass;
-        $nome = Empresas::find($id)->nome_fantasia;
-        if (sizeof(
-            DB::table("pessoas")
-                ->where("id_empresa", $id)
-                ->where("lixeira", 0)
-                ->get()
-        )) {
-            $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a essa empresa.";
-            $resultado->permitir = 0;
-        } else if (sizeof(
-            DB::table("comodatos")
-                ->whereRaw("CURDATE() >= inicio AND CURDATE() < fim")
-                ->where("id_empresa", $id)
-                ->get()
-        )) {
-            $resultado->aviso = "Não é possível excluir ".$nome." porque existem máquinas comodatadas para essa empresa.";
-            $resultado->permitir = 0;
-        } else {
-            $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
-            $resultado->permitir = 1;
-        }
-        return json_encode($resultado);
+        return json_encode($this->aviso_main($id));
     }
 
     public function salvar(Request $request) {
+        if (intval($this->consultar($request))) return 401;
         $linha = Empresas::firstOrNew(["id" => $request->id]);
         $linha->nome_fantasia = mb_strtoupper($request->nome_fantasia);
         $linha->razao_social = mb_strtoupper($request->razao_social);
@@ -113,6 +118,7 @@ class EmpresasController extends ControllerKX {
     }
 
     public function excluir(Request $request) {
+        if (!$this->aviso_main($request->id)->permitir) return 401;
         $linha = Empresas::find($request->id);
         $linha->lixeira = 1;
         $linha->save();

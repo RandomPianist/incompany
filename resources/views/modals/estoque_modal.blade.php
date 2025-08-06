@@ -18,6 +18,7 @@
                             <div class = "col-4 form-search pr-1">
                                 <label for = "produto-1" class = "custom-label-form">Produto: *</label>
                                 <input id = "produto-1"
+                                    name = "produto[]"
                                     class = "form-control autocomplete produto"
                                     data-input = "#id_produto-1"
                                     data-table = "produtos"

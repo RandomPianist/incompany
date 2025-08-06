@@ -148,6 +148,56 @@ class PessoasController extends ControllerKX {
                     ->get();
     }
 
+    private function consultar_main(Request $request) {
+        $resultado = new \stdClass;
+        if ($this->empresa_consultar($request)) {
+            $resultado->tipo = "invalido";
+            $resultado->dado = "Empresa";
+        } else if (!sizeof(
+            DB::table("setores")
+                ->where("id", $request->id_setor)
+                ->where("descr", $request->setor)
+                ->get()
+        )) {
+            $resultado->tipo = "invalido";
+            $resultado->dado = "Setor";
+        } else if (sizeof(
+            DB::table("pessoas")
+                ->where("lixeira", 0)
+                ->where("cpf", $request->cpf)
+                ->get()
+        ) && trim($request->cpf)) {
+            $resultado->tipo = "duplicado";
+            $resultado->dado = "CPF";
+        } else if (sizeof(
+            DB::table("pessoas")
+                ->join("users", "users.id_pessoa", "pessoas.id")
+                ->where("lixeira", 0)
+                ->where("email", $request->email)
+                ->get()
+        )) {
+            $resultado->tipo = "duplicado";
+            $resultado->dado = "e-mail";
+        } else {
+            $resultado->tipo = "ok";
+            $resultado->dado = "";
+        }
+        return $resultado;
+    }
+
+    private function aviso_main($id) {
+        $resultado = new \stdClass;
+        if ($id != Auth::user()->id_pessoa) {
+            $nome = Pessoas::find($id)->nome;
+            $resultado->permitir = 1;
+            $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
+        } else {
+            $resultado->permitir = 0;
+            $resultado->aviso = "Não é possível excluir a si mesmo";
+        }
+        return $resultado;
+    }
+
     public function ver($tipo) {
         switch($tipo) {
             case "A":
@@ -187,40 +237,7 @@ class PessoasController extends ControllerKX {
     }
 
     public function consultar(Request $request) {
-        $resultado = new \stdClass;
-        if ($this->empresa_consultar($request)) {
-            $resultado->tipo = "invalido";
-            $resultado->dado = "Empresa";
-        } else if (!sizeof(
-            DB::table("setores")
-                ->where("id", $request->id_setor)
-                ->where("descr", $request->setor)
-                ->get()
-        )) {
-            $resultado->tipo = "invalido";
-            $resultado->dado = "Setor";
-        } else if (sizeof(
-            DB::table("pessoas")
-                ->where("lixeira", 0)
-                ->where("cpf", $request->cpf)
-                ->get()
-        ) && trim($request->cpf)) {
-            $resultado->tipo = "duplicado";
-            $resultado->dado = "CPF";
-        } else if (sizeof(
-            DB::table("pessoas")
-                ->join("users", "users.id_pessoa", "pessoas.id")
-                ->where("lixeira", 0)
-                ->where("email", $request->email)
-                ->get()
-        )) {
-            $resultado->tipo = "duplicado";
-            $resultado->dado = "e-mail";
-        } else {
-            $resultado->tipo = "ok";
-            $resultado->dado = "";
-        }
-        return json_encode($resultado);
+        return json_encode($this->consultar_main($request));
     }
 
     public function mostrar($id) {
@@ -249,19 +266,11 @@ class PessoasController extends ControllerKX {
     }
 
     public function aviso($id) {
-        $resultado = new \stdClass;
-        if ($id != Auth::user()->id_pessoa) {
-            $nome = Pessoas::find($id)->nome;
-            $resultado->permitir = 1;
-            $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
-        } else {
-            $resultado->permitir = 0;
-            $resultado->aviso = "Não é possível excluir a si mesmo";
-        }
-        return json_encode($resultado);
+        return json_encode($this->aviso_main($id));
     }
 
     public function salvar(Request $request) {
+        if ($this->consultar_main($request)->tipo != "ok") return 401;
         $linha = 0;
         $setores = [$request->id_setor];
         if ($request->id) {
@@ -323,6 +332,7 @@ class PessoasController extends ControllerKX {
     }
 
     public function excluir(Request $request) {
+        if (!$this->aviso_main($request->id)->permitir) return 401;
         $linha = Pessoas::find($request->id);
         $linha->lixeira = 1;
         $linha->save();

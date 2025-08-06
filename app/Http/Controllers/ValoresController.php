@@ -68,45 +68,7 @@ class ValoresController extends ControllerKX {
                     ->get();
     }
 
-    public function ver($alias) {
-        $comodato = false;
-        if ($alias == "maquinas") {
-            $busca = $this->busca($alias, "1");
-            foreach($busca as $linha) {
-                if ($linha->comodato != "---") $comodato = true;
-            }
-        }
-        $ultima_atualizacao = $this->log_consultar("valores", $alias);
-        $titulo = $alias == "maquinas" ? "Máquinas" : "Categorias";
-        return view("valores", compact("alias", "titulo", "ultima_atualizacao", "comodato"));
-    }
-
-    public function listar($alias, Request $request) {
-        $filtro = trim($request->filtro);
-        if ($filtro) {
-            $busca = $this->busca($alias, "descr LIKE '".$filtro."%'");
-            if (sizeof($busca) < 3) $busca = $this->busca($alias, "descr LIKE '%".$filtro."%'");
-            if (sizeof($busca) < 3) $busca = $this->busca($alias, "(descr LIKE '%".implode("%' AND descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')");
-        } else $busca = $this->busca($alias, "1");
-        return json_encode($busca);
-    }
-
-    public function consultar($alias, Request $request) {
-        if (sizeof(
-            DB::table("valores")
-                ->where("alias", $alias)
-                ->where("lixeira", 0)
-                ->where("descr", $request->descr)
-                ->get()
-        )) return "1";
-        return "0";
-    }
-
-    public function mostrar($alias, $id) {
-        return Valores::find($id)->descr;
-    }
-
-    public function aviso($alias, $id) {
+    private function aviso_main($alias, $id) {
         $aviso = "";
         if ($alias == "maquinas") {
             $aviso = DB::table("valores")
@@ -166,10 +128,53 @@ class ValoresController extends ControllerKX {
             :
                 "Não é possível excluir ".$nome." porque essa máquina ".$aviso
         : "Tem certeza que deseja excluir ".$nome."?";
-        return json_encode($resultado);
+        return $resultado;
+    }
+
+    public function ver($alias) {
+        $comodato = false;
+        if ($alias == "maquinas") {
+            $busca = $this->busca($alias, "1");
+            foreach($busca as $linha) {
+                if ($linha->comodato != "---") $comodato = true;
+            }
+        }
+        $ultima_atualizacao = $this->log_consultar("valores", $alias);
+        $titulo = $alias == "maquinas" ? "Máquinas" : "Categorias";
+        return view("valores", compact("alias", "titulo", "ultima_atualizacao", "comodato"));
+    }
+
+    public function listar($alias, Request $request) {
+        $filtro = trim($request->filtro);
+        if ($filtro) {
+            $busca = $this->busca($alias, "descr LIKE '".$filtro."%'");
+            if (sizeof($busca) < 3) $busca = $this->busca($alias, "descr LIKE '%".$filtro."%'");
+            if (sizeof($busca) < 3) $busca = $this->busca($alias, "(descr LIKE '%".implode("%' AND descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')");
+        } else $busca = $this->busca($alias, "1");
+        return json_encode($busca);
+    }
+
+    public function consultar($alias, Request $request) {
+        if (sizeof(
+            DB::table("valores")
+                ->where("alias", $alias)
+                ->where("lixeira", 0)
+                ->where("descr", $request->descr)
+                ->get()
+        )) return "1";
+        return "0";
+    }
+
+    public function mostrar($alias, $id) {
+        return Valores::find($id)->descr;
+    }
+
+    public function aviso($alias, $id) {
+        return json_encode($this->aviso_main($alias, $id));
     }
 
     public function salvar($alias, Request $request) {
+        if (intval($this->consultar($alias, $request))) return 401;
         $linha = Valores::firstOrNew(["id" => $request->id]);
         $linha->descr = mb_strtoupper($request->descr);
         $linha->alias = $alias;
@@ -188,6 +193,7 @@ class ValoresController extends ControllerKX {
     }
 
     public function excluir($alias, Request $request) {
+        if (!$this->aviso_main($alias, $request->id)->permitir) return 401;
         $linha = Valores::find($request->id);
         $linha->lixeira = 1;
         $linha->save();

@@ -25,6 +25,7 @@
                             <div class = "col-11 pr-0 form-search">
                                 <label for = "setor-empresa" class = "custom-label-form">Empresa: *</label>
                                 <input id = "setor-empresa"
+                                    name = "empresa"
                                     class = "form-control autocomplete"
                                     data-input = "#setor-id_empresa"
                                     data-table = "empresas"

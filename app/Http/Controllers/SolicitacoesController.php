@@ -20,16 +20,7 @@ class SolicitacoesController extends ControllerKX {
                 ->value("id_pessoa");
     }
 
-    public function ver(Request $request) {
-        $tela = $this->sugestao_main($request);
-        $resultado = $tela->resultado;
-        $criterios = $tela->criterios;
-        $mostrar_giro = $tela->mostrar_giro;
-        if (sizeof($resultado)) return view("solicitacoes", compact("resultado", "criterios", "mostrar_giro"));
-        return view("nada");
-    }
-
-    public function consultar($id_comodato) {
+    private function consultar_main($id_comodato) {
         $resultado = new \stdClass;
         $solicitacao = Solicitacoes::find(
             DB::table("solicitacoes")
@@ -39,11 +30,11 @@ class SolicitacoesController extends ControllerKX {
         );
         if ($solicitacao === null) {
             $resultado->continuar = 1;
-            return json_encode($resultado);
+            return $resultado;
         }
         if (!in_array($solicitacao->status, ["A", "E"])) {
             $resultado->continuar = 1;
-            return json_encode($resultado);
+            return $resultado;
         }
         $id_autor = $this->obter_autor($solicitacao->id);
         $resultado->continuar = 0;
@@ -55,7 +46,20 @@ class SolicitacoesController extends ControllerKX {
         $resultado->autor = Pessoas::find($id_autor)->nome;
         $resultado->sou_autor = Auth::user()->id_pessoa == $id_autor ? 1 : 0;
         $resultado->id = $solicitacao->id;
-        return json_encode($resultado);
+        return $resultado;
+    }
+
+    public function ver(Request $request) {
+        $tela = $this->sugestao_main($request);
+        $resultado = $tela->resultado;
+        $criterios = $tela->criterios;
+        $mostrar_giro = $tela->mostrar_giro;
+        if (sizeof($resultado)) return view("solicitacoes", compact("resultado", "criterios", "mostrar_giro"));
+        return view("nada");
+    }
+
+    public function consultar($id_comodato) {
+        return json_encode($this->consultar_main($id_comodato));
     }
 
     public function mostrar(Request $request) {
@@ -168,6 +172,7 @@ class SolicitacoesController extends ControllerKX {
     }
     
     public function criar(Request $request) {
+        if (!$this->consultar_main($request->id_comodato)->continuar) return 401;
         $solicitacao = new Solicitacoes;
         $solicitacao->status = "A";
         $solicitacao->avisou = 1;
@@ -199,6 +204,7 @@ class SolicitacoesController extends ControllerKX {
 
     public function cancelar(Request $request) {
         $solicitacao = Solicitacoes::find($request->id);
+        if ($solicitacao->status != "A" || $this->obter_autor($solicitacao->id) != Auth::user()->id_pessoa) return 401;
         $solicitacao->status = "C";
         $solicitacao->save();
         $this->log_inserir("D", "solicitacoes", $solicitacao->id);
