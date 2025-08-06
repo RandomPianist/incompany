@@ -565,6 +565,14 @@ class RelatoriosController extends ControllerKX {
                             }
                             array_push($criterios, $periodo);
                         }
+                        if ($request->tipo != "todos") {
+                            $sql->where(function($w) use($request) {
+                                $ativo = $request->tipo == "ativos" ? 0 : 1;
+                                $w->where("pessoas.lixeira", $ativo)
+                                    ->orWhere("setores.lixeira", $ativo);
+                            });
+                            array_push($criterios, "Apenas ".$request->tipo);
+                        }
                     })
                     ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "pessoas", true))
                     ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores", true))

@@ -1004,6 +1004,7 @@ function RelatorioRanking() {
         modal("relatorioRankingModal", 0, function() {
             elementos.inicio.value = hoje();
             elementos.fim.value = hoje();
+            document.getElementById("rel-tipo3").value = "todos";
         });
     }, 0);
 }

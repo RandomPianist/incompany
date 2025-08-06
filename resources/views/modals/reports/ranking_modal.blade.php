@@ -13,15 +13,23 @@
                 <div class = "modal-body">
                     <div class = "container">
                         <div class = "row">
-                            <div class = "col-12">
+                            <div class = "col-6">
                                 <label for = "rel-inicio4" class = "custom-label-form">Início:</label>
                                 <input id = "rel-inicio4" name = "inicio" class = "form-control data" autocomplete = "off" type = "text" />
+                            </div>
+                            <div class = "col-6">
+                                <label for = "rel-fim4" class = "custom-label-form">Fim:</label>
+                                <input id = "rel-fim4" name = "fim" class = "form-control data" autocomplete = "off" type = "text" />
                             </div>
                         </div>
                         <div class = "row">
                             <div class = "col-12">
-                                <label for = "rel-fim4" class = "custom-label-form">Fim:</label>
-                                <input id = "rel-fim4" name = "fim" class = "form-control data" autocomplete = "off" type = "text" />
+                                <label for = "rel-tipo3" class = "custom-label-form">Tipo:</label>
+                                <select class = "form-control" id = "rel-tipo3" name = "tipo">
+                                    <option value = "todos">Todos</option>
+                                    <option value = "ativos">Ativos</option>
+                                    <option value = "inativos">Inativos</option>
+                                </select>
                             </div>
                         </div>
                     </div>
