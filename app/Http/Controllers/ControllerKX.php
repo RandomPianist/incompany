@@ -334,11 +334,11 @@ class ControllerKX extends Controller {
         }
     }
 
-    protected function obter_where($id_pessoa, $coluna = "pessoas.id_empresa") {
+    protected function obter_where($id_pessoa, $tabela = "pessoas", $inclusive_excluidos = false) {
         $id_emp = Pessoas::find($id_pessoa)->id_empresa;
-        $where = $coluna == "pessoas.id_empresa" ? "pessoas.lixeira = 0" : "1";
+        $where = !in_array($tabela, ["comodatos", "retiradas"]) && !$inclusive_excluidos ? $tabela.".lixeira = 0" : "1";
         if (intval($id_emp)) {
-            $where .= " AND ".$coluna." IN (
+            $where .= " AND ".($tabela != "empresas" ? $tabela.".id_empresa" : "empresas.id")." IN (
                 SELECT id
                 FROM empresas
                 WHERE empresas.id = ".$id_emp."

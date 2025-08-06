@@ -32,14 +32,14 @@ class DashboardController extends ControllerKX {
                                 ->joinsub(
                                     DB::table("retiradas")
                                         ->selectRaw("DISTINCTROW id_pessoa")
-                                        ->whereRaw($this->obter_where($id_pessoa, "retiradas.id_empresa"))
+                                        ->whereRaw($this->obter_where($id_pessoa, "retiradas"))
                                         ->whereRaw("retiradas.data >= '".$inicio."'")
                                         ->whereRaw("retiradas.data <= '".$fim."'"),
                                     "ret",
                                     "ret.id_pessoa",
                                     "pessoas.id"
                                 )
-                                ->whereRaw($this->obter_where($id_pessoa))
+                                ->whereRaw($this->obter_where($id_pessoa, "pessoas", true))
                                 ->get();
         foreach ($ultimas_retiradas as $retirada) $retirada->foto = asset("storage/".$retirada->foto);
         return $ultimas_retiradas;
@@ -59,9 +59,8 @@ class DashboardController extends ControllerKX {
                 ->join("setores", "setores.id", "retiradas.id_setor")
                 ->whereRaw("retiradas.data >= '".$inicio."'")
                 ->whereRaw("retiradas.data <= '".$fim."'")
-                ->where("setores.lixeira", 0)
-                ->whereRaw($this->obter_where($id_pessoa, "retiradas.id_empresa"))
-                ->whereRaw($this->obter_where($id_pessoa, "setores.id_empresa"))
+                ->whereRaw($this->obter_where($id_pessoa, "retiradas"))
+                ->whereRaw($this->obter_where($id_pessoa, "setores"))
                 ->groupby(
                     "setores.id",
                     "setores.descr"
@@ -193,8 +192,8 @@ class DashboardController extends ControllerKX {
                         DB::raw("SUM(retiradas.qtd) AS retirados")
                     )
                     ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
-                    ->whereRaw($this->obter_where($id_pessoa))
-                    ->whereRaw($this->obter_where($id_pessoa, "retiradas.id_empresa"))
+                    ->whereRaw($this->obter_where($id_pessoa, "pessoas", true))
+                    ->whereRaw($this->obter_where($id_pessoa, "retiradas"))
                     ->whereRaw("retiradas.data >= '".$inicio."'")
                     ->whereRaw("retiradas.data <= '".$fim."'")
                     ->groupby(
@@ -300,10 +299,9 @@ class DashboardController extends ControllerKX {
                     )
                     ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
                     ->whereRaw($this->obter_where(Auth::user()->id_pessoa))
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas.id_empresa"))
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas"))
                     ->whereRaw("retiradas.data >= '".$inicio."'")
                     ->whereRaw("retiradas.data <= '".$fim."'")
-                    ->where("pessoas.lixeira", 0)
                     ->where("retiradas.id_setor", $id_setor)
                     ->groupby(
                         "pessoas.id",

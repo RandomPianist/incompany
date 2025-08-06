@@ -119,7 +119,7 @@ class SolicitacoesController extends ControllerKX {
         return json_encode(
             DB::table("comodatos")
                     ->whereRaw("((CURDATE() BETWEEN inicio AND fim) OR (CURDATE() BETWEEN inicio AND fim))")
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "comodatos.id_empresa"))
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "comodatos"))
                     ->where(function($sql) use($request) {
                         if (isset($request->id_maquina)) $sql->where("id_maquina", $request->id_maquina);
                     })
