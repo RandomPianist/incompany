@@ -20,7 +20,7 @@ class DashboardController extends ControllerKX {
         return $resultado;
     }
 
-    private function ultimas_retiradas_main($where, $inicio = "", $fim = "") {
+    private function ultimas_retiradas_main($id_pessoa, $inicio = "", $fim = "") {
         if (!$inicio) $inicio = date("Y-m")."-01";
         if (!$fim) $fim = date("Y-m-d");
         $ultimas_retiradas = DB::table("pessoas")
@@ -31,34 +31,21 @@ class DashboardController extends ControllerKX {
                                 )
                                 ->joinsub(
                                     DB::table("retiradas")
-                                        ->select(
-                                            "id_pessoa",
-                                            "id_empresa"
-                                        )
+                                        ->selectRaw("DISTINCTROW id_pessoa")
+                                        ->whereRaw($this->obter_where($id_pessoa, "retiradas.id_empresa"))
                                         ->whereRaw("retiradas.data >= '".$inicio."'")
-                                        ->whereRaw("retiradas.data <= '".$fim."'")
-                                        ->groupby(
-                                            "id_pessoa",
-                                            "id_empresa"
-                                        ),
+                                        ->whereRaw("retiradas.data <= '".$fim."'"),
                                     "ret",
-                                    function($join) {
-                                        $join->on(function($sql) {
-                                            $sql->on("pessoas.id", "ret.id_pessoa")
-                                                ->where("pessoas.id_empresa", 0);
-                                        })->orOn(function($sql) {
-                                            $sql->on("pessoas.id", "ret.id_pessoa")
-                                                ->on("pessoas.id_empresa", "ret.id_empresa");
-                                        });
-                                    }
+                                    "ret.id_pessoa",
+                                    "pessoas.id"
                                 )
-                                ->whereRaw($where)
+                                ->whereRaw($this->obter_where($id_pessoa))
                                 ->get();
         foreach ($ultimas_retiradas as $retirada) $retirada->foto = asset("storage/".$retirada->foto);
         return $ultimas_retiradas;
     }
 
-    private function retiradas_por_setor_main($where, $inicio = "", $fim = "") {
+    private function retiradas_por_setor_main($id_pessoa, $inicio = "", $fim = "") {
         if (!$inicio) $inicio = date("Y-m")."-01";
         if (!$fim) $fim = date("Y-m-d");
         return collect(
@@ -66,24 +53,16 @@ class DashboardController extends ControllerKX {
                 ->select(
                     "setores.id",
                     "setores.descr",
-                    DB::raw("SUM(qtd) AS retirados"),
+                    DB::raw("SUM(retiradas.qtd) AS retirados"),
                     DB::raw("SUM(retiradas.preco) AS valor")
                 )
-                ->join("pessoas", function($join) {
-                    $join->on(function($sql) {
-                        $sql->on("pessoas.id", "retiradas.id_pessoa")
-                            ->where("pessoas.id_empresa", 0);
-                    })->orOn(function($sql) {
-                        $sql->on("pessoas.id", "retiradas.id_pessoa")
-                            ->on("pessoas.id_empresa", "retiradas.id_empresa");
-                    });
-                })
                 ->join("setores", "setores.id", "retiradas.id_setor")
-                ->join("produtos", "produtos.id", "retiradas.id_produto")
                 ->whereRaw("retiradas.data >= '".$inicio."'")
                 ->whereRaw("retiradas.data <= '".$fim."'")
                 ->where("setores.lixeira", 0)
-                ->whereRaw($where)
+                ->whereRaw($this->obter_where($id_pessoa))
+                ->whereRaw($this->obter_where($id_pessoa, "retiradas.id_empresa"))
+                ->whereRaw($this->obter_where($id_pessoa, "setores.id_empresa"))
                 ->groupby(
                     "setores.id",
                     "setores.descr"
@@ -138,7 +117,7 @@ class DashboardController extends ControllerKX {
                     ->get();
     }
 
-    private function retiradas_em_atraso_main($where) {
+    private function retiradas_em_atraso_main($id_pessoa) {
         $atrasos = DB::table("pessoas")
                         ->select(
                             "pessoas.id",
@@ -171,7 +150,7 @@ class DashboardController extends ControllerKX {
                             "pendente.id_pessoa",
                             "pessoas.id"
                         )
-                        ->whereRaw($where)
+                        ->whereRaw($this->obter_where($id_pessoa))
                         ->orderby("pendente.qtd", "DESC")
                         ->get();
 
@@ -194,10 +173,9 @@ class DashboardController extends ControllerKX {
         if (isset($request->fim)) $fim = $this->formatar_data($request->fim);
         $resultado = new \stdClass;
 
-        $where = $this->obter_where(Auth::user()->id_pessoa);
-
+        $id_pessoa = Auth::user()->id_pessoa;
         $retiradas_por_setor = new \stdClass;
-        $aux = $this->retiradas_por_setor_main($where, $inicio, $fim);
+        $aux = $this->retiradas_por_setor_main($id_pessoa, $inicio, $fim);
         $total_val = 0;
         $total_qtd = 0;
         foreach ($aux as $rps) {
@@ -215,16 +193,9 @@ class DashboardController extends ControllerKX {
                         "pessoas.foto",
                         DB::raw("SUM(qtd) AS retirados")
                     )
-                    ->join("pessoas", function($join) {
-                        $join->on(function($sql) {
-                            $sql->on("pessoas.id", "retiradas.id_pessoa")
-                                ->where("pessoas.id_empresa", 0);
-                        })->orOn(function($sql) {
-                            $sql->on("pessoas.id", "retiradas.id_pessoa")
-                                ->on("pessoas.id_empresa", "retiradas.id_empresa");
-                        });
-                    })
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa))
+                    ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
+                    ->whereRaw($this->obter_where($id_pessoa))
+                    ->whereRaw($this->obter_where($id_pessoa, "retiradas.id_empresa"))
                     ->whereRaw("retiradas.data >= '".$inicio."'")
                     ->whereRaw("retiradas.data <= '".$fim."'")
                     ->groupby(
@@ -237,8 +208,8 @@ class DashboardController extends ControllerKX {
                     ->get();
         foreach ($ranking as $pessoa) $pessoa->foto = asset("storage/".$pessoa->foto);
         
-        $resultado->atrasos = $inicio == date("Y-m")."-01" ? $this->retiradas_em_atraso_main($where) : [];
-        $resultado->ultimasRetiradas = $inicio == date("Y-m")."-01" ? $this->ultimas_retiradas_main($where, $inicio, $fim) : [];
+        $resultado->atrasos = $inicio == date("Y-m")."-01" ? $this->retiradas_em_atraso_main($id_pessoa) : [];
+        $resultado->ultimasRetiradas = $inicio == date("Y-m")."-01" ? $this->ultimas_retiradas_main($id_pessoa, $inicio, $fim) : [];
         $resultado->retiradasPorSetor = $retiradas_por_setor;
         $resultado->ranking = $ranking;
         $resultado->maquinas = $this->maquinas_main($inicio, $fim);
@@ -328,21 +299,9 @@ class DashboardController extends ControllerKX {
                         DB::raw("SUM(qtd) AS retirados"),
                         DB::raw("SUM(retiradas.preco) AS valor")
                     )
-                    ->join("pessoas", function($join) {
-                        $join->on(function($sql) {
-                            $sql->on("pessoas.id", "retiradas.id_pessoa")
-                                ->where("pessoas.id_empresa", 0);
-                        })->orOn(function($sql) {
-                            $sql->on("pessoas.id", "retiradas.id_pessoa")
-                                ->on("pessoas.id_empresa", "retiradas.id_empresa");
-                        });
-                    })
-                    ->join("produtos", "produtos.id", "retiradas.id_produto")
-                    ->leftjoin("comodatos", "comodatos.id", "retiradas.id_comodato")
-                    ->leftjoin("maquinas_produtos AS mp", function($join) {
-                        $join->on("mp.id_produto", "produtos.id")
-                            ->on("mp.id_maquina", "comodatos.id_maquina");
-                    })
+                    ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa))
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas.id_empresa"))
                     ->whereRaw("retiradas.data >= '".$inicio."'")
                     ->whereRaw("retiradas.data <= '".$fim."'")
                     ->where("pessoas.lixeira", 0)
@@ -386,14 +345,14 @@ class DashboardController extends ControllerKX {
     }
 
     public function ultimas_retiradas($id_pessoa) {
-        return json_encode($this->ultimas_retiradas_main($this->obter_where($id_pessoa)));
+        return json_encode($this->ultimas_retiradas_main($id_pessoa));
     }
 
     public function retiradas_por_setor($id_pessoa) {
-        return json_encode($this->retiradas_por_setor_main($this->obter_where($id_pessoa)));
+        return json_encode($this->retiradas_por_setor_main($id_pessoa));
     }
 
     public function retiradas_em_atraso($id_pessoa) {
-        return json_encode($this->retiradas_em_atraso_main($this->obter_where($id_pessoa)));
+        return json_encode($this->retiradas_em_atraso_main($id_pessoa));
     }
 }

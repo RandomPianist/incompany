@@ -100,11 +100,36 @@ class MaquinasController extends ControllerKX {
             }
         }
 
+        if (!$texto) {
+            for ($i = 0; $i < sizeof($produtos_id); $i++) {
+                $prmin = floatval(
+                    DB::table("produtos")
+                        ->selectRaw("IFNULL(prmin, 0) AS prmin")
+                        ->where("id", $produtos_id[$i])
+                        ->value("prmin")
+                );
+                $preco = floatval($precos[$i]);
+                if ($prmin > 0 && $preco < $prmin) {
+                    $texto = $texto ? "Há itens com preço abaixo do mínimo.<br>Os campos foram corrigidos" : "Há um item com um preço abaixo do mínimo.<br>O campo foi corrigido";
+                    $texto .= " para o preço mínimo.<br>Por favor, verifique e tente novamente.";
+                    array_push($campos, "preco-".($i + 1));
+                    array_push($valores, $prmin);
+                }
+            }
+        }
+
         $resultado = new \stdClass;
         $resultado->texto = $texto;
         $resultado->campos = $campos;
         $resultado->valores = $valores;
         return json_encode($resultado);
+    }
+
+    public function preco(Requst $request) {
+        return DB::table("maquinas_produtos")
+                    ->where("id_maquina", $request->id_maquina)
+                    ->where("id_produto", $request->id_produto)
+                    ->value("preco");
     }
 
     public function consultar_comodato(Request $request) {

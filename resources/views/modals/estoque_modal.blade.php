@@ -27,7 +27,7 @@
                                     type = "text"
                                     autocomplete = "off"
                                 />
-                                <input id = "id_produto-1" class = "id-produto" name = "id_produto[]" type = "hidden" />
+                                <input id = "id_produto-1" class = "id-produto" name = "id_produto[]" type = "hidden" onchange = "atualizaPreco(1)" />
                             </div>
                             <div class = "col-2 p-0 px-1">
                                 <label for = "es-1" class = "custom-label-form">E/S: *</label>
@@ -119,13 +119,29 @@
     }
 
     function carrega_obs(seq) {
-        if (document.getElementById("es-" + seq).value == "E") {
-            document.getElementById("obs-" + seq).value = "ENTRADA";
-        } else if(document.getElementById("es-" + seq).value == "S") {
-            document.getElementById("obs-" + seq).value = "SAÍDA";
-        } else {
-            document.getElementById("obs-" + seq).value = "AJUSTE";
+        switch(document.getElementById("es-" + seq).value) {
+            case "E":
+                var obs = "ENTRADA";
+                break;
+            case "S":
+                var obs = "SAÍDA";
+                break;
+            default:
+                var obs = "AJUSTE";
         }
+        document.getElementById("obs-" + seq).value = obs;
+    }
+
+    function atualizaPreco(seq) {
+        const el_prod = document.getElementById("id_produto-" + seq);
+        $.get(URL + "/maquinas/preco", {
+            id_maquina : document.getElementById("id_maquina").value,
+            id_produto : el_prod.value
+        }, function(preco) {
+            let el_preco = el_prod.parentElement.parentElement.querySelector(".preco");
+            el_preco.value = preco;
+            $(el_preco).trigger("keyup");
+        })
     }
 
     function adicionar_campo() {
@@ -170,6 +186,9 @@
         el_prod_post.type = "hidden";
         el_prod_post.name = "id_produto[]";
         el_prod_post.id = "id_produto-" + cont;
+        el_prod_post.onchange = function() {
+            atualizaPreco(cont);
+        }
 
         let el_es = document.createElement("select");
         el_es.classList.add("form-control", "es");

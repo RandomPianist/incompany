@@ -14,6 +14,12 @@ use App\Models\Retiradas;
 use App\Models\Comodatos;
 
 class ControllerKX extends Controller {
+    protected function comparar_texto($a, $b) {
+        if ($a === null) $a = "";
+        if ($b === null) $b = "";
+        return mb_strtoupper(trim($a)) != mb_strtoupper(trim($b));
+    }
+
     protected function maquinas_periodo($inicio, $fim) {
         $where = "";
         if ($inicio) $where .= "('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim)";
@@ -297,7 +303,7 @@ class ControllerKX extends Controller {
     }
 
     protected function atribuicao_atualiza_ref($id, $antigo, $novo, $nome = "", $api = false) {
-        if ($id) {
+        if ($id && $this->comparar_texto($antigo, $novo)) {
             $novo = trim($novo);
             $where = "produto_ou_referencia_valor = '".$antigo."' AND produto_ou_referencia_chave = 'R'";
             DB::statement("
@@ -306,6 +312,25 @@ class ControllerKX extends Controller {
                 WHERE ".$where
             );
             $this->log_inserir_lote($novo ? "E" : "D", $api ? "ERP" : "WEB", "atribuicoes", $where, $nome);
+            if (!$novo) {
+                $lista = DB::table("atribuicoes")
+                            ->selectRaw("DISTINCTROW pessoas.id")
+                            ->join("pessoas", function($join) {
+                                $join->on(function($sql) {
+                                    $sql->on("pessoas.pessoa_ou_setor_valor", "pessoas.id")
+                                        ->where("pessoas.pessoa_ou_setor_chave", "P");
+                                })->orOn(function($sql) {
+                                    $sql->on("pessoas.pessoa_ou_setor_valor", "pessoas.id_setor")
+                                        ->where("pessoas.pessoa_ou_setor_chave", "S");
+                                });
+                            })
+                            ->where("atribuicoes.produto_ou_referencia_chave", "R")
+                            ->where("atribuicoes.produto_ou_referencia_valor", $antigo)
+                            ->pluck("pessoas.id")
+                            ->toArray();
+                DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
+                DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
+            }
         }
     }
 

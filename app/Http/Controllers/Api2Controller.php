@@ -15,12 +15,6 @@ use App\Models\Retiradas;
 use Illuminate\Http\Request;
 
 class Api2Controller extends ControllerKX {
-    private function comparar_texto($a, $b) {
-        if ($a === null) $a = "";
-        if ($b === null) $b = "";
-        return mb_strtoupper(trim($a)) != mb_strtoupper(trim($b));
-    }
-
     private function comparar_num($a, $b) {
         if ($a === null) $a = 0;
         if ($b === null) $b = 0;
@@ -191,7 +185,10 @@ class Api2Controller extends ControllerKX {
                 if ($this->comparar_texto($req_produto->descr, $produto->descr)) $continua = true;
                 if ($this->comparar_texto($req_produto->ca, $produto->ca)) $continua = true;
                 if ($this->comparar_texto($validade_ca, $produto->validade_ca)) $continua = true;
-                if ($this->comparar_texto($req_produto->refer, $produto->referencia)) $continua = true;
+                if ($this->comparar_texto($req_produto->refer, $produto->referencia)) {
+                    $this->atribuicao_atualiza_ref($req_produto->id, $produto->referencia, $req_produto->refer, $usuario, true);
+                    $continua = true;
+                }
                 if ($this->comparar_texto($req_produto->cod_fab, $produto->cod_fab)) $continua = true;
                 if ($this->comparar_texto($req_produto->tamanho, $produto->tamanho)) $continua = true;
                 if ($this->comparar_texto($req_produto->foto, $produto->foto)) $continua = true;

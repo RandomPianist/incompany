@@ -129,6 +129,7 @@ Route::middleware("auth")->group(function () {
     });
 
     Route::group(["prefix" => "maquinas"], function() {
+        Route::get("/preco", [MaquinasController::class, "preco"]);
         Route::group(["prefix" => "estoque"], function() {
             Route::post("/",          [MaquinasController::class, "estoque"]);
             Route::get ("/consultar", [MaquinasController::class, "consultar_estoque"]);

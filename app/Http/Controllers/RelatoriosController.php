@@ -425,23 +425,13 @@ class RelatoriosController extends ControllerKX {
                     DB::raw("SUM(retiradas.qtd) AS qtd"),
                     DB::raw("SUM(retiradas.preco) AS valor")
                 )
-                ->join("pessoas", function($join) {
-                    $join->on(function($sql) {
-                        $sql->on("pessoas.id", "retiradas.id_pessoa")
-                            ->where("pessoas.id_empresa", 0);
-                    })->orOn(function($sql) {
-                        $sql->on("pessoas.id", "retiradas.id_pessoa")
-                            ->on("pessoas.id_empresa", "retiradas.id_empresa");
-                    });
-                })
+                ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
                 ->join("setores", "setores.id", "retiradas.id_setor")
                 ->join("produtos", "produtos.id", "retiradas.id_produto")
                 ->leftjoin("empresas", "empresas.id", "retiradas.id_empresa")
-                ->leftjoin("comodatos", "comodatos.id", "retiradas.id_comodato")
-                ->leftjoin("maquinas_produtos AS mp", function($join) {
-                    $join->on("mp.id_produto", "produtos.id")
-                         ->on("mp.id_maquina", "comodatos.id_maquina");
-                })
+                ->whereRaw($this->obter_where(Auth::user()->id_pessoa))
+                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas.id_empresa"))
+                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores.id_empresa"))
                 ->where(function($sql) use($request, &$criterios) {
                     $inicio = "";
                     $fim = "";
@@ -491,16 +481,6 @@ class RelatoriosController extends ControllerKX {
                     } else if ($request->tipo_colab != "todos") {
                         $sql->where("pessoas.lixeira", $request->tipo_colab == "ativos" ? 0 : 1);
                         array_push($criterios, "Apenas colaboradores ".$request->tipo_colab);
-                    }
-
-                    if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) {
-                        $sql->where(function($where) use($inicio, $fim) {
-                            $where->where(function($w) use($inicio, $fim) {
-                                $w->whereIn("comodatos.id_maquina", $this->maquinas_periodo($inicio, $fim));
-                            })->orWhere(function($w) {
-                                $w->whereNull("comodatos.id_maquina");
-                            });
-                        });
                     }
                 })
                 ->groupby(
@@ -569,16 +549,8 @@ class RelatoriosController extends ControllerKX {
                         "setores.descr AS setor",
                         DB::raw("SUM(qtd) AS retirados")
                     )
-                    ->join("pessoas", function($join) {
-                        $join->on(function($sql) {
-                            $sql->on("pessoas.id", "retiradas.id_pessoa")
-                                ->where("pessoas.id_empresa", 0);
-                        })->orOn(function($sql) {
-                            $sql->on("pessoas.id", "retiradas.id_pessoa")
-                                ->on("pessoas.id_empresa", "retiradas.id_empresa");
-                        });
-                    })
-                    ->join("setores", "setores.id", "pessoas.id_setor")
+                    ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
+                    ->join("setores", "setores.id", "retiradas.id_setor")
                     ->where(function($sql) use($request, &$criterios) {
                         if ($request->inicio || $request->fim) {
                             $periodo = "Período";
@@ -597,6 +569,8 @@ class RelatoriosController extends ControllerKX {
                     })
                     ->where("setores.lixeira", 0)
                     ->whereRaw($this->obter_where(Auth::user()->id_pessoa))
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas.id_empresa"))
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores.id_empresa"))
                     ->groupby(
                         "pessoas.id_setor",
                         "pessoas.id",

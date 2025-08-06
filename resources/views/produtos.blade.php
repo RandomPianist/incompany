@@ -107,7 +107,8 @@
                 cod_externo : document.getElementById("cod_externo").value,
                 categoria : document.getElementById("categoria").value,
                 id_categoria : document.getElementById("id_categoria").value,
-                referencia : document.getElementById("referencia").value
+                referencia : document.getElementById("referencia").value,
+                preco : parseInt(preco.value.replace(/\D/g, "")) / 100
             }, function(data) {
                 if (!erro && data == "invalido") {
                     erro = "Categoria não encontrada";
@@ -116,6 +117,10 @@
                 if (!erro && data == "duplicado") {
                     erro = "Já existe um registro com esse código";
                     document.getElementById("cod_externo").classList.add("invalido");
+                }
+                if (!erro && data.indexOf("preco") > -1) {
+                    erro = "O preço está inferior ao preço mínimo de " + dinheiro(data.replace("preco", ""));
+                    preco.classList.add("invalido");
                 }
                 if (!erro && !alterou && !document.querySelector("#produtosModal input[type=file]").value) erro = "Altere pelo menos um campo para salvar";
                 if (!erro) {
