@@ -197,11 +197,9 @@ class ValoresController extends ControllerKX {
         $linha = Valores::find($request->id);
         $linha->lixeira = 1;
         $linha->save();
-        DB::statement("
-            UPDATE produtos
-            SET id_categoria = NULL
-            WHERE id_categoria = ".$request->id
-        );
+        $where = "id_categoria = ".$request->id;
+        DB::statement("UPDATE produtos SET id_categoria = NULL ".$where);
         $this->log_inserir("D", "valores", $linha->id);
+        $this->log_inserir_lote("E", "WEB", "produtos", $where);
     }
 }
