@@ -143,7 +143,7 @@ class SolicitacoesController extends ControllerKX {
                             ->pluck("obs");
             foreach ($consulta as $obs) {
                 $aux = explode("|", $obs);
-                if (($aux[1] == "O produto não existe no ERP TargetX" && $solicitacao->status == "A") || $aux[1] != "O produto não existe no ERP TargetX") $possui_inconsistencias = "A";
+                if (($aux[1] == config("app.msg_inexistente") && $solicitacao->status == "A") || $aux[1] != config("app.msg_inexistente")) $possui_inconsistencias = "A";
             }
             $resultado = array();
             return json_encode(array(

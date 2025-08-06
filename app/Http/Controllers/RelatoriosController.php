@@ -622,7 +622,7 @@ class RelatoriosController extends ControllerKX {
             $linha = new \stdClass;
             $linha->inconsistencia = $aux[0];
             $linha->justificativa = $aux[1];
-            if (($aux[1] == "O produto não existe no ERP TargetX" && $solicitacao->status == "A") || $aux[1] != "O produto não existe no ERP TargetX") array_push($resultado, $linha);
+            if (($aux[1] == config("app.msg_inexistente") && $solicitacao->status == "A") || $aux[1] != config("app.msg_inexistente")) array_push($resultado, $linha);
         }
         return view("reports.solicitacao", compact("resultado"));
     }

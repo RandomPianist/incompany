@@ -376,7 +376,7 @@ class Api2Controller extends ControllerKX {
                 ->where("sp.id_solicitacao", $req_sp["id_solicitacao"])
                 ->get();
             $sp = SolicitacoesProdutos::find($consulta[0]->id);
-            $sp->obs = "Item removido: ".$req_sp["cod"]." - ".$consulta[0]->descr."|O produto não existe no ERP TargetX";
+            $sp->obs = "Item removido: ".$req_sp["cod"]." - ".$consulta[0]->descr."|".config("app.msg_inexistente");
             $sp->save();
             $this->log_inserir("E", "solicitacoes_produtos", $sp->id, "ERP", $request->usu);
             $solicitacao = Solicitacoes::find($req_sp["id_solicitacao"]);
