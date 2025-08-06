@@ -9,6 +9,24 @@ use App\Models\Empresas;
 use App\Models\Pessoas;
 
 class EmpresasController extends ControllerKX {
+    private function validar_cnpj($cnpj) {
+        $cnpj = preg_replace('/[^0-9]/', '', (string) $cnpj);
+        if (strlen($cnpj) != 14) return false;
+        if (preg_match('/(\d)\1{13}/', $cnpj)) return false;
+        for ($i = 0, $j = 5, $soma = 0; $i < 12; $i++) {
+            $soma += $cnpj[$i] * $j;
+            $j = ($j == 2) ? 9 : $j - 1;
+        }
+        $resto = $soma % 11;
+        if ($cnpj[12] != ($resto < 2 ? 0 : 11 - $resto)) return false;
+        for ($i = 0, $j = 6, $soma = 0; $i < 13; $i++) {
+            $soma += $cnpj[$i] * $j;
+            $j = ($j == 2) ? 9 : $j - 1;
+        }
+        $resto = $soma % 11;
+        return $cnpj[13] == ($resto < 2 ? 0 : 11 - $resto);
+    }
+
     private function busca($param) {
         return DB::table("empresas")
                     ->select(
@@ -106,8 +124,18 @@ class EmpresasController extends ControllerKX {
     }
 
     public function salvar(Request $request) {
+        if (!trim($request->cnpj)) return 400;
+        if (!trim($request->razao_social)) return 400;
+        if (!trim($request->nome_fantasia)) return 400;
         if (intval($this->consultar($request))) return 401;
         $linha = Empresas::firstOrNew(["id" => $request->id]);
+        if (
+            $request->id &&
+            !$this->comparar_texto($request->cnpj, $linha->cnpj) &&
+            !$this->comparar_texto($request->razao_social, $linha->razao_social) &&
+            !$this->comparar_texto($request->nome_fantasia, $linha->nome_fantasia)
+        ) return 400;
+        if (!$this->validar_cnpj($request->cnpj)) return 400;
         $linha->nome_fantasia = mb_strtoupper($request->nome_fantasia);
         $linha->razao_social = mb_strtoupper($request->razao_social);
         $linha->cnpj = $request->cnpj;

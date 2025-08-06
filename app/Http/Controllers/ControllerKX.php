@@ -14,6 +14,12 @@ use App\Models\Retiradas;
 use App\Models\Comodatos;
 
 class ControllerKX extends Controller {
+    protected function comparar_num($a, $b) {
+        if ($a === null) $a = 0;
+        if ($b === null) $b = 0;
+        return floatval($a) != floatval($b);
+    }
+
     protected function comparar_texto($a, $b) {
         if ($a === null) $a = "";
         if ($b === null) $b = "";

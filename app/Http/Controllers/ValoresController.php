@@ -174,8 +174,13 @@ class ValoresController extends ControllerKX {
     }
 
     public function salvar($alias, Request $request) {
+        if (!trim($request->descr)) return 400;
+        if (!in_array($alias, ["categorias", "maquinas"])) return 400;
         if (intval($this->consultar($alias, $request))) return 401;
         $linha = Valores::firstOrNew(["id" => $request->id]);
+        if ($request->id) {
+            if (!$this->comparar_texto($request->descr, $linha->descr)) return 400;
+        }
         $linha->descr = mb_strtoupper($request->descr);
         $linha->alias = $alias;
         if (!$request->id) {

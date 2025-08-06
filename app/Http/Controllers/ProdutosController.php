@@ -114,8 +114,29 @@ class ProdutosController extends ControllerKX {
     }
 
     public function salvar(Request $request) {
+        $arr_req = (array) $request;
+        $erro = false;
+        foreach ($arr_req as $chave => $valor) {
+            if (in_array($chave, ["cod_externo", "descr", "ca", "validade", "categoria", "tamanho", "validade_ca"]) && !trim($valor)) $erro = true;
+        }
+        if ($erro) return 400;
+        $validade_ca = Carbon::createFromFormat('d/m/Y', $request->validade_ca)->format('Y-m-d');
         if ($this->consultar($request)) return 401;
         $linha = Produtos::firstOrNew(["id" => $request->id]);
+        if (
+            $request->id &&
+            !$request->file("foto") &&
+            $validade_ca == strval($linha->validade_ca) &&
+            !$this->comparar_texto($request->descr, $linha->descr) &&
+            !$this->comparar_texto($request->tamanho, $linha->tamanho) &&
+            !$this->comparar_texto($request->detalhes, $linha->detalhes) &&
+            !$this->comparar_texto($request->referencia, $linha->referencia) &&
+            !$this->comparar_num($request->ca, $linha->ca) &&
+            !$this->comparar_num($request->preco, $linha->preco) &&
+            !$this->comparar_num($request->consumo, $linha->consumo) &&
+            !$this->comparar_num($request->validade, $linha->validade) &&
+            !$this->comparar_num($request->id_categoria, $linha->id_categoria)
+        ) return 400;
         $this->atribuicao_atualiza_ref($request->id, $linha->referencia, $request->referencia);
         $linha->descr = mb_strtoupper($request->descr);
         $linha->preco = $request->preco;

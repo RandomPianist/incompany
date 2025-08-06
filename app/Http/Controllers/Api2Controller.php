@@ -10,17 +10,12 @@ use App\Models\Produtos;
 use App\Models\Estoque;
 use App\Models\Solicitacoes;
 use App\Models\SolicitacoesProdutos;
+use App\Models\MaquinasProdutos;
 use App\Models\Comodatos;
 use App\Models\Retiradas;
 use Illuminate\Http\Request;
 
 class Api2Controller extends ControllerKX {
-    private function comparar_num($a, $b) {
-        if ($a === null) $a = 0;
-        if ($b === null) $b = 0;
-        return floatval($a) != floatval($b);
-    }
-
     private function maquinas($cft) {
         return DB::table("valores")
                     ->select(
@@ -50,6 +45,122 @@ class Api2Controller extends ControllerKX {
                             ->toArray()
                     )
                     ->where("valores.lixeira", 0);
+    }
+
+    private function sincronizar_produtos($maquina, $usuario, $produtos) {
+        $ids_cdp = array();
+        $cods_cdp = array();
+        $ids_itm = array();
+        $cods_itm = array();
+        foreach ($produtos as $req_produto_arr) {
+            $req_produto = (object) $req_produto_arr;
+            $produto = Produtos::find($req_produto->id);
+            $continua = false;
+            $inserir_log = true;
+            $validade_ca = Carbon::createFromFormat('d-m-Y', $req_produto->validade_ca)->format('Y-m-d');
+            if ($produto !== null) {
+                if ($this->comparar_texto($req_produto->cod, $produto->cod_externo)) $continua = true;
+                if ($this->comparar_texto($req_produto->descr, $produto->descr)) $continua = true;
+                if ($this->comparar_texto($req_produto->ca, $produto->ca)) $continua = true;
+                if ($this->comparar_texto($validade_ca, $produto->validade_ca)) $continua = true;
+                if ($this->comparar_texto($req_produto->refer, $produto->referencia)) {
+                    $this->atribuicao_atualiza_ref($req_produto->id, $produto->referencia, $req_produto->refer, $usuario, true);
+                    $continua = true;
+                }
+                if ($this->comparar_texto($req_produto->cod_fab, $produto->cod_fab)) $continua = true;
+                if ($this->comparar_texto($req_produto->tamanho, $produto->tamanho)) $continua = true;
+                if ($this->comparar_texto($req_produto->foto, $produto->foto)) $continua = true;
+                if ($this->comparar_num($req_produto->prcad, $produto->preco)) $continua = true;
+                if ($this->comparar_num($req_produto->prmin, $produto->prmin)) $continua = true;
+                if ($this->comparar_num($req_produto->validade, $produto->validade)) $continua = true;
+                if ($this->comparar_num($req_produto->consumo, $produto->consumo)) $continua = true;
+            } else {
+                $produto = new Produtos;
+                $continua = true;
+            }
+            if ($continua) {
+                $produto->cod_externo = $req_produto->cod;
+                $produto->descr = $req_produto->descr;
+                $produto->ca = $req_produto->ca;
+                $produto->validade_ca = $validade_ca;
+                $produto->referencia = $req_produto->refer;
+                $produto->cod_fab = $req_produto->cod_fab;
+                $produto->tamanho = $req_produto->tamanho;
+                $produto->foto = $req_produto->foto;
+                $produto->preco = $req_produto->prcad;
+                $produto->prmin = $req_produto->prmin;
+                $produto->validade = $req_produto->validade;
+                $produto->consumo = $req_produto->consumo;
+                $produto->save();
+                $inserir_log = false;
+                $this->log_inserir(intval($req_produto->id) ? "E" : "C", "produtos", $produto->id, "ERP", $usuario);
+            }
+            $where_mp = "id_maquina = ".$maquina." AND id_produto = ".$produto->id;
+            if (!intval($req_produto->id)) {
+                $this->criar_mp($produto->id, "valores.id", true, $usuario);
+                array_push($ids_itm, $produto->id);
+                array_push($cods_itm, $produto->cod_externo);
+            }
+            if ($this->comparar_num($req_produto->preco, $req_produto->prcad)) {
+                DB::statement("
+                    UPDATE maquinas_produtos
+                    SET preco = ".$req_produto->preco."
+                    WHERE ".$where_mp
+                );
+                if (intval($req_produto->id)) $this->log_inserir_lote("E", "ERP", "maquinas_produtos", $where_mp);
+            }
+            $req_categoria = (object) $req_produto->categoria;
+            if (intval($req_categoria->cod)) {
+                $categoria = Valores::find($req_categoria->id);
+                $continua = false;
+                if ($categoria !== null) {
+                    if ($this->comparar_num($req_categoria->cod, $categoria->id_externo)) $continua = true;
+                    if ($this->comparar_texto($req_categoria->descr, $categoria->descr)) $continua = true;
+                } else {
+                    $categoria = new Valores;
+                    $continua = true;
+                }
+                if ($continua) {
+                    $categoria->id_externo = $req_categoria->cod;
+                    $categoria->descr = $req_categoria->descr;
+                    $categoria->alias = "categorias";
+                    $categoria->save();
+                    $this->log_inserir(intval($req_categoria->id) ? "E" : "C", "valores", $categoria->id, "ERP", $usuario);
+                    if (!intval($req_categoria->id)) {
+                        array_push($ids_cdp, $categoria->id);
+                        array_push($cods_cdp, $categoria->id_externo);
+                    }
+                }
+                if ($this->comparar_num($produto->id_categoria, $categoria->id)) {
+                    $produto->id_categoria = $categoria->id;
+                    $produto->save();
+                    if ($inserir_log || !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario);
+                }
+            } else {
+                $id_cat = 0;
+                if ($produto->id_categoria !== null) $id_cat = intval($produto->id_categoria);
+                if ($id_cat) {
+                    $produto->id_categoria = 0;
+                    $produto->save();
+                    if ($inserir_log || !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario);
+                }
+            }
+            $estq = new Estoque;
+            $estq->es = "E";
+            $estq->qtd = $req_produto->qtd;
+            $estq->id_mp = DB::table("maquinas_produtos")
+                                ->whereRaw($where_mp)
+                                ->value("id");
+            $estq->preco = MaquinasPrecos::find($estq->id_mp)->preco;
+            $estq->save();
+            $this->log_inserir("C", "estoque", $estq->id, "ERP", $usuario);
+        }
+        $resultado = new \stdClass;
+        $resultado->ids_cdp = $ids_cdp;
+        $resultado->cods_cdp = $cods_cdp;
+        $resultado->ids_itm = $ids_itm;
+        $resultado->cods_itm = $cods_itm;
+        return $resultado;
     }
 
     public function maquinas_por_cliente(Request $request) {
@@ -167,120 +278,6 @@ class Api2Controller extends ControllerKX {
                         ->first();
         if ($consulta === null) return "";
         return json_encode($consulta);
-    }
-
-    private function sincronizar_produtos($maquina, $usuario, $produtos) {
-        $ids_cdp = array();
-        $cods_cdp = array();
-        $ids_itm = array();
-        $cods_itm = array();
-        foreach ($produtos as $req_produto_arr) {
-            $req_produto = (object) $req_produto_arr;
-            $produto = Produtos::find($req_produto->id);
-            $continua = false;
-            $inserir_log = true;
-            $validade_ca = Carbon::createFromFormat('d-m-Y', $req_produto->validade_ca)->format('Y-m-d');
-            if ($produto !== null) {
-                if ($this->comparar_texto($req_produto->cod, $produto->cod_externo)) $continua = true;
-                if ($this->comparar_texto($req_produto->descr, $produto->descr)) $continua = true;
-                if ($this->comparar_texto($req_produto->ca, $produto->ca)) $continua = true;
-                if ($this->comparar_texto($validade_ca, $produto->validade_ca)) $continua = true;
-                if ($this->comparar_texto($req_produto->refer, $produto->referencia)) {
-                    $this->atribuicao_atualiza_ref($req_produto->id, $produto->referencia, $req_produto->refer, $usuario, true);
-                    $continua = true;
-                }
-                if ($this->comparar_texto($req_produto->cod_fab, $produto->cod_fab)) $continua = true;
-                if ($this->comparar_texto($req_produto->tamanho, $produto->tamanho)) $continua = true;
-                if ($this->comparar_texto($req_produto->foto, $produto->foto)) $continua = true;
-                if ($this->comparar_num($req_produto->prcad, $produto->preco)) $continua = true;
-                if ($this->comparar_num($req_produto->prmin, $produto->prmin)) $continua = true;
-                if ($this->comparar_num($req_produto->validade, $produto->validade)) $continua = true;
-                if ($this->comparar_num($req_produto->consumo, $produto->consumo)) $continua = true;
-            } else {
-                $produto = new Produtos;
-                $continua = true;
-            }
-            if ($continua) {
-                $produto->cod_externo = $req_produto->cod;
-                $produto->descr = $req_produto->descr;
-                $produto->ca = $req_produto->ca;
-                $produto->validade_ca = $validade_ca;
-                $produto->referencia = $req_produto->refer;
-                $produto->cod_fab = $req_produto->cod_fab;
-                $produto->tamanho = $req_produto->tamanho;
-                $produto->foto = $req_produto->foto;
-                $produto->preco = $req_produto->prcad;
-                $produto->prmin = $req_produto->prmin;
-                $produto->validade = $req_produto->validade;
-                $produto->consumo = $req_produto->consumo;
-                $produto->save();
-                $inserir_log = false;
-                $this->log_inserir(intval($req_produto->id) ? "E" : "C", "produtos", $produto->id, "ERP", $usuario);
-            }
-            $where_mp = "id_maquina = ".$maquina." AND id_produto = ".$produto->id;
-            if (!intval($req_produto->id)) {
-                $this->criar_mp($produto->id, "valores.id", true, $usuario);
-                if ($this->comparar_num($req_produto->preco, $req_produto->prcad)) {
-                    DB::statement("
-                        UPDATE maquinas_produtos
-                        SET preco = ".$req_produto->preco."
-                        WHERE ".$where_mp
-                    );
-                }
-                array_push($ids_itm, $produto->id);
-                array_push($cods_itm, $produto->cod_externo);
-            }
-            $req_categoria = (object) $req_produto->categoria;
-            if (intval($req_categoria->cod)) {
-                $categoria = Valores::find($req_categoria->id);
-                $continua = false;
-                if ($categoria !== null) {
-                    if ($this->comparar_num($req_categoria->cod, $categoria->id_externo)) $continua = true;
-                    if ($this->comparar_texto($req_categoria->descr, $categoria->descr)) $continua = true;
-                } else {
-                    $categoria = new Valores;
-                    $continua = true;
-                }
-                if ($continua) {
-                    $categoria->id_externo = $req_categoria->cod;
-                    $categoria->descr = $req_categoria->descr;
-                    $categoria->alias = "categorias";
-                    $categoria->save();
-                    $this->log_inserir(intval($req_categoria->id) ? "E" : "C", "valores", $categoria->id, "ERP", $usuario);
-                    if (!intval($req_categoria->id)) {
-                        array_push($ids_cdp, $categoria->id);
-                        array_push($cods_cdp, $categoria->id_externo);
-                    }
-                }
-                if ($this->comparar_num($produto->id_categoria, $categoria->id)) {
-                    $produto->id_categoria = $categoria->id;
-                    $produto->save();
-                    if ($inserir_log || !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario);
-                }
-            } else {
-                $id_cat = 0;
-                if ($produto->id_categoria !== null) $id_cat = intval($produto->id_categoria);
-                if ($id_cat) {
-                    $produto->id_categoria = 0;
-                    $produto->save();
-                    if ($inserir_log || !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario);
-                }
-            }
-            $estq = new Estoque;
-            $estq->es = "E";
-            $estq->qtd = $req_produto->qtd;
-            $estq->id_mp = DB::table("maquinas_produtos")
-                                ->whereRaw($where_mp)
-                                ->value("id");
-            $estq->save();
-            $this->log_inserir("C", "estoque", $estq->id, "ERP", $usuario);
-        }
-        $resultado = new \stdClass;
-        $resultado->ids_cdp = $ids_cdp;
-        $resultado->cods_cdp = $cods_cdp;
-        $resultado->ids_itm = $ids_itm;
-        $resultado->cods_itm = $cods_itm;
-        return $resultado;
     }
 
     public function sincronizar(Request $request) {

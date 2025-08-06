@@ -130,11 +130,17 @@ class SetoresController extends ControllerKX {
     }
 
     public function salvar(Request $request) {
+        if (!trim($request->descr)) return 400;
         if ($this->consultar_main($request)->msg) return 401;
         $cria_usuario = $request->cria_usuario == "S" ? 1 : 0;
         $linha = Setores::firstOrNew(["id" => $request->id]);
         if ($request->id) {
             $adm_ant = intval($linha->cria_usuario);
+            if (
+                $adm_ant == $cria_usuario &&
+                $linha->id_empresa == $request->id_empresa &&
+                !$this->comparar_texto($request->descr, $linha->descr)
+            ) return 400;
             if ($adm_ant != $cria_usuario) {
                 if ($adm_ant) {
                     $lista = array();

@@ -110,7 +110,7 @@ class PessoasController extends ControllerKX {
         $modelo->nome = mb_strtoupper($request->nome);
         $modelo->cpf = $request->cpf;
         $modelo->funcao = mb_strtoupper($request->funcao);
-        if ($request->admissao) $modelo->admissao = Carbon::createFromFormat('d/m/Y', $request->admissao)->format('Y-m-d');
+        $modelo->admissao = Carbon::createFromFormat('d/m/Y', $request->admissao)->format('Y-m-d');
         $modelo->id_empresa = $request->id_empresa;
         $modelo->id_setor = $request->id_setor;
         if (trim($request->senha)) $modelo->senha = $request->senha;
@@ -270,11 +270,31 @@ class PessoasController extends ControllerKX {
     }
 
     public function salvar(Request $request) {
+        $arr_req = (array) $request;
+        $erro = false;
+        foreach ($arr_req as $chave => $valor) {
+            if (in_array($chave, ["nome", "funcao", "admissao", "cpf"]) && !trim($valor)) $erro = true;
+        }
+        if ($erro) return 400;
+        if ($this->criar_usuario($request->id_setor)) {
+            if (!trim($request->email)) return 400;
+            if (!filter_var($request->email, FILTER_VALIDATE_EMAIL)) return 400;
+        }
+        $admissao = Carbon::createFromFormat('d/m/Y', $request->admissao);
+        $hj = Carbon::parse(date('Y-m-d'));
+        if ($admissao > $hj) return 400;
         if ($this->consultar_main($request)->tipo != "ok") return 401;
         $linha = 0;
         $setores = [$request->id_setor];
         if ($request->id) {
-            $setor_ant = Pessoas::find($request->id)->id_setor;
+            $modelo = Pessoas::find($request->id);
+            if (
+                !$this->comparar_texto($request->cpf, $modelo->cpf) &&
+                !$this->comparar_texto($request->nome, $modelo->nome) &&
+                !$this->comparar_texto($request->funcao, $modelo->funcao) &&
+                !$this->comparar_texto($admissao->format('Y-m-d'), strval($modelo->admissao))
+            ) return 400;
+            $setor_ant = $modelo->id_setor;
             if ($setor_ant != $request->id_setor) {
                 array_push($setores, $setor_ant);
                 if ($this->cria_usuario($setor_ant)) $this->deletar_usuario($request->id);    
@@ -300,7 +320,6 @@ class PessoasController extends ControllerKX {
                                                     ->value("id")
                 );
             }
-            $modelo = Pessoas::find($request->id);
             $linha = $this->salvar_main($modelo, $request);
         } else {
             $modelo = new Pessoas;
