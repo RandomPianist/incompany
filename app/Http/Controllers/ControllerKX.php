@@ -64,7 +64,7 @@ class ControllerKX extends Controller {
         return (!sizeof(
             DB::table("empresas")
                 ->where("id", $request->id_empresa)
-                ->where("nome_fantasia", $request->empresa)
+                ->where("nome_fantasia", trim(str_replace("-", "", $request->empresa)))
                 ->where("lixeira", 0)
                 ->get()
         ));
