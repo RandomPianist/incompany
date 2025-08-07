@@ -95,6 +95,7 @@ class ControllerKX extends Controller {
     }
 
     protected function log_consultar($tabela, $param = "") {
+        if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) return "";
         $query = "
             SELECT
                 IFNULL(log.nome, log.origem) AS nome,
@@ -170,7 +171,7 @@ class ControllerKX extends Controller {
         $query .= " AND log.origem IS NOT NULL ORDER BY log.data DESC";
 
         $consulta = DB::select(DB::raw($query));
-        return !intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa) ? sizeof($consulta) ? "Última atualização feita por ".$consulta[0]->nome." em ".$consulta[0]->data : "Nenhuma atualização feita" : "";
+        return sizeof($consulta) ? "Última atualização feita por ".$consulta[0]->nome." em ".$consulta[0]->data : "Nenhuma atualização feita";
     }
 
     protected function retirada_consultar($id_atribuicao, $qtd, $id_pessoa) {
