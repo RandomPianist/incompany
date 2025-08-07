@@ -30,6 +30,12 @@ class ValoresController extends ControllerKX {
                                     aux1.fim_formatado
                                 ) ELSE '---'
                             END AS comodato
+                        "),
+                        DB::raw("
+                            CASE
+                                WHEN aux2.cod_externo IS NOT NULL THEN 'S'
+                                ELSE 'N'
+                            END AS tem_cod
                         ")
                     )
                     ->leftjoinSub(
@@ -47,7 +53,8 @@ class ValoresController extends ControllerKX {
                             ->select(
                                 "id",
                                 "id_matriz",
-                                "nome_fantasia"
+                                "nome_fantasia",
+                                "cod_externo"
                             )
                             ->where("lixeira", 0),
                     "aux2", "aux2.id", "aux1.id_empresa")

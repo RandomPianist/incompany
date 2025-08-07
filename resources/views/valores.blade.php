@@ -87,7 +87,7 @@
                         resultado += "<i class = 'my-icon far fa-edit' title = 'Editar' onclick = 'chamar_modal(" + linha.id + ")'></i>" +
                             "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/valores/{{ $alias }}"' + ")'></i>";
                     }
-                    if (linha.alias == "maquinas" && emp) resultado += "<i class = 'my-icon far fa-cart-arrow-down' title = 'Solicitar compra' onclick = 'relatorio = new RelatorioItens(true, " + linha.id + ")'></i>";
+                    if (linha.alias == "maquinas" && emp && linha.tem_cod == "S") resultado += "<i class = 'my-icon far fa-cart-arrow-down' title = 'Solicitar compra' onclick = 'relatorio = new RelatorioItens(true, " + linha.id + ")'></i>";
                     resultado += "</td></tr>";
                 });
                 document.getElementById("table-dados").innerHTML = resultado;
