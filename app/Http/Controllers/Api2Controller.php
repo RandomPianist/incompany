@@ -134,7 +134,7 @@ class Api2Controller extends ControllerKX {
                 if ($this->comparar_num($produto->id_categoria, $categoria->id)) {
                     $produto->id_categoria = $categoria->id;
                     $produto->save();
-                    if ($inserir_log || !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario);
+                    if ($inserir_log && !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario);
                 }
             } else {
                 $id_cat = 0;
@@ -142,7 +142,7 @@ class Api2Controller extends ControllerKX {
                 if ($id_cat) {
                     $produto->id_categoria = 0;
                     $produto->save();
-                    if ($inserir_log || !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario);
+                    if ($inserir_log && !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario);
                 }
             }
             $estq = new Estoque;
