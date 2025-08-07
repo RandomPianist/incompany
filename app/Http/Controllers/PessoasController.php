@@ -276,7 +276,7 @@ class PessoasController extends ControllerKX {
             if (in_array($chave, ["nome", "funcao", "admissao", "cpf"]) && !trim($valor)) $erro = true;
         }
         if ($erro) return 400;
-        if ($this->criar_usuario($request->id_setor)) {
+        if ($this->cria_usuario($request->id_setor)) {
             if (!trim($request->email)) return 400;
             if (!filter_var($request->email, FILTER_VALIDATE_EMAIL)) return 400;
         }
