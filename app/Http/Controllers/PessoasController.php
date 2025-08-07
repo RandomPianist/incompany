@@ -332,12 +332,10 @@ class PessoasController extends ControllerKX {
                 $linha->save();
             }
         }
+        $modelo = Pessoas::find($linha->id);
         $tipo = $request->tipo;
-        if (!$tipo) {
-            $tipo = "U";
-            if (intval(Pessoas::find($modelo->id)->supervisor)) $tipo = "S";
-            if (!intval(Pessoas::find($modelo->id)->id_empresa)) $tipo = "A";
-        }
+        if ($this->cria_usuario($modelo->id_setor)) $tipo = !intval($modelo->id_empresa) ? "A" : "U";
+        else $tipo = intval($modelo->supervisor) ? $tipo = "S" : "F";
 
         $lista = DB::table("pessoas")
                     ->where("lixeira", 0)
