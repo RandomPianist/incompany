@@ -27,8 +27,8 @@ class PreviasController extends ControllerKX {
 
     public function excluir(Request $request) {
         $where = "id_comodato = ".$request->id_comodato." AND id_pessoa = ".Auth::user()->id_pessoa;
-        DB::statement("DELETE FROM previas WHERE ".$where);
         $this->log_inserir_lote("D", "WEB", "previas", $where);
+        DB::statement("DELETE FROM previas WHERE ".$where);
     }
 
     public function preencher(Request $request) {
