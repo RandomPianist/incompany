@@ -204,7 +204,7 @@ class ControllerKX extends Controller {
                     "preco"
                 )
         ;
-        $consulta_produto = $consulta->where("produtos.id", $json["id_produto"])->get();
+        $consulta_produto = $consulta->where("produtos.id", $json["id_produto"])->first();
 
         $pessoa = Pessoas::find($json["id_pessoa"]);
         $linha = new Retiradas;
