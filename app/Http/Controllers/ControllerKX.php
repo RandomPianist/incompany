@@ -209,6 +209,7 @@ class ControllerKX extends Controller {
         $pessoa = Pessoas::find($json["id_pessoa"]);
         $linha = new Retiradas;
         if (isset($json["obs"])) $linha->obs = $json["obs"];
+        if (isset($json["hora"])) $linha->hora = $json["hora"];
         if (isset($json["biometria_ou_senha"])) $linha->biometria_ou_senha = $json["biometria_ou_senha"];
         if (isset($json["id_supervisor"])) {
             if (intval($json["id_supervisor"])) $linha->id_supervisor = $json["id_supervisor"];
