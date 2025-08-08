@@ -188,7 +188,7 @@ class ControllerKX extends Controller {
         $comodato = intval($json["id_comodato"]);
         $api = $comodato > 0;
 
-        $consulta = !$api ?
+        $consulta = $api ?
             DB::table("maquinas_produtos AS mp")
                 ->select(
                     "produtos.ca",
