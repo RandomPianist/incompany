@@ -282,7 +282,7 @@ class PessoasController extends ControllerKX {
         }
         $admissao = Carbon::createFromFormat('d/m/Y', $request->admissao);
         $hj = Carbon::parse(date('Y-m-d'));
-        if ($admissao > $hj) return 400;
+        // if ($admissao > $hj) return 400;
         if ($this->consultar_main($request)->tipo != "ok") return 401;
         $linha = 0;
         $setores = [$request->id_setor];
