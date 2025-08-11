@@ -280,9 +280,9 @@ class PessoasController extends ControllerKX {
             if (!trim($request->email)) return 400;
             if (!filter_var($request->email, FILTER_VALIDATE_EMAIL)) return 400;
         }
-        $admissao = Carbon::createFromFormat('d/m/Y', $request->admissao);
-        $hj = Carbon::parse(date('Y-m-d'));
-        // if ($admissao > $hj) return 400;
+        $admissao = Carbon::createFromFormat('d/m/Y', $request->admissao)->startOfDay();
+        $hj = Carbon::today();
+        if ($admissao->greaterThan($hj)) return 400;
         if ($this->consultar_main($request)->tipo != "ok") return 401;
         $linha = 0;
         $setores = [$request->id_setor];
