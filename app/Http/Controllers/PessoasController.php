@@ -8,7 +8,6 @@ use Hash;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
-use App\Models\Log;
 
 class PessoasController extends ControllerKX {
     private function busca($where, $tipo) {
@@ -128,8 +127,9 @@ class PessoasController extends ControllerKX {
     }
 
     private function permissao_usuario($id_pessoa) {
-        if (!intval(DB::table("pessoas")->selectRaw("IFNULL(id_usuario, 0) AS id_usuario")->where("id", Auth::user()->id_pessoa)->value("id_usuario"))) return true;
-        if (!intval(DB::table("pessoas")->selectRaw("IFNULL(id_usuario, 0) AS id_usuario")->where("id", $id_pessoa)->value("id_usuario"))) return true;
+        $consulta = DB::table("pessoas")->selectRaw("IFNULL(id_usuario, 0) AS id_usuario");
+        if (!intval($consulta->where("id", Auth::user()->id_pessoa)->value("id_usuario"))) return true;
+        if (!intval($consulta->where("id", $id_pessoa)->value("id_usuario"))) return true;
         return in_array(Pessoas::find($id_pessoa)->id_usuario, $this->criados_por_mim([Auth::user()->id]));
     }
 
