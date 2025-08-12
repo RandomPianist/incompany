@@ -17,12 +17,8 @@ class SetoresController extends ControllerKX {
                         "empresas.nome_fantasia AS empresa"
                     )
                     ->leftjoin("empresas", "setores.id_empresa", "empresas.id")
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores"))
                     ->whereRaw($param)
-                    ->where(function($sql) {
-                        $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
-                        if ($id_emp) $sql->whereRaw($id_emp." IN (empresas.id, empresas.id_matriz)");
-                    })
-                    ->where("setores.lixeira", 0)
                     ->get();
     }
 
@@ -129,12 +125,17 @@ class SetoresController extends ControllerKX {
         return json_encode($this->aviso_main($id));
     }
 
+    public function permissao() {
+        return !intval(DB::table("pessoas")->selectRaw("IFNULL(id_usuario, 0) AS id_usuario")->where("id", Auth::user()->id_pessoa)->value("id_usuario")) ? 1 : 0;
+    }
+
     public function salvar(Request $request) {
         if (!trim($request->descr)) return 400;
         if ($this->consultar_main($request)->msg) return 401;
         $cria_usuario = $request->cria_usuario == "S" ? 1 : 0;
         $linha = Setores::firstOrNew(["id" => $request->id]);
         if ($request->id) {
+            if (!$this->permissao()) return 401;
             $adm_ant = intval($linha->cria_usuario);
             if (
                 $adm_ant == $cria_usuario &&
@@ -195,7 +196,7 @@ class SetoresController extends ControllerKX {
     public function primeiro_admin() {
         return json_encode(
             DB::table("setores")
-                ->where("lixeira", 0)
+                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores"))
                 ->where("cria_usuario", 1)
                 ->first()
         );

@@ -149,107 +149,117 @@
             $(el).prev().val(el.checked ? "S" : "N");
             const id = parseInt(document.getElementById("id").value);
             let tudo = document.querySelector("#setoresModal .container");
+            $(".linha-usuario").each(function() {
+                $(this).remove();
+            });
             if (id) {
-                $(".linha-usuario").each(function() {
-                    $(this).remove();
-                });
-                if (el.checked) {
-                    $.get(URL + "/setores/pessoas/" + id, function(data) {
-                        if (typeof data == "string") data = $.parseJSON(data);
-                        for (let i = 1; i <= data.length; i++) {
-                            let linha = document.createElement("div");
-                            linha.classList.add("row", "linha-usuario", "mb-2");
+                $.get(URL + "/setores/permissao", function(permissao) {
+                    if (parseInt(permissao)) {
+                        if (el.checked) {
+                            $.get(URL + "/setores/pessoas/" + id, function(data) {
+                                if (typeof data == "string") data = $.parseJSON(data);
+                                for (let i = 1; i <= data.length; i++) {
+                                    let linha = document.createElement("div");
+                                    linha.classList.add("row", "linha-usuario", "mb-2");
 
-                            let col_email = document.createElement("div");
-                            col_email.classList.add("col-6", "pr-1");
+                                    let col_email = document.createElement("div");
+                                    col_email.classList.add("col-6", "pr-1");
 
-                            let col_senha = document.createElement("div");
-                            col_senha.classList.add("col-6", "pl-1");
+                                    let col_senha = document.createElement("div");
+                                    col_senha.classList.add("col-6", "pl-1");
 
-                            let el_id_pessoa = document.createElement("input");
-                            el_id_pessoa.type = "hidden";
-                            el_id_pessoa.name = "id_pessoa[]";
-                            el_id_pessoa.value = data[i - 1].id;
+                                    let el_id_pessoa = document.createElement("input");
+                                    el_id_pessoa.type = "hidden";
+                                    el_id_pessoa.name = "id_pessoa[]";
+                                    el_id_pessoa.value = data[i - 1].id;
 
-                            let el_nome_pessoa = document.createElement("input");
-                            el_nome_pessoa.type = "hidden";
-                            el_nome_pessoa.name = "nome[]";
-                            el_nome_pessoa.value = data[i - 1].nome;
+                                    let el_nome_pessoa = document.createElement("input");
+                                    el_nome_pessoa.type = "hidden";
+                                    el_nome_pessoa.name = "nome[]";
+                                    el_nome_pessoa.value = data[i - 1].nome;
 
-                            let el_email = document.createElement("input");
-                            el_email.classList.add("form-control", "validar");
-                            el_email.type = "text";
-                            el_email.name = "email[]";
-                            el_email.placeholder = "Email de " + data[i - 1].nome;
-                            el_email.id = "email-" + i;
+                                    let el_email = document.createElement("input");
+                                    el_email.classList.add("form-control", "validar");
+                                    el_email.type = "text";
+                                    el_email.name = "email[]";
+                                    el_email.placeholder = "Email de " + data[i - 1].nome;
+                                    el_email.id = "email-" + i;
 
-                            let el_senha = document.createElement("input");
-                            el_senha.classList.add("form-control", "validar");
-                            el_senha.type = "password";
-                            el_senha.name = "password[]";
-                            el_senha.placeholder = "Senha de " + data[i - 1].nome;
-                            el_senha.id = "senha-" + i;
+                                    let el_senha = document.createElement("input");
+                                    el_senha.classList.add("form-control", "validar");
+                                    el_senha.type = "password";
+                                    el_senha.name = "password[]";
+                                    el_senha.placeholder = "Senha de " + data[i - 1].nome;
+                                    el_senha.id = "senha-" + i;
 
-                            col_email.appendChild(el_email);
-                            col_senha.appendChild(el_senha);
-                            linha.appendChild(el_id_pessoa);
-                            linha.appendChild(el_nome_pessoa);
-                            linha.appendChild(col_email);
-                            linha.appendChild(col_senha);
-                            tudo.appendChild(linha);
-                        }
-                        let lista = document.getElementsByClassName("linha-usuario");
-                        lista[lista.length - 1].classList.add("mb-4");
-                        $(".form-control").each(function() {
-                            $(this).keydown(function() {
-                                $(this).removeClass("invalido");
-                            });
-                        });
-                    });
-                } else {
-                    $.get(URL + "/setores/usuarios/" + id, function(data) {
-                        if (typeof data == "string") data = $.parseJSON(data);
-                        if (!parseInt(data.bloquear)) {
-                            for (let i = 1; i <= data.consulta.length; i++) {
-                                let linha = document.createElement("div");
-                                linha.classList.add("row", "linha-usuario", "mb-2");
-
-                                let col_senha = document.createElement("div");
-                                col_senha.classList.add("col-12");
-
-                                let el_id_pessoa = document.createElement("input");
-                                el_id_pessoa.type = "hidden";
-                                el_id_pessoa.name = "id_pessoa[]";
-                                el_id_pessoa.value = data.consulta[i - 1].id;
-
-                                let el_senha = document.createElement("input");
-                                el_senha.classList.add("form-control", "validar");
-                                el_senha.type = "password";
-                                el_senha.name = "password[]";
-                                el_senha.placeholder = "Senha de " + data.consulta[i - 1].nome;
-                                el_senha.id = "senha-" + i;
-                                el_senha.onkeyup = function() {
-                                    numerico(el_senha);
+                                    col_email.appendChild(el_email);
+                                    col_senha.appendChild(el_senha);
+                                    linha.appendChild(el_id_pessoa);
+                                    linha.appendChild(el_nome_pessoa);
+                                    linha.appendChild(col_email);
+                                    linha.appendChild(col_senha);
+                                    tudo.appendChild(linha);
                                 }
-
-                                col_senha.appendChild(el_senha);
-                                linha.appendChild(el_id_pessoa);
-                                linha.appendChild(col_senha);
-                                tudo.appendChild(linha);
-                            }
-                            let lista = document.getElementsByClassName("linha-usuario");
-                            lista[lista.length - 1].classList.add("mb-4");
-                            $(".form-control").each(function() {
-                                $(this).keydown(function() {
-                                    $(this).removeClass("invalido");
+                                let lista = document.getElementsByClassName("linha-usuario");
+                                lista[lista.length - 1].classList.add("mb-4");
+                                $(".form-control").each(function() {
+                                    $(this).keydown(function() {
+                                        $(this).removeClass("invalido");
+                                    });
                                 });
                             });
                         } else {
-                            s_alert("Alterar essa opção apagaria seu usuário");
-                            el.checked = true;
+                            $.get(URL + "/setores/usuarios/" + id, function(data) {
+                                if (typeof data == "string") data = $.parseJSON(data);
+                                if (!parseInt(data.bloquear)) {
+                                    for (let i = 1; i <= data.consulta.length; i++) {
+                                        let linha = document.createElement("div");
+                                        linha.classList.add("row", "linha-usuario", "mb-2");
+
+                                        let col_senha = document.createElement("div");
+                                        col_senha.classList.add("col-12");
+
+                                        let el_id_pessoa = document.createElement("input");
+                                        el_id_pessoa.type = "hidden";
+                                        el_id_pessoa.name = "id_pessoa[]";
+                                        el_id_pessoa.value = data.consulta[i - 1].id;
+
+                                        let el_senha = document.createElement("input");
+                                        el_senha.classList.add("form-control", "validar");
+                                        el_senha.type = "password";
+                                        el_senha.name = "password[]";
+                                        el_senha.placeholder = "Senha de " + data.consulta[i - 1].nome;
+                                        el_senha.id = "senha-" + i;
+                                        el_senha.onkeyup = function() {
+                                            numerico(el_senha);
+                                        }
+
+                                        col_senha.appendChild(el_senha);
+                                        linha.appendChild(el_id_pessoa);
+                                        linha.appendChild(col_senha);
+                                        tudo.appendChild(linha);
+                                    }
+                                    let lista = document.getElementsByClassName("linha-usuario");
+                                    lista[lista.length - 1].classList.add("mb-4");
+                                    $(".form-control").each(function() {
+                                        $(this).keydown(function() {
+                                            $(this).removeClass("invalido");
+                                        });
+                                    });
+                                } else {
+                                    s_alert("Alterar essa opção apagaria seu usuário");
+                                    el.checked = true;
+                                    $(el).prev().val("S");
+                                }
+                            });
                         }
-                    });
-                }
+                    } else {
+                        setTimeout(function() {
+                            el.checked = !el.checked;
+                            s_alert("Você não tem permissão para executar essa ação");
+                        }, 1);
+                    }
+                });
             }
         }
     </script>

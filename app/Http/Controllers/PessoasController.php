@@ -178,18 +178,7 @@ class PessoasController extends ControllerKX {
 
     private function consultar_main(Request $request) {
         $resultado = new \stdClass;
-        if ($this->empresa_consultar($request)) {
-            $resultado->tipo = "invalido";
-            $resultado->dado = "Empresa";
-        } else if (!sizeof(
-            DB::table("setores")
-                ->where("id", $request->id_setor)
-                ->where("descr", $request->setor)
-                ->get()
-        )) {
-            $resultado->tipo = "invalido";
-            $resultado->dado = "Setor";
-        } else if (sizeof(
+        if (sizeof(
             DB::table("pessoas")
                 ->where("lixeira", 0)
                 ->where("cpf", $request->cpf)
@@ -276,14 +265,17 @@ class PessoasController extends ControllerKX {
     }
 
     public function consultar(Request $request) {
-        return json_encode($this->consultar_main($request));
-    }
-
-    public function consultar2(Request $request) {
-        if ($request->id) {
-            if ($this->cria_usuario($request->id_setor) != $this->cria_usuario(Pessoas::find($request->id)->id_setor)) return $this->permissao_usuario($request->id) ? 1 : 0;
-        } else if ($this->cria_usuario($request->id_setor)) return intval(Pessoas::find(Auth::user()->id_pessoa)->supervisor);
-        return 1;
+        $consulta = $this->consultar_main($request);
+        if ($consulta->tipo == "ok") {
+            if ($request->id) {
+                if ($this->cria_usuario($request->id_setor) != $this->cria_usuario(Pessoas::find($request->id)->id_setor)) {
+                    if (!$this->permissao_usuario($request->id)) $consulta->tipo = "permissao";
+                }
+            } else if ($this->cria_usuario($request->id_setor)) {
+                if (!intval(Pessoas::find(Auth::user()->id_pessoa)->supervisor)) $consulta->tipo = "permissao";
+            }
+        }
+        return json_encode($consulta);
     }
 
     public function mostrar($id) {
@@ -298,13 +290,9 @@ class PessoasController extends ControllerKX {
                     "pessoas.supervisor",
                     "pessoas.foto",
                     DB::raw("DATE_FORMAT(pessoas.admissao, '%d/%m/%Y') AS admissao"),
-                    "setores.descr AS setor",
-                    "empresas.nome_fantasia AS empresa",
                     DB::raw("IFNULL(users.name, pessoas.nome) AS nome"),
                     "users.email"
                 )
-                ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
-                ->leftjoin("setores", "setores.id", "pessoas.id_setor")
                 ->leftjoin("users", "users.id_pessoa", "pessoas.id")
                 ->where("pessoas.id", $id)
                 ->first()

@@ -283,8 +283,6 @@ function modal(nome, id, callback) {
                 resultado += "<option value = '" + setor.id + "'>" + setor.descr + "</option>";
             });
             document.getElementById("pessoa-setor-select").innerHTML = resultado;
-            pessoa.alterarEmpresa();
-            pessoa.alterarSetor();
             concluir();
         });
     } else concluir();
@@ -760,7 +758,7 @@ function limitar(el) {
 }
 
 function numerico(el) {
-    el.value = el.value.replace(/\D/g, "");
+    el.value = el.value.replace(/\D/g, "").substring(0, 4);
 }
 
 function mostrar_atribuicoes(_id) {
