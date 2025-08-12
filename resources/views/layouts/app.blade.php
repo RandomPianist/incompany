@@ -315,28 +315,37 @@
                                 if (aux) {
                                     if (!erro && eFuturo(aux)) erro = "A admissão não pode ser no futuro";
                                 }
-
+                                
+                                let _id_setor = document.getElementById("pessoa-id_setor").value;
                                 $.get(URL + "/colaboradores/consultar/", {
                                     cpf : _cpf.value.replace(/\D/g, ""),
                                     email : _email.value,
                                     empresa : document.getElementById("pessoa-empresa").value,
                                     id_empresa : document.getElementById("pessoa-id_empresa").value.replace("-", "").trim(),
                                     setor : document.getElementById("pessoa-setor").value,
-                                    id_setor : document.getElementById("pessoa-id_setor").value
+                                    id_setor : _id_setor
                                 }, function(data) {
                                     if (typeof data == "string") data = $.parseJSON(data);
+                                    let id_pessoa = parseInt(document.getElementById("pessoa-id").value);
                                     if (!erro && data.tipo == "invalido") {
                                         erro = data.dado + " não encontrad" + (data.dado == "Empresa" ? "a" : "o");
                                         document.getElementById("pessoa-" + data.dado.toLowerCase() + "-select").classList.add("invalido");
                                     }
-                                    if (!erro && data.tipo == "duplicado" && !parseInt(document.getElementById("pessoa-id").value)) {
+                                    if (!erro && data.tipo == "duplicado" && !id_pessoa) {
                                         erro = "Já existe um registro com esse " + data.dado;
                                         document.getElementById(data.dado == "CPF" ? "cpf" : "email").classList.add("invalido");
                                     }
                                     if (!erro && !alterou && !document.querySelector("#pessoasModal input[type=file]").value) erro = "Altere pelo menos um campo para salvar";
                                     if (!erro) {
-                                        _cpf.value = _cpf.value.replace(/\D/g, "");
-                                        document.querySelector("#pessoasModal form").submit();
+                                        $.get(URL + "/colaboradores/consultar2", {
+                                            id : id_pessoa,
+                                            id_setor : _id_setor
+                                        }, function(ret) {
+                                            if (parseInt(ret)) {
+                                                _cpf.value = _cpf.value.replace(/\D/g, "");
+                                                document.querySelector("#pessoasModal form").submit();
+                                            } else s_alert("Você não tem permissão para " + (id_pessoa ? "editar" : "criar") + " esse administrador");
+                                        });
                                     } else s_alert(erro.replace("Setor", "Centro de custo"));
                                 });
                             });
@@ -368,8 +377,9 @@
                             document.getElementById("pessoa-setor-select").value = "0";
                             document.getElementById("pessoa-id_setor").value = 0;
                         }
+                        $("#pessoa-id_setor").trigger("change");
                         if (callback !== undefined) callback();
-                    }, 0);                    
+                    }, 0);
                 }
 
                 let titulo = id ? "Editando" : "Cadastrando";
@@ -406,6 +416,7 @@
                                     document.querySelector("#pessoasModal .user-pic span").innerHTML = iniciais;
                                 }
                                 foto_pessoa("#pessoasModal .user-pic", data.foto ? data.foto : "");
+                                $("#pessoa-id_setor").trigger("change");
                             });
                         }, 0);
                     });
@@ -439,6 +450,7 @@
                                 that.alterarEmpresa();
                                 that.alterarSetor();
                             }
+                            $("#pessoa-id_setor").trigger("change");
                         });
                     }, 0);
                 }

@@ -8,6 +8,7 @@ use Hash;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
+use App\Models\Log;
 
 class PessoasController extends ControllerKX {
     private function busca($where, $tipo) {
@@ -89,13 +90,17 @@ class PessoasController extends ControllerKX {
                     ->get();
     }
 
-    private function criar_usuario($id_pessoa, Request $request) {
-        $senha = Hash::make($request->password);
-        DB::statement("INSERT INTO users (name, email, password, id_pessoa) VALUES ('".trim($request->nome)."', '".trim($request->email)."', '".$senha."', ".$id_pessoa.")");
-        $this->log_inserir("C", "users", DB::table("users")
-                                            ->selectRaw("MAX(id) AS id")
-                                            ->value("id")
-        );
+    private function criar_usuario($id_pessoa, Request $request, $tipo) {
+        if (($tipo == "supervisor" && Pessoas::find(Auth::user()->id_pessoa)->supervisor) || ($tipo == "permissao" && $this->permissao_usuario($id_pessoa))) {
+            $senha = Hash::make($request->password);
+            DB::statement("INSERT INTO users (name, email, password, id_pessoa) VALUES ('".trim($request->nome)."', '".trim($request->email)."', '".$senha."', ".$id_pessoa.")");
+            $this->log_inserir("C", "users", DB::table("users")
+                                                ->selectRaw("MAX(id) AS id")
+                                                ->value("id")
+            );
+            return true;
+        }
+        return false;
     }
 
     private function deletar_usuario($id_pessoa) {
@@ -106,7 +111,29 @@ class PessoasController extends ControllerKX {
         $this->log_inserir("D", "users", $fk);
     }
 
-    private function salvar_main($modelo, Request $request) {
+    private function criados_por_mim($usuarios) {
+        $consulta = DB::table("pessoas")
+                        ->join("users", "users.id_pessoa", "pessoas.id")
+                        ->whereIn("pessoas.id_usuario", $usuarios)
+                        ->pluck("users.id");
+        $adicionou = false;
+        foreach ($consulta as $id) {
+            $id_usuario = intval($id);
+            if (!in_array($id_usuario, $usuarios)) {
+                array_push($usuarios, $id_usuario);
+                $adicionou = true;
+            }
+        }
+        return $adicionou ? $this->criados_por_mim($usuarios) : $usuarios;
+    }
+
+    private function permissao_usuario($id_pessoa) {
+        if (!intval(DB::table("pessoas")->selectRaw("IFNULL(id_usuario, 0) AS id_usuario")->where("id", Auth::user()->id_pessoa)->value("id_usuario"))) return true;
+        if (!intval(DB::table("pessoas")->selectRaw("IFNULL(id_usuario, 0) AS id_usuario")->where("id", $id_pessoa)->value("id_usuario"))) return true;
+        return in_array(Pessoas::find($id_pessoa)->id_usuario, $this->criados_por_mim([Auth::user()->id]));
+    }
+
+    private function salvar_main(Pessoas $modelo, Request $request) {
         $modelo->nome = mb_strtoupper($request->nome);
         $modelo->cpf = $request->cpf;
         $modelo->funcao = mb_strtoupper($request->funcao);
@@ -116,6 +143,7 @@ class PessoasController extends ControllerKX {
         if (trim($request->senha)) $modelo->senha = $request->senha;
         $modelo->supervisor = $request->supervisor;
         if ($request->file("foto")) $modelo->foto = $request->file("foto")->store("uploads", "public");
+        $modelo->id_usuario = Auth::user()->id;
         $modelo->save();
         $this->log_inserir($request->id ? "E" : "C", "pessoas", $modelo->id);
         return $modelo;
@@ -166,7 +194,7 @@ class PessoasController extends ControllerKX {
                 ->where("lixeira", 0)
                 ->where("cpf", $request->cpf)
                 ->get()
-        ) && trim($request->cpf)) {
+        ) && trim($request->cpf) && !$request->id) {
             $resultado->tipo = "duplicado";
             $resultado->dado = "CPF";
         } else if (sizeof(
@@ -175,7 +203,7 @@ class PessoasController extends ControllerKX {
                 ->where("lixeira", 0)
                 ->where("email", $request->email)
                 ->get()
-        )) {
+        ) && !$request->id) {
             $resultado->tipo = "duplicado";
             $resultado->dado = "e-mail";
         } else {
@@ -188,13 +216,24 @@ class PessoasController extends ControllerKX {
     private function aviso_main($id) {
         $resultado = new \stdClass;
         if ($id != Auth::user()->id_pessoa) {
+            if (sizeof(
+                DB::table("users")
+                    ->where("id_pessoa", $id)
+                    ->get()
+            )) {
+                if (!$this->permissao_usuario($id)) {
+                    $resultado->permitir = 0;
+                    $resultado->aviso = "Você não tem permissão para excluir essa pessoa";
+                    return $resultado;
+                }
+            }
             $nome = Pessoas::find($id)->nome;
             $resultado->permitir = 1;
             $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
-        } else {
-            $resultado->permitir = 0;
-            $resultado->aviso = "Não é possível excluir a si mesmo";
+            return $resultado;
         }
+        $resultado->permitir = 0;
+        $resultado->aviso = "Não é possível excluir a si mesmo";
         return $resultado;
     }
 
@@ -240,6 +279,13 @@ class PessoasController extends ControllerKX {
         return json_encode($this->consultar_main($request));
     }
 
+    public function consultar2(Request $request) {
+        if ($request->id) {
+            if ($this->cria_usuario($request->id_setor) != $this->cria_usuario(Pessoas::find($request->id)->id_setor)) return $this->permissao_usuario($request->id) ? 1 : 0;
+        } else if ($this->cria_usuario($request->id_setor)) return intval(Pessoas::find(Auth::user()->id_pessoa)->supervisor);
+        return 1;
+    }
+
     public function mostrar($id) {
         return json_encode(
             DB::table("pessoas")
@@ -270,12 +316,7 @@ class PessoasController extends ControllerKX {
     }
 
     public function salvar(Request $request) {
-        $arr_req = (array) $request;
-        $erro = false;
-        foreach ($arr_req as $chave => $valor) {
-            if (in_array($chave, ["nome", "funcao", "admissao", "cpf"]) && !trim($valor)) $erro = true;
-        }
-        if ($erro) return 400;
+        if ($this->verifica_vazios($request, ["nome", "funcao", "admissao", "cpf"])) return 400;
         if ($this->cria_usuario($request->id_setor)) {
             if (!trim($request->email)) return 400;
             if (!filter_var($request->email, FILTER_VALIDATE_EMAIL)) return 400;
@@ -288,24 +329,23 @@ class PessoasController extends ControllerKX {
         $setores = [$request->id_setor];
         if ($request->id) {
             $modelo = Pessoas::find($request->id);
+            $setor_ant = $modelo->id_setor;
             if (
                 !$this->comparar_texto($request->cpf, $modelo->cpf) &&
                 !$this->comparar_texto($request->nome, $modelo->nome) &&
                 !$this->comparar_texto($request->funcao, $modelo->funcao) &&
+                !$this->comparar_num($request->id_setor, $setor_ant) &&
                 !$this->comparar_texto($admissao->format('Y-m-d'), strval($modelo->admissao))
             ) return 400;
-            $setor_ant = $modelo->id_setor;
-            if ($setor_ant != $request->id_setor) {
-                array_push($setores, $setor_ant);
-                if ($this->cria_usuario($setor_ant)) $this->deletar_usuario($request->id);    
-                else if ($this->cria_usuario($request->id_setor)) $this->criar_usuario($request->id, $request);
-            } else if (
-                $this->cria_usuario($request->id_setor) && (
+            if ($setor_ant != $request->id_setor) array_push($setores, $setor_ant);
+            if (
+                $this->cria_usuario($request->id_setor) && $this->cria_usuario($setor_ant) && (
                     $request->password ||
-                    mb_strtoupper(trim(Auth::user()->email)) != mb_strtoupper(trim($request->email)) ||
-                    mb_strtoupper(trim(Auth::user()->name))  != mb_strtoupper(trim($request->nome))
+                    $this->comparar_texto($request->email, $modelo->email) ||
+                    $this->comparar_texto($request->nome, $modelo->nome)
                 )
             ) {
+                if (!$this->permissao_usuario($request->id)) return 401;
                 $senha = Hash::make($request->password);
                 $atualiza_senha = $request->password ? "password = '".$senha."'," : "";
                 DB::statement("
@@ -319,12 +359,23 @@ class PessoasController extends ControllerKX {
                                                     ->where("id_pessoa", $request->id)
                                                     ->value("id")
                 );
+            } else if ($this->cria_usuario($request->id_setor) != $this->cria_usuario($setor_ant)) {
+                if ($this->cria_usuario($setor_ant)) {
+                    if (!$this->permissao_usuario($request->id)) return 401;
+                    $this->deletar_usuario($request->id);
+                } else if (!$this->criar_usuario($request->id, $request, "permissao")) return 401;
             }
             $linha = $this->salvar_main($modelo, $request);
         } else {
             $modelo = new Pessoas;
             $linha = $this->salvar_main($modelo, $request);
-            if ($this->cria_usuario($linha->id_setor)) $this->criar_usuario($linha->id, $request);
+            if ($this->cria_usuario($linha->id_setor)) {
+                if (!$this->criar_usuario($linha->id, $request, "supervisor")) {
+                    DB::statement("DELETE FROM log WHERE fk = ".$linha->id." AND tabela = 'pessoas'");
+                    $linha->delete();
+                    return 401;
+                }
+            }
         }
         if ($request->password) {
             if (str_replace(".", "", $request->password) == $request->password && is_numeric($request->password) && strlen($request->password) == 4) {
@@ -339,7 +390,7 @@ class PessoasController extends ControllerKX {
 
         $lista = DB::table("pessoas")
                     ->where("lixeira", 0)
-                    ->whereRaw("id_setor IN (".join(",", $setores).")")
+                    ->whereIn("id_setor", $setores)
                     ->pluck("id")
                     ->toArray();
         DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
@@ -371,7 +422,8 @@ class PessoasController extends ControllerKX {
     }
 
     public function modal() {
-        $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+        $id_pessoa = Auth::user()->id_pessoa;
+        $id_emp = intval(Pessoas::find($id_pessoa)->id_empresa);
         $resultado = new \stdClass;
         $empresas = $this->busca_emp($id_emp, 0);
         foreach($empresas as $matriz) {
@@ -384,19 +436,7 @@ class PessoasController extends ControllerKX {
                                         "id",
                                         "descr"
                                     )
-                                    ->where("cria_usuario", 0)
-                                    ->where(function($sql) use($id_emp) {
-                                        $where = "id_empresa = ".$id_emp." OR id_empresa IN (
-                                            SELECT id_matriz
-                                            FROM empresas
-                                            WHERE id = ".$id_emp."
-                                        ) OR id_empresa IN (
-                                            SELECT id
-                                            FROM empresas
-                                            WHERE id_matriz = ".$id_emp."
-                                        )";
-                                        $sql->whereRaw($where);
-                                    })
+                                    ->whereRaw($this->obter_where($id_pessoa, "setores"))
                                     ->orderby("descr")
                                     ->get();
         return json_encode($resultado);

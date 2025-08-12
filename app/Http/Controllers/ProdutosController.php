@@ -114,12 +114,7 @@ class ProdutosController extends ControllerKX {
     }
 
     public function salvar(Request $request) {
-        $arr_req = (array) $request;
-        $erro = false;
-        foreach ($arr_req as $chave => $valor) {
-            if (in_array($chave, ["cod_externo", "descr", "ca", "validade", "categoria", "tamanho", "validade_ca"]) && !trim($valor)) $erro = true;
-        }
-        if ($erro) return 400;
+        if ($this->verifica_vazios($request, ["cod_externo", "descr", "ca", "validade", "categoria", "tamanho", "validade_ca"])) return 400;
         $validade_ca = Carbon::createFromFormat('d/m/Y', $request->validade_ca)->format('Y-m-d');
         if ($this->consultar($request)) return 401;
         $linha = Produtos::firstOrNew(["id" => $request->id]);

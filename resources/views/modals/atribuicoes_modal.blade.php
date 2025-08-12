@@ -20,7 +20,7 @@
                                 data-input = "#id_produto"
                                 data-table = "produtos"
                                 data-column = "referencia"
-                                data-filter_col = ""
+                                data-filter_col = "referencia"
                                 data-filter = ""
                                 type = "text"
                                 autocomplete = "off"

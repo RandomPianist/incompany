@@ -16,60 +16,25 @@ class HomeController extends ControllerKX {
     public function autocomplete(Request $request) {
         $tabela = str_replace("_todos", "", $request->table);
         $tabela = str_replace("_lixeira", "", $tabela);
-        $where = " AND ".$request->column." LIKE '%".$request->search."%'";
+        $where = " AND ".$request->column." LIKE '%".$request->search."%' AND ";
         
-        $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
-        if ($id_emp) {
-            switch ($tabela) {
-                case "empresas":
-                    $where .= " AND (id = ".$id_emp;
-                    if (sizeof(
-                        DB::table("empresas")
-                            ->where("id_matriz", $id_emp)
-                            ->where("lixeira", 0)
-                            ->get()
-                    ) > 0) $where .= " OR id_matriz = ".$id_emp;
-                    $where .= ")";
-                    break;
-                case "pessoas":
-                    $where .= " AND (id_empresa = ".$id_emp." OR id_empresa IN (
-                        SELECT id_matriz
-                        FROM empresas
-                        WHERE id = ".$id_emp."
-                    ) OR id_empresa IN (
-                        SELECT id
-                        FROM empresas
-                        WHERE id_matriz = ".$id_emp."
-                    ))";
-                    break;
-                case "setores":
-                    if ($request->filter_col) $where .= " AND cria_usuario = 0";
-                    break;
-                case "produtos":
-                    $where .= " AND produtos.id IN (
-                        SELECT id_produto
-                        FROM vprodutos
-                        WHERE id_pessoa = ".Auth::user()->id_pessoa.
-                    ")";
-                    break;
-            }
-        }
+        if ($tabela == "produtos") {
+            $where .= " AND produtos.id IN (
+                SELECT id_produto
+                FROM vprodutos
+                WHERE id_pessoa = ".Auth::user()->id_pessoa.
+            ")";
+        } else if (in_array($tabela, ["empresas", "pessoas", "setores"])) $where .= $this->obter_where(Auth::user()->id_pessoa, $tabela, true);
+        else $where .= "1";
 
         if ($request->filter_col) {
-            if ($tabela == "setores") {
-                $colunas = explode(",", $request->filter_col);
-                $filtros = explode(",", $request->filter);
-                for ($i = 0; $i < sizeof($colunas); $i++) {
-                    if (($colunas[$i] == "cria_usuario" && $id_emp) || ($colunas[$i] != "cria_usuario")) $where .= " AND ".$colunas[$i]." = ".$filtros[$i];
-                }
-            } else {
-                $where .= $request->column != "referencia" ? " AND ".$request->filter_col." = '".$request->filter."'" : " AND referencia NOT IN (
-                    SELECT produto_ou_referencia_valor
-                    FROM atribuicoes
-                    WHERE pessoa_ou_setor_valor = ".$request->filter."
-                      AND lixeira = 0
-                )";
-            }
+            $where .= $request->column != "referencia" ? " AND ".$request->filter_col." = '".$request->filter."'" : " AND referencia NOT IN (
+                SELECT produto_ou_referencia_valor
+                FROM atribuicoes
+                WHERE pessoa_ou_setor_valor = ".$request->filter."
+                    AND produto_ou_referencia_chave = 'R'
+                    AND lixeira = 0
+            )";
         }
 
         $query = "SELECT ";

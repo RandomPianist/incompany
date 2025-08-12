@@ -168,7 +168,7 @@ class ValoresController extends ControllerKX {
                 ->where("lixeira", 0)
                 ->where("descr", $request->descr)
                 ->get()
-        )) return "1";
+        ) && !$request->id) return "1";
         return "0";
     }
 

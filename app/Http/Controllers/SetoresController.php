@@ -41,7 +41,7 @@ class SetoresController extends ControllerKX {
                 ->where("descr", $request->descr)
                 ->where("id_empresa", $request->id_empresa)
                 ->get()
-        )) {
+        ) && !$request->id) {
             $resultado->msg = "Já existe um centro de custo de mesmo nome nessa empresa";
             $resultado->el = "descr";
             return $resultado;

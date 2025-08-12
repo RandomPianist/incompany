@@ -26,6 +26,15 @@ class ControllerKX extends Controller {
         return mb_strtoupper(trim($a)) != mb_strtoupper(trim($b));
     }
 
+    protected function verifica_vazios(Request $request, $chaves) {
+        $arr_req = (array) $request;
+        $erro = false;
+        foreach ($arr_req as $chave => $valor) {
+            if (in_array($chave, $chaves) && !trim($valor)) $erro = true;
+        }
+        return $erro;
+    }
+
     protected function maquinas_periodo($inicio, $fim) {
         $where = "";
         if ($inicio) $where .= "('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim)";

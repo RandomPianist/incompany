@@ -93,6 +93,7 @@ Route::middleware("auth")->group(function () {
         Route::get ("/pagina/{tipo}",   [PessoasController::class, "ver"]);
         Route::get ("/listar",          [PessoasController::class, "listar"]);
         Route::get ("/consultar",       [PessoasController::class, "consultar"]);
+        Route::get ("/consultar2",      [PessoasController::class, "consultar2"]);
         Route::get ("/mostrar/{id}",    [PessoasController::class, "mostrar"]);
         Route::get ("/aviso/{id}",      [PessoasController::class, "aviso"]);
         Route::get ("/modal",           [PessoasController::class, "modal"]);
