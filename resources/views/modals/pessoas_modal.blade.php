@@ -49,7 +49,7 @@
                         <div class = "row">
                             <div class = "col-11 pr-0">
                                 <label for = "pessoa-empresa" class = "custom-label-form">Empresa: *</label>
-                                <select id = "pessoa-empresa-select" name = "empresa" class = "form-control"></select>
+                                <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control"></select>
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
                                 <a href = "{{ config('app.root_url') }}/empresas" title = "Cadastro de empresas" target = "_blank">
@@ -64,7 +64,7 @@
                             </div>
                             <div class = "col-5 pr-0">
                                 <label for = "pessoa-setor" class = "custom-label-form">Centro de custo: *</label>
-                                <select id = "pessoa-setor-select" name = "setor" class = "form-control" onchange = "pessoa.toggle_user(this.value)"></select>
+                                <select id = "pessoa-setor-select" name = "id_setor" class = "form-control" onchange = "pessoa.toggle_user(this.value)"></select>
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
                                 <a href = "{{ config('app.root_url') }}/setores" title = "Cadastro de centro de custos" target = "_blank">

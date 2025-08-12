@@ -47,7 +47,7 @@ function Pessoa(_id) {
 
         let _email = document.getElementById("email");
         let _cpf = document.getElementById("cpf");
-        let _admissao = document.getElementById("admissao").value;
+        let _admissao = document.getElementById("admissao");
 
         if (validaUsuario && !_email.value) {
             erro = "Preencha o campo";
@@ -101,15 +101,15 @@ function Pessoa(_id) {
         });
     }
 
-    let titulo = id ? "Editando" : "Cadastrando";
+    let titulo = _id ? "Editando" : "Cadastrando";
     titulo += " colaborador";
     document.getElementById("pessoasModalLabel").innerHTML = titulo;
     let estilo_bloco_senha = document.getElementById("password").parentElement.parentElement.style;
     let el_setor = document.getElementById("pessoa-setor-select");
     let el_empresa = document.getElementById("pessoa-empresa-select");
     let el_sup_chk = document.getElementById("supervisor-chk");
-    if (id) {
-        $.get(URL + "/colaboradores/mostrar/" + id, function(data) {
+    if (_id) {
+        $.get(URL + "/colaboradores/mostrar/" + _id, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
             ["nome", "cpf", "pessoa-setor-select", "pessoa-empresa-select", "email", "funcao", "admissao", "supervisor"].forEach((__id) => {
                 document.getElementById(__id).value = data[__id.replace("pessoa-", "id_").replace("-select", "")];
@@ -117,10 +117,10 @@ function Pessoa(_id) {
             ant_id_setor = parseInt(el_setor.value);
             ant_id_empresa = parseInt(el_empresa.value);
             setTimeout(function() {
-                modal("pessoasModal", id, function() {
+                modal("pessoasModal", _id, function() {
                     that.toggle_user(parseInt(data.id_setor));
                     estilo_bloco_senha.display = id != USUARIO && validaUsuario ? "none" : "";
-                    el_setor.disabled = id == USUARIO;
+                    el_setor.disabled = _id == USUARIO;
                     el_sup_chk.checked = parseInt(data.supervisor) == 1;
                     Array.from(document.getElementsByClassName("pessoa-senha")).forEach((el) => {
                         el.innerHTML = "Senha:";

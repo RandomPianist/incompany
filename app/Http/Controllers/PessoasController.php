@@ -284,8 +284,8 @@ class PessoasController extends ControllerKX {
                 ->select(
                     "pessoas.id",
                     "pessoas.cpf",
-                    "pessoas.id_setor",
-                    "pessoas.id_empresa",
+                    DB::raw("IFNULL(pessoas.id_setor, 0) AS id_setor"),
+                    DB::raw("IFNULL(pessoas.id_empresa, 0) AS id_empresa"),
                     "pessoas.funcao",
                     "pessoas.supervisor",
                     "pessoas.foto",
@@ -381,8 +381,10 @@ class PessoasController extends ControllerKX {
                     ->whereIn("id_setor", $setores)
                     ->pluck("id")
                     ->toArray();
-        DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
-        DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
+        if (sizeof($lista)) {
+            DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
+            DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
+        }
 
         return redirect("/colaboradores/pagina/".$tipo);
     }

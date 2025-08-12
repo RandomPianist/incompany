@@ -15,8 +15,10 @@ class AtribuicoesController extends ControllerKX {
                     ->where($atribuicao->pessoa_ou_setor_chave == "S" ? "id_setor" : "id", $atribuicao->pessoa_ou_setor_valor)
                     ->pluck("id")
                     ->toArray();
-        DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
-        DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
+        if (sizeof($lista)) {
+            DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
+            DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
+        }
     }
 
     private function consulta_main($select) {

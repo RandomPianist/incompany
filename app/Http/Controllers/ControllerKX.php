@@ -345,8 +345,10 @@ class ControllerKX extends Controller {
                             ->where("atribuicoes.produto_ou_referencia_valor", $antigo)
                             ->pluck("pessoas.id")
                             ->toArray();
-                DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
-                DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
+                if (sizeof($lista)) {
+                    DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
+                    DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
+                }
             }
         }
     }
