@@ -19,7 +19,7 @@ class HomeController extends ControllerKX {
         $where = " AND ".$request->column." LIKE '%".$request->search."%' AND ";
         
         if ($tabela == "produtos") {
-            $where .= " AND produtos.id IN (
+            $where .= "produtos.id IN (
                 SELECT id_produto
                 FROM vprodutos
                 WHERE id_pessoa = ".Auth::user()->id_pessoa.
