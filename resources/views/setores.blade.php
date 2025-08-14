@@ -87,8 +87,8 @@
         function validar() {
             limpar_invalido();
 
-            const id = parseInt(document.getElementById("id").value);
             const _descr = document.getElementById("descr").value.toUpperCase().trim();
+            const _empresa = document.getElementById("setor-empresa").value;
 
             let lista = ["descr"];
             Array.from(document.getElementsByClassName("validar")).forEach((el) => {
@@ -97,17 +97,17 @@
             erro = verifica_vazios(lista).erro;
 
             if (
-                id &&
+                parseInt(document.getElementById("id").value) &&
                 !erro &&
                 document.getElementById("cria_usuario-chk").checked == ant_usr &&
                 _descr == anteriores.descr.toUpperCase().trim() &&
-                document.getElementById("setor-empresa").value.toUpperCase().trim() == anteriores["setor-empresa"].toUpperCase().trim()
+                _empresa.toUpperCase().trim() == anteriores["setor-empresa"].toUpperCase().trim()
             ) erro = "Não há alterações para salvar";
 
             $.get(URL + "/setores/consultar", {
                 descr : _descr,
                 id_empresa : document.getElementById("setor-id_empresa").value,
-                empresa : document.getElementById("setor-empresa").value
+                empresa : _empresa
             }, function(data) {
                 if (typeof data == "string") data = $.parseJSON(data);
                 if (data.msg && !erro) {
