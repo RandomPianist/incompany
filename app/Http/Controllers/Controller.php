@@ -103,7 +103,7 @@ class Controller extends BaseController {
         if ($origem == "WEB") {
             $linha->id_pessoa = Auth::user()->id_pessoa;
             $linha->nome = Pessoas::find($linha->id_pessoa)->nome;
-        } else if ($nome) $linha->nome = $linha->nome;
+        } else if ($nome) $linha->nome = $nome;
         $linha->data = date("Y-m-d");
         $linha->hms = date("H:i:s");
         $linha->save();
@@ -111,12 +111,28 @@ class Controller extends BaseController {
     }
 
     protected function log_inserir_lote($acao, $query, $where, $origem = "WEB", $nome = "", $tabela = "") {
-        if (!$tabela) $tabela = $query;
-        $lista = DB::table(DB::raw($query))
-                    ->whereRaw($where)
-                    ->pluck("id")
-                    ->toArray();
-        foreach ($lista as $fk) $this->log_inserir($acao, $tabela, $fk, $origem, $nome);
+        $id_pessoa = "NULL";
+        if ($origem == "WEB") {
+            $id_pessoa = Auth::user()->id_pessoa;
+            $nome = Pessoas::find($id_pessoa)->nome;
+        }
+        DB::statement("
+            INSERT INTO log (acao, origem, tabela, fk, id_pessoa, nome, data, hms) (
+                SELECT
+                    '".$acao."',
+                    '".$origem."',
+                    '".($tabela ? $tabela : $query)."',
+                    id,
+                    ".$id_pessoa.",
+                    ".($nome ? "'".$nome."'" : "NULL").",
+                    CURDATE(),
+                    '".date("H:i:s")."'
+                
+                FROM ".$query."
+
+                WHERE ".$where."
+            )
+        ");
     }
 
     protected function log_consultar($tabela, $param = "") {
