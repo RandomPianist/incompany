@@ -276,7 +276,7 @@
             tudo.removeChild(linha);
             ["produto", "id_produto", "es", "qtd", "preco", "obs"].forEach((classe) => {
                 let lista = Array.from(document.getElementsByClassName(classe));
-                for (let i = 1; i <= lista.length; i++) el.id = classe + "-" + i;
+                for (let i = 1; i <= lista.length; i++) lista[i - 1].id = classe + "-" + i;
             });
         });
 
