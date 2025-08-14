@@ -126,7 +126,12 @@ class SetoresController extends Controller {
     }
 
     public function permissao() {
-        return !intval(DB::table("pessoas")->selectRaw("IFNULL(id_usuario, 0) AS id_usuario")->where("id", Auth::user()->id_pessoa)->value("id_usuario")) ? 1 : 0;
+        return !intval(
+            DB::table("pessoas")
+                ->selectRaw("IFNULL(id_usuario, 0) AS id_usuario")
+                ->where("id", Auth::user()->id_pessoa)
+                ->value("id_usuario")
+        ) ? 1 : 0;
     }
 
     public function salvar(Request $request) {
@@ -146,9 +151,10 @@ class SetoresController extends Controller {
                 if ($adm_ant) {
                     $lista = array();
                     $consulta = DB::table("users")
+                                    ->select("users.id")
                                     ->join("pessoas", "pessoas.id", "users.id_pessoa")
                                     ->where("id_setor", $request->id)
-                                    ->pluck("users.id");
+                                    ->pluck("id");
                     foreach($consulta as $usuario) {
                         array_push($lista, $usuario);
                         $this->log_inserir("D", "users", $usuario);

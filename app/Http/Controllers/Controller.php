@@ -41,6 +41,15 @@ class Controller extends BaseController {
         return $erro;
     }
 
+    protected function atualizar_aa_main($consulta) {
+        $lista = $consulta->pluck("id")->toArray();
+        if (sizeof($lista)) {
+            $where = "id_pessoa IN (".join(",", $lista).")";
+            DB::statement("DELETE FROM atribuicoes_associadas WHERE ".$where);
+            DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE ".$where);
+        }
+    }
+
     protected function maquinas_periodo($inicio, $fim) {
         $where = "";
         if ($inicio) $where .= "('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim)";
@@ -71,7 +80,7 @@ class Controller extends BaseController {
                     )
                     ->whereRaw($where)
                     ->where("minhas_empresas.id_empresa", Pessoas::find(Auth::user()->id_pessoa)->id_empresa)                    
-                    ->pluck("comodatos.id_maquina")
+                    ->pluck("id_maquina")
                     ->toArray();
     }
 
@@ -101,8 +110,9 @@ class Controller extends BaseController {
         return $linha;
     }
 
-    protected function log_inserir_lote($acao, $origem, $tabela, $where, $nome = "") {
-        $lista = DB::table($tabela)
+    protected function log_inserir_lote($acao, $query, $where, $origem = "WEB", $nome = "", $tabela = "") {
+        if (!$tabela) $tabela = $query;
+        $lista = DB::table(DB::raw($query))
                     ->whereRaw($where)
                     ->pluck("id")
                     ->toArray();
@@ -302,28 +312,28 @@ class Controller extends BaseController {
             SET mp.preco = produtos.preco
             WHERE mp.preco IS NULL
         ");
-        $id_pessoa = $api ? "NULL" : Auth::user()->id_pessoa;
-        if (!$api) $nome = Pessoas::find($id_pessoa)->nome;
-        DB::statement("
-            INSERT INTO log (id_pessoa, nome, origem, acao, tabela, fk, data, hms) (
-                SELECT
-                    ".$id_pessoa.",
-                    ".($nome ? "'".$nome."'" : "NULL").",
-                    '".($api ? "ERP" : "WEB")."',
-                    'C',
-                    'maquinas_produtos',
-                    mp.id,
-                    CURDATE(),
-                    '".date("H:i:s")."'
+        $query = "
+            SELECT mp.id
+            FROM maquinas_produtos AS mp
+            LEFT JOIN log
+                ON log.tabela = 'maquinas_produtos' AND log.fk = mp.id
+            WHERE log.id IS NULL
+        ";
+        $this->log_inserir_lote("C", "(".$query.") AS tab", "1", $api ? "ERP" : "WEB", $nome, "maqunas_produtos");
+    }
 
-                FROM maquinas_produtos AS mp
-
-                LEFT JOIN log
-                    ON log.tabela = 'maquinas_produtos' AND log.fk = mp.id
-
-                WHERE log.id IS NULL
-            )
-        ");
+    protected function atb_pessoa() {
+        return DB::table("atribuicoes")
+                    ->selectRaw("DISTINCTROW pessoas.id")
+                    ->join("pessoas", function($join) {
+                        $join->on(function($sql) {
+                            $sql->on("pessoas.pessoa_ou_setor_valor", "pessoas.id")
+                                ->where("pessoas.pessoa_ou_setor_chave", "P");
+                        })->orOn(function($sql) {
+                            $sql->on("pessoas.pessoa_ou_setor_valor", "pessoas.id_setor")
+                                ->where("pessoas.pessoa_ou_setor_chave", "S");
+                        });
+                    });
     }
 
     protected function atribuicao_atualiza_ref($id, $antigo, $novo, $nome = "", $api = false) {
@@ -335,27 +345,13 @@ class Controller extends BaseController {
                 SET ".($novo ? "produto_ou_referencia_valor = '".$novo."'" : "lixeira = 1")."
                 WHERE ".$where
             );
-            $this->log_inserir_lote($novo ? "E" : "D", $api ? "ERP" : "WEB", "atribuicoes", $where, $nome);
+            $this->log_inserir_lote($novo ? "E" : "D", "atribuicoes", $where, $api ? "ERP" : "WEB", $nome);
             if (!$novo) {
-                $lista = DB::table("atribuicoes")
-                            ->selectRaw("DISTINCTROW pessoas.id")
-                            ->join("pessoas", function($join) {
-                                $join->on(function($sql) {
-                                    $sql->on("pessoas.pessoa_ou_setor_valor", "pessoas.id")
-                                        ->where("pessoas.pessoa_ou_setor_chave", "P");
-                                })->orOn(function($sql) {
-                                    $sql->on("pessoas.pessoa_ou_setor_valor", "pessoas.id_setor")
-                                        ->where("pessoas.pessoa_ou_setor_chave", "S");
-                                });
-                            })
-                            ->where("atribuicoes.produto_ou_referencia_chave", "R")
-                            ->where("atribuicoes.produto_ou_referencia_valor", $antigo)
-                            ->pluck("pessoas.id")
-                            ->toArray();
-                if (sizeof($lista)) {
-                    DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
-                    DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
-                }
+                $this->atualizar_aa_main(
+                    $this->atb_pessoa()
+                        ->where("atribuicoes.produto_ou_referencia_chave", "R")
+                        ->where("atribuicoes.produto_ou_referencia_valor", $antigo)
+                );
             }
         }
     }

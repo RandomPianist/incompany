@@ -107,7 +107,7 @@ class Api2Controller extends Controller {
                     SET preco = ".$req_produto->preco."
                     WHERE ".$where_mp
                 );
-                if (intval($req_produto->id)) $this->log_inserir_lote("E", "ERP", "maquinas_produtos", $where_mp);
+                if (intval($req_produto->id)) $this->log_inserir_lote("E", "maquinas_produtos", $where_mp, "ERP", $usuario);
             }
             $req_categoria = (object) $req_produto->categoria;
             if (intval($req_categoria->cod)) {

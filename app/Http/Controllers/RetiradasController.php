@@ -27,7 +27,7 @@ class RetiradasController extends Controller {
 
     public function desfazer(Request $request) {
         $where = "id_pessoa = ".$request->id_pessoa;
-        $this->log_inserir_lote("D", "WEB", "retiradas", $where);
+        $this->log_inserir_lote("D", "retiradas", $where);
         DB::statement("DELETE FROM retiradas WHERE ".$where);
     }
 

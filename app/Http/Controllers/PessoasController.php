@@ -112,9 +112,10 @@ class PessoasController extends Controller {
 
     private function criados_por_mim($usuarios) {
         $consulta = DB::table("pessoas")
+                        ->select("users.id")
                         ->join("users", "users.id_pessoa", "pessoas.id")
                         ->whereIn("pessoas.id_usuario", $usuarios)
-                        ->pluck("users.id");
+                        ->pluck("id");
         $adicionou = false;
         foreach ($consulta as $id) {
             $id_usuario = intval($id);
@@ -376,15 +377,11 @@ class PessoasController extends Controller {
         if ($this->cria_usuario($modelo->id_setor)) $tipo = !intval($modelo->id_empresa) ? "A" : "U";
         else $tipo = intval($modelo->supervisor) ? $tipo = "S" : "F";
 
-        $lista = DB::table("pessoas")
-                    ->where("lixeira", 0)
-                    ->whereIn("id_setor", $setores)
-                    ->pluck("id")
-                    ->toArray();
-        if (sizeof($lista)) {
-            DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
-            DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
-        }
+        $this->atualizar_aa_main(
+            DB::table("pessoas")
+                ->where("lixeira", 0)
+                ->whereIn("id_setor", $setores)
+        );
 
         return redirect("/colaboradores/pagina/".$tipo);
     }

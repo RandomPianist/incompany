@@ -27,7 +27,7 @@ class PreviasController extends Controller {
 
     public function excluir(Request $request) {
         $where = "id_comodato = ".$request->id_comodato." AND id_pessoa = ".Auth::user()->id_pessoa;
-        $this->log_inserir_lote("D", "WEB", "previas", $where);
+        $this->log_inserir_lote("D", "previas", $where);
         DB::statement("DELETE FROM previas WHERE ".$where);
     }
 

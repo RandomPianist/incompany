@@ -190,7 +190,7 @@ class SolicitacoesController extends Controller {
         }
         $where = "id_comodato = ".$request->id_comodato;
         DB::statement("UPDATE previas SET confirmado = 1 WHERE ".$where);
-        $this->log_inserir_lote("E", "WEB", "previas", $where);
+        $this->log_inserir_lote("E", "previas", $where);
         return view("sucesso");
     }
 

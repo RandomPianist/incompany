@@ -212,6 +212,6 @@ class ValoresController extends Controller {
         $where = "id_categoria = ".$request->id;
         DB::statement("UPDATE produtos SET id_categoria = NULL ".$where);
         $this->log_inserir("D", "valores", $linha->id);
-        $this->log_inserir_lote("E", "WEB", "produtos", $where);
+        $this->log_inserir_lote("E", "produtos", $where);
     }
 }

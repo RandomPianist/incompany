@@ -10,15 +10,11 @@ use App\Models\Pessoas;
 
 class AtribuicoesController extends Controller {
     private function atualizar_aa(Atribuicoes $atribuicao) {
-        $lista = DB::table("pessoas")
-                    ->where("lixeira", 0)
-                    ->where($atribuicao->pessoa_ou_setor_chave == "S" ? "id_setor" : "id", $atribuicao->pessoa_ou_setor_valor)
-                    ->pluck("id")
-                    ->toArray();
-        if (sizeof($lista)) {
-            DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista).")");
-            DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista).")");
-        }
+        $this->atualizar_aa_main(
+            DB::table("pessoas")
+                ->where("lixeira", 0)
+                ->where($atribuicao->pessoa_ou_setor_chave == "S" ? "id_setor" : "id", $atribuicao->pessoa_ou_setor_valor)
+        );
     }
 
     private function consulta_main($select) {

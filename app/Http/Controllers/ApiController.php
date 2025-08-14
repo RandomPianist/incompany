@@ -294,7 +294,11 @@ class ApiController extends Controller {
     }
 
     public function gerenciar_estoque(Request $request) {
-        $precoProd = floatval(DB::select("produtos")->where("id", $request->idProduto)->value("preco"));
+        $precoProd = floatval(
+            DB::select("produtos")
+                ->where("id", $request->idProduto)
+                ->value("preco")
+        );
         if (isset($request->preco)) {
             if (floatval($request->preco) > 0) $precoProd = floatval($request->preco);
         }
@@ -308,7 +312,7 @@ class ApiController extends Controller {
         );
         $nome = "";
         if (isset($request->usu)) $nome = $request->usu;
-        $this->log_inserir_lote("E", "ERP", "maquinas_produtos", $where, $nome);
+        $this->log_inserir_lote("E", "maquinas_produtos", $where, "ERP", $nome);
     }
 
     public function validar_app(Request $request) {
@@ -330,7 +334,9 @@ class ApiController extends Controller {
     }
 
     public function produtos_por_pessoa(Request $request) {
-        $id_pessoa = DB::table("pessoas")->where("cpf", $request->cpf)->value("id");
+        $id_pessoa = DB::table("pessoas")
+                        ->where("cpf", $request->cpf)
+                        ->value("id");
         return json_encode(collect(
             array_merge(
                 $this->produtos_por_pessoa_main($id_pessoa, true),
@@ -504,7 +510,9 @@ class ApiController extends Controller {
     }
 
     public function validar_biometria(Request $request) {
-        $pessoa = DB::table("pessoas")->where("biometria", $request->biometria)->value("id");
+        $pessoa = DB::table("pessoas")
+                    ->where("biometria", $request->biometria)
+                    ->value("id");
         if ($pessoa == null) return 0;
         return $pessoa;
     }

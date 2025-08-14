@@ -170,43 +170,10 @@ class ProdutosController extends Controller {
                         ->toArray();
         
         if (sizeof($lista_atb)) {
-            $pessoa = Pessoas::find(Auth::user()->id_pessoa);
-            DB::statement("UPDATE atribuicoes SET lixeira = 1 WHERE id IN (".join(",", $lista_atb).")");
-            DB::statement("
-                INSERT INTO log (id_pessoa, nome, origem, acao, tabela, fk, data, hms) (
-                    SELECT
-                        ".$pessoa->id.",
-                        '".$pessoa->nome."',
-                        'WEB',
-                        'D',
-                        'atribuicoes',
-                        id,
-                        CURDATE(),
-                        '".date("H:i:s")."'
-
-                    FROM atribuicoes
-
-                    WHERE id IN (".join(",", $lista_atb).")
-                )
-            ");
-            $lista_pessoas = DB::table("pessoas")
-                                ->selectRaw("DISTINCTROW pessoas.id")
-                                ->join("atribuicoes", function($join) {
-                                    $join->on(function($sql) {
-                                        $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoa.id")
-                                            ->where("atribuicoes.pessoa_ou_setor_chave", "P");
-                                    })->orOn(function($sql) {
-                                        $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoa.id_setor")
-                                            ->where("atribuicoes.pessoa_ou_setor_chave", "S");
-                                    });
-                                })
-                                ->whereIn("atribuicoes.id", $lista_atb)
-                                ->pluck("pessoas.id")
-                                ->toArray();
-            if (sizeof($lista_pessoas)) {
-                DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa IN (".join(",", $lista_pessoas).")");
-                DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE id_pessoa IN (".join(",", $lista_pessoas).")");
-            }
+            $where = "id IN (".join(",", $lista_atb).")";
+            DB::statement("UPDATE atribuicoes SET lixeira = 1 WHERE ".$where);
+            $this->log_inserir_lote("D", "atribuicoes", $where);
+            $this->atualizar_aa_main($this->atb_pessoa()->whereIn("atribuicoes.id", $lista_atb));
         }
     }
 }
