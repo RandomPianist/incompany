@@ -343,11 +343,11 @@ class Controller extends BaseController {
                     ->selectRaw("DISTINCTROW pessoas.id")
                     ->join("pessoas", function($join) {
                         $join->on(function($sql) {
-                            $sql->on("pessoas.pessoa_ou_setor_valor", "pessoas.id")
-                                ->where("pessoas.pessoa_ou_setor_chave", "P");
+                            $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id")
+                                ->where("atribuicoes.pessoa_ou_setor_chave", "P");
                         })->orOn(function($sql) {
-                            $sql->on("pessoas.pessoa_ou_setor_valor", "pessoas.id_setor")
-                                ->where("pessoas.pessoa_ou_setor_chave", "S");
+                            $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id_setor")
+                                ->where("atribuicoes.pessoa_ou_setor_chave", "S");
                         });
                     });
     }
