@@ -335,7 +335,7 @@ class Controller extends BaseController {
                 ON log.tabela = 'maquinas_produtos' AND log.fk = mp.id
             WHERE log.id IS NULL
         ";
-        $this->log_inserir_lote("C", "(".$query.") AS tab", "1", $api ? "ERP" : "WEB", $nome, "maqunas_produtos");
+        $this->log_inserir_lote("C", "(".$query.") AS tab", "1", $api ? "ERP" : "WEB", $nome, "maquinas_produtos");
     }
 
     protected function atb_pessoa() {
