@@ -7,7 +7,7 @@ use Auth;
 use App\Models\Previas;
 use Illuminate\Http\Request;
 
-class PreviasController extends ControllerKX {
+class PreviasController extends Controller {
     public function salvar(Request $request) {
         $id = DB::table("previas")
                 ->where("id_comodato", $request->id_comodato)

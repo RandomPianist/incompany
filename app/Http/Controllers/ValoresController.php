@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Pessoas;
 use App\Models\Valores;
 
-class ValoresController extends ControllerKX {
+class ValoresController extends Controller {
     private function busca($alias, $where) {
         return DB::table("valores")
                     ->select(

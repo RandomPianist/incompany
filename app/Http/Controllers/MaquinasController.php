@@ -9,7 +9,7 @@ use App\Models\Comodatos;
 use App\Models\Estoque;
 use App\Models\MaquinasProdutos;
 
-class MaquinasController extends ControllerKX {
+class MaquinasController extends Controller {
     private function consultar_estoque_main($produtos_id, $produtos_descr, $quantidades, $precos, $es) {
         $texto = "";
         $campos = array();

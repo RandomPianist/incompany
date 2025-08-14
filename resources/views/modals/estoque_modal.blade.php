@@ -48,7 +48,7 @@
                             </div>
                             <div class = "col-2 p-0 px-1">
                                 <label for = "obs-1" class = "custom-label-form">Observação:</label>
-                                <input id = "obs-1" name = "obs[]" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 16)" />
+                                <input id = "obs-1" name = "obs[]" class = "form-control obs" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 16)" />
                                 <span class = "custom-label-form tam-max"></span>
                             </div>
                             <div class = "col-2 text-right max-13">
@@ -274,6 +274,10 @@
         adicionar.addEventListener("click", adicionar_campo);
         remover.addEventListener("click", () => {
             tudo.removeChild(linha);
+            ["produto", "id_produto", "es", "qtd", "preco", "obs"].forEach((classe) => {
+                let lista = Array.from(document.getElementsByClassName(classe));
+                for (let i = 1; i <= lista.length; i++) el.id = classe + "-" + i;
+            });
         });
 
         carrega_autocomplete();

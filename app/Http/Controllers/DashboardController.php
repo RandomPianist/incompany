@@ -7,7 +7,7 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
 
-class DashboardController extends ControllerKX {
+class DashboardController extends Controller {
     private function formatar_data($data) {
         $arr = explode("-", $data);
         $resultado = $arr[0];

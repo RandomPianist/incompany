@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Empresas;
 use App\Models\Pessoas;
 
-class EmpresasController extends ControllerKX {
+class EmpresasController extends Controller {
     private function validar_cnpj($cnpj) {
         $cnpj = preg_replace('/[^0-9]/', '', (string) $cnpj);
         if (strlen($cnpj) != 14) return false;

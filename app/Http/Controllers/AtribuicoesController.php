@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Atribuicoes;
 use App\Models\Pessoas;
 
-class AtribuicoesController extends ControllerKX {
+class AtribuicoesController extends Controller {
     private function atualizar_aa(Atribuicoes $atribuicao) {
         $lista = DB::table("pessoas")
                     ->where("lixeira", 0)

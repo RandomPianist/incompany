@@ -7,7 +7,37 @@ use Auth;
 use App\Models\Pessoas;
 use Illuminate\Http\Request;
 
-class HomeController extends ControllerKX {
+class HomeController extends Controller {
+    private function str_ireplace2($search, $replace, $subject) {
+        $len = strlen($search);
+        $result = "";
+        $i = 0;
+    
+        while ($i < strlen($subject)) {
+            if (strtolower(substr($subject, $i, $len)) === strtolower($search)) {
+                $j = 0;
+                $insideTag = false;
+                foreach (str_split($replace) as $char) {
+                    if ($char == "<") {
+                        $insideTag = true;
+                        $result .= $char;
+                    } else if ($char == ">") {
+                        $insideTag = false;
+                        $result .= $char;
+                    } else if (!$insideTag) {
+                        $result .= ctype_upper($subject[$i + $j]) ? strtoupper($char) : strtolower($char);
+                        $j++;
+                    } else $result .= $char;
+                }
+                $i += $len;
+            } else {
+                $result .= $subject[$i];
+                $i++;
+            }
+        }
+        return $result;
+    }
+
     public function index() {
         if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) return redirect("/colaboradores/pagina/F");
         return redirect("/valores/categorias");
@@ -50,6 +80,16 @@ class HomeController extends ControllerKX {
         $query .= " ORDER BY ".$request->column;
         $query .= " LIMIT 30";
         
-        return json_encode(DB::select(DB::raw($query)));
+        $resultado = array();
+        $consulta = DB::select(DB::raw($query));
+        foreach ($consulta as $linha) {
+            $linha = (array) $linha;
+            $aux = array(
+                "id" => $linha["id"],
+                $request->column => $this->str_ireplace2($request->search, "<b>".$request->search."</b>", $linha[$request->column])
+            );
+            array_push($resultado, $aux);
+        }
+        return json_encode($resultado);
     }
 }

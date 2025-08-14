@@ -11,7 +11,7 @@ use App\Models\Comodatos;
 use App\Models\Solicitacoes;
 use App\Models\SolicitacoesProdutos;
 
-class SolicitacoesController extends ControllerKX {
+class SolicitacoesController extends Controller {
     private function consultar_main($id_comodato) {
         $resultado = new \stdClass;
         $solicitacao = Solicitacoes::find(

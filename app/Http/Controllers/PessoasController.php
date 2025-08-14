@@ -9,7 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
 
-class PessoasController extends ControllerKX {
+class PessoasController extends Controller {
     private function busca($where, $tipo) {
         return DB::table("pessoas")
                     ->select(

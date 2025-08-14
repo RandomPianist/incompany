@@ -12,7 +12,7 @@ use App\Models\Valores;
 use App\Models\Solicitacoes;
 use App\Models\Produtos;
 
-class RelatoriosController extends ControllerKX {
+class RelatoriosController extends Controller {
     private function consultar_maquina(Request $request) {
         return ((!sizeof(
             DB::table("valores")

@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Pessoas;
 use App\Models\Setores;
 
-class SetoresController extends ControllerKX {
+class SetoresController extends Controller {
     private function busca($param) {
         return DB::table("setores")
                     ->select(

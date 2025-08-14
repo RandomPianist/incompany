@@ -14,7 +14,7 @@ use App\Models\Empresas;
 use App\Models\Pessoas;
 use App\Models\Log;
 
-class ApiController extends ControllerKX {
+class ApiController extends Controller {
     private function info_atb($id_pessoa, $obrigatorios, $grade) {
         return DB::table("vpendentes")
                     ->select(DB::raw($obrigatorios ? "

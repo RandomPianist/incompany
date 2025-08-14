@@ -15,7 +15,7 @@ use App\Models\Comodatos;
 use App\Models\Retiradas;
 use Illuminate\Http\Request;
 
-class Api2Controller extends ControllerKX {
+class Api2Controller extends Controller {
     private function maquinas($cft) {
         return DB::table("valores")
                     ->select(

@@ -10,7 +10,7 @@ use App\Models\Pessoas;
 use App\Models\Produtos;
 use App\Models\Atribuicoes;
 
-class ProdutosController extends ControllerKX {
+class ProdutosController extends Controller {
     private function busca($where) {
         return DB::table("produtos")
                     ->select(

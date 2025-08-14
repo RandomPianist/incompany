@@ -7,7 +7,7 @@ use Carbon\Carbon;
 use App\Models\Pessoas;
 use Illuminate\Http\Request;
 
-class RetiradasController extends ControllerKX {
+class RetiradasController extends Controller {
     public function consultar(Request $request) {
         return $this->retirada_consultar($request->atribuicao, $request->qtd, $request->pessoa);
     }
