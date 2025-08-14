@@ -305,7 +305,7 @@ class Controller extends BaseController {
         $id_pessoa = $api ? "NULL" : Auth::user()->id_pessoa;
         if (!$api) $nome = Pessoas::find($id_pessoa)->nome;
         DB::statement("
-            INSERT INTO log (id_pessoa, nome, origem, acao, tabela, fk, data) (
+            INSERT INTO log (id_pessoa, nome, origem, acao, tabela, fk, data, hms) (
                 SELECT
                     ".$id_pessoa.",
                     ".($nome ? "'".$nome."'" : "NULL").",
@@ -313,7 +313,8 @@ class Controller extends BaseController {
                     'C',
                     'maquinas_produtos',
                     mp.id,
-                    CURDATE()
+                    CURDATE(),
+                    '".date("H:i:s")."'
 
                 FROM maquinas_produtos AS mp
 

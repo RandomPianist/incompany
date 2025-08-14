@@ -173,7 +173,7 @@ class ProdutosController extends Controller {
             $pessoa = Pessoas::find(Auth::user()->id_pessoa);
             DB::statement("UPDATE atribuicoes SET lixeira = 1 WHERE id IN (".join(",", $lista_atb).")");
             DB::statement("
-                INSERT INTO log (id_pessoa, nome, origem, acao, tabela, fk, data) (
+                INSERT INTO log (id_pessoa, nome, origem, acao, tabela, fk, data, hms) (
                     SELECT
                         ".$pessoa->id.",
                         '".$pessoa->nome."',
@@ -181,7 +181,8 @@ class ProdutosController extends Controller {
                         'D',
                         'atribuicoes',
                         id,
-                        CURDATE()
+                        CURDATE(),
+                        '".date("H:i:s")."'
 
                     FROM atribuicoes
 
