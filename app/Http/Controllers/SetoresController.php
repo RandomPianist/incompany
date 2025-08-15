@@ -131,7 +131,7 @@ class SetoresController extends Controller {
                 ->selectRaw("IFNULL(id_usuario, 0) AS id_usuario")
                 ->where("id", Auth::user()->id_pessoa)
                 ->value("id_usuario")
-        ) ? 1 : 0;
+        ) && !intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa) ? 1 : 0;
     }
 
     public function salvar(Request $request) {
