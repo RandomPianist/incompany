@@ -56,21 +56,26 @@ CREATE TABLE pessoas (
 	foto64 TEXT,
 	supervisor TINYINT DEFAULT 0,
 	biometria TEXT,
+    id_usuario INT,
 	FOREIGN KEY (id_setor) REFERENCES setores(id),
 	FOREIGN KEY (id_empresa) REFERENCES empresas(id)
 );
 
 CREATE TABLE users (
 	id INT AUTO_INCREMENT PRIMARY KEY,
-	email VARCHAR(64),
-	password VARCHAR(512),
-	lixeira TINYINT DEFAULT 0,
-	id_pessoa INT,
-	admin TINYINT DEFAULT 0,
-	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    name VARCHAR(255),
+    email VARCHAR(255),
+    email_verified_at TIMESTAMP,
+    password VARCHAR(255),
+    remember_token VARCHAR(100),
+    id_pessoa INT,
+    admin TINYINT DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	FOREIGN KEY (id_pessoa) REFERENCES pessoas(id)
+    FOREIGN KEY (id_pessoa) REFERENCES pessoas(id)
 );
+
+ALTER TABLE pessoas ADD FOREIGN KEY (id_usuario) REFERENCES users(id);
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------- PRODUTOS -------------------------------------------------------------------------
@@ -582,11 +587,9 @@ CREATE VIEW vatribuicoes AS (
         f.id_atribuicao
 );
 
-CREATE TABLE atribuicoes_associadas AS SELECT * FROM vatribuicoes;
-
 CREATE VIEW vpendentes AS (
     SELECT
-        aa.id_pessoa,
+        vatribuicoes.id_pessoa,
 
         atribuicoes.validade,
         atribuicoes.id AS id_atribuicao,
@@ -627,32 +630,32 @@ CREATE VIEW vpendentes AS (
         
     FROM atribuicoes
 
-    JOIN atribuicoes_associadas AS aa
-        ON aa.id_atribuicao = atribuicoes.id
+    JOIN vatribuicoes
+        ON vatribuicoes.id_atribuicao = atribuicoes.id
         
     JOIN produtos
         ON (produtos.cod_externo = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'P')
             OR (produtos.referencia = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'R')
 
     JOIN vprodutos
-        ON vprodutos.id_produto = produtos.id AND vprodutos.id_pessoa = aa.id_pessoa
+        ON vprodutos.id_produto = produtos.id AND vprodutos.id_pessoa = vatribuicoes.id_pessoa
         
     JOIN vestoque
         ON vestoque.id_mp = vprodutos.id_mp
 
     JOIN (
         SELECT
-            aa.id_pessoa,
-            aa.id_atribuicao,
+            vatribuicoes.id_pessoa,
+            vatribuicoes.id_atribuicao,
             IFNULL(SUM(retiradas.qtd), 0) AS valor
             
         FROM atribuicoes
         
-        JOIN atribuicoes_associadas AS aa
-            ON aa.id_atribuicao = atribuicoes.id
+        JOIN vatribuicoes
+            ON vatribuicoes.id_atribuicao = atribuicoes.id
             
         JOIN pessoas
-            ON pessoas.id = aa.id_pessoa
+            ON pessoas.id = vatribuicoes.id_pessoa
         
         LEFT JOIN retiradas
             ON retiradas.id_atribuicao = atribuicoes.id
@@ -662,26 +665,26 @@ CREATE VIEW vpendentes AS (
                 AND retiradas.id_supervisor IS NULL
         
         GROUP BY
-            aa.id_pessoa,
-            aa.id_atribuicao
-    ) AS calc_qtd ON calc_qtd.id_atribuicao = atribuicoes.id AND calc_qtd.id_pessoa = aa.id_pessoa
+            vatribuicoes.id_pessoa,
+            vatribuicoes.id_atribuicao
+    ) AS calc_qtd ON calc_qtd.id_atribuicao = atribuicoes.id AND calc_qtd.id_pessoa = vatribuicoes.id_pessoa
 
     JOIN (
         SELECT
-            aa.id_pessoa,
-            aa.id_atribuicao,
+            vatribuicoes.id_pessoa,
+            vatribuicoes.id_atribuicao,
             MAX(retiradas.data) AS data
             
         FROM atribuicoes
         
-        JOIN atribuicoes_associadas AS aa
-            ON aa.id_atribuicao = atribuicoes.id
+        JOIN vatribuicoes
+            ON vatribuicoes.id_atribuicao = atribuicoes.id
             
         JOIN atribuicoes AS associadas
-            ON associadas.id = aa.id_associado
+            ON associadas.id = vatribuicoes.id_associado
             
         JOIN pessoas
-            ON pessoas.id = aa.id_pessoa
+            ON pessoas.id = vatribuicoes.id_pessoa
             
         LEFT JOIN retiradas
             ON retiradas.id_atribuicao = associadas.id
@@ -690,14 +693,14 @@ CREATE VIEW vpendentes AS (
                 AND retiradas.id_supervisor IS NULL
                 
         GROUP BY
-            aa.id_atribuicao,
-            aa.id_pessoa
-    ) AS atbgrp ON atbgrp.id_atribuicao = atribuicoes.id AND atbgrp.id_pessoa = aa.id_pessoa
+            vatribuicoes.id_atribuicao,
+            vatribuicoes.id_pessoa
+    ) AS atbgrp ON atbgrp.id_atribuicao = atribuicoes.id AND atbgrp.id_pessoa = vatribuicoes.id_pessoa
 
     WHERE (atribuicoes.qtd - calc_qtd.valor) > 0
 
     GROUP BY
-        aa.id_pessoa,
+        vatribuicoes.id_pessoa,
         atribuicoes.id,
         atribuicoes.obrigatorio,
         atribuicoes.validade,
@@ -723,3 +726,36 @@ CREATE VIEW vpendentes AS (
             ELSE produtos.descr
         END
 );
+
+ALTER TABLE estoque
+  ADD INDEX idx_estoque_id_mp (id_mp),
+  ADD INDEX idx_estoque_idmp_es_qtd (id_mp, es, qtd);
+
+ALTER TABLE maquinas_produtos
+  ADD INDEX idx_mp_id_produto (id_produto),
+  ADD INDEX idx_mp_id_maquina (id_maquina);
+
+ALTER TABLE comodatos
+  ADD INDEX idx_comodatos_id_maquina (id_maquina),
+  ADD INDEX idx_comodatos_id_empresa (id_empresa),
+  ADD INDEX idx_comodatos_maquina_empresa_inicio_fim (id_maquina, id_empresa, inicio, fim);
+
+ALTER TABLE produtos
+  ADD INDEX idx_produtos_codext_lixeira (cod_externo, lixeira),
+  ADD INDEX idx_produtos_referencia_lixeira (referencia, lixeira);
+
+ALTER TABLE pessoas
+  ADD INDEX idx_pessoas_id_empresa (id_empresa),
+  ADD INDEX idx_pessoas_id_setor (id_setor),
+  ADD INDEX idx_pessoas_lixeira (lixeira);
+
+ALTER TABLE empresas
+  ADD INDEX idx_empresas_id_matriz (id_matriz),
+  ADD INDEX idx_empresas_lixeira (lixeira);
+
+ALTER TABLE atribuicoes
+  ADD INDEX idx_atr_pessoa_valor_chaves (pessoa_ou_setor_valor, pessoa_ou_setor_chave, produto_ou_referencia_chave, produto_ou_referencia_valor, lixeira),
+  ADD INDEX idx_atr_prodref_valor_chave (produto_ou_referencia_valor, produto_ou_referencia_chave, lixeira);
+
+ALTER TABLE retiradas
+  ADD INDEX idx_retiradas_atb_pessoa_empresa_data_super (id_atribuicao, id_pessoa, id_empresa, data, id_supervisor);
