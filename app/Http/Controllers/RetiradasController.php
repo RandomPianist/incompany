@@ -59,8 +59,7 @@ class RetiradasController extends Controller {
                         )
                         ->orderby(DB::raw("obrigatorio DESC, DATE(proxima_retirada_real)"))
                         ->get();
-        $resultado = new \stdClass;
-        $retiradas = array();
+        $resultado = array();
         foreach ($consulta as $linha) {
             $proxima_retirada = Carbon::parse($linha->proxima_retirada_real);
             $dias = $proxima_retirada->diffInDays($hoje);
@@ -73,10 +72,8 @@ class RetiradasController extends Controller {
             $aux->qtd = $linha->qtd;
             $aux->proxima_retirada = $proxima_retirada->format("d/m/Y");
             $aux->dias = $dias;
-            array_push($retiradas, $aux);
+            array_push($resultado, $aux);
         }
-        $resultado->retiradas = $retiradas;
-        $resultado->nome = Pessoas::find($id_pessoa)->nome;
         return json_encode($resultado);
     }
 }

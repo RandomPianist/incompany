@@ -102,49 +102,58 @@
         }
 
         function proximas_retiradas(id_pessoa) {
-            $.get(URL + "/retiradas/proximas/" + id_pessoa, function(data) {
-                if (typeof data == "string") data = $.parseJSON(data);
-                let referencia = false;
-                let tamanho = false;
-                let resultado = "";
-                let maximo_verde = 0;
-                let maximo_vermelho = 0;
-                data.retiradas.forEach((linha) => {
-                    let dias = parseInt(linha.dias);
-                    if (dias > 0) {
-                        if (dias > maximo_verde) maximo_verde = dias;
-                    } else {
-                        if (Math.abs(dias) > maximo_vermelho) maximo_vermelho = Math.abs(dias);
-                    }
+            let tudo = document.getElementById("table-ret").classList;
+            let container = document.getElementById("table-ret-dados");
+            container.innerHTML = "";
+            tudo.add("d-none");
+            $.get(URL + "/colaboradores/mostrar/" + id_pessoa, function(resp) {
+                if (typeof resp == "string") resp = $.parseJSON(resp);
+                document.getElementById("proximasRetiradasModalLabel").innerHTML = "Próximas retiradas (" + resp.nome + ")";
+                modal("proximasRetiradasModal", 0, function() {
+                    $.get(URL + "/retiradas/proximas/" + id_pessoa, function(data) {
+                        if (typeof data == "string") data = $.parseJSON(data);
+                        let referencia = false;
+                        let tamanho = false;
+                        let resultado = "";
+                        let maximo_verde = 0;
+                        let maximo_vermelho = 0;
+                        data.forEach((linha) => {
+                            let dias = parseInt(linha.dias);
+                            if (dias > 0) {
+                                if (dias > maximo_verde) maximo_verde = dias;
+                            } else {
+                                if (Math.abs(dias) > maximo_vermelho) maximo_vermelho = Math.abs(dias);
+                            }
+                        });
+                        const hex = ["11", "22", "33", "44", "55", "66", "77", "88", "99", "AA", "BB", "CC", "DD", "EE", "FF"];
+                        data.forEach((linha) => {
+                            let dias = parseInt(linha.dias);
+                            if (linha.tamanho) tamanho = true;
+                            if (linha.referencia) referencia = true;
+                            let op_verde = hex[parseInt((((dias / maximo_verde) * 100) * 14) / 100)];
+                            let op_vermelho = hex[parseInt((((Math.abs(dias) / maximo_vermelho) * 100) * 14) / 100)];
+                            resultado += "<tr>" +
+                                "<td class = 'align-middle'>" + linha.id_produto.toString().padStart(6, "0") + "</td>" +
+                                "<td class = 'align-middle'>" + linha.descr + "</td>" +
+                                "<td class = 'align-middle'>" + linha.referencia + "</td>" +
+                                "<td class = 'align-middle'>" + linha.tamanho + "</td>" +
+                                "<td class = 'align-middle text-right'>" + linha.qtd + "</td>" +
+                                "<td class = 'align-middle'>" + linha.proxima_retirada + "</td>" +
+                                "<td class = 'align-middle' style = 'background:" + (dias < 0 ? "#ff0000" + op_vermelho : "#00ff00" + op_verde) + "'>" + Math.abs(dias) + "</td>" +
+                            "</tr>";
+                        });
+                        container.innerHTML = resultado;
+                        tudo.remove("d-none");
+                        Array.from(document.getElementsByClassName("tamanho")).forEach((el) => {
+                            if (!tamanho) el.classList.add("d-none");
+                            else el.classList.remove("d-none");
+                        });
+                        Array.from(document.getElementsByClassName("referencia")).forEach((el) => {
+                            if (!referencia) el.classList.add("d-none");
+                            else el.classList.remove("d-none");
+                        });
+                    });
                 });
-                const hex = ["11", "22", "33", "44", "55", "66", "77", "88", "99", "AA", "BB", "CC", "DD", "EE", "FF"];
-                data.retiradas.forEach((linha) => {
-                    let dias = parseInt(linha.dias);
-                    if (linha.tamanho) tamanho = true;
-                    if (linha.referencia) referencia = true;
-                    let op_verde = hex[parseInt((((dias / maximo_verde) * 100) * 14) / 100)];
-                    let op_vermelho = hex[parseInt((((Math.abs(dias) / maximo_vermelho) * 100) * 14) / 100)];
-                    resultado += "<tr>" +
-                        "<td class = 'align-middle'>" + linha.id_produto.toString().padStart(6, "0") + "</td>" +
-                        "<td class = 'align-middle'>" + linha.descr + "</td>" +
-                        "<td class = 'align-middle'>" + linha.referencia + "</td>" +
-                        "<td class = 'align-middle'>" + linha.tamanho + "</td>" +
-                        "<td class = 'align-middle text-right'>" + linha.qtd + "</td>" +
-                        "<td class = 'align-middle'>" + linha.proxima_retirada + "</td>" +
-                        "<td class = 'align-middle' style = 'background:" + (dias < 0 ? "#ff0000" + op_vermelho : "#00ff00" + op_verde) + "'>" + Math.abs(dias) + "</td>" +
-                    "</tr>";
-                });
-                document.getElementById("proximasRetiradasModalLabel").innerHTML = "Próximas retiradas (" + data.nome + ")"; 
-                document.getElementById("table-ret-dados").innerHTML = resultado;
-                Array.from(document.getElementsByClassName("tamanho")).forEach((el) => {
-                    if (!tamanho) el.classList.add("d-none");
-                    else el.classList.remove("d-none");
-                });
-                Array.from(document.getElementsByClassName("referencia")).forEach((el) => {
-                    if (!referencia) el.classList.add("d-none");
-                    else el.classList.remove("d-none");
-                });
-                modal("proximasRetiradasModal", 0);
             });
         }
 
