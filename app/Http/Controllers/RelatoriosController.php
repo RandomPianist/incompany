@@ -217,21 +217,11 @@ class RelatoriosController extends Controller {
     }
 
     public function extrato_consultar(Request $request) {
-        if (isset($request->maquina)) {
-            if ($this->consultar_maquina($request)) return "maquina";
-        }
-        if (((trim($request->produto) && !sizeof(
-            DB::table("produtos")
-                ->where("id", $request->id_produto)
-                ->where("descr", $request->produto)
-                ->where("lixeira", 0)
-                ->get()
-        )) || (trim($request->id_produto) && !trim($request->produto)))) return "produto";
-        return "";
+        return json_encode($this->extrato_consultar_main($request));
     }
 
     public function sugestao(Request $request) {
-        if ($this->extrato_consultar($request)) return 401;
+        if ($this->extrato_consultar_main($request)->el) return 401;
         $tela = $this->sugestao_main($request);
         $resultado = $tela->resultado;
         $criterios = $tela->criterios;
@@ -241,7 +231,7 @@ class RelatoriosController extends Controller {
     }
 
     public function extrato(Request $request) {
-        if ($this->extrato_consultar($request)) return 401;
+        if ($this->extrato_consultar_main($request)->el) return 401;
         $criterios = array();
         $lm = $request->lm == "S";
         $resultado = collect(

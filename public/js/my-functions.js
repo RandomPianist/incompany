@@ -609,10 +609,26 @@ function RelatorioItens(resumido, maquina) {
         if (elementos.inicio.value && elementos.fim.value) erro = validar_datas(elementos.inicio, elementos.fim, false);
         let req = ["produto"];
         if (maquina === undefined) req.push("maquina");
-        $.get(URL + "/relatorios/extrato/consultar", relObterElementosValor(elementos, req), function(data) {
-            if (data && !erro) {
-                elementos[data].classList.add("invalido");
-                erro == "maquina" ? "Máquina não encontrada" : "Produto não encontrado";
+        req = relObterElementosValor(elementos, req);
+        req.inicio = elementos.inicio.value;
+        req.fim = elementos.fim.value;
+        if (maquina !== undefined) req.id_maquina = maquina;
+        $.get(URL + "/relatorios/extrato/consultar", req, function(data) {
+            if (typeof data == "string") data = $.parseJSON(data);
+            if (data.el && !erro) {
+                const lista = data.el.split(",");
+                lista.forEach((el) => {
+                    elementos[el].classList.add("invalido");
+                    if (el == "inicio") elementos[el].value = data.inicio_correto;
+                    if (el == "fim") elementos[el].value = data.fim_correto;
+                });
+                if (["maquina", "produto"].indexOf(data.el) == -1) {
+                    if (lista.length > 1) {
+                        erro = "As datas foram corrigidas";
+                        if (data.varias_maquinas == "N") erro += " para o início e o fim programado para a locação desta máquina";
+                    } else erro = "A locação " + (data.varias_maquinas == "S" ? "desta máquina" : data.el == "inicio" ? "mais antiga" : "mais recente") + (data.el == "inicio" ? " foi iniciada em " + data.inicio_correto : " tem seu término programado para " + data.fim_correto) + ", sendo essa a " + (data.el == "inicio" ? "menor" : "maior") + " data possível para pesquisar.<br>A data foi corrigida";
+                    erro += ".<br>Tente novamente.";
+                } else erro = erro == "maquina" ? "Máquina não encontrada" : "Produto não encontrado";
             }
             if (!erro) document.querySelector("#relatorioItensModal form").submit();
             else s_alert(erro);

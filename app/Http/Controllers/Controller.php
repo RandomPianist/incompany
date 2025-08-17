@@ -386,6 +386,60 @@ class Controller extends BaseController {
         $this->log_inserir("C", "comodatos", $linha->id);
     }
 
+    protected function extrato_consultar_main(Request $request) {
+        $resultado = new \stdClass;
+        if (isset($request->maquina)) {
+            if ($this->consultar_maquina($request)) {
+                $resultado->el = "maquina";
+                return $resultado;
+            }
+        }
+        if (((trim($request->produto) && !sizeof(
+            DB::table("produtos")
+                ->where("id", $request->id_produto)
+                ->where("descr", $request->produto)
+                ->where("lixeira", 0)
+                ->get()
+        )) || (trim($request->id_produto) && !trim($request->produto)))) {
+            $resultado->el = "produto";
+            return $resultado;
+        }
+        if ($request->inicio || $request->fim) {
+            $consulta = DB::table("comodatos")
+                            ->select(
+                                DB::raw("MIN(inicio) AS inicio"),
+                                DB::raw("MAX(fim) AS fim")
+                            )
+                            ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "comodatos"))
+                            ->where(function($sql) use($request) {
+                                if ($request->id_maquina) $sql->where("id_maquina", $request->id_maquina);
+                            })
+                            ->first();
+            $elementos = array();
+            if ($request->inicio) {
+                $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->startOfDay();
+                $consulta_inicio = Carbon::createFromFormat('Y-m-d', $consulta->inicio)->startOfDay();
+                if ($inicio->lessThan($consulta_inicio)) {
+                    $resultado->inicio_correto = $consulta_inicio->format("d/m/Y");
+                    array_push($elementos, "inicio");
+                }
+            }
+            if ($request->fim) {
+                $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->startOfDay();
+                $consulta_fim = Carbon::createFromFormat('Y-m-d', $consulta->fim)->startOfDay();
+                if ($fim->greaterThan($consulta_fim)) {
+                    $resultado->fim_correto = $consulta_fim->format("d/m/Y");
+                    array_push($elementos, "fim");
+                }
+            }
+            $resultado->varias_maquinas = $request->id_maquina ? "N" : "S";
+            $resultado->el = join(",", $elementos);
+            return $resultado;
+        }
+        $resultado->el = "";
+        return $resultado;
+    }
+
     protected function sugestao_main(Request $request) {
         $criterios = array();
         array_push($criterios, "Período de ".$request->inicio." até ".$request->fim);
