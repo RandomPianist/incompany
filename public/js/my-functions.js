@@ -721,7 +721,7 @@ function RelatorioRetiradas(quebra) {
             function(data) {
                 if (data && !erro) {
                     elementos[data].classList.add("invalido");
-                    erro = data != "maquina" ? data.charAt(0).toUpperCase() + data.substring(1) : "Máquina";
+                    erro = data != "maquina" ? "Centro de custo" : "Máquina";
                     erro += " não encontrad";
                     erro += data == "setor" ? "o" : "a";
                 }
