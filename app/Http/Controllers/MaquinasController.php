@@ -10,7 +10,7 @@ use App\Models\Estoque;
 use App\Models\MaquinasProdutos;
 
 class MaquinasController extends Controller {
-    private function consultar_estoque_main($produtos_id, $produtos_descr, $quantidades, $precos, $es) {
+    private function consultar_estoque_main($id_maquina, $produtos_id, $produtos_descr, $quantidades, $precos, $es) {
         $texto = "";
         $campos = array();
         $valores = array();
@@ -31,7 +31,7 @@ class MaquinasController extends Controller {
 
         if (!$texto) {
             for ($i = 0; $i < sizeof($produtos_id); $i++) {
-                $saldo = $this->retorna_saldo_mp($request->id_maquina, $produtos_id[$i]);
+                $saldo = $this->retorna_saldo_mp($id_maquina, $produtos_id[$i]);
                 if (
                     $es[$i] == "S" &&
                     ($saldo - floatval($quantidades[$i])) < 0
@@ -126,6 +126,7 @@ class MaquinasController extends Controller {
     
     public function estoque(Request $request) {
         if ($this->consultar_estoque_main(
+            $request->id_maquina,
             $request->id_produto,
             $request->produto,
             $request->qtd,
@@ -173,6 +174,7 @@ class MaquinasController extends Controller {
 
     public function consultar_estoque(Request $request) {
         return json_encode($this->consultar_estoque_main(
+            $request->id_maquina,
             explode(",", $request->produtos_id),
             explode(",", $request->produtos_descr),
             explode(",", $request->quantidades),
@@ -181,7 +183,7 @@ class MaquinasController extends Controller {
         ));
     }
 
-    public function preco(Requst $request) {
+    public function preco(Request $request) {
         return DB::table("maquinas_produtos")
                     ->where("id_maquina", $request->id_maquina)
                     ->where("id_produto", $request->id_produto)

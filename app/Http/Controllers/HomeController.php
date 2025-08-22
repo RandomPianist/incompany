@@ -52,7 +52,7 @@ class HomeController extends Controller {
             $where .= "produtos.id IN (
                 SELECT id_produto
                 FROM vprodutos
-                WHERE id_pessoa = ".Auth::user()->id_pessoa.
+                WHERE ".($request->table == "produtos" ? "qtd > 0" : "1")." AND id_pessoa = ".Auth::user()->id_pessoa.
             ")";
         } else if (in_array($tabela, ["empresas", "pessoas", "setores"])) $where .= $this->obter_where(Auth::user()->id_pessoa, $tabela, true);
         else $where .= "1";

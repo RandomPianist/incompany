@@ -18,6 +18,7 @@
                             <div class = "col-11 pr-0 form-search form-search-2">
                                 <label for = "comodato-empresa" class = "custom-label-form">Empresa: *</label>
                                 <input id = "comodato-empresa"
+                                    name = "empresa"
                                     class = "form-control autocomplete"
                                     data-input = "#comodato-id_empresa"
                                     data-table = "empresas"

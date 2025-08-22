@@ -270,9 +270,9 @@ function modal(nome, id, callback) {
     if (nome == "pessoasModal") {
         $.get(URL + "/colaboradores/modal", function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
-            let resultado = "<option value = '0'>--</option>";
+            let resultado = !EMPRESA ? "<option value = '0'>--</option>" : "";
             data.empresas.forEach((empresa) => {
-                resultado += "<option value = '" + empresa.id + "'>" + empresa.nome_fantasia + "</option>";
+                resultado += "<option value = '" + empresa.id + "'" + (data.filial == "S" ? " disabled" : "") + ">" + empresa.nome_fantasia + "</option>";
                 empresa.filiais.forEach((filial) => {
                     resultado += "<option value = '" + filial.id + "'>- " + filial.nome_fantasia + "</option>";
                 });
@@ -394,13 +394,13 @@ function autocomplete(_this) {
         element.parent().find(".autocomplete-line").each(function () {
             $(this).click(function () {
                 $(input_id).val($(this).data().id).trigger("change");
-                element.val(retira_chars($(this).html().toString().split("|")[0].trim()));
+                element.val(retira_chars($(this).text()));
                 div_result.remove();
             });
 
             $(this).mouseover(function () {
                 $(input_id).val($(this).data().id).trigger("change");
-                element.val(retira_chars($(this).html().toString().split("|")[0].trim()));
+                element.val(retira_chars($(this).text()));
                 $(this).parent().find(".hovered").removeClass("hovered");
                 $(this).addClass("hovered");
             });

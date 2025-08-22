@@ -8,6 +8,7 @@ use Hash;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
+use App\Models\Empresas;
 
 class PessoasController extends Controller {
     private function busca($where, $tipo) {
@@ -173,6 +174,18 @@ class PessoasController extends Controller {
                             $sql->whereRaw($where);
                         }
                     })
+                    ->where(function($sql) {
+                        $m_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+                        if ($m_emp) {
+                            $possiveis = [$m_emp];
+                            $matriz = intval(Empresas::find($possiveis[0])->id_matriz);
+                            if ($matriz) {
+                                array_push($possiveis, $matriz);
+                                $sql->whereIn("id", $possiveis);
+                            }
+                        }
+                    })
+                    ->where("lixeira", 0)
                     ->orderby("nome_fantasia")
                     ->get();
     }
@@ -224,6 +237,34 @@ class PessoasController extends Controller {
         }
         $resultado->permitir = 0;
         $resultado->aviso = "Não é possível excluir a si mesmo";
+        return $resultado;
+    }
+
+    private function obter_dados() {
+        $resultado = new \stdClass;
+        $id_pessoa = Auth::user()->id_pessoa;
+        $id_emp = intval(Pessoas::find($id_pessoa)->id_empresa);
+        $matriz = $id_emp ? intval(Empresas::find($id_emp)->id_matriz) : 0;
+        $filial = "N";
+        if ($matriz > 0) {
+            $filial = "S";
+            $id_emp = $matriz;
+        }
+        $empresas = $this->busca_emp($id_emp, 0);
+        foreach($empresas as $matriz) {
+            $filiais = $this->busca_emp($id_emp, $matriz->id);
+            $matriz->filiais = $filiais;
+        }
+        $resultado->filial = $filial;
+        $resultado->empresas = $empresas;
+        $resultado->setores = DB::table("setores")
+                                    ->select(
+                                        "id",
+                                        "descr"
+                                    )
+                                    ->whereRaw($this->obter_where($id_pessoa, "setores"))
+                                    ->orderby("descr")
+                                    ->get();
         return $resultado;
     }
 
@@ -314,6 +355,19 @@ class PessoasController extends Controller {
         $hj = Carbon::today();
         if ($admissao->greaterThan($hj)) return 400;
         if ($this->consultar_main($request)->tipo != "ok") return 401;
+
+        if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) {
+            $dados = $this->obter_dados();
+            $empresas_possiveis_obj = $dados->empresas;
+            $empresas_possiveis_arr = array();
+            foreach ($empresas_possiveis_obj as $matriz) {
+                if ($dados->filial == "N") array_push($empresas_possiveis_arr, intval($matriz->id));
+                $filiais = $matriz->filiais;
+                foreach ($filiais as $filial) array_push($empresas_possiveis_arr, intval($filial->id));
+            }
+            if (!in_array(intval($request->id_empresa), $empresas_possiveis_arr)) return 401;
+        }
+
         $linha = 0;
         $setores = [$request->id_setor];
         if ($request->id) {
@@ -401,23 +455,6 @@ class PessoasController extends Controller {
     }
 
     public function modal() {
-        $id_pessoa = Auth::user()->id_pessoa;
-        $id_emp = intval(Pessoas::find($id_pessoa)->id_empresa);
-        $resultado = new \stdClass;
-        $empresas = $this->busca_emp($id_emp, 0);
-        foreach($empresas as $matriz) {
-            $filiais = $this->busca_emp($id_emp, $matriz->id);
-            $matriz->filiais = $filiais;
-        }
-        $resultado->empresas = $empresas;
-        $resultado->setores = DB::table("setores")
-                                    ->select(
-                                        "id",
-                                        "descr"
-                                    )
-                                    ->whereRaw($this->obter_where($id_pessoa, "setores"))
-                                    ->orderby("descr")
-                                    ->get();
-        return json_encode($resultado);
+        return json_encode($this->obter_dados());
     }
 }

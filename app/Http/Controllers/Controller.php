@@ -297,7 +297,7 @@ class Controller extends BaseController {
     protected function criar_mp($id_produto, $id_maquina, $api = false, $nome = "") {
         $id_produto = strval($id_produto);
         $id_maquina = strval($id_maquina);
-        $tabela = strpos(".", $id_maquina) !== false ? "valores" : "produtos";
+        $tabela = $id_maquina == "valores.id" ? "valores" : "produtos";
         DB::statement("
             INSERT INTO maquinas_produtos (id_produto, id_maquina) (
                 SELECT
@@ -377,8 +377,8 @@ class Controller extends BaseController {
         $dtfim = Carbon::createFromFormat('d/m/Y', $fim)->format('Y-m-d');
         
         $linha = new Comodatos;
-        $linha->id_maquina = $request->id_maquina;
-        $linha->id_empresa = $request->id_empresa;
+        $linha->id_maquina = $id_maquina;
+        $linha->id_empresa = $id_empresa;
         $linha->inicio = $dtinicio;
         $linha->fim = $dtfim;
         $linha->fim_orig = $dtfim;

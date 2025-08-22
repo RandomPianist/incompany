@@ -21,7 +21,7 @@
                                     name = "produto[]"
                                     class = "form-control autocomplete produto"
                                     data-input = "#id_produto-1"
-                                    data-table = "produtos"
+                                    data-table = "produtos_todos"
                                     data-column = "descr"
                                     data-filter_col = ""
                                     data-filter = ""
@@ -136,7 +136,7 @@
     function atualizaPreco(seq) {
         const el_prod = document.getElementById("id_produto-" + seq);
         $.get(URL + "/maquinas/preco", {
-            id_maquina : document.getElementById("id_maquina").value,
+            id_maquina : document.getElementsByClassName("id_maquina")[0].value,
             id_produto : el_prod.value
         }, function(preco) {
             let el_preco = el_prod.parentElement.parentElement.querySelector(".preco");
@@ -174,11 +174,12 @@
         let el_prod = document.createElement("input");
         el_prod.type = "text";
         el_prod.id = "produto-" + cont;
+        el_prod.name = "produto[]";
         el_prod.classList.add("form-control", "autocomplete", "produto");
         el_prod.autocomplete = "off";
         el_prod.dataset.input = "#id_produto-" + cont;
         el_prod.dataset.column = "descr";
-        el_prod.dataset.table = "produtos";
+        el_prod.dataset.table = "produtos_todos";
         el_prod.dataset.filter_col = "";
         el_prod.dataset.filter = "";
 

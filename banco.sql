@@ -253,7 +253,8 @@ CREATE VIEW vprodutos AS (
     SELECT
         minhas_empresas.id_pessoa,
         produtos.id AS id_produto,
-        mp.id AS id_mp
+        mp.id AS id_mp,
+        vestoque.qtd
     
     FROM produtos
     
@@ -300,13 +301,15 @@ CREATE VIEW vprodutos AS (
     GROUP BY
         minhas_empresas.id_pessoa,
         produtos.id,
-        mp.id
+        mp.id,
+        vestoque.qtd
 
     UNION ALL (
         SELECT
             pessoas.id AS id_pessoa,
             produtos.id AS id_produto,
-            mp.id AS id_mp
+            mp.id AS id_mp,
+            vestoque.qtd
 
         FROM pessoas
 
@@ -321,12 +324,12 @@ CREATE VIEW vprodutos AS (
         WHERE pessoas.id_empresa = 0
           AND pessoas.lixeira = 0
           AND produtos.lixeira = 0
-          AND vestoque.qtd > 0
 
         GROUP BY
             pessoas.id,
             produtos.id,
-            mp.id
+            mp.id,
+            vestoque.qtd
     )
 );
 
@@ -588,11 +591,12 @@ CREATE VIEW vpendentes AS (
         ON (produtos.cod_externo = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'P')
             OR (produtos.referencia = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'R')
 
-    JOIN vprodutos
-        ON vprodutos.id_produto = produtos.id AND vprodutos.id_pessoa = vatribuicoes.id_pessoa
-        
+    JOIN (
+        SELECT * FROM vprodutos WHERE qtd > 0
+    ) AS lim_prod ON lim_prod.id_produto = produtos.id AND lim_prod.id_pessoa = vatribuicoes.id_pessoa
+    
     JOIN vestoque
-        ON vestoque.id_mp = vprodutos.id_mp
+        ON vestoque.id_mp = lim_prod.id_mp
 
     JOIN (
         SELECT
