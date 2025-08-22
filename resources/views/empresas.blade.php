@@ -153,6 +153,13 @@
                     if (!$($(el).parent()).find("details").length) $($(el).parent()).replaceWith("<div class = 'sem-filhos texto-tabela' id = '" + el.id + "'>" + $(el).html() + "</div>");
                 });
                 zebrar();
+                const elGrupo = document.getElementById("empresa-{{ request('grupo') ?? '' }}");
+                if (elGrupo !== null) {
+                    elGrupo.parentElement.open = true;
+                    setTimeout(function() {
+                        zebrar();
+                    }, 100);
+                }
             });
         }
 

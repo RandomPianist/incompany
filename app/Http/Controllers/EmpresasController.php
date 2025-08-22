@@ -142,7 +142,7 @@ class EmpresasController extends Controller {
         $linha->id_matriz = $request->id_matriz ? $request->id_matriz : 0;
         $linha->save();
         $this->log_inserir($request->id ? "E" : "C", "empresas", $linha->id);
-        return redirect("/empresas");
+        return redirect("/empresas?grupo=".$request->id_matriz);
     }
 
     public function excluir(Request $request) {
