@@ -111,7 +111,7 @@ class EmpresasController extends Controller {
                 ->where("lixeira", 0)
                 ->where("cnpj", $request->cnpj)
                 ->get()
-        )) return "1";
+        ) && !$request->id) return "1";
         return "0";
     }
 
