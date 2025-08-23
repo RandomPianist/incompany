@@ -231,7 +231,7 @@ class RelatoriosController extends Controller {
     }
 
     public function extrato(Request $request) {
-        if ($this->extrato_consultar_main($request)->el) return 401;
+        // if ($this->extrato_consultar_main($request)->el) return 401;
         $criterios = array();
         $lm = $request->lm == "S";
         $resultado = collect(
@@ -414,7 +414,7 @@ class RelatoriosController extends Controller {
     }
 
     public function retiradas(Request $request) {
-        if ($this->retiradas_consultar($request)) return 401;
+        // if ($this->retiradas_consultar($request)) return 401;
         $criterios = array();
         $qtd_total = 0;
         $val_total = 0;

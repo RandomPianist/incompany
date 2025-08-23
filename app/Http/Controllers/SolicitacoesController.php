@@ -42,7 +42,7 @@ class SolicitacoesController extends Controller {
     }
 
     public function ver(Request $request) {
-        if ($this->extrato_consultar($request)->el) return 401;
+        if ($this->extrato_consultar_main($request)->el) return 401;
         $tela = $this->sugestao_main($request);
         $resultado = $tela->resultado;
         $criterios = $tela->criterios;

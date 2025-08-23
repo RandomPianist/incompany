@@ -627,7 +627,7 @@ CREATE VIEW vpendentes AS (
         DATE_FORMAT(IFNULL(DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY), CURDATE()), '%d/%m/%Y') AS proxima_retirada,
         DATE(IFNULL(DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY), atribuicoes.created_at)) AS proxima_retirada_real,
         CASE
-            WHEN ((DATE_ADD(atbgrp.data, INTERVAL atribuicoes.validade DAY) <= CURDATE()) OR (atbgrp.data IS NULL)) THEN 1
+            WHEN (atribuicoes.qtd - calc_qtd.valor) > 0 THEN 1
             ELSE 0
         END AS esta_pendente
         
@@ -665,7 +665,7 @@ CREATE VIEW vpendentes AS (
             ON retiradas.id_atribuicao = atribuicoes.id
                 AND retiradas.id_pessoa = pessoas.id
                 AND (retiradas.id_empresa = pessoas.id_empresa OR pessoas.id_empresa = 0)
-                AND retiradas.data >= DATE(atribuicoes.created_at)
+                AND retiradas.data >= DATE_ADD(DATE(atribuicoes.created_at), INTERVAL atribuicoes.validade DAY) 
                 AND retiradas.id_supervisor IS NULL
         
         GROUP BY
@@ -700,8 +700,6 @@ CREATE VIEW vpendentes AS (
             vatribuicoes.id_atribuicao,
             vatribuicoes.id_pessoa
     ) AS atbgrp ON atbgrp.id_atribuicao = atribuicoes.id AND atbgrp.id_pessoa = vatribuicoes.id_pessoa
-
-    WHERE (atribuicoes.qtd - calc_qtd.valor) > 0
 
     GROUP BY
         vatribuicoes.id_pessoa,

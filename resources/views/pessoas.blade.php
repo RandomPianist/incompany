@@ -166,6 +166,7 @@
             req.tipo = "A";
             req.rel_grupo = "pessoa";
             req.consumo = "todos";
+            req.tipo_colab = "ativos";
             let link = document.createElement("a");
             link.href = URL + "/relatorios/retiradas?" + $.param(req);
             link.target = "_blank";
