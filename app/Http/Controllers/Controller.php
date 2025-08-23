@@ -178,10 +178,10 @@ class Controller extends BaseController {
                 ) AS main ON main.id = log.fk
 
                 LEFT JOIN maquinas_produtos AS mp
-                    ON mp.id_maquina = main.id
+                    ON mp.id = log.fk
 
                 LEFT JOIN estoque
-                    ON estoque.id_mp = mp.id
+                    ON estoque.id = log.fk
 
                 WHERE ((log.tabela = 'valores' AND main.id IS NOT NULL)
                    OR (log.tabela = 'maquinas_produtos' AND mp.id IS NOT NULL)
