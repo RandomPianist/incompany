@@ -72,8 +72,8 @@ class HomeController extends Controller {
         $query .= "id, ".$request->column;
         $query .= " FROM ".$tabela;
         $query .= " WHERE ";
-        if (strpos("todos", $request->table) !== false) $query .= "1";
-        else if (strpos("lixeira", $request->table) !== false) $query .= "lixeira = 1";
+        if (strpos($request->table, "todos") !== false) $query .= "1";
+        else if (strpos($request->table, "lixeira") !== false) $query .= "lixeira = 1";
         else $query .= "lixeira = 0";
         $query .= $where;
         if ($request->column == "referencia") $query .= " GROUP BY referencia";

@@ -386,6 +386,29 @@ class Controller extends BaseController {
         $this->log_inserir("C", "comodatos", $linha->id);
     }
 
+    protected function dados_comodato(Request $request) {
+        return DB::table("comodatos")
+                    ->select(
+                        DB::raw("MIN(inicio) AS inicio"),
+                        DB::raw("MAX(fim) AS fim")
+                    )
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "comodatos"))
+                    ->where(function($sql) use($request) {
+                        if ($request->id_maquina) $sql->where("id_maquina", $request->id_maquina);
+                    })
+                    ->first();
+    }
+
+    protected function consultar_maquina(Request $request) {
+        return ((!sizeof(
+            DB::table("valores")
+                ->where("id", $request->id_maquina)
+                ->where("descr", $request->maquina)
+                ->where("lixeira", 0)
+                ->get()
+        ) && trim($request->maquina)) || (trim($request->id_maquina) && !trim($request->maquina)));
+    }
+
     protected function extrato_consultar_main(Request $request) {
         $resultado = new \stdClass;
         if (isset($request->maquina)) {
@@ -405,16 +428,7 @@ class Controller extends BaseController {
             return $resultado;
         }
         if ($request->inicio || $request->fim) {
-            $consulta = DB::table("comodatos")
-                            ->select(
-                                DB::raw("MIN(inicio) AS inicio"),
-                                DB::raw("MAX(fim) AS fim")
-                            )
-                            ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "comodatos"))
-                            ->where(function($sql) use($request) {
-                                if ($request->id_maquina) $sql->where("id_maquina", $request->id_maquina);
-                            })
-                            ->first();
+            $consulta = $this->dados_comodato($request);
             $elementos = array();
             if ($request->inicio) {
                 $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->startOfDay();

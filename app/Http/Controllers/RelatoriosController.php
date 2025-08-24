@@ -13,16 +13,6 @@ use App\Models\Solicitacoes;
 use App\Models\Produtos;
 
 class RelatoriosController extends Controller {
-    private function consultar_maquina(Request $request) {
-        return ((!sizeof(
-            DB::table("valores")
-                ->where("id", $request->id_maquina)
-                ->where("descr", $request->maquina)
-                ->where("lixeira", 0)
-                ->get()
-        ) && trim($request->maquina)) || (trim($request->id_maquina) && !trim($request->maquina)));
-    }
-
     private function consultar_empresa(Request $request) {
         return ($this->empresa_consultar($request) && trim($request->empresa)) || (trim($request->id_empresa) && !trim($request->empresa));
     }
@@ -231,8 +221,25 @@ class RelatoriosController extends Controller {
     }
 
     public function extrato(Request $request) {
-        // if ($this->extrato_consultar_main($request)->el) return 401;
-        $criterios = array();
+        $consulta = $this->extrato_consultar_main($request);
+        $el_erro = $consulta->el;
+        if (in_array($el_erro, ["maquina", "produto"])) return 401;
+        $dados = $this->dados_comodato($request);
+
+        $r_inicio = $request->inicio;
+        if ($r_inicio) {
+            if (strpos($el_erro, "inicio") !== false) $r_inicio = $consulta->inicio_correto;
+        } else $r_inicio = Carbon::parse($dados->inicio)->format("d/m/Y");
+        
+        $r_fim = $request->fim;
+        if ($r_fim) {
+            if (strpos($el_erro, "fim") !== false) $r_fim = $consulta->fim_correto;
+        } else $r_fim = Carbon::parse($dados->fim)->format("d/m/Y");
+
+        $inicio = Carbon::createFromFormat('d/m/Y', $r_inicio)->format('Y-m-d');
+        $fim = Carbon::createFromFormat('d/m/Y', $r_fim)->format('Y-m-d');
+
+        $criterios = ["Período de ".$r_inicio." até ".$r_fim];
         $lm = $request->lm == "S";
         $resultado = collect(
             DB::table("log")
@@ -280,40 +287,18 @@ class RelatoriosController extends Controller {
                     DB::table("estoque")
                         ->select(
                             "id_mp",
-                            DB::raw($request->inicio ? "
+                            DB::raw("
                                 SUM(CASE
                                     WHEN (es = 'E') THEN qtd
                                     ELSE qtd * -1
                                 END) AS qtd
-                            " : "0 AS qtd")
+                            ")
                         )
-                        ->where(function($sql) use($request) {
-                            if ($request->inicio){
-                                $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
-                                $sql->whereRaw("DATE(created_at) < '".$inicio."'");
-                            }
-                        })
+                        ->whereRaw("DATE(created_at) < '".$inicio."'")
                         ->groupby("id_mp"),
                     "tot", "tot.id_mp", "mp.id"
                 )
-                ->where(function($sql) use($request, &$criterios) {
-                    $inicio = "";
-                    $fim = "";
-                    if ($request->inicio) $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
-                    if ($request->fim) $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-                    
-                    if ($request->inicio || $request->fim) {
-                        $periodo = "Período";
-                        if ($request->inicio) {
-                            $sql->whereRaw("log.data >= '".$inicio."'");
-                            $periodo .= " de ".$request->inicio;
-                        }
-                        if ($request->fim) {
-                            $sql->whereRaw("log.data <= '".$fim."'");
-                            $periodo .= " até ".$request->fim;
-                        }
-                        array_push($criterios, $periodo);
-                    }
+                ->where(function($sql) use($request, $inicio, $fim, &$criterios) {
                     if ($request->id_maquina) {
                         $maquina = Valores::find($request->id_maquina);
                         array_push($criterios, "Máquina: ".$maquina->descr);
@@ -326,6 +311,8 @@ class RelatoriosController extends Controller {
                     }
                     if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) $sql->whereIn("mp.id_maquina", $this->maquinas_periodo($inicio, $fim));
                 })
+                ->whereRaw("log.data >= '".$inicio."'")
+                ->whereRaw("log.data <= '".$fim."'")
                 ->where("log.tabela", "estoque")
                 ->where("produtos.lixeira", 0)
                 ->where("valores.lixeira", 0)
@@ -414,7 +401,6 @@ class RelatoriosController extends Controller {
     }
 
     public function retiradas(Request $request) {
-        // if ($this->retiradas_consultar($request)) return 401;
         $criterios = array();
         $qtd_total = 0;
         $val_total = 0;
