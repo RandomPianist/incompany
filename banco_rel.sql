@@ -665,7 +665,7 @@ CREATE VIEW vpendentes AS (
                 AND retiradas.id_pessoa = pessoas.id
                 AND (retiradas.id_empresa = pessoas.id_empresa OR pessoas.id_empresa = 0)
                 AND retiradas.data >= DATE(atribuicoes.created_at)
-                AND retiradas.data > DATE_ADD(CURDATE(), INTERVAL atribuicoes.validade DAY)
+                AND retiradas.data > DATE_SUB(CURDATE(), INTERVAL atribuicoes.validade DAY)
                 AND retiradas.id_supervisor IS NULL
         
         GROUP BY
