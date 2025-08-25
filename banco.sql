@@ -591,11 +591,12 @@ CREATE VIEW vpendentes AS (
         ON (produtos.cod_externo = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'P')
             OR (produtos.referencia = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'R')
 
-    JOIN vprodutos
-        ON vprodutos.id_produto = produtos.id AND vprodutos.id_pessoa = vatribuicoes.id_pessoa
+    JOIN (
+        SELECT * FROM vprodutos WHERE qtd > 0
+    ) AS lim_prod ON lim_prod.id_produto = produtos.id AND lim_prod.id_pessoa = vatribuicoes.id_pessoa
         
     JOIN vestoque
-        ON vestoque.id_mp = vprodutos.id_mp
+        ON vestoque.id_mp = lim_prod.id_mp
 
     JOIN (
         SELECT
