@@ -22,6 +22,7 @@
                                 data-column = "referencia"
                                 data-filter_col = "referencia"
                                 data-filter = ""
+                                data-prox = "quantidade"
                                 type = "text"
                                 autocomplete = "off"
                             />
@@ -36,6 +37,7 @@
                                 data-column = "descr"
                                 data-filter_col = ""
                                 data-filter = ""
+                                data-prox = "quantidade"
                                 type = "text"
                                 autocomplete = "off"
                             />
@@ -47,11 +49,11 @@
                         </div>
                         <div class = "col-2">
                             <label for = "quantidade" class = "custom-label-form">Quantidade: *</label>
-                            <input id = "quantidade" class = "form-control text-right" autocomplete = "off" type = "number" onkeyup = "$(this).trigger('change')" onchange = "/*idatbglobal=0;*/limitar(this)" />
+                            <input id = "quantidade" class = "form-control text-right" autocomplete = "off" type = "number" onchange = "limitar(this)" onkeyup = "limitar(this);tentarAtribuir(event)" />
                         </div>
                         <div class = "col-2">
                             <label for = "validade" class = "custom-label-form">Validade em dias: *</label>
-                            <input id = "validade" class = "form-control text-right" autocomplete = "off" type = "number" onkeyup = "$(this).trigger('change')" onchange = "/*idatbglobal=0;*/limitar(this)" />
+                            <input id = "validade" class = "form-control text-right" autocomplete = "off" type = "number" onchange = "limitar(this)" onkeyup = "limitar(this);tentarAtribuir(event)" />
                         </div>
                         <div class = "col-2">
                             <label for = "obrigatorio" class = "custom-label-form">Obrigatório: *</label>

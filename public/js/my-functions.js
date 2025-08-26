@@ -401,6 +401,9 @@ function autocomplete(_this) {
                 $(input_id).val($(this).data().id).trigger("change");
                 element.val(retira_chars($(this).text()));
                 div_result.remove();
+                try {
+                    $("#" + $(element).data().prox).focus();
+                } catch(err) {}
             });
 
             $(this).mouseover(function () {
@@ -919,6 +922,10 @@ function excluir_atribuicao(_id) {
     excluirMain(_id, "/atribuicoes", aviso, function() {
         mostrar_atribuicoes();
     });
+}
+
+function tentarAtribuir(e) {
+    if (e.keyCode == 13) atribuir();
 }
 
 function foto_pessoa(seletor, caminho) {

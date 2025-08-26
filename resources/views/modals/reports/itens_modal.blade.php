@@ -36,6 +36,7 @@
                                     data-column = "descr"
                                     data-filter_col = "alias"
                                     data-filter = "maquinas"
+                                    data-prox = "rel-produto"
                                     type = "text"
                                     autocomplete = "off"
                                 />
@@ -53,6 +54,7 @@
                                     data-column = "descr"
                                     data-filter_col = ""
                                     data-filter = ""
+                                    data-prox = "rel-inicio1"
                                     type = "text"
                                     autocomplete = "off"
                                 />

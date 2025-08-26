@@ -25,6 +25,7 @@
                                     data-column = "nome_fantasia"
                                     data-filter_col = ""
                                     data-filter = ""
+                                    data-prox = "rel-pessoa2"
                                     type = "text"
                                     autocomplete = "off"
                                 />
@@ -40,6 +41,7 @@
                                     data-column = "nome"
                                     data-filter_col = ""
                                     data-filter = ""
+                                    data-prox = "rel-setor"
                                     type = "text"
                                     autocomplete = "off"
                                 />

@@ -26,6 +26,7 @@
                                     data-filter_col = ""
                                     data-filter = ""
                                     type = "text"
+                                    data-prox = "comodato-inicio"
                                     autocomplete = "off"
                                 />
                                 <input id = "comodato-id_empresa" name = "id_empresa" type = "hidden" />
