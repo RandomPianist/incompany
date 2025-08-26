@@ -13,14 +13,7 @@
                     </td>
                 </tr>
             </table>
-            <div id = "filtro-grid-by0" class = "input-group col-12 mb-3" data-table = "#table-dados">
-                <input id = "busca" type = "text" class = "form-control form-control-lg" placeholder = "Procurar por..." aria-label = "Procurar por..." aria-describedby = "btn-filtro" />
-                <div class = "input-group-append">
-                    <button class = "btn btn-secondary btn-search-grid" type = "button" onclick = "listar()">
-                        <i class = "my-icon fas fa-search"></i>
-                    </button>
-                </div>
-            </div>
+            @include("components.busca")
         </div>
         <div class = "custom-table card">
             <div class = "table-header-scroll">
@@ -43,22 +36,11 @@
                     </thead>
                 </table>
             </div>
-            <div class = "table-body-scroll custom-scrollbar">
-                <table id = "table-dados" class = "table">
-                    <tbody></tbody>
-                </table>
-            </div>
+            @include("components.table_dados")
         </div>
     </div>
-    <div class = "d-none" id = "nao-encontrado">
-        <div class = "d-flex flex-column align-items-center justify-content-center">
-            <img class = "imagem-erro" src = "{{ asset('img/not-found-error.png')}}"></img>
-            <h1>Dados não encontrados</h1>
-        </div>
-    </div>
-    <button class = "btn btn-primary custom-fab" type = "button" onclick = "chamar_modal(0)">
-        <i class = "my-icon fas fa-plus"></i>
-    </button>
+    @include("components.naoencontrado")
+    @include("components.add")
     <script type = "text/javascript" language = "JavaScript">
         let ant_usr = false;
 
