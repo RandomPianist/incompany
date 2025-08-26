@@ -73,16 +73,13 @@ class SetoresController extends Controller {
 
     public function listar(Request $request) {
         $busca = null;
-        $resultado = new \stdClass;
-        $filtro = trim($request->filtro);
+        $filtro = $request->filtro;
         if ($filtro) {
             $busca = $this->busca("descr LIKE '".$filtro."%'");
             if (sizeof($busca) < 3) $busca = $this->busca("descr LIKE '%".$filtro."%'");
             if (sizeof($busca) < 3) $busca = $this->busca("(descr LIKE '%".implode("%' AND descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')");
         } else $busca = $this->busca("1");
-        $resultado->consulta = $busca;
-        $resultado->empresa = Pessoas::find(Auth::user()->id_pessoa)->id_empresa;
-        return json_encode($resultado);
+        return json_encode($busca);
     }
 
     public function consultar(Request $request) {

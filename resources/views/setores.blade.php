@@ -62,7 +62,7 @@
             }, function(data) {
                 let resultado = "";
                 while (typeof data == "string") data = $.parseJSON(data);
-                data.consulta.forEach((linha) => {
+                data.forEach((linha) => {
                     resultado += "<tr>" +
                         "<td class = 'text-right' width = '10%'>" + linha.id.toString().padStart(4, "0") + "</td>" +
                         "<td width = '35%'>" + linha.descr + "</td>" +
@@ -71,7 +71,7 @@
                             "<i class = 'my-icon far fa-box'    title = 'Atribuir produto' onclick = 'atribuicao(false, " + linha.id + ")'></i>" +
                             "<i class = 'my-icon far fa-tshirt' title = 'Atribuir grade'   onclick = 'atribuicao(true, " + linha.id + ")'></i>" +
                             (
-                                !parseInt(data.empresa) ?
+                                !EMPRESA ?
                                     "<i class = 'my-icon far fa-edit'      title = 'Editar'  onclick = 'chamar_modal(" + linha.id + ")'></i>" +
                                     "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/setores"' + ")'></i>"
                                 : ""
