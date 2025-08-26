@@ -255,6 +255,11 @@ function dinheiro(texto_final) {
 
 function modal(nome, id, callback) {
     const concluir = function() {
+        if (!id && ["pessoasModal", "setoresModal"].indexOf(nome) > -1) {
+            let el = $("#" + (nome == "pessoasModal" ? "nome" : "descr"));
+            $(el).val($("#busca").val());
+            $(el).trigger("keyup");
+        }
         $("#" + nome).modal();
         callback();
     }
@@ -1096,4 +1101,20 @@ async function avisarSolicitacao() {
             }
         }
     }
+}
+
+function mostrarImagemErro() {
+    let imagem = document.getElementById("nao-encontrado");
+    imagem.classList.remove("d-none");
+    let pai = imagem.previousElementSibling;
+    pai.querySelector(".card").classList.add("d-none");
+    pai.classList.remove("h-100");
+}
+
+function esconderImagemErro() {
+    let imagem = document.getElementById("nao-encontrado");
+    imagem.classList.add("d-none");
+    let pai = imagem.previousElementSibling;
+    pai.querySelector(".card").classList.remove("d-none");
+    pai.classList.add("h-100");
 }

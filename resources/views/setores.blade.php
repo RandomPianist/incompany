@@ -50,6 +50,12 @@
             </div>
         </div>
     </div>
+    <div class = "d-none" id = "nao-encontrado">
+        <div class = "d-flex flex-column align-items-center justify-content-center">
+            <img class = "imagem-erro" src = "{{ asset('img/not-found-error.png')}}"></img>
+            <h1>Dados não encontrados</h1>
+        </div>
+    </div>
     <button class = "btn btn-primary custom-fab" type = "button" onclick = "chamar_modal(0)">
         <i class = "my-icon fas fa-plus"></i>
     </button>
@@ -62,25 +68,28 @@
             }, function(data) {
                 let resultado = "";
                 while (typeof data == "string") data = $.parseJSON(data);
-                data.forEach((linha) => {
-                    resultado += "<tr>" +
-                        "<td class = 'text-right' width = '10%'>" + linha.id.toString().padStart(4, "0") + "</td>" +
-                        "<td width = '35%'>" + linha.descr + "</td>" +
-                        "<td width = '40%'>" + linha.empresa + "</td>" +
-                        "<td class = 'text-center btn-table-action' width = '15%'>" +
-                            "<i class = 'my-icon far fa-box'    title = 'Atribuir produto' onclick = 'atribuicao(false, " + linha.id + ")'></i>" +
-                            "<i class = 'my-icon far fa-tshirt' title = 'Atribuir grade'   onclick = 'atribuicao(true, " + linha.id + ")'></i>" +
-                            (
-                                !EMPRESA ?
-                                    "<i class = 'my-icon far fa-edit'      title = 'Editar'  onclick = 'chamar_modal(" + linha.id + ")'></i>" +
-                                    "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/setores"' + ")'></i>"
-                                : ""
-                            ) +
-                        "</td>" +
-                    "</tr>";
-                });
-                document.getElementById("table-dados").innerHTML = resultado;
-                ordenar(coluna);
+                if (data.length) {
+                    esconderImagemErro();
+                    data.forEach((linha) => {
+                        resultado += "<tr>" +
+                            "<td class = 'text-right' width = '10%'>" + linha.id.toString().padStart(4, "0") + "</td>" +
+                            "<td width = '35%'>" + linha.descr + "</td>" +
+                            "<td width = '40%'>" + linha.empresa + "</td>" +
+                            "<td class = 'text-center btn-table-action' width = '15%'>" +
+                                "<i class = 'my-icon far fa-box'    title = 'Atribuir produto' onclick = 'atribuicao(false, " + linha.id + ")'></i>" +
+                                "<i class = 'my-icon far fa-tshirt' title = 'Atribuir grade'   onclick = 'atribuicao(true, " + linha.id + ")'></i>" +
+                                (
+                                    !EMPRESA ?
+                                        "<i class = 'my-icon far fa-edit'      title = 'Editar'  onclick = 'chamar_modal(" + linha.id + ")'></i>" +
+                                        "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/setores"' + ")'></i>"
+                                    : ""
+                                ) +
+                            "</td>" +
+                        "</tr>";
+                    });
+                    document.getElementById("table-dados").innerHTML = resultado;
+                    ordenar(coluna);
+                } else mostrarImagemErro();
             });
         }
 

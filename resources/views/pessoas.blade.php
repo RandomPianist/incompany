@@ -27,9 +27,7 @@
                 <table>
                     <thead>
                         <tr class = "sortable-columns" for = "#table-dados">
-                            <th width = "5%" class = 'nao-ordena'>
-                               
-                            </th>
+                            <th width = "5%" class = 'nao-ordena'>&nbsp;</th>
                             <th width = "10%" class = "text-right">
                                 <span>Código</span>
                             </th>
@@ -56,6 +54,12 @@
             </div>
         </div>
     </div>
+    <div class = "d-none" id = "nao-encontrado">
+        <div class = "d-flex flex-column align-items-center justify-content-center">
+            <img class = "imagem-erro" src = "{{ asset('img/not-found-error.png')}}"></img>
+            <h1>Dados não encontrados</h1>
+        </div>
+    </div>
     <button class = "btn btn-primary custom-fab" type = "button" onclick = "pessoa = new Pessoa(0)">
         <i class = "my-icon fas fa-plus"></i>
     </button>
@@ -65,39 +69,37 @@
                 filtro : document.getElementById("busca").value,
                 tipo : document.getElementById("titulo-tela").innerHTML.charAt(0)
             }, function(data) {
+                const img_biometria = '{{ asset("img/biometria-sim.png") }}';
                 let resultado = "";
                 if (typeof data == "string") data = $.parseJSON(data);
-                data.forEach((linha) => {
-                    let biometria;
-                    if(linha.possui_biometria === 'possui') {
-                        biometria = "<td width = '5%'><img src={{ asset('img/biometria-sim.png') }} class = 'imagem-biometria'></td>";
-                    } else if(linha.possui_biometria === 'nao-possui'){
-                        biometria = "<td width = '5%'><img src={{ asset('img/biometria-nao.png') }} class = 'imagem-biometria'></td>";
-                    } else {
-                        biometria = "<td width = '5%'></td>";
-                    }
-                    resultado += "<tr>" +
-                        biometria + 
-                        "<td width = '10%' class = 'text-right'>" + linha.id.toString().padStart(4, "0") + "</td>" +
-                        "<td width = '25%'>" + linha.nome + "</td>" +
-                        "<td width = '20%'>" + linha.empresa + "</td>" +
-                        "<td width = '20%'>" + linha.setor + "</td>" +
-                        "<td class = 'text-center btn-table-action' width = '20%'>";
-                    if (parseInt(linha.possui_retiradas)) {
-                        resultado += "<i class = 'my-icon fa-light fa-file' title = 'Retiradas' onclick = 'retirada_pessoa(" + linha.id + ")'></i>" +
-                            "<i class = 'my-icon fa-regular fa-clock-rotate-left' title = 'Desfazer retiradas' onclick = 'desfazer_retiradas(" + linha.id + ")'></i>";
-                    }
-                    if (parseInt(linha.possui_atribuicoes)) resultado += "<i class = 'my-icon far fa-calendar-alt' title = 'Próximas retiradas' onclick = 'proximas_retiradas(" + linha.id + ")'></i>";
-                    resultado += "" +
-                            "<i class = 'my-icon far fa-box'       title = 'Atribuir produto' onclick = 'atribuicao(false, " + linha.id + ")'></i>" +
-                            "<i class = 'my-icon far fa-tshirt'    title = 'Atribuir grade'   onclick = 'atribuicao(true, " + linha.id + ")'></i>" +
-                            "<i class = 'my-icon far fa-edit'      title = 'Editar'           onclick = 'pessoa = new Pessoa(" + linha.id + ")'></i>" +
-                            "<i class = 'my-icon far fa-trash-alt' title = 'Excluir'          onclick = 'excluir(" + linha.id + ", " + '"/colaboradores"' + ")'></i>" +
-                        "</td>" +
-                    "</tr>";
-                });
-                document.getElementById("table-dados").innerHTML = resultado;
-                ordenar(coluna);
+                if (data.length) {
+                    esconderImagemErro();
+                    data.forEach((linha) => {
+                        let biometria = "";
+                        if (linha.possui_biometria.indexOf("possui") > -1) biometria = '<img src = "' + (linha.possui_biometria == "nao-possui" ? img_biometria.replace("sim", "nao") : img_biometria) + '" class = "imagem-biometria" />';
+                        resultado += "<tr>" +
+                            "<td width = '5%'>" + biometria + "</td>" +
+                            "<td width = '10%' class = 'text-right'>" + linha.id.toString().padStart(4, "0") + "</td>" +
+                            "<td width = '25%'>" + linha.nome + "</td>" +
+                            "<td width = '20%'>" + linha.empresa + "</td>" +
+                            "<td width = '20%'>" + linha.setor + "</td>" +
+                            "<td class = 'text-center btn-table-action' width = '20%'>";
+                        if (parseInt(linha.possui_retiradas)) {
+                            resultado += "<i class = 'my-icon fa-light fa-file' title = 'Retiradas' onclick = 'retirada_pessoa(" + linha.id + ")'></i>" +
+                                "<i class = 'my-icon fa-regular fa-clock-rotate-left' title = 'Desfazer retiradas' onclick = 'desfazer_retiradas(" + linha.id + ")'></i>";
+                        }
+                        if (parseInt(linha.possui_atribuicoes)) resultado += "<i class = 'my-icon far fa-calendar-alt' title = 'Próximas retiradas' onclick = 'proximas_retiradas(" + linha.id + ")'></i>";
+                        resultado += "" +
+                                "<i class = 'my-icon far fa-box'       title = 'Atribuir produto' onclick = 'atribuicao(false, " + linha.id + ")'></i>" +
+                                "<i class = 'my-icon far fa-tshirt'    title = 'Atribuir grade'   onclick = 'atribuicao(true, " + linha.id + ")'></i>" +
+                                "<i class = 'my-icon far fa-edit'      title = 'Editar'           onclick = 'pessoa = new Pessoa(" + linha.id + ")'></i>" +
+                                "<i class = 'my-icon far fa-trash-alt' title = 'Excluir'          onclick = 'excluir(" + linha.id + ", " + '"/colaboradores"' + ")'></i>" +
+                            "</td>" +
+                        "</tr>";
+                    });
+                    document.getElementById("table-dados").innerHTML = resultado;
+                    ordenar(coluna);
+                } else mostrarImagemErro();
             });
         }
 

@@ -805,3 +805,9 @@ footer {
 option:disabled {
     background: #DADADA
 }
+
+.imagem-erro {
+    width: 26vw;
+    height: 54vh;
+    margin-top: -3vh
+}

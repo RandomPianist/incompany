@@ -54,6 +54,12 @@
             </div>
         </div>
     </div>
+    <div class = "d-none" id = "nao-encontrado">
+        <div class = "d-flex flex-column align-items-center justify-content-center">
+            <img class = "imagem-erro" src = "{{ asset('img/not-found-error.png')}}"></img>
+            <h1>Dados não encontrados</h1>
+        </div>
+    </div>
     <script type = "text/javascript" language = "JavaScript">
         let ant_consumo = false;
 
@@ -63,31 +69,34 @@
             }, function(data) {
                 let resultado = "";
                 if (typeof data == "string") data = $.parseJSON(data);
-                data.forEach((linha) => {
-                    resultado += "<tr>" +
-                        "<td width = '5%' class = 'text-center'>" +
-                            "<img class = 'user-photo-sm' src = '" + linha.foto + "'" + ' onerror = "this.onerror=null;' + "this.classList.add('d-none');$(this).next().removeClass('d-none')" + '" />' +
-                            "<i class = 'fa-light fa-image d-none' style = 'font-size:20px'></i>" +
-                        "</td>" +
-                        "<td width = '20%' class = 'text-center'>" + linha.cod_externo + "</td>" +
-                        "<td width = '27.5%'>" + linha.descr + "</td>" +
-                        "<td width = '27.5%'>" + linha.categoria + "</td>" +
-                        "<td width = '10%' class = 'dinheiro'>" + linha.preco + "</td>" +
-                        "<td class = 'text-center btn-table-action' width = '10%'>" +
-                            "<i class = 'my-icon far fa-edit'      title = 'Editar'  onclick = 'chamar_modal(" + linha.id + ")'></i>" +
-                            "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/produtos"' + ")'></i>"
-                        "</td>" +
-                    "</tr>";
-                });
-                document.getElementById("table-dados").innerHTML = resultado;
-                $(".dinheiro").each(function() {
-                    let texto_final = (parseFloat($(this).html()) * 100).toString();
-                    if (texto_final.indexOf(".") > -1) texto_final = texto_final.substring(0, texto_final.indexOf("."));
-                    if (texto_final == "") $(this).html("R$ 0,00");
-                    $(this).html(dinheiro(texto_final));
-                    $(this).addClass("text-right");
-                });
-                ordenar(coluna);
+                if (data.length) {
+                    esconderImagemErro();
+                    data.forEach((linha) => {
+                        resultado += "<tr>" +
+                            "<td width = '5%' class = 'text-center'>" +
+                                "<img class = 'user-photo-sm' src = '" + linha.foto + "'" + ' onerror = "this.onerror=null;' + "this.classList.add('d-none');$(this).next().removeClass('d-none')" + '" />' +
+                                "<i class = 'fa-light fa-image d-none' style = 'font-size:20px'></i>" +
+                            "</td>" +
+                            "<td width = '20%' class = 'text-center'>" + linha.cod_externo + "</td>" +
+                            "<td width = '27.5%'>" + linha.descr + "</td>" +
+                            "<td width = '27.5%'>" + linha.categoria + "</td>" +
+                            "<td width = '10%' class = 'dinheiro'>" + linha.preco + "</td>" +
+                            "<td class = 'text-center btn-table-action' width = '10%'>" +
+                                "<i class = 'my-icon far fa-edit'      title = 'Editar'  onclick = 'chamar_modal(" + linha.id + ")'></i>" +
+                                "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/produtos"' + ")'></i>"
+                            "</td>" +
+                        "</tr>";
+                    });
+                    document.getElementById("table-dados").innerHTML = resultado;
+                    $(".dinheiro").each(function() {
+                        let texto_final = (parseFloat($(this).html()) * 100).toString();
+                        if (texto_final.indexOf(".") > -1) texto_final = texto_final.substring(0, texto_final.indexOf("."));
+                        if (texto_final == "") $(this).html("R$ 0,00");
+                        $(this).html(dinheiro(texto_final));
+                        $(this).addClass("text-right");
+                    });
+                    ordenar(coluna);
+                } else mostrarImagemErro();
             });
         }
 
