@@ -255,7 +255,7 @@ function dinheiro(texto_final) {
 
 function modal(nome, id, callback) {
     const concluir = function() {
-        if (!id && ["pessoasModal", "setoresModal"].indexOf(nome) > -1) {
+        if (!id && ["pessoasModal", "setoresModal", "valoresModal"].indexOf(nome) > -1) {
             let el = $("#" + (nome == "pessoasModal" ? "nome" : "descr"));
             $(el).val($("#busca").val());
             $(el).trigger("keyup");

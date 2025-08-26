@@ -52,6 +52,12 @@
             </div>
         </div>
     </div>
+    <div class = "d-none" id = "nao-encontrado">
+        <div class = "d-flex flex-column align-items-center justify-content-center">
+            <img class = "imagem-erro" src = "{{ asset('img/not-found-error.png')}}"></img>
+            <h1>Dados não encontrados</h1>
+        </div>
+    </div>
     @if (!intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa))
         <button class = "btn btn-primary custom-fab" type = "button" onclick = "chamar_modal(0)">
             <i class = "my-icon fas fa-plus"></i>
@@ -63,35 +69,37 @@
                 filtro : document.getElementById("busca").value
             }, function(data) {
                 let resultado = "";
-                const emp = parseInt(EMPRESA);
                 if (typeof data == "string") data = $.parseJSON(data);
-                data.forEach((linha) => {
-                    resultado += "<tr>" +
-                        "<td class = 'text-right' width = '10%'>" + linha.seq.toString().padStart(4, "0") + "</td>";
-                    if ({{ $comodato ? "true" : "false"}}) {
-                        resultado += "<td width = '30%'>" + linha.descr + "</td>" +
-                            "<td width = '45%'>" + linha.comodato + "</td>";
-                    } else resultado += "<td width = '75%'>" + linha.descr + "</td>";
+                if (data.length) {
+                    esconderImagemErro();
+                    data.forEach((linha) => {
+                        resultado += "<tr>" +
+                            "<td class = 'text-right' width = '10%'>" + linha.seq.toString().padStart(4, "0") + "</td>";
+                        if ({{ $comodato ? "true" : "false"}}) {
+                            resultado += "<td width = '30%'>" + linha.descr + "</td>" +
+                                "<td width = '45%'>" + linha.comodato + "</td>";
+                        } else resultado += "<td width = '75%'>" + linha.descr + "</td>";
 
-                    resultado += "<td class = 'text-center btn-table-action' width = '15%'>";
-                    if (linha.alias != "maquinas" || !emp) {
-                        if (linha.alias == "maquinas") {
-                            if (linha.tem_mov == "S") resultado += "<i class = 'my-icon fa-light fa-file' title = 'Extrato' onclick = 'extrato_maquina(" + linha.id + ")'></i>";
-                            resultado += "<i class = 'my-icon fa-light fa-cubes' title = 'Estoque' onclick = 'estoque(" + linha.id + ")'></i>";
-                            resultado += linha.comodato != "---" ?
-                                "<i class = 'my-icon fa-duotone fa-handshake-slash' title = 'Encerrar locação' onclick = 'encerrar(" + linha.id + ")'></i>"
-                            :
-                                "<i class = 'my-icon far fa-handshake' title = 'Locar máquina' onclick = 'comodatar(" + linha.id + ")'></i>"
-                            ;
+                        resultado += "<td class = 'text-center btn-table-action' width = '15%'>";
+                        if (linha.alias != "maquinas" || !EMPRESA) {
+                            if (linha.alias == "maquinas") {
+                                if (linha.tem_mov == "S") resultado += "<i class = 'my-icon fa-light fa-file' title = 'Extrato' onclick = 'extrato_maquina(" + linha.id + ")'></i>";
+                                resultado += "<i class = 'my-icon fa-light fa-cubes' title = 'Estoque' onclick = 'estoque(" + linha.id + ")'></i>";
+                                resultado += linha.comodato != "---" ?
+                                    "<i class = 'my-icon fa-duotone fa-handshake-slash' title = 'Encerrar locação' onclick = 'encerrar(" + linha.id + ")'></i>"
+                                :
+                                    "<i class = 'my-icon far fa-handshake' title = 'Locar máquina' onclick = 'comodatar(" + linha.id + ")'></i>"
+                                ;
+                            }
+                            resultado += "<i class = 'my-icon far fa-edit' title = 'Editar' onclick = 'chamar_modal(" + linha.id + ")'></i>" +
+                                "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/valores/{{ $alias }}"' + ")'></i>";
                         }
-                        resultado += "<i class = 'my-icon far fa-edit' title = 'Editar' onclick = 'chamar_modal(" + linha.id + ")'></i>" +
-                            "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/valores/{{ $alias }}"' + ")'></i>";
-                    }
-                    if (linha.alias == "maquinas" && emp && linha.tem_cod == "S") resultado += "<i class = 'my-icon far fa-cart-arrow-down' title = 'Solicitar compra' onclick = 'relatorio = new RelatorioItens(true, " + linha.id + ")'></i>";
-                    resultado += "</td></tr>";
-                });
-                document.getElementById("table-dados").innerHTML = resultado;
-                ordenar(coluna);
+                        if (linha.alias == "maquinas" && EMPRESA && linha.tem_cod == "S") resultado += "<i class = 'my-icon far fa-cart-arrow-down' title = 'Solicitar compra' onclick = 'relatorio = new RelatorioItens(true, " + linha.id + ")'></i>";
+                        resultado += "</td></tr>";
+                    });
+                    document.getElementById("table-dados").innerHTML = resultado;
+                    ordenar(coluna);
+                } else mostrarImagemErro();
             });
         }
 
