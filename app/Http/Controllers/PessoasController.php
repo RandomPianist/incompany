@@ -23,7 +23,9 @@ class PessoasController extends Controller {
                                         ELSE 'nao-possui'
                                     END
                                 ELSE 'sem-foto'
-                            END AS possui_biometria,
+                            END AS possui_biometria
+                        "),
+                        DB::raw("
                             CONCAT(
                                 pessoas.nome,
                                 CASE
