@@ -174,6 +174,7 @@
     </script>
 
     @include("modals.atribuicoes_modal")
+    @include("modals.detalhar_atb_modal")
     @include("modals.retiradas_modal")
     @include("modals.supervisor_modal")
     @include("modals.proximas_retiradas_modal")

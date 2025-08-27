@@ -68,7 +68,7 @@
                     </div>
                     <div class = "row">
                         <div class = "col-12">
-                            <table id = "table-atribuicoes" class = "w-100" border = 1></table>
+                            <table id = "table-atribuicoes" class = "w-100 atribuicoes" border = 1></table>
                         </div>
                     </div>
                 </div>

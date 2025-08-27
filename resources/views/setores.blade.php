@@ -205,4 +205,5 @@
 
     @include("modals.setores_modal")
     @include("modals.atribuicoes_modal")
+    @include("modals.detalhar_atb_modal")
 @endsection

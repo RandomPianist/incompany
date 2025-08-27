@@ -640,7 +640,7 @@ span, label, table, h1, h2, h3, h4, h5, h6, .texto-tabela {
     bottom: 30px
 }
 
-#table-atribuicoes th, #table-atribuicoes td  {
+table.atribuicoes th, table.atribuicoes td  {
     padding: 4px 10px
 }
 

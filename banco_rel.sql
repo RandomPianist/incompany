@@ -738,6 +738,7 @@ CREATE VIEW vprodaux AS (
         cod_externo,
         CONCAT(IFNULL(CONCAT(cod_externo, ' - '), ''), descr) AS descr,
         referencia,
+        tamanho,
         lixeira
 
     FROM produtos

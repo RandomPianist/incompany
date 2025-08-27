@@ -383,23 +383,10 @@ function autocomplete(_this) {
         data.forEach((item) => {
             div_result.append("<div class = 'autocomplete-line' data-id = '" + item.id + "'>" + item[_column] + "</div>");
         });
-        let retira_chars = function(texto) {
-            let entityMap = {
-                '&amp;': '&',
-                '&lt;': '<',
-                '&gt;': '>',
-                '&quot': '"',
-                '&#39;': "'",
-                '&#x2F;': '/'
-            };
-            return String(texto).replace(/&amp;|&lt;|&gt;|&quot|&#39;|&#x2F;/g, function (s) {
-                return entityMap[s];
-            });
-        }
         element.parent().find(".autocomplete-line").each(function () {
             $(this).click(function () {
                 $(input_id).val($(this).data().id).trigger("change");
-                element.val(retira_chars($(this).text()));
+                element.val($(this).text());
                 div_result.remove();
                 try {
                     $("#" + $(element).data().prox).focus();
@@ -408,7 +395,7 @@ function autocomplete(_this) {
 
             $(this).mouseover(function () {
                 $(input_id).val($(this).data().id).trigger("change");
-                element.val(retira_chars($(this).text()));
+                element.val($(this).text());
                 $(this).parent().find(".hovered").removeClass("hovered");
                 $(this).addClass("hovered");
             });
@@ -809,6 +796,7 @@ function mostrar_atribuicoes(_id) {
             "<tbody>";
             data.forEach((atribuicao) => {
                 let acoes = "";
+                if (gradeGlobal) acoes += "<i class = 'my-icon far fa-eye' title = 'Detalhar' onclick = 'detalhar_atribuicao(" + atribuicao.id + ")'></i>";
                 if (location.href.indexOf("colaboradores") > -1) acoes += "<i class = 'my-icon far fa-hand-holding-box' title = 'Retirar' onclick = 'retirar(" + atribuicao.id + ")'></i>";
                 if (parseInt(atribuicao.pode_editar)) {
                     acoes += "<i class = 'my-icon far fa-edit' title = 'Editar' onclick = 'editar_atribuicao(" + atribuicao.id + ")'></i>" +
@@ -926,6 +914,27 @@ function excluir_atribuicao(_id) {
 
 function tentarAtribuir(e) {
     if (e.keyCode == 13) atribuir();
+}
+
+function detalhar_atribuicao(id) {
+    $.get(URL + "/atribuicoes/grade/" + id, function(data) {
+        let resultado = "<thead>" +
+            "<th>Produto</th>" +
+            "<th>Tamanho</th>" +
+        "</thead>" +
+        "<tbody>";
+        if (typeof data == "string") data = $.parseJSON(data);
+        document.getElementById("detalharAtbModalLabel").innerHTML = data[0].referencia;
+        data.forEach((produto) => {
+            resultado += "<tr>" +
+                "<td>" + produto.descr + "</td>" + 
+                "<td>" + produto.tamanho + "</td>" +
+            "</tr>";
+        });
+        resultado += "</tbody>";
+        document.getElementById("table-detalhar-atb").innerHTML = resultado;
+        $("#detalharAtbModal").modal();
+    });
 }
 
 function foto_pessoa(seletor, caminho) {

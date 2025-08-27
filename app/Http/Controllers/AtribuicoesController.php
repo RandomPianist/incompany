@@ -165,4 +165,19 @@ class AtribuicoesController extends Controller {
             END AS titulo
         ", "atribuicoes.id = ".$id)->orderby("descr")->get());
     }
+
+    public function grade($id) {
+        return json_encode(
+            DB::table("vprodaux")
+                ->select(
+                    "referencia",
+                    "descr",
+                    "tamanho"
+                )
+                ->join("atribuicoes", "atribuicoes.produto_ou_referencia_valor", "vprodaux.referencia")
+                ->where("atribuicoes.id", $id)
+                ->where("vprodaux.lixeira", 0)
+                ->get()
+        );
+    }
 }

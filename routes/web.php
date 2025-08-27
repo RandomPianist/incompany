@@ -118,6 +118,7 @@ Route::middleware("auth")->group(function () {
         Route::get ("/listar",        [AtribuicoesController::class, "listar"]);
         Route::get ("/mostrar/{id}",  [AtribuicoesController::class, "mostrar"]);
         Route::get ("/produtos/{id}", [AtribuicoesController::class, "produtos"]);
+        Route::get ("/grade/{id}",    [AtribuicoesController::class, "grade"]);
         Route::post("/salvar",        [AtribuicoesController::class, "salvar"]);
         Route::post("/excluir",       [AtribuicoesController::class, "excluir"]);
     });
