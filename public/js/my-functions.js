@@ -35,21 +35,18 @@ jQuery.fn.sortElements = (function() {
     };
 })();
 
-window.onload = function() {
-    Array.from(document.querySelectorAll(".modal-body .row")).forEach((el) => {
-        if ($(el).prev().hasClass("row")) $(el).css("margin-top", $(el).prev().find(".tam-max").length ? "-14px" : "11px");
+$(document).ready(function() {
+    $(".modal-body .row").each(function() {
+        if ($(this).prev().hasClass("row")) $(this).css("margin-top", $(this).prev().find(".tam-max").length ? "-14px" : "11px");
     });
 
-    Array.from(document.querySelectorAll(".modal-body button")).forEach((el) => {
-        el.parentElement.style.paddingTop = "1px";
+    $(".modal-body button").each(function() {
+        $($(this).parent()).css("padding-top", "1px");
     });
 
-    let el_busca = document.getElementById("busca");
-    if (el_busca !== null) {
-        el_busca.onkeyup = function(e) {
-            if (e.keyCode == 13) listar();
-        }
-    }
+    $("#busca").keyup(function(e) {
+        if (e.keyCode == 13) listar();
+    });
 
     $(document).on("keydown", "form", function(event) { 
         const enter = event.key == "Enter";
@@ -155,7 +152,7 @@ window.onload = function() {
     });
 
     $("#relatorioBilateralModal").on("hide.bs.modal", function() {
-        if (document.getElementById("rel-grupo1").value == "maquinas-por-empresa") relatorio.inverter();
+        if ($("#rel-grupo1").val() == "maquinas-por-empresa") relatorio.inverter();
     });
 
     $("#atribuicoesModal").on("hide.bs.modal", function() {
@@ -163,14 +160,14 @@ window.onload = function() {
     });
 
     $("#estoqueModal").on("hide.bs.modal", function() {
-        Array.from(document.getElementsByClassName("remove-produto")).forEach((el) => {
-            $(el).trigger("click");
+        $(".remove-produto").each(function() {
+            $(this).trigger("click");
         });
-        document.getElementById("produto-1").value = "";
-        document.getElementById("id_produto-1").value = "";
-        document.getElementById("es-1").value = "E";
-        document.getElementById("qtd-1").value = 1;
-        document.getElementById("obs-1").value = "ENTRADA";
+        $("#produto-1").val("");
+        $("#id_produto-1").val("");
+        $("#es-1").val("E");
+        $("#qtd-1").val(1);
+        $("#obs-1").val("ENTRADA");
     });
 
     $("#setoresModal").on("hide.bs.modal", function() {
@@ -198,11 +195,8 @@ window.onload = function() {
         });
     });
 
-    Array.from(document.querySelectorAll(".user-pic .m-auto")).forEach((el) => {
-        let conteudo = el.innerHTML;
-        while (conteudo.indexOf("\n") > -1) conteudo = conteudo.replace("\n", "");
-        while (conteudo.indexOf(" ") > -1) conteudo = conteudo.replace(" ", "");
-        el.innerHTML = conteudo;
+    $(".user-pic .m-auto").each(function() {
+        $(this).html($(this).html().replaceAll("\n", "").replaceAll(" ", ""));
     });
 
     $.get(URL + "/colaboradores/mostrar/" + USUARIO, function(data) {
@@ -230,7 +224,7 @@ window.onload = function() {
     listar(location.href.indexOf("produtos") > -1 ? 1 : 0);
 
     avisarSolicitacao();
-}
+});
 
 function ordenar(coluna) {
     if (coluna === undefined) {
@@ -241,9 +235,9 @@ function ordenar(coluna) {
 }
 
 function contar_char(el, max) {
-    el.classList.remove("invalido");
-    el.value = el.value.substring(0, max);
-    el.nextElementSibling.innerHTML = el.value.length + "/" + max;
+    $(el).removeClass("invalido");
+    $(el).val($(el).val().substring(0, max));
+    $(el).next().html($(el).val().length + "/" + max);
 }
 
 function dinheiro(texto_final) {
@@ -277,10 +271,10 @@ function modal(nome, id, callback) {
     limpar_invalido();
     if (callback === undefined) callback = function() {}
     if (id) document.getElementById(nome == "pessoasModal" ? "pessoa-id" : "id").value = id;
-    Array.from(document.querySelectorAll("#" + nome + " input, #" + nome + " textarea")).forEach((el) => {
-        if (!id && el.name != "_token" && (!(nome == "pessoasModal" && el.name == "tipo"))) el.value = "";
-        if (!$(el).hasClass("autocomplete")) $(el).trigger("keyup");
-        anteriores[el.id] = el.value;
+    $("#" + nome + " input, #" + nome + " textarea").each(function() {
+        if (!id && $(this).attr("name") != "_token" && (!(nome == "pessoasModal" && $(this).attr("name") == "tipo"))) $(this).val("");
+        if (!$(this).hasClass("autocomplete")) $(this).trigger("keyup");
+        anteriores[$(this).attr("id")] = $(this).val();
     });
     if (nome == "pessoasModal") {
         $.get(URL + "/colaboradores/modal", function(data) {
@@ -292,12 +286,12 @@ function modal(nome, id, callback) {
                     resultado += "<option value = '" + filial.id + "'>- " + filial.nome_fantasia + "</option>";
                 });
             });
-            document.getElementById("pessoa-empresa-select").innerHTML = resultado;
+            $("#pessoa-empresa-select").html(resultado);
             resultado = "<option value = '0'>--</option>";
             data.setores.forEach((setor) => {
                 resultado += "<option value = '" + setor.id + "'>" + setor.descr + "</option>";
             });
-            document.getElementById("pessoa-setor-select").innerHTML = resultado;
+            $("#pessoa-setor-select").html(resultado);
             concluir();
         });
     } else concluir();
@@ -306,7 +300,7 @@ function modal(nome, id, callback) {
 function modal2(nome, limpar) {
     limpar_invalido();
     limpar.forEach((id) => {
-        document.getElementById(id).value = "";
+        $("#" + id).val("");
     });
     $("#" + nome).modal();
 }
@@ -476,16 +470,16 @@ function verifica_vazios(arr, _erro) {
     if (_erro === undefined) _erro = "";
     let _alterou = false;
     arr.forEach((id) => {
-        let el = document.getElementById(id);
-        let erro_ou_vazio = !el.value;
-        if (!erro_ou_vazio && id.indexOf("qtd-") > -1) erro_ou_vazio = !parseInt(el.value);
+        let el = $("#" + id);
+        let erro_ou_vazio = !$(el).val();
+        if (!erro_ou_vazio && id.indexOf("qtd-") > -1) erro_ou_vazio = !parseInt($(el).val());
         if (erro_ou_vazio) {
             if (!_erro) _erro = "Preencha o campo";
             else _erro = "Preencha os campos";
-            el.classList.add("invalido");
+            $(el).addClass("invalido");
         }
         try {
-            if (el.value.toString().toUpperCase().trim() != anteriores[id].toString().toUpperCase().trim()) _alterou = true;
+            if ($(el).val().toString().toUpperCase().trim() != anteriores[id].toString().toUpperCase().trim()) _alterou = true;
         } catch(err) {}
     });
     return {
@@ -495,8 +489,8 @@ function verifica_vazios(arr, _erro) {
 }
 
 function limpar_invalido() {
-    Array.from(document.querySelectorAll("input, select")).forEach((el) => {
-        el.classList.remove("invalido");
+    $("input, select").each(function() {
+        $(this).removeClass("invalido");
     });
 }
 
@@ -506,15 +500,15 @@ function hoje() {
 
 function validar_datas(el_inicio, el_fim, comodato) {
     let erro = "";
-    let aux = el_inicio.value.split("/");
+    let aux = $(el_inicio).val().split("/");
     const inicio = new Date(aux[2], aux[1] - 1, aux[0]);
-    aux = el_fim.value.split("/");
+    aux = $(el_fim).val().split("/");
     const fim = new Date(aux[2], aux[1] - 1, aux[0]);
     if (inicio > fim) erro = "A data inicial não pode ser maior que a data final";
     else if (inicio.getTime() == fim.getTime() && comodato) erro = "A locação precisa durar mais de um dia";
     if (!comodato && erro) {
-        el_inicio.classList.add("invalido");
-        el_fim.classList.add("invalido");
+        $(el_inicio).addClass("invalido");
+        $(el_fim).addClass("invalido");
     }
     return erro;
 }
@@ -530,9 +524,9 @@ function relObterElementos(lista) {
     let resultado = {};
     lista.forEach((item) => {
         let chave = item.replace(/[0-9]/g, '');
-        resultado[chave] = document.getElementById("rel-" + item);
+        resultado[chave] = $("#rel-" + item);
         let el = document.getElementById("rel-id_" + item);
-        if (el !== null) resultado["id_" + chave] = el;
+        if (el !== null) resultado["id_" + chave] = $(el);
     });
     return resultado;
 }
@@ -540,8 +534,8 @@ function relObterElementos(lista) {
 function relObterElementosValor(elementos, chaves) {
     let resultado = {};
     chaves.forEach((chave) => {
-        resultado[chave] = elementos[chave].value;
-        resultado["id_" + chave] = elementos["id_" + chave].value;
+        resultado[chave] = $(elementos[chave]).val();
+        resultado["id_" + chave] = $(elementos["id_" + chave]).val();
     });
     return resultado;
 }
@@ -555,14 +549,14 @@ function RelatorioBilateral(_grupo) {
         let elementos = relObterElementos(["empresa1", "maquina1"]);
         let valores = relObterElementosValor(elementos, ["empresa", "maquina"]);
         valores.prioridade = grupo == "maquinas-por-empresa" ? "empresas" : "maquinas";
-        document.getElementById("rel-prioridade").value = valores.prioridade;
+        $("#rel-prioridade").val(valores.prioridade);
         $.get(URL + "/relatorios/bilateral/consultar", valores, function(erro) {
             if (erro) {
-                elementos[erro].classList.add("invalido");
+                $(elementos[erro]).addClass("invalido");
                 erro = erro == "empresa" ? "Empresa" : "Máquina";
                 erro += " não encontrada";
                 s_alert(erro);
-            } else document.querySelector("#relatorioBilateralModal form").submit();
+            } else $("#relatorioBilateralModal form").submit();
         });
     }
 
@@ -587,12 +581,12 @@ function RelatorioBilateral(_grupo) {
         that.inverter();
         titulo = "Máquinas por empresa";
     }
-    document.getElementById("relatorioBilateralModalLabel").innerHTML = titulo;
+    $("#relatorioBilateralModalLabel").html(titulo);
     
     limpar_invalido();
     setTimeout(function() {
         modal("relatorioBilateralModal", 0, function() {
-            document.getElementById("rel-grupo1").value = grupo;
+            $("#rel-grupo1").val(grupo);
         });
     }, 0);
 }
@@ -603,28 +597,27 @@ function RelatorioItens(resumido, maquina) {
     this.validar = function() {
         limpar_invalido();
         let erro = "";
-        if (resumido && (!(elementos.inicio.value && elementos.fim.value)) && document.getElementById("rel-tipo").value == "G") {
-            if (!elementos.inicio.value) elementos.inicio.classList.add("invalido");
-            if (!elementos.fim.value) elementos.fim.classList.add("invalido");
+        if (resumido && (!($(elementos.inicio).val() && $(elementos.fim).val())) && $("#rel-tipo").val() == "G") {
+            if (!$(elementos.inicio).val()) $(elementos.inicio).addClass("invalido");
+            if (!$(elementos.fim).val()) $(elementos.fim).addClass("invalido");
             s_alert("Preencha as datas");
             return;
         }
 
-        if (elementos.inicio.value && elementos.fim.value) erro = validar_datas(elementos.inicio, elementos.fim, false);
+        if ($(elementos.inicio).val() && $(elementos.fim).val()) erro = validar_datas($(elementos.inicio), $(elementos.fim), false);
         let req = ["produto"];
         if (maquina === undefined) req.push("maquina");
         req = relObterElementosValor(elementos, req);
-        req.inicio = elementos.inicio.value;
-        req.fim = elementos.fim.value;
+        req.inicio = $(elementos.inicio).val();
+        req.fim = $(elementos.fim).val();
         if (maquina !== undefined) req.id_maquina = maquina;
         $.get(URL + "/relatorios/extrato/consultar", req, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
             if (data.el && !erro) {
                 const lista = data.el.split(",");
                 lista.forEach((el) => {
-                    elementos[el].classList.add("invalido");
-                    if (el == "inicio") elementos[el].value = data.inicio_correto;
-                    if (el == "fim") elementos[el].value = data.fim_correto;
+                    $(elementos[el]).addClass("invalido");
+                    $(elementos[el]).val(data[el + "_correto"]);
                 });
                 if (["maquina", "produto"].indexOf(data.el) == -1) {
                     if (lista.length > 1) {
@@ -634,37 +627,36 @@ function RelatorioItens(resumido, maquina) {
                     erro += ".<br>Tente novamente.";
                 } else erro = erro == "maquina" ? "Máquina não encontrada" : "Produto não encontrado";
             }
-            if (!erro) document.querySelector("#relatorioItensModal form").submit();
+            if (!erro) $("#relatorioItensModal form").submit();
             else s_alert(erro);
         });
     }
 
     this.mudaTipo = function() {
-        let elDias = document.getElementById("rel-dias");
-        const giro = document.getElementById("rel-tipo2").value == "G";
-        elDias.disabled = !giro;
-        if (giro) elDias.focus();
-        else elementos.maquina.focus();
+        let elDias = $("#rel-dias");
+        const giro = $("#rel-tipo2").val() == "G";
+        $(elDias).attr("disabled", !giro);
+        if (giro) $(elDias).focus();
+        else $(elementos.maquina).focus();
     }
     
     limpar_invalido();
     setTimeout(function() {
         modal("relatorioItensModal", 0, function() {
-            let modo_resumo = document.getElementById("rel-modo-resumo").classList;
-            document.getElementById("rel-lm").value = "N";
-            elementos.inicio.value = hoje();
-            elementos.fim.value = hoje();
-            document.getElementById("rel-id_maquina2").value = maquina !== undefined ? maquina : 0;
-            document.getElementById("relatorioItensModalLabel").innerHTML = resumido ? maquina === undefined ? "Sugestão de compra" : "Solicitação de compra" : "Extrato de itens";
-            document.getElementById("resumo").value = resumido ? "S" : "N";
-            document.getElementById("rel-lm-chk").checked = false;
-            document.querySelector("label[for='rel-lm-chk']").innerHTML = resumido ? "Listar apenas produtos cuja compra é sugerida" : "Listar movimentação";
-            document.querySelector("#relatorioItensModal form").action = resumido ? maquina === undefined ? URL + "/relatorios/sugestao" : URL + "/solicitacoes" : URL + "/relatorios/extrato";
-            let el_maq = document.getElementById("rel-maquina2").parentElement.parentElement.classList;
-            if (maquina !== undefined) el_maq.add("d-none");
-            else el_maq.remove("d-none");
-            if (resumido) modo_resumo.remove("d-none");
-            else modo_resumo.add("d-none");
+            $("#rel-lm").val("N");
+            $(elementos.inicio).val(hoje());
+            $(elementos.fim).val(hoje());
+            $("#rel-id_maquina2").val(maquina !== undefined ? maquina : 0);
+            $("#relatorioItensModalLabel").html(resumido ? maquina === undefined ? "Sugestão de compra" : "Solicitação de compra" : "Extrato de itens");
+            $("#resumo").val(resumido ? "S" : "N");
+            $("#rel-lm-chk").attr("checked", false);
+            $("label[for='rel-lm-chk']").html(resumido ? "Listar apenas produtos cuja compra é sugerida" : "Listar movimentação");
+            $("#relatorioItensModal form").attr("action", resumido ? maquina === undefined ? URL + "/relatorios/sugestao" : URL + "/solicitacoes" : URL + "/relatorios/extrato");
+            let el_maq = $($($("#rel-maquina2").parent()).parent());
+            if (maquina !== undefined) $(el_maq).addClass("d-none");
+            else $(el_maq).removeClass("d-none");
+            if (resumido) $("#rel-modo-resumo").removeClass("d-none");
+            else $("#rel-modo-resumo").addClass("d-none");
         });
     }, 0);
 }
@@ -675,19 +667,19 @@ function RelatorioControle() {
     this.validar = function() {
         limpar_invalido();
         let erro = "";
-        if (elementos.inicio.value && elementos.fim.value) erro = validar_datas(elementos.inicio, elementos.fim, false);
+        if ($(elementos.inicio).val() && $(elementos.fim).val()) erro = validar_datas($(elementos.inicio), $(elementos.fim), false);
         $.get(URL + "/relatorios/controle/consultar", relObterElementosValor(elementos, ["pessoa"]), function(data) {
             if (data && !erro) {
-                elementos.pessoa.classList.add("invalido");
+                $(elementos.pessoa).addClass("invalido");
                 erro = "Colaborador não encontrado";
             }
             if (!erro) {
-                if (!elementos.id_pessoa.value.trim()) {
+                if (!$(elementos.id_pessoa).val().trim()) {
                     $.get(URL + "/relatorios/controle/pessoas", function(data2) {
                         if (typeof data2 == "string") data2 = $.parseJSON(data2);
                         controleTodos(data2);
                     });
-                } else document.querySelector("#relatorioControleModal form").submit();    
+                } else $("#relatorioControleModal form").submit();
             } else s_alert(erro);
         });
     }
@@ -695,10 +687,10 @@ function RelatorioControle() {
     limpar_invalido();
     setTimeout(function() {
         modal("relatorioControleModal", 0, function() {
-            elementos.inicio.value = hoje();
-            elementos.fim.value = hoje();
-            elementos.consumo.value = "todos";
-        });
+            $(elementos.inicio).val(hoje());
+            $(elementos.fim).val(hoje());
+            $(elementos.consumo).val("todos");
+       });
     }, 0);
 }
 
@@ -716,28 +708,26 @@ function RelatorioRetiradas(quebra) {
                 break;
         }
 
-        let elemento = document.getElementById("rel-pessoa2");
-        elemento.value = "";
-        elemento.dataset.table = tabela;
-
-        document.getElementById("rel-id_pessoa2").value = "";
+        $("#rel-pessoa2").val("");
+        $("#rel-pessoa2").data().table = tabela;
+        $("#rel-id_pessoa2").val("");
     }
 
     this.validar = function() {
         limpar_invalido();
         let erro = "";
-        if (elementos.inicio.value && elementos.fim.value) erro = validar_datas(elementos.inicio, elementos.fim, false);
+        if ($(elementos.inicio).val() && $(elementos.fim).val()) erro = validar_datas($(elementos.inicio), $(elementos.fim), false);
         $.get(
             URL + "/relatorios/retiradas/consultar",
             relObterElementosValor(elementos, ["empresa", "pessoa", "setor"]),
             function(data) {
                 if (data && !erro) {
-                    elementos[data].classList.add("invalido");
+                    $(elementos[data]).addClass("invalido");
                     erro = data != "maquina" ? "Centro de custo" : "Máquina";
                     erro += " não encontrad";
                     erro += data == "setor" ? "o" : "a";
                 }
-                if (!erro) document.querySelector("#relatorioRetiradasModal form").submit();
+                if (!erro) $("#relatorioRetiradasModal form").submit();
                 else s_alert(erro);
             }
         );
@@ -746,47 +736,41 @@ function RelatorioRetiradas(quebra) {
     limpar_invalido();
     setTimeout(function() {
         modal("relatorioRetiradasModal", 0, function() {
-            ["rel-pessoa-tipo", "rel-consumo2", "rel-tipo"].forEach((id) => {
-                let el = document.getElementById(id).parentElement.classList;
-                if (quebra == "pessoa") {
-                    el.add("col-4");
-                    el.remove("col-6");
-                } else {
-                    el.add("col-6");
-                    el.remove("col-4");
-                }
+            $("#rel-pessoa-tipo, #rel-consumo2, #rel-tipo").each(function() {
+                let el = $($(this).parent());
+                $(el).addClass(quebra == "pessoa" ? "col-4" : "col-6");
+                $(el).removeClass(quebra == "pessoa" ? "col-6" : "col-4");
             });
-            let el_tipo = document.getElementById("rel-pessoa-tipo");
-            elementos.inicio.value = hoje();
-            elementos.fim.value = hoje();
+            $(elementos.inicio).val(hoje());
+            $(elementos.fim).val(hoje());
             if (quebra == "setor") {
-                elementos.pessoa.parentElement.classList.add("d-none");
-                elementos.setor.parentElement.classList.remove("d-none");
-                el_tipo.parentElement.classList.add("d-none");
+                $($(elementos.pessoa).parent()).addClass("d-none");
+                $($(elementos.setor).parent()).removeClass("d-none");
+                $($("#rel-pessoa-tipo").parent()).addClass("d-none");
             } else {
-                elementos.setor.parentElement.classList.add("d-none");
-                elementos.pessoa.parentElement.classList.remove("d-none");
-                el_tipo.parentElement.classList.remove("d-none");
+                $($(elementos.setor).parent()).addClass("d-none");
+                $($(elementos.pessoa).parent()).removeClass("d-none");
+                $($("#rel-pessoa-tipo").parent()).removeClass("d-none");
             }
-            el_tipo.value = "todos";
-            elementos.consumo.value = "todos";
-            elementos.tipo.value = "A";
+            $("#rel-pessoa-tipo").val("todos");
+            $(elementos.consumo).val("todos");
+            $(elementos.tipo).val("A");
             let titulo = "Consumo por ";
             titulo += quebra == "pessoa" ? "colaborador" : "centro de custo";
-            document.getElementById("relatorioRetiradasModalLabel").innerHTML = titulo;
-            document.getElementById("rel-grupo2").value = quebra;
+            $("#relatorioRetiradasModalLabel").html(titulo);
+            $("#rel-grupo2").val(quebra);
         });
     }, 0);
 }
 
 function limitar(el) {
-    let texto = el.value.toString();
-    if (!texto.length || parseInt(texto) < 1) el.value = 1;
-    if (texto.length > 11) el.value = "".padStart(11, "9");
+    let texto = $(el).val().toString();
+    if (!texto.length || parseInt(texto) < 1) $(el).val(1);
+    if (texto.length > 11) $(el).val("".padStart(11, "9"));
 }
 
 function numerico(el) {
-    el.value = el.value.replace(/\D/g, "").substring(0, 4);
+    $(el).val($(el).val().replace(/\D/g, "").substring(0, 4));
 }
 
 function mostrar_atribuicoes(_id) {
@@ -798,7 +782,6 @@ function mostrar_atribuicoes(_id) {
         tipo2 : location.href.indexOf("colaboradores") > -1 ? "P" : "S"
     }, function(data) {
         let resultado = "";
-        let elRes = document.getElementById("table-atribuicoes");
         if (typeof data == "string") data = $.parseJSON(data);
         if (data.length) {
             resultado += "<thead>" +
@@ -829,9 +812,9 @@ function mostrar_atribuicoes(_id) {
                 "</tr>";
             });
             resultado += "</tbody>";
-            elRes.parentElement.classList.add("pb-4");
-        } else elRes.parentElement.classList.remove("pb-4");
-        elRes.innerHTML = resultado;
+            $($("#table-atribuicoes").parent()).addClass("pb-4");
+        } else $($("#table-atribuicoes").parent()).removeClass("pb-4");
+        $("#table-atribuicoes").html(resultado);
     });
 }
 
@@ -840,19 +823,18 @@ function atribuicao(grade, id) {
         pessoa_atribuindo = id;
         $.get(URL + "/" + (location.href.indexOf("colaboradores") > -1 ? "colaboradores" : "setores") + "/mostrar/" + id, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
-            let div_produto = document.getElementById("div-produto").classList;
-            let div_referencia = document.getElementById("div-referencia").classList;
-            let nome = location.href.indexOf("colaboradores") > -1 ? data.nome.toUpperCase() : data.descr.toUpperCase();
-            document.getElementById("atribuicoesModalLabel").innerHTML = nome + " - Atribuindo " + (grade ? "grades" : "produtos");
+            $("#atribuicoesModalLabel").html(
+                data[location.href.indexOf("colaboradores") > -1 ? "nome" : "descr"].toUpperCase() + " - Atribuindo " + (grade ? "grades" : "produtos")
+            );
             if (grade) {
-                document.getElementById("referencia").dataset.filter = id;
-                div_produto.add("d-none");
-                div_referencia.remove("d-none");
+                $("#referencia").data().filter = id;
+                $("#div-produto").addClass("d-none");
+                $("#div-referencia").removeClass("d-none");
             } else {
-                div_produto.remove("d-none");
-                div_referencia.add("d-none");
+                $("#div-produto").removeClass("d-none");
+                $("#div-referencia").addClass("d-none");
             }
-            document.getElementById("obrigatorio").value = "opt-0";
+            $("#obrigatorio").val("opt-0");
             gradeGlobal = grade;
             mostrar_atribuicoes();
         });
@@ -868,19 +850,19 @@ function atribuir() {
         pessoa_ou_setor_valor : pessoa_atribuindo,
         produto_ou_referencia_chave : campo,
         produto_ou_referencia_valor : document.getElementById(gradeGlobal ? "referencia" : "produto").value,
-        validade : document.getElementById("validade").value,
-        qtd : document.getElementById("quantidade").value,
-        obrigatorio : document.getElementById("obrigatorio").value.replace("opt-", "")
+        validade : $("#validade").val(),
+        qtd : $("#quantidade").val(),
+        obrigatorio : $("#obrigatorio").val().replace("opt-", "")
     }, function(ret) {
         ret = parseInt(ret);
         switch(ret) {
             case 201:
-                document.getElementById("id_produto").value = "";
-                document.getElementById("referencia").value = "";
-                document.getElementById("produto").value = "";
-                document.getElementById("quantidade").value = 1;
-                document.getElementById("validade").value = 1;
-                document.getElementById("obrigatorio").value = "opt-0";
+                $("#id_produto").val("");
+                $("#referencia").val("");
+                $("#produto").val("");
+                $("#quantidade").val(1);
+                $("#validade").val(1);
+                $("#obrigatorio").val("opt-0");
                 mostrar_atribuicoes();
                 break;
             case 403:
@@ -897,23 +879,23 @@ function editar_atribuicao(id) {
     if (idatbglobal != id) {
         const campo = gradeGlobal ? "referencia" : "produto";
         $.get(URL + "/atribuicoes/mostrar/" + id, function(data) {
-            document.getElementById("estiloAux").innerHTML = ".autocomplete-result{display:none}";
-            [campo, "validade", "quantidade", "obrigatorio"].forEach((el) => {
-                document.getElementById(el).disabled = true;
+            $("#estiloAux").html(".autocomplete-result{display:none}");
+            $("#" + campo + ", #validade, #quantidade, #obrigatorio").each(function() {
+                $(this).attr("disabled", true);
             });
             if (typeof data == "string") data = $.parseJSON(data);
-            document.getElementById(campo).value = data.descr;
+            $("#" + campo).val(data.descr);
             $("#" + campo).trigger("keyup");
             setTimeout(function() {
                 $($(".autocomplete-line").first()).trigger("click");
             }, 500);
             setTimeout(function() {
-                document.getElementById("validade").value = data.validade;
-                document.getElementById("quantidade").value = parseInt(data.qtd);
-                document.getElementById("obrigatorio").value = "opt-" + data.obrigatorio;
-                document.getElementById("estiloAux").innerHTML = "";
-                [campo, "validade", "quantidade", "obrigatorio"].forEach((el) => {
-                    document.getElementById(el).disabled = false;
+                $("#validade").val(data.validade);
+                $("#quantidade").val(parseInt(data.qtd));
+                $("#obrigatorio").val("opt-" + data.obrigatorio);
+                $("#estiloAux").html("");
+                $("#" + campo + ", #validade, #quantidade, #obrigatorio").each(function() {
+                    $(this).attr("disabled", true);
                 });
                 mostrar_atribuicoes(id);
             }, 1000);
@@ -941,7 +923,7 @@ function detalhar_atribuicao(id) {
         "</thead>" +
         "<tbody>";
         if (typeof data == "string") data = $.parseJSON(data);
-        document.getElementById("detalharAtbModalLabel").innerHTML = data[0].referencia;
+        $("#detalharAtbModalLabel").html(data[0].referencia);
         data.forEach((produto) => {
             resultado += "<tr>" +
                 "<td>" + produto.descr + "</td>" + 
@@ -949,25 +931,24 @@ function detalhar_atribuicao(id) {
             "</tr>";
         });
         resultado += "</tbody>";
-        document.getElementById("table-detalhar-atb").innerHTML = resultado;
+        $("#table-detalhar-atb").html(resultado);
         $("#detalharAtbModal").modal();
     });
 }
 
 function foto_pessoa(seletor, caminho) {
-    let el = document.querySelector(seletor);
     if (caminho) caminho = URL + "/storage/" + caminho;
-    el.style.backgroundImage = caminho ? "url('" + caminho + "')" : "";
-    el.firstElementChild.classList.remove("d-none");
+    $(seletor).css("background-image", caminho ? "url('" + caminho + "')" : "");
+    $($(seletor).first()).removeClass("d-none");
     if (caminho) {
-        el.style.backgroundSize = "100% 100%";
-        el.firstElementChild.classList.add("d-none");
-    }
+        $(seletor).css("background-size", "100% 100%");
+        $($(seletor).first()).addClass("d-none");
+   }
 }
 
 function formatar_cpf(el) {
-    el.classList.remove("invalido");
-    let cpf = el.value;
+    $(el).removeClass("invalido");
+    let cpf = $(el).val();
     let num = cpf.replace(/[^\d]/g, '');
     let len = num.length;
     if (len <= 6) cpf = num.replace(/(\d{3})(\d{1,3})/g, '$1.$2');
@@ -976,7 +957,7 @@ function formatar_cpf(el) {
         cpf = num.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/g, "$1.$2.$3-$4");
         cpf = cpf.substring(0, 14);
     }
-    el.value = cpf;
+    $(el).val(cpf);
 }
 
 function validar_cpf(__cpf) {
@@ -1008,16 +989,16 @@ async function controleTodos(ids) {
     loader.display = "flex";
     modal.zIndex = "0";
     for (let i = 0; i < ids.length; i++) {
-        elementos.id_pessoa.value = ids[i];
+        $(elementos.id_pessoa).val(ids[i]);
         let existe = await $.get(URL + "/relatorios/controle/existe", {
             id_pessoa : ids[i],
-            consumo : elementos.consumo.value,
-            inicio : elementos.inicio.value,
-            fim : elementos.fim.value
+            consumo : $(elementos.consumo).val(),
+            inicio : $(elementos.inicio).val(),
+            fim : $(elementos.fim).val()
         });
         if (parseInt(existe)) {
             algum_existe = true;
-            document.querySelector("#relatorioControleModal form").submit();
+            $("#relatorioControleModal form").submit();
         }
     }
     lista.forEach((el) => {
@@ -1038,17 +1019,17 @@ function RelatorioRanking() {
     this.validar = function() {
         limpar_invalido();
         let erro = "";
-        if (elementos.inicio.value && elementos.fim.value) erro = validar_datas(elementos.inicio, elementos.fim, false);
-        if (!erro) document.querySelector("#relatorioRankingModal form").submit();
+        if ($(elementos.inicio).val() && $(elementos.fim).val()) erro = validar_datas($(elementos.inicio), $(elementos.fim), false);
+        if (!erro) $("#relatorioRankingModal form").submit();
         else s_alert(erro);
     }
     
     limpar_invalido();
     setTimeout(function() {
         modal("relatorioRankingModal", 0, function() {
-            elementos.inicio.value = hoje();
-            elementos.fim.value = hoje();
-            document.getElementById("rel-tipo3").value = "todos";
+            $(elementos.inicio).val(hoje());
+            $(elementos.fim).val(hoje());
+            $("#rel-tipo3").val("todos");
         });
     }, 0);
 }
@@ -1056,7 +1037,7 @@ function RelatorioRanking() {
 function trocarEmpresa() {
     $.post(URL + "/colaboradores/alterar-empresa", {
         _token : $("meta[name='csrf-token']").attr("content"),
-        idEmpresa : document.getElementById("empresa-select").value
+        idEmpresa : $("#empresa-select").val()
     }, function() {
         location.reload();
     });
@@ -1072,9 +1053,9 @@ function trocarEmpresaModal() {
                 resultado += "<option value = '" + filial.id + "'>- " + filial.nome_fantasia + "</option>";
             });
         })
-        document.getElementById("empresa-select").innerHTML = resultado;
-        document.querySelector("#empresa-select option[value='" + EMPRESA + "']").selected = true;
-        $("#trocarEmpresaModal").modal();    
+        $("empresa-select").html(resultado);
+        $("#empresa-select option[value='" + EMPRESA + "']").attr("selected", true);
+        $("#trocarEmpresaModal").modal();
     });
 }
 
@@ -1137,17 +1118,13 @@ async function avisarSolicitacao() {
 }
 
 function mostrarImagemErro() {
-    let imagem = document.getElementById("nao-encontrado");
-    imagem.classList.remove("d-none");
-    let pai = imagem.previousElementSibling;
-    pai.querySelector(".card").classList.add("d-none");
-    pai.classList.remove("h-100");
+    $("#nao-encontrado").removeClass("d-none");
+    $($("#nao-encontrado").prev()).find(".card").addClass("d-none");
+    $($("#nao-encontrado").prev()).removeClass("h-100");
 }
 
 function esconderImagemErro() {
-    let imagem = document.getElementById("nao-encontrado");
-    imagem.classList.add("d-none");
-    let pai = imagem.previousElementSibling;
-    pai.querySelector(".card").classList.remove("d-none");
-    pai.classList.add("h-100");
+    $("#nao-encontrado").addClass("d-none");
+    $($("#nao-encontrado").prev()).find(".card").removeClass("d-none");
+    $($("#nao-encontrado").prev()).addClass("h-100");
 }
