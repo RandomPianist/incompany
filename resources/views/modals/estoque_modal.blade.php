@@ -236,19 +236,18 @@
 
         let classes_btn = document.querySelector("#estoqueModal form div:not(.modal-body) button").classList.value
             .replace("mx-auto", "mr-2")
+            .replace("px-3", "px-20")
             .split(" ");
-        classes_btn.splice(classes_btn.indexOf("px-3"), 1);
         classes_btn.splice(classes_btn.indexOf("mt-4"), 1);
         classes_btn.splice(classes_btn.indexOf("w-100"), 1);
-        classes_btn.push("px-20");
 
         let adicionar = document.createElement("button");
         adicionar.type = "button";
         adicionar.textContent = "+";
         adicionar.classList.add(...classes_btn);
 
-        classes_btn.splice(classes_btn.indexOf("mr-2"), 1);
-        classes_btn.push("btn-target-black", "mx-auto", "remove-produto");
+        classes_btn[classes_btn.indexOf("mr-2")] = "mx-auto";
+        classes_btn.push("btn-target-black", "remove-produto");
         let remover = document.createElement("button");
         remover.type = "button";
         remover.textContent = "-";

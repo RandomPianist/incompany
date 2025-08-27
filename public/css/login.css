@@ -1,18 +1,23 @@
 .body-login {
     height: 100%;
     background-color: white;
-    margin: 0 !important;
+    margin: 0 !important
 }
+
 .secao-direita {
     background-color: #f0ededd8;;
-    padding:0;
-    margin:0;
+    padding: 0;
+    margin: 0
 }
 
 .container-login {
     background-color: white;
     padding: 3rem;
-    border-radius:1rem;
+    border-radius: 1rem;
     width: 500px;
-    height:550px;
+    height: 550px
+}
+
+body.row.swal2-height-auto {
+    height: 100vh !important
 }
