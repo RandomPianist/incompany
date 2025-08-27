@@ -707,7 +707,7 @@ function RelatorioRetiradas(quebra) {
         }
 
         $("#rel-pessoa2").val("");
-        $("#rel-pessoa2").data().table = tabela;
+        $("#rel-pessoa2").data("table", tabela);
         $("#rel-id_pessoa2").val("");
     }
 
