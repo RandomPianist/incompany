@@ -128,11 +128,9 @@ $(document).ready(function() {
             onSelect: function() {
                 const el = document.getElementById(that.data().prox);
                 if (el !== null) {
-                    if (el.classList.contains("data")) {
-                        setTimeout(function() {
-                            $(el).focus();
-                        }, 100);
-                    } else $(el).focus();
+                    setTimeout(function() {
+                        $(el).focus();
+                    }, $(el).hasClass("data") ? 100 : 0);
                 }
             }
         });
