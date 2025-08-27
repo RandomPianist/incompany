@@ -10,14 +10,14 @@ use App\Models\Pessoas;
 
 class AtribuicoesController extends Controller {
     private function consulta_main($select) {
-        return DB::table("produtos")
+        return DB::table("vprodaux")
                     ->select(DB::raw($select))
                     ->join("atribuicoes", function($join) {
                         $join->on(function($sql) {
-                            $sql->on("atribuicoes.produto_ou_referencia_valor", "produtos.cod_externo")
+                            $sql->on("atribuicoes.produto_ou_referencia_valor", "vprodaux.cod_externo")
                                 ->where("atribuicoes.produto_ou_referencia_chave", "P");
                         })->orOn(function($sql) {
-                            $sql->on("atribuicoes.produto_ou_referencia_valor", "produtos.referencia")
+                            $sql->on("atribuicoes.produto_ou_referencia_valor", "vprodaux.referencia")
                                 ->where("atribuicoes.produto_ou_referencia_chave", "R");
                         });
                     });
@@ -26,19 +26,19 @@ class AtribuicoesController extends Controller {
     private function consulta($select, $where) {
         return $this->consulta_main($select)
                     ->whereRaw($where)
-                    ->where("produtos.lixeira", 0)
+                    ->where("vprodaux.lixeira", 0)
                     ->where("atribuicoes.lixeira", 0);
     }
 
     public function salvar(Request $request) {
         if (!sizeof(
-            DB::table("produtos")
+            DB::table("vprodaux")
                 ->where($request->produto_ou_referencia_chave == "P" ? "descr" : "referencia", $request->produto_ou_referencia_valor)
                 ->where("lixeira", 0)
                 ->get()
         )) return 404;
         $produto_ou_referencia_valor = $request->produto_ou_referencia_chave == "P" ?
-            DB::table("produtos")
+            DB::table("vprodaux")
                 ->where("descr", $request->produto_ou_referencia_valor)
                 ->where("lixeira", 0)
                 ->value("cod_externo")
@@ -75,7 +75,7 @@ class AtribuicoesController extends Controller {
 
     public function listar(Request $request) {
         $select = "atribuicoes.id, ";
-        if ($request->tipo == "P") $select .= "produtos.descr AS ";
+        if ($request->tipo == "P") $select .= "vprodaux.descr AS ";
         $select .= "produto_ou_referencia_valor,
             atribuicoes.qtd,
             atribuicoes.validade, 
@@ -104,11 +104,11 @@ class AtribuicoesController extends Controller {
                         })
                         ->where("pessoa_ou_setor_valor", $request->id)
                         ->where("produto_ou_referencia_chave", $request->tipo)
-                        ->where("produtos.lixeira", 0)
+                        ->where("vprodaux.lixeira", 0)
                         ->where("atribuicoes.lixeira", 0)
                         ->groupby(
                             "atribuicoes.id",
-                            ($request->tipo == "P" ? "produtos.descr" : "produto_ou_referencia_valor"),
+                            ($request->tipo == "P" ? "vprodaux.descr" : "produto_ou_referencia_valor"),
                             "atribuicoes.qtd",
                             "atribuicoes.validade",
                             "atribuicoes.id_empresa",
@@ -143,8 +143,8 @@ class AtribuicoesController extends Controller {
     public function mostrar($id) {
         return json_encode($this->consulta("
             CASE
-                WHEN produto_ou_referencia_chave = 'R' THEN produtos.referencia
-                ELSE produtos.descr
+                WHEN produto_ou_referencia_chave = 'R' THEN vprodaux.referencia
+                ELSE vprodaux.descr
             END AS descr,
             qtd,
             atribuicoes.validade,
@@ -154,14 +154,14 @@ class AtribuicoesController extends Controller {
 
     public function produtos($id) {
         return json_encode($this->consulta("
-            produtos.id,
+            vprodaux.id,
             CASE
-                WHEN produto_ou_referencia_chave = 'R' THEN CONCAT(produtos.descr, ' ', tamanho)
-                ELSE produtos.descr
+                WHEN produto_ou_referencia_chave = 'R' THEN CONCAT(vprodaux.descr, ' ', tamanho)
+                ELSE vprodaux.descr
             END AS descr,
             CASE
-                WHEN produto_ou_referencia_chave = 'R' THEN produtos.referencia
-                ELSE produtos.descr
+                WHEN produto_ou_referencia_chave = 'R' THEN vprodaux.referencia
+                ELSE vprodaux.descr
             END AS titulo
         ", "atribuicoes.id = ".$id)->orderby("descr")->get());
     }

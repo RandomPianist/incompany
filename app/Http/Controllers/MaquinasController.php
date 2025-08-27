@@ -17,7 +17,7 @@ class MaquinasController extends Controller {
 
         for ($i = 0; $i < sizeof($produtos_id); $i++) {
             if (!sizeof(
-                DB::table("produtos")
+                DB::table("vprodaux")
                     ->where("id", $produtos_id[$i])
                     ->where("descr", $produtos_descr[$i])
                     ->where("lixeira", 0)

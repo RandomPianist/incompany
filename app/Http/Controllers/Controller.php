@@ -418,7 +418,7 @@ class Controller extends BaseController {
             }
         }
         if (((trim($request->produto) && !sizeof(
-            DB::table("produtos")
+            DB::table("vprodaux")
                 ->where("id", $request->id_produto)
                 ->where("descr", $request->produto)
                 ->where("lixeira", 0)

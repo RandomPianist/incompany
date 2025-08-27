@@ -49,7 +49,8 @@ class HomeController extends Controller {
         $where = " AND ".$request->column." LIKE '%".$request->search."%' AND ";
         
         if ($tabela == "produtos") {
-            $where .= "produtos.id IN (
+            $tabela = "vprodaux";
+            $where .= "id IN (
                 SELECT id_produto
                 FROM vprodutos
                 WHERE ".($request->table == "produtos" ? "qtd > 0" : "1")." AND id_pessoa = ".Auth::user()->id_pessoa.

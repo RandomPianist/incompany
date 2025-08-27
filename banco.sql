@@ -683,6 +683,17 @@ CREATE VIEW vpendentes AS (
         END
 );
 
+CREATE VIEW vprodaux AS (
+    SELECT
+        id,
+        cod_externo,
+        CONCAT(IFNULL(CONCAT(cod_externo, ' - '), ''), descr) AS descr,
+        referencia,
+        lixeira
+
+    FROM produtos
+);
+
 ALTER TABLE estoque
   ADD INDEX idx_estoque_id_mp (id_mp),
   ADD INDEX idx_estoque_idmp_es_qtd (id_mp, es, qtd);
