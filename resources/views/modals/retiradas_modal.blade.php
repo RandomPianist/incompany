@@ -80,54 +80,51 @@
 
 <script type = "text/javascript" language = "JavaScript">
     function atualizaQtd() {
-        document.getElementById("quantidade2_label").innerHTML = document.getElementById("quantidade2").value;
+        $("#quantidade2_label").html($("#quantidade2").val());
     }
 
     function retirar(id) {
-        document.getElementById("quantidade2").value = 1;
+        $("#quantidade2").val(1);
         atualizaQtd();
         $.get(URL + "/atribuicoes/produtos/" + id, function(data) {
-            let el = document.getElementById("variacao");
-            let pai = el.parentElement.parentElement.classList;
+            let pai = $($($("#variacao").parent()).parent());
             let resultado = "";
             if (typeof data == "string") data = $.parseJSON(data);
             data.forEach((variacao) => {
                 resultado += "<option value = 'prod-" + variacao.id + "'>" + variacao.descr + "</option>";
             });
-            el.innerHTML = resultado;
-            pai.remove("d-none");
-            if (data.length < 2) pai.add("d-none");
-            el = document.getElementById("quantidade2");
-            pai = el.parentElement.parentElement.parentElement.classList;
-            pai.add("d-none")
-            if (parseInt(el.max) > 1) pai.remove("d-none");
-            document.getElementById("btn-retirada").onclick = function() {
+            $("#variacao").html(resultado);
+            $(pai).removeClass("d-none");
+            if (data.length < 2) $(pai).addClass("d-none");
+            pai = $($($($("#quantidade2").parent()).parent()).parent());
+            $(pai).addClass("d-none")
+            if (parseInt($("#quantidade2").attr("max")) > 1) $(pai).removeClass("d-none");
+            $("#btn-retirada").click(function() {
                 let erro = "";
-                let data_ret = document.getElementById("data-ret");
                 
-                if (!data_ret.value) erro = "Preencha o campo";
-                else if (eFuturo(data_ret.value)) erro = "A retirada não pode ser no futuro";
+                if (!$("#data-ret").val()) erro = "Preencha o campo";
+                else if (eFuturo($("#data-ret").val())) erro = "A retirada não pode ser no futuro";
                 
                 if (!erro) {
                     $.get(URL + "/retiradas/consultar", {
                         atribuicao : id,
-                        qtd : document.getElementById("quantidade2").value,
+                        qtd : $("#quantidade2").val(),
                         pessoa : pessoa_atribuindo
                     }, function(ok) {
                         if (!parseInt(ok)) modal2("supervisorModal", ["cpf2", "senha2"]);
                         else retirarMain(id);
                     });
                 } else {
-                    data_ret.classList.add("invalido");
+                    $("#data-ret").addClass("invalido");
                     s_alert(erro);
                 }
-            }
+            });
             let titulo = "Retirada retroativa - " + data[0].titulo;
             if (titulo.length > 46) titulo = titulo.substring(0, 46).trim() + "...";
-            document.getElementById("retiradasModalLabel").innerHTML = titulo;
-            document.getElementById("quantidade2").value = 1;
+            $("#retiradasModalLabel").html(titulo);
+            $("#quantidade2").val(1);
             atualizaQtd();
-            document.getElementById("data-ret").value = "";
+            $("#data-ret").val("");
             $("#retiradasModal").modal();
         });
     }
@@ -135,30 +132,28 @@
     function validar() {
         limpar_invalido();
         let erro = "";
-        let _cpf = document.getElementById("cpf2");
-        let _senha = document.getElementById("senha2");
 
-        if (!_cpf.value) {
+        if (!$("#cpf2").val()) {
             erro = "Preencha o campo";
-            _cpf.classList.add("invalido");
+            $("#cpf2").addClass("invalido");
         }
 
-        if (!_senha.value) {
+        if (!$("#senha2").val()) {
             if (!erro) erro = "Preencha o campo";
             else erro = "Preencha os campos";
-            _senha.classList.add("invalido");
+            $("#senha2").addClass("invalido");
         }
 
-        if (!erro && !validar_cpf(_cpf.value)) {
+        if (!erro && !validar_cpf($("#cpf2").val())) {
             erro = "CPF inválido";
-            _cpf.classList.add("invalido");
+            $("#cpf2").addClass("invalido");
         }
 
         if (!erro) {
             $.post(URL + "/colaboradores/supervisor", {
                 _token : $("meta[name='csrf-token']").attr("content"),
-                cpf : _cpf.value.replace(/\D/g, ""),
-                senha : _senha.value
+                cpf : $("#cpf2").val().replace(/\D/g, ""),
+                senha : $("#senha2").val()
             }, function(ok) {
                 if (parseInt(ok)) retirarMain(id, ok);
                 else s_alert("Supervisor inválido");
@@ -173,9 +168,9 @@
             supervisor : _supervisor,
             atribuicao : id,
             pessoa : pessoa_atribuindo,
-            produto : document.getElementById("variacao").value.replace("prod-", ""),
-            data : document.getElementById("data-ret").value,
-            quantidade : document.getElementById("quantidade2").value
+            produto : $("#variacao").val().replace("prod-", ""),
+            data : $("#data-ret").val(),
+            quantidade : $("#quantidade2").val()
         }, function() {
             $("#supervisorModal").modal("hide");
             $("#retiradasModal").modal("hide");

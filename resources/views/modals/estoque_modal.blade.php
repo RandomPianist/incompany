@@ -68,9 +68,9 @@
 <script type = "text/javascript" language = "JavaScript">
     function estoque(id) {
         $.get(URL + "/valores/{{ $alias }}/mostrar/" + id, function(descr) {
-            document.getElementById("estoqueModalLabel").innerHTML = descr + " - movimentar estoque";
-            Array.from(document.getElementsByClassName("id_maquina")).forEach((el) => {
-                el.value = id;
+            $("#estoqueModalLabel").html(descr + " - movimentar estoque");
+            $(".id_maquina").each(function() {
+                $(this).val(id);
             });
             modal2("estoqueModal", ["obs-1", "qtd-1"]);
             $("#obs-1").trigger("keyup");
@@ -82,8 +82,8 @@
     function validar_estoque() {
         let obter_vetor = function(classe) {
             let resultado = new Array();
-            Array.from(document.getElementsByClassName(classe)).forEach((el) => {
-                resultado.push(classe == "preco" ? el.value.replace(/\D/g, "") : el.value);
+            $("." + classe).each(function() {
+                resultado.push(classe == "preco" ? $(this).val().replace(/\D/g, "") : $(this).val());
             });
             return resultado.join(",");
         }
@@ -98,29 +98,29 @@
             quantidades : obter_vetor("qtd"),
             es : obter_vetor("es"),
             precos : obter_vetor("preco"),
-            id_maquina : document.getElementsByClassName("id_maquina")[0].value
+            id_maquina : $($(".id_maquina")[0]).val()
         }, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
             if (!erro && data.texto) {
                 for (let i = 0; i < data.campos.length; i++) {
-                    let el = document.getElementById(data.campos[i]);
-                    el.value = data.valores[i];
+                    let el = $("#" + data.campos[i]);
+                    $(el).val(data.valores[i]);
                     $(el).trigger("keyup");
-                    el.classList.add("invalido");
+                    $(el).addClass("invalido");
                 }
                 erro = data.texto;
             }
             if (!erro) {
-                Array.from(document.getElementsByClassName("preco")).forEach((el) => {
-                    el.value = parseInt(el.value.replace(/\D/g, "")) / 100;
+                $(".preco").each(function() {
+                    $(this).val(parseInt($(this).val().replace(/\D/g, "")) / 100);
                 });
-                document.querySelector("#estoqueModal form").submit();
+                $("#estoqueModal form").submit();
             } else s_alert(erro);
         });
     }
 
     function carrega_obs(seq) {
-        switch(document.getElementById("es-" + seq).value) {
+        switch($("es-" + seq).val()) {
             case "E":
                 var obs = "ENTRADA";
                 break;
@@ -130,18 +130,17 @@
             default:
                 var obs = "AJUSTE";
         }
-        document.getElementById("obs-" + seq).value = obs;
-        document.getElementById("qtd-" + seq).focus();
+        $("obs-" + seq).val(obs);
+        $("qtd-" + seq).focus();
     }
 
     function atualizaPreco(seq) {
-        const el_prod = document.getElementById("id_produto-" + seq);
         $.get(URL + "/maquinas/preco", {
-            id_maquina : document.getElementsByClassName("id_maquina")[0].value,
-            id_produto : el_prod.value
+            id_maquina : $($(".id_maquina")[0]).val()
+            id_produto : $("#id_produto-" + seq).val()
         }, function(preco) {
-            let el_preco = el_prod.parentElement.parentElement.querySelector(".preco");
-            el_preco.value = preco;
+            let el_preco = $($($($("#id_produto-" + seq).parent()).parent()).find(".preco"));
+            $(el_preco).val(preco);
             $(el_preco).trigger("keyup");
         })
     }

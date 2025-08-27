@@ -122,7 +122,7 @@ $(document).ready(function() {
             firstDay: 1,
             beforeShow: function(elem, dp) {
                 setTimeout(function() {
-                    dp.dpDiv[0].style.width = (elem.offsetWidth > 244 ? elem.offsetWidth : 244) + "px";
+                    $(dp.dpDiv[0]).css("width", (elem.offsetWidth > 244 ? elem.offsetWidth : 244) + "px");
                 }, 0);
             },
             onSelect: function() {
@@ -130,7 +130,7 @@ $(document).ready(function() {
                 if (el !== null) {
                     if (el.classList.contains("data")) {
                         setTimeout(function() {
-                            el.focus();
+                            $(el).focus();
                         }, 100);
                     } else $(el).focus();
                 }
@@ -270,7 +270,7 @@ function modal(nome, id, callback) {
 
     limpar_invalido();
     if (callback === undefined) callback = function() {}
-    if (id) document.getElementById(nome == "pessoasModal" ? "pessoa-id" : "id").value = id;
+    if (id) $("#" + (nome == "pessoasModal" ? "pessoa-id" : "id")).val(id);
     $("#" + nome + " input, #" + nome + " textarea").each(function() {
         if (!id && $(this).attr("name") != "_token" && (!(nome == "pessoasModal" && $(this).attr("name") == "tipo"))) $(this).val("");
         if (!$(this).hasClass("autocomplete")) $(this).trigger("keyup");
@@ -849,7 +849,7 @@ function atribuir() {
         pessoa_ou_setor_chave : location.href.indexOf("colaboradores") > -1 ? "P" : "S",
         pessoa_ou_setor_valor : pessoa_atribuindo,
         produto_ou_referencia_chave : campo,
-        produto_ou_referencia_valor : document.getElementById(gradeGlobal ? "referencia" : "produto").value,
+        produto_ou_referencia_valor : $("#" + (gradeGlobal ? "referencia" : "produto")).val(),
         validade : $("#validade").val(),
         qtd : $("#quantidade").val(),
         obrigatorio : $("#obrigatorio").val().replace("opt-", "")
@@ -939,10 +939,10 @@ function detalhar_atribuicao(id) {
 function foto_pessoa(seletor, caminho) {
     if (caminho) caminho = URL + "/storage/" + caminho;
     $(seletor).css("background-image", caminho ? "url('" + caminho + "')" : "");
-    $($(seletor).first()).removeClass("d-none");
+    $($($(seletor).children()[0])).removeClass("d-none");
     if (caminho) {
         $(seletor).css("background-size", "100% 100%");
-        $($(seletor).first()).addClass("d-none");
+        $($($(seletor).children()[0])).addClass("d-none");
    }
 }
 
@@ -1006,7 +1006,7 @@ async function controleTodos(ids) {
     });
     modal.removeProperty("z-index");
     loader.removeProperty("display");
-    elementos.id_pessoa.value = "";
+    $(elementos.id_pessoa).val("");
     if (!algum_existe) {
         elementos.pessoa.classList.add("invalido");
         s_alert("Colaborador não encontrado");

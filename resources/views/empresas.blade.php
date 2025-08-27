@@ -90,35 +90,35 @@
         function zebrar() {
             setTimeout(function() {
                 let obterVisiveis = function(details, resultado) {
-                    let summary = details.querySelector("summary");
+                    let summary = $(details).children("summary")[0];
                     if (summary) resultado.push(summary.id);
-                    Array.from(details.querySelectorAll(":scope > div, :scope > details > summary")).forEach((el) => {
-                        resultado.push(el.id);
+                    $(details).children("div, details > summary").each(function() {
+                        resultado.push(this.id);
                     });
-                    Array.from(details.querySelectorAll(":scope > details")).forEach((el) => {
-                        if (el.open) obterVisiveis(el, resultado);
+                    $(details).children("details[open]").each(function() {
+                        obterVisiveis(this, resultado);
                     });
                     return resultado;
                 }
 
                 let ativar = false;
                 let aux = new Array();
-                Array.from(document.querySelectorAll("#principal > div, #principal > details > summary")).forEach((el) => {
-                    aux.push(el.id);
+                $("#principal > div, #principal > details > summary").each(function() {
+                    aux.push($(this).attr("id"));
                 });
-                Array.from(document.querySelectorAll("#principal > details")).forEach((el) => {
-                    if (el.open) {
+                $("#principal > details").each(function() {
+                    if ($(this).attr("open")) {
                         aux.concat(obterVisiveis(el, aux));
                         ativar = true;
                     }
                 });
                 let lista = new Array();
-                Array.from(document.querySelectorAll("#principal .texto-tabela")).forEach((el) => {
-                    el.classList.remove("impar");
-                    el.classList.remove("par");
-                    if (aux.indexOf(el.id) > -1) lista.push(el.id.replace("empresa-", ""));
+                $("#principal .texto-tabela").each(function() {
+                    $(this).removeClass("impar");
+                    $(this).removeClass("par");
+                    if (aux.indexOf($(this).attr("id")) > -1) lista.push($(this).attr("id").replace("empresa-", ""));
                 });
-                for (let i = 0; i < lista.length; i++) document.querySelector("#principal #empresa-" + lista[i]).classList.add(((i % 2 > 0) ? "im" : "") + "par");
+                for (let i = 0; i < lista.length; i++) $("#principal #empresa-" + lista[i]).addClass(((i % 2 > 0) ? "im" : "") + "par");
             }, 0);
         }
 
@@ -140,17 +140,20 @@
                 data.inicial.forEach((empresa) => {
                     resultado += "<details>" + linha(empresa.id, empresa.nome_fantasia) + "</details>";
                 });
-                document.querySelector("#principal").innerHTML = resultado;
+                $("#principal").html(resultado);
                 data.final.forEach((empresa) => {
                     if (empresa.id_matriz != 0) {
-                        document.querySelector("#empresa-" + empresa.id_matriz).parentElement.innerHTML += "<details class = 'filho'>" + 
-                            linha(empresa.id, empresa.nome_fantasia) +
-                        "</details>";
-                        if (!parseInt(data.matriz_editavel)) document.querySelector("#empresa-" + empresa.id_matriz + " .btn-table-action").style.visibility = "hidden";
+                        $($("#empresa-" + empresa.id_matriz).parent()).html(
+                            $($("#empresa-" + empresa.id_matriz).parent()).html() +
+                            "<details class = 'filho'>" + 
+                                linha(empresa.id, empresa.nome_fantasia) +
+                            "</details>"
+                        );
+                        if (!parseInt(data.matriz_editavel)) $("#empresa-" + empresa.id_matriz + " .btn-table-action").css("visibility", "hidden");
                     }
                 });
-                Array.from(document.querySelectorAll("summary.texto-tabela")).forEach((el) => {
-                    if (!$($(el).parent()).find("details").length) $($(el).parent()).replaceWith("<div class = 'sem-filhos texto-tabela' id = '" + el.id + "'>" + $(el).html() + "</div>");
+                $("summary.texto-tabela").each(function() {
+                    if (!$($(this).parent()).find("details").length) $($(this).parent()).replaceWith("<div class = 'sem-filhos texto-tabela' id = '" + $(this).attr("id") + "'>" + $(this).html() + "</div>");
                 });
                 zebrar();
                 const elGrupo = document.getElementById("empresa-{{ request('grupo') ?? '' }}");
@@ -192,63 +195,62 @@
 
         function formatar_cnpj(el) {
             el.classList.remove("invalido");
-            let rawValue = el.value.replace(/\D/g, "");
+            let rawValue = $(el).val().replace(/\D/g, "");
             if (rawValue.length === 15 && rawValue.startsWith("0")) {
                 let potentialCNPJ = rawValue.substring(1);
                 if (validar_cnpj(potentialCNPJ)) rawValue = potentialCNPJ;
             }
-            el.value  = rawValue.replace(/^(\d{2})(\d)/, '$1.$2') // Adiciona ponto após o segundo dígito
-                                .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3') // Adiciona ponto após o quinto dígito
-                                .replace(/\.(\d{3})(\d)/, '.$1/$2') // Adiciona barra após o oitavo dígito
-                                .replace(/(\d{4})(\d)/, '$1-$2') // Adiciona traço após o décimo segundo dígito
-                                .replace(/(-\d{2})\d+?$/, '$1'); // Impede a entrada de mais de 14 dígitos
+            $(el).val(
+                rawValue.replace(/^(\d{2})(\d)/, '$1.$2') // Adiciona ponto após o segundo dígito
+                    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3') // Adiciona ponto após o quinto dígito
+                    .replace(/\.(\d{3})(\d)/, '.$1/$2') // Adiciona barra após o oitavo dígito
+                    .replace(/(\d{4})(\d)/, '$1-$2') // Adiciona traço após o décimo segundo dígito
+                    .replace(/(-\d{2})\d+?$/, '$1'); // Impede a entrada de mais de 14 dígitos
+            );
         }
 
         function validar() {
             limpar_invalido();
             let erro = "";
 
-            let _cnpj = document.getElementById("cnpj");
-            if (!_cnpj.value) {
+            if (!$("#cnpj").val()) {
                 erro = "Preencha o campo";
-                _cnpj.classList.add("invalido");
+                $("#cnpj").addClass("invalido");
             }
             const aux = verifica_vazios(["nome_fantasia", "razao_social"], erro);
             erro = aux.erro;
             let alterou = aux.alterou;
-            if (!erro && !validar_cnpj(_cnpj.value)) {
+            if (!erro && !validar_cnpj($("#cnpj").val())) {
                 erro = "CNPJ inválido";
-                _cnpj.classList.add("invalido");
+                $("#cnpj").addClass("invalido");
             }
-            if (_cnpj.value != anteriores.cnpj) alterou = true;
+            if ($("#cnpj").val() != anteriores.cnpj) alterou = true;
 
             $.get(URL + "/empresas/consultar/", {
-                cnpj : _cnpj.value.replace(/\D/g, "")
+                cnpj : $("#cnpj").val().replace(/\D/g, "")
             }, function(data) {
-                if (!erro && parseInt(data) && !parseInt(document.getElementById("id").value)) {
+                if (!erro && parseInt(data) && !parseInt($("#id").val())) {
                     erro = "Já existe um registro com esse CNPJ";
-                    _cnpj.classList.add("invalido");
+                    $("#cnpj").addClass("invalido");
                 }
                 if (!erro && !alterou) erro = "Altere pelo menos um campo para salvar";
                 if (!erro) {
-                    _cnpj.value = _cnpj.value.replace(/\D/g, "");
-                    document.querySelector("#empresasModal form").submit();
+                    $("#cnpj").val($("#cnpj").val().replace(/\D/g, ""));
+                    $("#empresasModal form").submit();
                 } else s_alert(erro);
             });
         }
 
         function chamar_modal(id, e) {
             if (e !== undefined) e.preventDefault();
-            let titulo = id ? "Editando" : "Cadastrando";
-            titulo += " empresa";
-            document.getElementById("empresasModalLabel").innerHTML = titulo;
+            $("empresasModalLabel").html((id ? "Editando" : "Cadastrando") + " empresa");
             if (id) {
                 $.get(URL + "/empresas/mostrar/" + id, function(data) {
                     if (typeof data == "string") data = $.parseJSON(data);
-                    ["id_matriz", "cnpj", "razao_social", "nome_fantasia"].forEach((_id) => {
-                        document.getElementById(_id).value = data[_id];
+                    $("#id_matriz, #cnpj, #razao_social, #nome_fantasia").each(function() {
+                        $(this).val(data[$(this).attr("id")]);
                     });
-                    if (parseInt(data.id_matriz)) document.getElementById("empresasModalLabel").innerHTML = "Editando filial";
+                    if (parseInt(data.id_matriz)) $("#empresasModalLabel").html("Editando filial");
                     modal("empresasModal", id);
                 });
             } else modal("empresasModal", id);
@@ -256,9 +258,9 @@
 
         function criar_filial(matriz, e) {
             e.preventDefault();
-            document.getElementById("empresasModalLabel").innerHTML = "Criando filial";
+            $("#empresasModalLabel").html("Criando filial");
             modal("empresasModal", 0, function() {
-                document.getElementById("id_matriz").value = matriz;
+                $("#id_matriz").val(matriz);
             });
         }
     </script>

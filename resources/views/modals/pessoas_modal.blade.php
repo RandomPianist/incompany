@@ -60,11 +60,11 @@
                         <div class = "row">
                             <div class = "col-6">
                                 <label for = "cpf" class = "custom-label-form">CPF: *</label>
-                                <input id = "cpf" name = "cpf" class = "form-control" autocomplete = "off" type = "text" onkeyup = "formatar_cpf(this)" />
+                                <input id = "cpf" name = "cpf" class = "form-control" autocomplete = "off" type = "text" onkeyup = "formatar_cpf($(this))" />
                             </div>
                             <div class = "col-5 pr-0">
                                 <label for = "pessoa-setor" class = "custom-label-form">Centro de custo: *</label>
-                                <select id = "pessoa-setor-select" name = "id_setor" class = "form-control" onchange = "pessoa.toggle_user(this.value)"></select>
+                                <select id = "pessoa-setor-select" name = "id_setor" class = "form-control" onchange = "pessoa.toggle_user($(this).val())"></select>
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
                                 <a href = "{{ config('app.root_url') }}/setores" title = "Cadastro de centro de custos" target = "_blank">
@@ -94,7 +94,7 @@
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">
                                     <input id = "supervisor" name = "supervisor" type = "hidden" />
-                                    <input id = "supervisor-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "document.getElementById('supervisor').value = this.checked ? 1 : 0" />
+                                    <input id = "supervisor-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "$('#supervisor').val($(this).attr('checked') ? '1' : '0')" />
                                     <label for = "supervisor-chk" class = "custom-control-label">Supervisor<label>
                                 </div>
                             </div>

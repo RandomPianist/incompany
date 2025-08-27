@@ -96,7 +96,7 @@
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">
                                     <input id = "consumo" name = "consumo" type = "hidden" />
-                                    <input id = "consumo-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "document.getElementById('consumo').value = this.checked ? 1 : 0" />
+                                    <input id = "consumo-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "$('#consumo').val($(this).attr('checked') ? '1' : '0')" />
                                     <label for = "consumo-chk" class = "custom-control-label">Consumo<label>
                                 </div>
                             </div>

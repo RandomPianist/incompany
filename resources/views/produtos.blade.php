@@ -49,7 +49,7 @@
 
         function listar(coluna) {
             $.get(URL + "/produtos/listar", {
-                filtro : document.getElementById("busca").value
+                filtro : $("#busca").val()
             }, function(data) {
                 let resultado = "";
                 if (typeof data == "string") data = $.parseJSON(data);
@@ -71,7 +71,7 @@
                             "</td>" +
                         "</tr>";
                     });
-                    document.getElementById("table-dados").innerHTML = resultado;
+                    $("#table-dados").html(resultado);
                     $(".dinheiro").each(function() {
                         let texto_final = (parseFloat($(this).html()) * 100).toString();
                         if (texto_final.indexOf(".") > -1) texto_final = texto_final.substring(0, texto_final.indexOf("."));
@@ -89,37 +89,36 @@
             const aux = verifica_vazios(["cod_externo", "descr", "ca", "validade", "categoria", "tamanho", "validade_ca"]);
             let erro = aux.erro;
             let alterou = aux.alterou;
-            let preco = document.getElementById("preco");
-            if (!erro && parseInt(preco.value.replace(/\D/g, "")) <= 0) {
+            if (!erro && parseInt($("#preco").val().replace(/\D/g, "")) <= 0) {
                 erro = "Valor inválido";
-                preco.classList.add("invalido");
+                $("#preco").addClass("invalido");
             }
-            if (preco.value.trim() != dinheiro(anteriores.preco.toString()) || document.getElementById("consumo-chk").checked != ant_consumo) alterou = true;
+            if ($("#preco").val().trim() != dinheiro(anteriores.preco.toString()) || $("#consumo-chk").attr("checked") != ant_consumo) alterou = true;
             $.get(URL + "/produtos/consultar/", {
-                id : document.getElementById("id").value,
-                cod_externo : document.getElementById("cod_externo").value,
-                categoria : document.getElementById("categoria").value,
-                id_categoria : document.getElementById("id_categoria").value,
-                referencia : document.getElementById("referencia").value,
-                preco : parseInt(preco.value.replace(/\D/g, "")) / 100
+                id : $("#id").val(),
+                cod_externo : $("#cod_externo").val(),
+                categoria : $("#categoria").val(),
+                id_categoria : $("#id_categoria").val(),
+                referencia : $("#referencia").val(),
+                preco : parseInt($("#preco").val().replace(/\D/g, "")) / 100
             }, function(data) {
                 if (!erro && data == "invalido") {
                     erro = "Categoria não encontrada";
-                    document.getElementById("categoria").classList.add("invalido");
+                    $("#categoria").addClass("invalido");
                 }
                 if (!erro && data == "duplicado") {
                     erro = "Já existe um registro com esse código";
-                    document.getElementById("cod_externo").classList.add("invalido");
+                    $("#cod_externo").addClass("invalido");
                 }
                 if (!erro && data.indexOf("preco") > -1) {
                     erro = "O preço está inferior ao preço mínimo de " + dinheiro(data.replace("preco", ""));
-                    preco.classList.add("invalido");
+                    $("#preco").addClass("invalido");
                 }
                 if (!erro && !alterou && !document.querySelector("#produtosModal input[type=file]").value) erro = "Altere pelo menos um campo para salvar";
                 if (!erro) {
                     const fn = function() {
-                        preco.value = parseInt(preco.value.replace(/\D/g, "")) / 100;
-                        document.querySelector("#produtosModal form").submit();
+                        $("#preco").val(parseInt($("#preco").val().replace(/\D/g, "")) / 100);
+                        $("#produtosModal form").submit();
                     }
                     if (data == "aviso") s_confirm("Prosseguir apagará atribuições.<br>Deseja continuar?", fn);
                     else fn();
@@ -128,31 +127,28 @@
         }
 
         function chamar_modal(id) {
-            let titulo = id ? "Editando" : "Cadastrando";
-            titulo += " produto";
-            document.getElementById("produtosModalLabel").innerHTML = titulo;
-            let el_img = document.querySelector("#produtosModal img");
+            $("#produtosModalLabel").html((id ? "Editando" : "Cadastrando") + " produto");
             if (id) {
                 $.get(URL + "/produtos/mostrar/" + id, function(data) {
                     if (typeof data == "string") data = $.parseJSON(data);
                     ["cod_externo", "descr", "preco", "ca", "validade", "categoria", "id_categoria", "referencia", "tamanho", "detalhes", "validade_ca_fmt"].forEach((_id) => {
-                        document.getElementById(_id.replace("_fmt", "")).value = data[_id];
+                        $("#" + _id.replace("_fmt", "")).val(data[_id]);
                     });
-                    document.getElementById("cod_externo").disabled = true;
-                    document.getElementById("consumo-chk").checked = parseInt(data.e_consumo) == 1;
+                    $("#cod_externo").attr("disabled", true);
+                    $("#consumo-chk").attr("checked", parseInt(data.e_consumo) == 1);
                     ant_consumo = parseInt(data.e_consumo) == 1;
                     modal("produtosModal", id, function() {
-                        el_img.src = data.foto;
-                        el_img.parentElement.classList.remove("d-none");
-                        if (!data.foto) el_img.parentElement.classList.add("d-none");
+                        $("#produtosModal img").attr("src", data.foto);
+                        $($("#produtosModal img").parent()).removeClass("d-none");
+                        if (!data.foto) $($("#produtosModal img").parent()).addClass("d-none");
                     });
                 });
             } else {
                 modal("produtosModal", id, function() {
-                    el_img.parentElement.classList.add("d-none");
-                    document.getElementById("cod_externo").disabled = false;
-                    document.getElementById("validade_ca").value = hoje();
-                    document.getElementById("consumo-chk").checked = false;
+                    $($("#produtosModal img").parent()).addClass("d-none");
+                    $("#cod_externo").attr("disabled", false);
+                    $("#validade_ca").val(hoje());
+                    $("#consumo-chk").attr("checked", false);
                     ant_consumo = false;
                 });
             }
@@ -160,7 +156,7 @@
 
         function atualiza_cod_externo(el) {
             contar_char(el, 8);
-            document.getElementById("cod_externo_real").value = document.getElementById("cod_externo").value;
+            $("#cod_externo_real").val($("#cod_externo").val());
         }
     </script>
 

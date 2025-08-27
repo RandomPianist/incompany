@@ -66,7 +66,7 @@
                         <div class = "row">
                             <div class = "col-4">
                                 <label for = "rel-pessoa-tipo" class = "custom-label-form">Tipo de colaborador:</label>
-                                <select class = "form-control" id = "rel-pessoa-tipo" name = "tipo_colab" onchange = "relatorio.atualizarTabela(this.value)">
+                                <select class = "form-control" id = "rel-pessoa-tipo" name = "tipo_colab" onchange = "relatorio.atualizarTabela($(this).val())">
                                     <option value = "todos">Todos</option>
                                     <option value = "ativos">Ativos</option>
                                     <option value = "inativos">Inativos</option>

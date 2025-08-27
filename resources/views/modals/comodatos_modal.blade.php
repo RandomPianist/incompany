@@ -60,11 +60,11 @@
 <script type = "text/javascript" language = "JavaScript">
     function comodatar(id) {
         $.get(URL + "/valores/{{ $alias }}/mostrar/" + id, function(descr) {
-            document.getElementById("comodatosModalLabel").innerHTML = "Locando " + descr;
-            Array.from(document.getElementsByClassName("id_maquina")).forEach((el) => {
-                el.value = id;
+            $("#comodatosModalLabel").html("Locando " + descr);
+            $(".id_maquina").each(function() {
+                $(this).val(id);
             });
-            document.getElementById("comodato-inicio").value = hoje();
+            $("#comodato-inicio").val(hoje());
             modal2("comodatosModal", ["comodato-fim", "comodato-empresa", "comodato-id_empresa"]);
         });
     }
@@ -92,26 +92,23 @@
     function validar_comodato() {
         limpar_invalido();
         let erro = verifica_vazios(["comodato-empresa", "comodato-inicio", "comodato-fim"]).erro;
-        let el_inicio = document.getElementById("comodato-inicio");
-        let el_fim = document.getElementById("comodato-fim");
-        let el_empresa = document.getElementById("comodato-empresa");
-        if (!erro) erro = validar_datas(el_inicio, el_fim, true);
+        if (!erro) erro = validar_datas($("#comodato-inicio"), $("#comodato-fim"), true);
         $.get(URL + "/maquinas/comodato/consultar/", {
-            inicio : el_inicio.value,
-            fim : el_fim.value,
-            empresa : el_empresa.value,
-            id_empresa : document.getElementById("comodato-id_empresa").value,
-            id_maquina : document.getElementsByClassName("id_maquina")[0].value
+            inicio : $("#comodato-inicio").val(),
+            fim : $("#comodato-fim").val(),
+            empresa : $("#comodato-empresa").val(),
+            id_empresa : $("#comodato-id_empresa").val(),
+            id_maquina : $($(".id_maquina")[0]).val()
         }, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
             if (!erro && data.texto) {
                 if (data.invalida_inicio !== undefined) {
-                    if (data.invalida_inicio == "S") el_inicio.classList.add("invalido");
-                    if (data.invalida_fim == "S") el_fim.classList.add("invalido");
-                } else el_empresa.classList.add("invalido");
+                    if (data.invalida_inicio == "S") $("#comodato-inicio").addClass("invalido");
+                    if (data.invalida_fim == "S") $("#comodato-fim").addClass("invalido");
+                } else $("#comodato-empresa").addClass("invalido");
                 erro = data.texto;
             }
-            if (!erro) document.querySelector("#comodatosModal form").submit();
+            if (!erro) $("#comodatosModal form").submit();
             else s_alert(erro);
         });
     }

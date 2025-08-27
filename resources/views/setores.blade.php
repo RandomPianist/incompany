@@ -46,7 +46,7 @@
 
         function listar(coluna) {
             $.get(URL + "/setores/listar", {
-                filtro : document.getElementById("busca").value
+                filtro : $("#busca").val()
             }, function(data) {
                 let resultado = "";
                 while (typeof data == "string") data = $.parseJSON(data);
@@ -69,7 +69,7 @@
                             "</td>" +
                         "</tr>";
                     });
-                    document.getElementById("table-dados").innerHTML = resultado;
+                    $("#table-dados").html(resultado);
                     ordenar(coluna);
                 } else mostrarImagemErro();
             });
@@ -78,68 +78,63 @@
         function validar() {
             limpar_invalido();
 
-            const _descr = document.getElementById("descr").value.toUpperCase().trim();
-            const _empresa = document.getElementById("setor-empresa").value;
+            const _descr = $("#descr").toUpperCase().trim();
+            const _empresa = $("#setor-empresa").val();
 
             let lista = ["descr"];
-            Array.from(document.getElementsByClassName("validar")).forEach((el) => {
-                lista.push(el.id);
-            })
+            $(".validar").each(function() {
+                lista.push($(this).attr("id"));
+            });
             erro = verifica_vazios(lista).erro;
 
             if (
-                parseInt(document.getElementById("id").value) &&
+                parseInt($("#id").val()) &&
                 !erro &&
-                document.getElementById("cria_usuario-chk").checked == ant_usr &&
+                $("#cria_usuario-chk").attr("checked") == ant_usr &&
                 _descr == anteriores.descr.toUpperCase().trim() &&
                 _empresa.toUpperCase().trim() == anteriores["setor-empresa"].toUpperCase().trim()
             ) erro = "Não há alterações para salvar";
 
             $.get(URL + "/setores/consultar", {
                 descr : _descr,
-                id_empresa : document.getElementById("setor-id_empresa").value,
+                id_empresa : $("#setor-id_empresa").val(),
                 empresa : _empresa
             }, function(data) {
                 if (typeof data == "string") data = $.parseJSON(data);
                 if (data.msg && !erro) {
                     erro = data.msg;
-                    document.getElementById(data.el).classList.add("invalido");
+                    $("#" + data.el).addClass("invalido");
                 }
-                if (!erro) document.querySelector("#setoresModal form").submit();
+                if (!erro) $("#setoresModal form").submit();
                 else s_alert(erro);
             });
         }
 
         function chamar_modal(id) {
-            let titulo = id ? "Editando" : "Cadastrando";
-            titulo += " centro de custo";
-            document.getElementById("setoresModalLabel").innerHTML = titulo;
-            let el_cria_usuario = document.getElementById("cria_usuario");
-            let el_cria_usuario_chk = document.getElementById("cria_usuario-chk");
+            $("#setoresModalLabel").html((id ? "Editando" : "Cadastrando") + " centro de custo");
             if (id) {
                 $.get(URL + "/setores/mostrar/" + id, function(data) {
                     if (typeof data == "string") data = $.parseJSON(data);
-                    document.getElementById("descr").value = data.descr;
-                    document.getElementById("setor-id_empresa").value = data.id_empresa;
-                    document.getElementById("setor-empresa").value = data.empresa;
-                    el_cria_usuario.value = parseInt(data.cria_usuario) ? "S" : "N";
-                    el_cria_usuario_chk.checked = el_cria_usuario.value == "S";
-                    ant_usr = el_cria_usuario_chk.checked;
+                    $("#descr").val(data.descr);
+                    $("#setor-id_empresa").val(data.id_empresa);
+                    $("#setor-empresa").val(data.empresa);
+                    $("#cria_usuario").val(parseInt(data.cria_usuario) ? "S" : "N");
+                    $("#cria_usuario-chk").attr("checked", $("#cria_usuario").val() == "S");
+                    ant_usr = $("#cria_usuario-chk").attr("checked");
                     modal("setoresModal", id);
                 });
             } else {
                 modal("setoresModal", id, function() {
-                    el_cria_usuario.value = "N";
-                    el_cria_usuario_chk.checked = false;
-                    el_setor_padrao_chk.checked = false;
+                    $("#cria_usuario").val("N");
+                    $("#cria_usuario-chk").attr("checked", false);
                 });
             }
         }
 
         function muda_cria_usuario(el) {
             const escrever = function(container, texto) {
-                tudo.innerHTML = resultado;
-                document.querySelector("#setoresModal .linha-usuario:last-child").classList.add("mb-4");
+                $(container).html(texto);
+                $("#setoresModal .linha-usuario:last-child").addClass("mb-4");
                 $(".form-control").each(function() {
                     $(this).keydown(function() {
                         $(this).removeClass("invalido");
@@ -147,14 +142,13 @@
                 });
             }
 
-            $(el).prev().val(el.checked ? "S" : "N");
-            const id = parseInt(document.getElementById("id").value);
-            let tudo = document.querySelector("#setoresModal .container");
-            tudo.innerHTML = "";
+            $(el).prev().val($(el).attr("checked") ? "S" : "N");
+            const id = parseInt($("#id").val());
+            $("#setoresModal .container").html("");
             if (id) {
                 $.get(URL + "/setores/permissao", function(permissao) {
                     if (parseInt(permissao)) {
-                        if (el.checked) {
+                        if ($(el).attr("checked")) {
                             $.get(URL + "/setores/pessoas/" + id, function(data) {
                                 if (typeof data == "string") data = $.parseJSON(data);
                                 let resultado = "";
@@ -169,7 +163,7 @@
                                         "</div>" +
                                     "</div>";
                                 }
-                                escrever(tudo, resultado);
+                                escrever($("#setoresModal .container"), resultado);
                             });
                         } else {
                             $.get(URL + "/setores/usuarios/" + id, function(data) {
@@ -184,17 +178,17 @@
                                             "</div>" +
                                         "</div>";
                                     }
-                                    escrever(tudo, resultado);
+                                    escrever($("#setoresModal .container"), resultado);
                                 } else {
                                     s_alert("Alterar essa opção apagaria seu usuário");
-                                    el.checked = true;
+                                    $(el).attr("checked", true);
                                     $(el).prev().val("S");
                                 }
                             });
                         }
                     } else {
                         setTimeout(function() {
-                            el.checked = !el.checked;
+                            $(el).attr("checked", !$(el).attr("checked"));
                             s_alert("Você não tem permissão para executar essa ação");
                         }, 1);
                     }

@@ -13,7 +13,6 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/app.js') }}" defer></script>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/sweetalert2.js') }}"></script>
-        
     </head>
     <body class = "body-login row">
         <div class = "secao-esquerda d-flex flex-column justify-content-center align-items-center bg-primary text-white col-4">
@@ -32,7 +31,7 @@
             </div>
         </div>
         <div class = "col-8 secao-direita d-flex justify-content-center align-items-center">
-                @yield("content")    
+            @yield("content")    
         </div>
     </body>
 </html>

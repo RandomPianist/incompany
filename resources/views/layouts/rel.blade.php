@@ -36,34 +36,36 @@
         <script type = "text/javascript" language = "JavaScript">
             const URL = "{{ config('app.root_url') }}";
 
-            window.onload = function() {
-                Array.from(document.getElementsByClassName("traduzir")).forEach((el) => {
-                    el.innerHTML = el.innerHTML
-                        .replace("Monday", "Segunda-feira")
-                        .replace("Tuesday", "Terça-feira")
-                        .replace("Wednesday", "Quarta-feira")
-                        .replace("Thursday", "Quinta-feira")
-                        .replace("Friday", "Sexta-feira")
-                        .replace("Saturday", "Sábado")
-                        .replace("Sunday", "Domingo")
-                        .replace("January", "janeiro")
-                        .replace("February", "fevereiro")
-                        .replace("March", "março")
-                        .replace("April", "abril")
-                        .replace("May", "maio")
-                        .replace("June", "junho")
-                        .replace("July", "julho")
-                        .replace("August", "agosto")
-                        .replace("September", "setembro")
-                        .replace("October", "outubro")
-                        .replace("November", "novembro")
-                        .replace("December", "dezembro");
+            $(document).ready(function() {
+                $(".traduzir").each(function() {
+                    $(this).html(
+                        $(this).html()
+                            .replace("Monday", "Segunda-feira")
+                            .replace("Tuesday", "Terça-feira")
+                            .replace("Wednesday", "Quarta-feira")
+                            .replace("Thursday", "Quinta-feira")
+                            .replace("Friday", "Sexta-feira")
+                            .replace("Saturday", "Sábado")
+                            .replace("Sunday", "Domingo")
+                            .replace("January", "janeiro")
+                            .replace("February", "fevereiro")
+                            .replace("March", "março")
+                            .replace("April", "abril")
+                            .replace("May", "maio")
+                            .replace("June", "junho")
+                            .replace("July", "julho")
+                            .replace("August", "agosto")
+                            .replace("September", "setembro")
+                            .replace("October", "outubro")
+                            .replace("November", "novembro")
+                            .replace("December", "dezembro");
+                    );      
+                    if (location.href.indexOf("solicitacoes") > -1) {
+                        $("#btn-print").addClass("d-none");
+                        carregar();
+                    } else $("#menu").addClass("d-none");
                 });
-                if (location.href.indexOf("solicitacoes") > -1) {
-                    document.getElementById("btn-print").classList.add("d-none");
-                    carregar();
-                } else document.getElementById("menu").classList.add("d-none");
-            }
+            });
         </script>
     </body>
 </html>

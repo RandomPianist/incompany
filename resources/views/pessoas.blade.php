@@ -48,8 +48,8 @@
     <script type = "text/javascript" language = "JavaScript">
         function listar(coluna) {
             $.get(URL + "/colaboradores/listar/", {
-                filtro : document.getElementById("busca").value,
-                tipo : document.getElementById("titulo-tela").innerHTML.charAt(0)
+                filtro : $("#busca").val(),
+                tipo : $("#titulo-tela").html().charAt(0)
             }, function(data) {
                 const img_biometria = '{{ asset("img/biometria-sim.png") }}';
                 let resultado = "";
@@ -79,20 +79,18 @@
                             "</td>" +
                         "</tr>";
                     });
-                    document.getElementById("table-dados").innerHTML = resultado;
+                    $("#table-dados").html(resultado);
                     ordenar(coluna);
                 } else mostrarImagemErro();
             });
         }
 
         function proximas_retiradas(id_pessoa) {
-            let tudo = document.getElementById("table-ret").classList;
-            let container = document.getElementById("table-ret-dados");
-            container.innerHTML = "";
-            tudo.add("d-none");
+            $("#table-ret-dados").html("");
+            $("#table-ret").addClass("d-none");
             $.get(URL + "/colaboradores/mostrar/" + id_pessoa, function(resp) {
                 if (typeof resp == "string") resp = $.parseJSON(resp);
-                document.getElementById("proximasRetiradasModalLabel").innerHTML = "Próximas retiradas (" + resp.nome + ")";
+                $("proximasRetiradasModalLabel").html("Próximas retiradas (" + resp.nome + ")");
                 modal("proximasRetiradasModal", 0, function() {
                     $.get(URL + "/retiradas/proximas/" + id_pessoa, function(data) {
                         if (typeof data == "string") data = $.parseJSON(data);
@@ -126,15 +124,15 @@
                                 "<td class = 'align-middle' style = 'background:" + (dias < 0 ? "#ff0000" + op_vermelho : "#00ff00" + op_verde) + "'>" + Math.abs(dias) + "</td>" +
                             "</tr>";
                         });
-                        container.innerHTML = resultado;
-                        tudo.remove("d-none");
-                        Array.from(document.getElementsByClassName("tamanho")).forEach((el) => {
-                            if (!tamanho) el.classList.add("d-none");
-                            else el.classList.remove("d-none");
+                        $("#table-ret-dados").html(resultado);
+                        $("#table-ret").removeClass("d-none");
+                        $(".tamanho").each(function() {
+                            if (!tamanho) $(this).addClass("d-none");
+                            else $(this).removeClass("d-none");
                         });
-                        Array.from(document.getElementsByClassName("referencia")).forEach((el) => {
-                            if (!referencia) el.classList.add("d-none");
-                            else el.classList.remove("d-none");
+                        $(".referencia").each(function() {
+                            if (!referencia) $(el).addClass("d-none");
+                            else $(el).removeClass("d-none");
                         });
                     });
                 });

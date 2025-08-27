@@ -48,7 +48,7 @@
     <script type = "text/javascript" language = "JavaScript">
         function listar(coluna) {
             $.get(URL + "/valores/{{ $alias }}/listar", {
-                filtro : document.getElementById("busca").value
+                filtro : $("#busca").val()
             }, function(data) {
                 let resultado = "";
                 if (typeof data == "string") data = $.parseJSON(data);
@@ -79,7 +79,7 @@
                         if (linha.alias == "maquinas" && EMPRESA && linha.tem_cod == "S") resultado += "<i class = 'my-icon far fa-cart-arrow-down' title = 'Solicitar compra' onclick = 'relatorio = new RelatorioItens(true, " + linha.id + ")'></i>";
                         resultado += "</td></tr>";
                     });
-                    document.getElementById("table-dados").innerHTML = resultado;
+                    $("#table-dados").html(resultado);
                     ordenar(coluna);
                 } else mostrarImagemErro();
             });
@@ -101,27 +101,24 @@
         function validar() {
             limpar_invalido();
             let erro = "";
-            let el = document.getElementById("descr");
-            if (!el.value) erro = "Preencha o campo";
-            if (!erro && el.value.toUpperCase().trim() == anteriores.descr.toUpperCase().trim()) erro = "Não há alterações para salvar";
+            if (!$("#descr").val()) erro = "Preencha o campo";
+            if (!erro && $("#descr").val().toUpperCase().trim() == anteriores.descr.toUpperCase().trim()) erro = "Não há alterações para salvar";
             $.get(URL + "/valores/{{ $alias }}/consultar/", {
-                descr : el.value.toUpperCase().trim()
+                descr : $("#descr").val().toUpperCase().trim()
             }, function(data) {
-                if (!erro && parseInt(data) && !parseInt(document.getElementById("id").value)) erro = "Já existe um registro com essa descrição";
+                if (!erro && parseInt(data) && !parseInt($("#id").val())) erro = "Já existe um registro com essa descrição";
                 if (erro) {
-                    el.classList.add("invalido");
+                    $("#descr").addClass("invalido");
                     s_alert(erro);
-                } else document.querySelector("#valoresModal form").submit();
+                } else $("#valoresModal form").submit();
             });
         }
 
         function chamar_modal(id) {
-            let titulo = id ? "Editando" : "Cadastrando";
-            titulo += " {{ $titulo }}".toLowerCase().substring(0, "{{ $titulo }}".length);
-            document.getElementById("valoresModalLabel").innerHTML = titulo;
+            $("#valoresModalLabel").html((id ? "Editando" : "Cadastrando") + " {{ $titulo }}".toLowerCase().substring(0, "{{ $titulo }}".length));
             if (id) {
                 $.get(URL + "/valores/{{ $alias }}/mostrar/" + id, function(descr) {
-                    document.getElementById("descr").value = descr;
+                    $("#descr").val(descr);
                     modal("valoresModal", id); 
                 });
             } else modal("valoresModal", id); 

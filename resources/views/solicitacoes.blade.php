@@ -120,10 +120,10 @@
 
     <script type = "text/javascript" language = "JavaScript">
         function recalcular() {
-            document.querySelectorAll("tbody .report-row").forEach((linha) => {
-                let qtd = linha.querySelector(".sugerido").innerHTML;
-                linha.querySelector(".solicitado").innerHTML = qtd;
-                linha.querySelector(".qtd").value = qtd;
+            $("tbody .report-row").each(function() {
+                let qtd = $(this).find(".sugerido").html();
+                $($(this).find(".solicitado")[0]).html(qtd);
+                $($(this).find(".qtd")[0]).val(qtd);
                 let estilo = linha.querySelector(".fa-minus").style;
                 if (!parseInt(qtd)) estilo.visibility = "hidden";
                 else estilo.removeProperty("visibility");
@@ -131,21 +131,21 @@
             
             $.post(URL + "/previas/excluir", {
                 _token : $("meta[name='csrf-token']").attr("content"),
-                id_comodato : document.getElementById("id_comodato").value
+                id_comodato : $("#id_comodato").val()
             });
         }
 
         function calcular(el, val) {
-            val += parseInt(el.parentElement.querySelector(".qtd").value);
-            let estilo = el.parentElement.querySelector(".fa-minus").style;
+            val += parseInt($($($(el).parent()).find(".qtd")[0]).val());
+            let estilo = $($(el).parent()).(".fa-minus").style;
             if (!val) estilo.visibility = "hidden";
             else estilo.removeProperty("visibility");
-            el.parentElement.querySelector(".qtd").value = val;
-            el.parentElement.querySelector(".solicitado").innerHTML = val;
+            $($($(el).parent()).find(".qtd")[0]).val(val);
+            $($($(el).parent()).find(".solicitado")[0]).html(val);
             $.post(URL + "/previas/salvar", {
                 _token : $("meta[name='csrf-token']").attr("content"),
-                id_comodato : document.getElementById("id_comodato").value,
-                id_produto : el.parentElement.querySelector(".produto").value,
+                id_comodato : $("#id_comodato").val(),
+                id_produto : $($($(el).parent()).find(".produto")[0]).val(),
                 qtd : val
             });
         }
@@ -154,7 +154,7 @@
             $.get(URL + "/solicitacoes/mostrar", {
                 id_produto : _id_produto,
                 tipo : _tipo,
-                id_maquina : document.getElementById("id_maquina").value,
+                id_maquina : $("#id_maquina").val(),
                 inicio : "{{ request('inicio') }}",
                 fim : "{{ request('fim') }}"
             }, function(data) {
@@ -218,18 +218,18 @@
                     confirmButtonColor : "rgb(31, 41, 55)"
                 });
                 if (!autor) {
-                    Array.from(document.getElementsByClassName("autor")).forEach((el) => {
-                        el.style.display = "none";
+                    $(".autor").each(function() {
+                        $(this).css("display", "none");
                     });
                 }
                 if (!supervisor) {
-                    Array.from(document.getElementsByClassName("supervisor")).forEach((el) => {
-                        el.style.display = "none";
+                    $(".supervisor").each(function() {
+                        $(this).css("display", "none");
                     });
                 }
                 if (!origem) {
-                    Array.from(document.getElementsByClassName("origem")).forEach((el) => {
-                        el.style.display = "none";
+                    $(".origem").each(function() {
+                        $(this).css("display", "none");
                     });
                 }
             })
@@ -237,8 +237,8 @@
 
         function solicitar() {
             let total = 0;
-            Array.from(document.getElementsByClassName("qtd")).forEach((el) => {
-                total += parseInt(el.value);
+            $(".qtd").each(function() {
+                total += parseInt($(this).val());
             });
             if (!total) {
                 Swal.fire({
@@ -249,7 +249,7 @@
                 });
                 return;
             }
-            $.get(URL + "/solicitacoes/consultar/" + document.getElementById("id_comodato").value, function(data) {
+            $.get(URL + "/solicitacoes/consultar/" + $("#id_comodato").val(), function(data) {
                 if (typeof data == "string") data = $.parseJSON(data);
                 if (!parseInt(data.continuar)) {
                     if (parseInt(data.sou_autor) && data.status == "A") {
@@ -267,7 +267,7 @@
                                     _token : $("meta[name='csrf-token']").attr("content"),
                                     id : data.id
                                 }, function() {
-                                    document.querySelector("form").submit();
+                                    $($("form")[0]).submit();
                                 })
                             }
                         });
@@ -283,18 +283,17 @@
                             confirmButtonColor : "rgb(31, 41, 55)"
                         });
                     }
-                } else document.querySelector("form").submit();
+                } else $($("form")[0]).submit();
             })
         }
         
         async function carregar() {
-            let data = await $.get(URL + "/solicitacoes/meus-comodatos?id_maquina=" + document.getElementById("id_maquina").value);
+            let data = await $.get(URL + "/solicitacoes/meus-comodatos?id_maquina=" + $("#id_maquina").val());
             if (typeof data == "string") data = $.parseJSON(data);
-            document.getElementById("id_comodato").value = data[0];
-            let lista = Array.from(document.querySelectorAll("tbody .report-row"));
+            $("#id_comodato").val(data[0]);
             let _produtos = new Array();
-            lista.forEach((linha) => {
-                _produtos.push(linha.querySelector(".produto").value);
+            $("tbody .report-row").each(function() {
+                _produtos.push($($(this).find(".produto")[0]).val());
             });
             let resp = await $.get(URL + "/previas/preencher", {
                 id_comodato : data[0],
@@ -302,15 +301,14 @@
             });
             resp = $.parseJSON(resp);
             for (let i = 0; i < resp.length; i++) {
-                let qtd = parseInt(resp[i].qtd);
-                let pai = document.getElementById("produto-" + resp[i].id_produto);
-                pai.querySelector(".qtd").value = qtd;
-                pai.querySelector(".solicitado").innerHTML = qtd;
+                let qtd = parseInt(resp[i].qtd);                
+                $($("#produto-" + resp[i].produto).find(".qtd")[0]).val(qtd);
+                $($("#produto-" + resp[i].produto).find(".solicitado")[0]).html(qtd);
                 let estilo = pai.querySelector(".fa-minus").style;
                 if (!qtd) estilo.visibility = "hidden";
                 else estilo.removeProperty("visibility");
             }
-            document.querySelector("form").classList.remove("d-none");
+            $($("form")[0]).removeClass("d-none");
         }
     </script>
 @endsection
