@@ -15,7 +15,7 @@
                         <div class = "row">
                             <div class = "col-6">
                                 <label for = "rel-inicio4" class = "custom-label-form">Início:</label>
-                                <input id = "rel-inicio4" name = "inicio" class = "form-control data" autocomplete = "off" type = "text" />
+                                <input id = "rel-inicio4" name = "inicio" class = "form-control data" autocomplete = "off" type = "text" data-prox = "rel-fim4" />
                             </div>
                             <div class = "col-6">
                                 <label for = "rel-fim4" class = "custom-label-form">Fim:</label>

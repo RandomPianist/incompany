@@ -15,7 +15,7 @@
                         <div class = "row d-none" id = "rel-modo-resumo">
                             <div class = "col-6">
                                 <label for = "rel-tipo2" class = "custom-label-form">Tipo:</label>
-                                <select id = "rel-tipo2" name = "tipo" class = "form-control" onchange = "document.getElementById('rel-dias').disabled = this.value == 'M'">
+                                <select id = "rel-tipo2" name = "tipo" class = "form-control" onchange = "relatorio.mudaTipo()">
                                     <option value = "G">Por giro de estoque</option>
                                     <option value = "M">Por quantidade mínima</option>
                                 </select>
@@ -64,7 +64,7 @@
                         <div class = "row">
                             <div class = "col-6">
                                 <label for = "rel-inicio1" class = "custom-label-form">Início:</label>
-                                <input id = "rel-inicio1" name = "inicio" class = "form-control data" autocomplete = "off" type = "text" />
+                                <input id = "rel-inicio1" name = "inicio" class = "form-control data" autocomplete = "off" type = "text" data-prox = "rel-fim1" />
                             </div>
                             <div class = "col-6">
                                 <label for = "rel-fim1" class = "custom-label-form">Fim:</label>

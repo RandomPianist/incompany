@@ -42,7 +42,7 @@
                             </div>
                             <div class = "col-4">
                                 <label for = "validade_ca" class = "custom-label-form">Validade do CA: *</label>
-                                <input id = "validade_ca" name = "validade_ca" class = "form-control data" autocomplete = "off" type = "text" />
+                                <input id = "validade_ca" name = "validade_ca" class = "form-control data" autocomplete = "off" type = "text" data-prox = "referencia" />
                             </div>
                             <div class = "col-2">
                                 <label for = "referencia" class = "custom-label-form">Referência:</label>

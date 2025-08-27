@@ -49,7 +49,7 @@
                         <div class = "row">
                             <div class = "col-11 pr-0">
                                 <label for = "pessoa-empresa" class = "custom-label-form">Empresa: *</label>
-                                <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control"></select>
+                                <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control" onchange = "$('#cpf').focus()"></select>
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
                                 <a href = "{{ config('app.root_url') }}/empresas" title = "Cadastro de empresas" target = "_blank">

@@ -131,6 +131,7 @@
                 var obs = "AJUSTE";
         }
         document.getElementById("obs-" + seq).value = obs;
+        document.getElementById("qtd-" + seq).focus();
     }
 
     function atualizaPreco(seq) {

@@ -40,7 +40,7 @@
                         <div class = "row">
                             <div class = "col-6">
                                 <label for = "comodato-inicio" class = "custom-label-form">Início: *</label>
-                                <input id = "comodato-inicio" name = "inicio" class = "form-control data" autocomplete = "off" type = "text" />
+                                <input id = "comodato-inicio" name = "inicio" class = "form-control data" autocomplete = "off" type = "text" data-prox = "comodato-fim" />
                             </div>
                             <div class = "col-6">
                                 <label for = "comodato-fim" class = "custom-label-form">Fim: *</label>

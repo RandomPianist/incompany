@@ -30,7 +30,7 @@
                             </div>
                             <div class = "col-6">
                                 <label for = "rel-consumo1" class = "custom-label-form">Tipo de produto:</label>
-                                <select class = "form-control" id = "rel-consumo1" name = "consumo">
+                                <select class = "form-control" id = "rel-consumo1" name = "consumo" onchange = "$('#rel-inicio2').focus()">
                                     <option value = "todos">Todos</option>
                                     <option value = "consumo">Consumo</option>
                                     <option value = "epi">EPI</option>
@@ -40,7 +40,7 @@
                         <div class = "row">
                             <div class = "col-6">
                                 <label for = "rel-inicio2" class = "custom-label-form">Início:</label>
-                                <input id = "rel-inicio2" name = "inicio" class = "form-control data" autocomplete = "off" type = "text" />
+                                <input id = "rel-inicio2" name = "inicio" class = "form-control data" autocomplete = "off" type = "text" data-prox = "rel-fim2" />
                             </div>
                             <div class = "col-6">
                                 <label for = "rel-fim2" class = "custom-label-form">Fim:</label>
