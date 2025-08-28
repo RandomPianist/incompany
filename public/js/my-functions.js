@@ -1051,7 +1051,7 @@ function trocarEmpresaModal() {
                 resultado += "<option value = '" + filial.id + "'>- " + filial.nome_fantasia + "</option>";
             });
         })
-        $("empresa-select").html(resultado);
+        $("#empresa-select").html(resultado);
         $("#empresa-select option[value='" + EMPRESA + "']").attr("selected", true);
         $("#trocarEmpresaModal").modal();
     });
