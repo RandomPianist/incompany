@@ -326,6 +326,7 @@ class DashboardController extends Controller {
                     "validade",
                     "qtd",
                     "nome_produto",
+                    "produto_ou_referencia_chave",
                     DB::raw("
                         CASE
                             WHEN produto_ou_referencia_chave = 'P' THEN descr
