@@ -514,7 +514,7 @@
                 data.forEach((linha) => {
                     resultado +=
                         "<tr>" +
-                            "<td width = '60%'>" + linha.produto + "</td>" +
+                            "<td width = '60%'>" + linha.nome_produto + "</td>" +
                             "<td width = '20%' class = 'text-right'>" + linha.qtd + "</td>" +
                             "<td width = '20%' class = 'text-right'>" + linha.validade + "</td>" +
                         "</tr>";

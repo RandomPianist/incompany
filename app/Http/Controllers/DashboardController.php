@@ -311,7 +311,13 @@ class DashboardController extends Controller {
                     "id_produto AS id",
                     "validade",
                     "qtd",
-                    "nome_produto AS produto"
+                    "nome_produto AS produto",
+                    DB::raw("
+                        CASE
+                            WHEN produto_ou_referencia_chave = 'P' THEN descr
+                            ELSE CONCAT('REF: ', referencia)
+                        END AS nome_produto
+                    ")
                 )
                 ->where("id_pessoa", $id_pessoa)
                 ->where("esta_pendente", 1)
@@ -319,7 +325,13 @@ class DashboardController extends Controller {
                     "id_produto",
                     "validade",
                     "qtd",
-                    "nome_produto"
+                    "nome_produto",
+                    DB::raw("
+                        CASE
+                            WHEN produto_ou_referencia_chave = 'P' THEN descr
+                            ELSE referencia
+                        END
+                    ")
                 )
                 ->orderby("qtd", "DESC")
                 ->get()
