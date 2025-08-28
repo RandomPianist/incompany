@@ -235,12 +235,7 @@ class DashboardController extends Controller {
                     ->whereRaw("retiradas.data <= '".$fim."'")
                     ->groupby(
                         "produtos.id",
-                        DB::raw("
-                            CASE
-                                WHEN atribuicoes.produto_ou_referencia_chave = 'P' THEN produtos.descr
-                                ELSE produtos.referencia
-                            END
-                        ")
+                        "produtos.descr"
                     )
                     ->get()
             )->sortByDesc("qtd")->values()->all()
