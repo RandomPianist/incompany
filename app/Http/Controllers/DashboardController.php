@@ -225,12 +225,7 @@ class DashboardController extends Controller {
                 DB::table("retiradas")
                     ->select(
                         "produtos.id",
-                        DB::raw("
-                            CASE
-                                WHEN atribuicoes.produto_ou_referencia_chave = 'P' THEN produtos.descr
-                                ELSE produtos.referencia
-                            END AS produto
-                        "),
+                        "produtos.descr AS produto",
                         DB::raw("ROUND(SUM(retiradas.qtd)) AS qtd")
                     )
                     ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
@@ -264,12 +259,7 @@ class DashboardController extends Controller {
                     ->select(
                         "retiradas.id AS id_retirada",
                         "produtos.id",
-                        DB::raw("
-                            CASE
-                                WHEN atribuicoes.produto_ou_referencia_chave = 'P' THEN produtos.descr
-                                ELSE produtos.referencia
-                            END AS produto
-                        "),
+                        "produtos.descr AS produto",
                         DB::raw("ROUND(retiradas.qtd) AS qtd"),
                         DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data")
                     )
