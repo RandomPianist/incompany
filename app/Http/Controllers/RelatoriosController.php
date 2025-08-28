@@ -252,7 +252,7 @@ class RelatoriosController extends Controller {
                     "produtos.id AS id_produto",
                     "produtos.descr AS produto",
                     DB::raw("IFNULL(tot.qtd, 0) AS saldo"),
-                    "estoque.preco",
+                    "mp.preco",
 
                     // DETALHES
                     DB::raw("CONCAT(DATE_FORMAT(log.data, '%d/%m/%Y'), CASE WHEN log.hms IS NOT NULL THEN CONCAT(' ', log.hms) ELSE '' END) AS data"),
