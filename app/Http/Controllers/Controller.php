@@ -266,6 +266,29 @@ class Controller extends BaseController {
         return $linha;
     }
 
+    protected function atualizar_aa_main($consulta) {
+        $lista = $consulta->pluck("id")->toArray();
+        if (sizeof($lista)) {
+            $where = "id_pessoa IN (".join(",", $lista).")";
+            DB::statement("DELETE FROM atribuicoes_associadas WHERE ".$where);
+            DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE ".$where);
+        }
+    }
+
+    protected function atb_pessoa() {
+        return DB::table("atribuicoes")
+                    ->selectRaw("DISTINCTROW pessoas.id")
+                    ->join("pessoas", function($join) {
+                        $join->on(function($sql) {
+                            $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id")
+                                ->where("atribuicoes.pessoa_ou_setor_chave", "P");
+                        })->orOn(function($sql) {
+                            $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id_setor")
+                                ->where("atribuicoes.pessoa_ou_setor_chave", "S");
+                        });
+                    });
+    }
+
     protected function supervisor_consultar(Request $request) {
         $consulta = DB::table("pessoas")
                         ->where("cpf", $request->cpf)
@@ -339,6 +362,13 @@ class Controller extends BaseController {
                 WHERE ".$where
             );
             $this->log_inserir_lote($novo ? "E" : "D", "atribuicoes", $where, $api ? "ERP" : "WEB", $nome);
+            if (!$novo) {
+                $this->atualizar_aa_main(
+                    $this->atb_pessoa()
+                        ->where("atribuicoes.produto_ou_referencia_chave", "R")
+                        ->where("atribuicoes.produto_ou_referencia_valor", $antigo)
+                );
+            }
         }
     }
 

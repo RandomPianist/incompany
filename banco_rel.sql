@@ -590,9 +590,11 @@ CREATE VIEW vatribuicoes AS (
         f.id_atribuicao
 );
 
+CREATE TABLE atribuicoes_associadas AS SELECT * FROM vatribuicoes;
+
 CREATE VIEW vpendentes AS (
     SELECT
-        vatribuicoes.id_pessoa,
+        aa.id_pessoa,
 
         atribuicoes.validade,
         atribuicoes.id AS id_atribuicao,
@@ -633,8 +635,8 @@ CREATE VIEW vpendentes AS (
         
     FROM atribuicoes
 
-    JOIN vatribuicoes
-        ON vatribuicoes.id_atribuicao = atribuicoes.id
+    JOIN atribuicoes_associadas AS aa
+        ON aa.id_atribuicao = atribuicoes.id
         
     JOIN produtos
         ON (produtos.cod_externo = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'P')
@@ -642,24 +644,24 @@ CREATE VIEW vpendentes AS (
 
     JOIN (
         SELECT * FROM vprodutos WHERE qtd > 0
-    ) AS lim_prod ON lim_prod.id_produto = produtos.id AND lim_prod.id_pessoa = vatribuicoes.id_pessoa
+    ) AS lim_prod ON lim_prod.id_produto = produtos.id AND lim_prod.id_pessoa = aa.id_pessoa
         
     JOIN vestoque
         ON vestoque.id_mp = lim_prod.id_mp
 
     JOIN (
         SELECT
-            vatribuicoes.id_pessoa,
-            vatribuicoes.id_atribuicao,
+            aa.id_pessoa,
+            aa.id_atribuicao,
             IFNULL(SUM(retiradas.qtd), 0) AS valor
             
         FROM atribuicoes
         
-        JOIN vatribuicoes
-            ON vatribuicoes.id_atribuicao = atribuicoes.id
+        JOIN atribuicoes_associadas AS aa
+            ON aa.id_atribuicao = atribuicoes.id
             
         JOIN pessoas
-            ON pessoas.id = vatribuicoes.id_pessoa
+            ON pessoas.id = aa.id_pessoa
         
         LEFT JOIN retiradas
             ON retiradas.id_atribuicao = atribuicoes.id
@@ -670,26 +672,26 @@ CREATE VIEW vpendentes AS (
                 AND retiradas.id_supervisor IS NULL
         
         GROUP BY
-            vatribuicoes.id_pessoa,
-            vatribuicoes.id_atribuicao
-    ) AS calc_qtd ON calc_qtd.id_atribuicao = atribuicoes.id AND calc_qtd.id_pessoa = vatribuicoes.id_pessoa
+            aa.id_pessoa,
+            aa.id_atribuicao
+    ) AS calc_qtd ON calc_qtd.id_atribuicao = atribuicoes.id AND calc_qtd.id_pessoa = aa.id_pessoa
 
     JOIN (
         SELECT
-            vatribuicoes.id_pessoa,
-            vatribuicoes.id_atribuicao,
+            aa.id_pessoa,
+            aa.id_atribuicao,
             MAX(retiradas.data) AS data
             
         FROM atribuicoes
         
-        JOIN vatribuicoes
-            ON vatribuicoes.id_atribuicao = atribuicoes.id
+        JOIN atribuicoes_associadas AS aa
+            ON aa.id_atribuicao = atribuicoes.id
             
         JOIN atribuicoes AS associadas
-            ON associadas.id = vatribuicoes.id_associado
+            ON associadas.id = aa.id_associado
             
         JOIN pessoas
-            ON pessoas.id = vatribuicoes.id_pessoa
+            ON pessoas.id = aa.id_pessoa
             
         LEFT JOIN retiradas
             ON retiradas.id_atribuicao = associadas.id
@@ -698,14 +700,14 @@ CREATE VIEW vpendentes AS (
                 AND retiradas.id_supervisor IS NULL
                 
         GROUP BY
-            vatribuicoes.id_atribuicao,
-            vatribuicoes.id_pessoa
-    ) AS atbgrp ON atbgrp.id_atribuicao = atribuicoes.id AND atbgrp.id_pessoa = vatribuicoes.id_pessoa
+            aa.id_atribuicao,
+            aa.id_pessoa
+    ) AS atbgrp ON atbgrp.id_atribuicao = atribuicoes.id AND atbgrp.id_pessoa = aa.id_pessoa
 
     WHERE (atribuicoes.qtd - calc_qtd.valor) > 0
 
     GROUP BY
-        vatribuicoes.id_pessoa,
+        aa.id_pessoa,
         atribuicoes.id,
         atribuicoes.obrigatorio,
         atribuicoes.validade,

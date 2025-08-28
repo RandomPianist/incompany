@@ -173,6 +173,7 @@ class ProdutosController extends Controller {
             $where = "id IN (".join(",", $lista_atb).")";
             DB::statement("UPDATE atribuicoes SET lixeira = 1 WHERE ".$where);
             $this->log_inserir_lote("D", "atribuicoes", $where);
+            $this->atualizar_aa_main($this->atb_pessoa()->whereIn("atribuicoes.id", $lista_atb));
         }
     }
 }

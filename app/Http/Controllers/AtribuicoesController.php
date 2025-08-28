@@ -9,6 +9,14 @@ use App\Models\Atribuicoes;
 use App\Models\Pessoas;
 
 class AtribuicoesController extends Controller {
+    private function atualizar_aa(Atribuicoes $atribuicao) {
+        $this->atualizar_aa_main(
+            DB::table("pessoas")
+                ->where("lixeira", 0)
+                ->where($atribuicao->pessoa_ou_setor_chave == "S" ? "id_setor" : "id", $atribuicao->pessoa_ou_setor_valor)
+        );
+    }
+
     private function consulta_main($select) {
         return DB::table("vprodaux")
                     ->select(DB::raw($select))
@@ -62,6 +70,7 @@ class AtribuicoesController extends Controller {
         $linha->obrigatorio = $request->obrigatorio;
         $linha->id_empresa = Pessoas::find(Auth::user()->id_pessoa)->id_empresa;
         $linha->save();
+        $this->atualizar_aa($linha);
         $this->log_inserir($request->id ? "E" : "C", "atribuicoes", $linha->id);
         return 201;
     }
@@ -70,6 +79,7 @@ class AtribuicoesController extends Controller {
         $linha = Atribuicoes::find($request->id);
         $linha->lixeira = 1;
         $linha->save();
+        $this->atualizar_aa($linha);
         $this->log_inserir("D", "atribuicoes", $linha->id);
     }
 

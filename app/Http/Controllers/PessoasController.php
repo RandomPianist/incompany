@@ -73,7 +73,7 @@ class PessoasController extends Controller {
                         }
                     )
                     ->leftjoinSub(
-                        DB::table("vatribuicoes")
+                        DB::table("atribuicoes_associadas")
                             ->selectRaw("DISTINCTROW id_pessoa"),
                         "atb",
                         "atb.id_pessoa",
@@ -432,6 +432,11 @@ class PessoasController extends Controller {
         $tipo = $request->tipo;
         if ($this->cria_usuario($modelo->id_setor)) $tipo = !intval($modelo->id_empresa) ? "A" : "U";
         else $tipo = intval($modelo->supervisor) ? $tipo = "S" : "F";
+        $this->atualizar_aa_main(
+            DB::table("pessoas")
+                ->where("lixeira", 0)
+                ->whereIn("id_setor", $setores)
+        );
         return redirect("/colaboradores/pagina/".$tipo);
     }
 
@@ -442,6 +447,7 @@ class PessoasController extends Controller {
         $linha->save();
         $this->log_inserir("D", "pessoas", $linha->id);
         if ($this->cria_usuario($linha->id_setor)) $this->deletar_usuario($linha->id);
+        DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa = ".$linha->id);
     }
 
     public function supervisor(Request $request) {
