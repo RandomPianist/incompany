@@ -647,7 +647,7 @@ function RelatorioItens(resumido, maquina) {
             $("#rel-id_maquina2").val(maquina !== undefined ? maquina : 0);
             $("#relatorioItensModalLabel").html(resumido ? maquina === undefined ? "Sugestão de compra" : "Solicitação de compra" : "Extrato de itens");
             $("#resumo").val(resumido ? "S" : "N");
-            $("#rel-lm-chk").attr("checked", false);
+            $("#rel-lm-chk").prop("checked", false);
             $("label[for='rel-lm-chk']").html(resumido ? "Listar apenas produtos cuja compra é sugerida" : "Listar movimentação");
             $("#relatorioItensModal form").attr("action", resumido ? maquina === undefined ? URL + "/relatorios/sugestao" : URL + "/solicitacoes" : URL + "/relatorios/extrato");
             let el_maq = $($($("#rel-maquina2").parent()).parent());

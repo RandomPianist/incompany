@@ -111,7 +111,7 @@ function Pessoa(_id) {
                     that.toggle_user(parseInt(data.id_setor));
                     estilo_bloco_senha.display = id != USUARIO && validaUsuario ? "none" : "";
                     $("#pessoa-setor-select").attr("disabled", _id == USUARIO);
-                    $("#supervisor-chk").attr("checked", parseInt(data.supervisor) == 1);
+                    $("#supervisor-chk").prop("checked", parseInt(data.supervisor) == 1);
                     $(".pessoa-senha").each(function() {
                         $(this).html("Senha:");
                     });
@@ -140,7 +140,7 @@ function Pessoa(_id) {
                 });
                 $($("#pessoasModal .user-pic").parent()).removeClass("d-none");
                 const tipo = $("#titulo-tela").html().charAt(0);
-                $("#supervisor-chk").attr("checked", tipo == "S");
+                $("#supervisor-chk").prop("checked", tipo == "S");
                 $("#supervisor").val(tipo == "S" ? "1" : "0");
 
                 if (tipo == "A" || tipo == "U") {

@@ -94,7 +94,7 @@
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">
                                     <input id = "supervisor" name = "supervisor" type = "hidden" />
-                                    <input id = "supervisor-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "$('#supervisor').val($(this).attr('checked') ? '1' : '0')" />
+                                    <input id = "supervisor-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "$('#supervisor').val($(this).prop('checked') ? '1' : '0')" />
                                     <label for = "supervisor-chk" class = "custom-control-label">Supervisor<label>
                                 </div>
                             </div>

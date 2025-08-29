@@ -90,7 +90,7 @@
             if (
                 parseInt($("#id").val()) &&
                 !erro &&
-                $("#cria_usuario-chk").attr("checked") == ant_usr &&
+                $("#cria_usuario-chk").prop("checked") == ant_usr &&
                 _descr == anteriores.descr.toUpperCase().trim() &&
                 _empresa.toUpperCase().trim() == anteriores["setor-empresa"].toUpperCase().trim()
             ) erro = "Não há alterações para salvar";
@@ -119,14 +119,14 @@
                     $("#setor-id_empresa").val(data.id_empresa);
                     $("#setor-empresa").val(data.empresa);
                     $("#cria_usuario").val(parseInt(data.cria_usuario) ? "S" : "N");
-                    $("#cria_usuario-chk").attr("checked", $("#cria_usuario").val() == "S");
-                    ant_usr = $("#cria_usuario-chk").attr("checked");
+                    $("#cria_usuario-chk").prop("checked", $("#cria_usuario").val() == "S");
+                    ant_usr = $("#cria_usuario-chk").prop("checked");
                     modal("setoresModal", id);
                 });
             } else {
                 modal("setoresModal", id, function() {
                     $("#cria_usuario").val("N");
-                    $("#cria_usuario-chk").attr("checked", false);
+                    $("#cria_usuario-chk").prop("checked", false);
                 });
             }
         }
@@ -142,13 +142,13 @@
                 });
             }
 
-            $(el).prev().val($(el).attr("checked") ? "S" : "N");
+            $(el).prev().val($(el).prop("checked") ? "S" : "N");
             const id = parseInt($("#id").val());
             $("#setoresModal .container").html("");
             if (id) {
                 $.get(URL + "/setores/permissao", function(permissao) {
                     if (parseInt(permissao)) {
-                        if ($(el).attr("checked")) {
+                        if ($(el).prop("checked")) {
                             $.get(URL + "/setores/pessoas/" + id, function(data) {
                                 if (typeof data == "string") data = $.parseJSON(data);
                                 let resultado = "";
@@ -181,14 +181,14 @@
                                     escrever($("#setoresModal .container"), resultado);
                                 } else {
                                     s_alert("Alterar essa opção apagaria seu usuário");
-                                    $(el).attr("checked", true);
+                                    $(el).prop("checked", true);
                                     $(el).prev().val("S");
                                 }
                             });
                         }
                     } else {
                         setTimeout(function() {
-                            $(el).attr("checked", !$(el).attr("checked"));
+                            $(el).prop("checked", !$(el).prop("checked"));
                             s_alert("Você não tem permissão para executar essa ação");
                         }, 1);
                     }

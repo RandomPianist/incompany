@@ -93,7 +93,7 @@
                 erro = "Valor inválido";
                 $("#preco").addClass("invalido");
             }
-            if ($("#preco").val().trim() != dinheiro(anteriores.preco.toString()) || $("#consumo-chk").attr("checked") != ant_consumo) alterou = true;
+            if ($("#preco").val().trim() != dinheiro(anteriores.preco.toString()) || $("#consumo-chk").prop("checked") != ant_consumo) alterou = true;
             $.get(URL + "/produtos/consultar/", {
                 id : $("#id").val(),
                 cod_externo : $("#cod_externo").val(),
@@ -135,7 +135,7 @@
                         $("#" + _id.replace("_fmt", "")).val(data[_id]);
                     });
                     $("#cod_externo").attr("disabled", true);
-                    $("#consumo-chk").attr("checked", parseInt(data.e_consumo) == 1);
+                    $("#consumo-chk").prop("checked", parseInt(data.e_consumo) == 1);
                     ant_consumo = parseInt(data.e_consumo) == 1;
                     modal("produtosModal", id, function() {
                         $("#produtosModal img").attr("src", data.foto);
@@ -148,7 +148,7 @@
                     $($("#produtosModal img").parent()).addClass("d-none");
                     $("#cod_externo").attr("disabled", false);
                     $("#validade_ca").val(hoje());
-                    $("#consumo-chk").attr("checked", false);
+                    $("#consumo-chk").prop("checked", false);
                     ant_consumo = false;
                 });
             }
