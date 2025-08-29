@@ -90,7 +90,7 @@ function Pessoa(_id) {
             if (!erro && data.tipo == "permissao") erro = "Você não tem permissão para " + (_id ? "editar esse" : "criar um") + " administrador";
             if (!erro && !alterou && !document.querySelector("#pessoasModal input[type=file]").value) erro = "Altere pelo menos um campo para salvar";
             if (!erro) {
-                $("#cpf").val() = $("#cpf").val().replace(/\D/g, "");
+                $("#cpf").val($("#cpf").val().replace(/\D/g, ""));
                 $("#pessoasModal form").submit();
             } else s_alert(erro);
         });
