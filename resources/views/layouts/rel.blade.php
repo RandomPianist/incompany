@@ -58,7 +58,7 @@
                             .replace("September", "setembro")
                             .replace("October", "outubro")
                             .replace("November", "novembro")
-                            .replace("December", "dezembro");
+                            .replace("December", "dezembro")
                     );      
                     if (location.href.indexOf("solicitacoes") > -1) {
                         $("#btn-print").addClass("d-none");

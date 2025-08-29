@@ -153,7 +153,7 @@
     }
 
     function carrega_obs(seq) {
-        switch($("es-" + seq).val()) {
+        switch($("#es-" + seq).val()) {
             case "E":
                 var obs = "ENTRADA";
                 break;
@@ -163,8 +163,8 @@
             default:
                 var obs = "AJUSTE";
         }
-        $("obs-" + seq).val(obs);
-        $("qtd-" + seq).focus();
+        $("#obs-" + seq).val(obs);
+        $("#qtd-" + seq).focus();
     }
 
     function atualizaPreco(seq) {
