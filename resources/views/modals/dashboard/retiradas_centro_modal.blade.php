@@ -16,7 +16,7 @@
                             <thead>
                                 <tr>
                                     <th>Colaborador</th>
-                                    <th>Valor</th>
+                                    <th class = 'text-right'>Valor</th>
                                 </tr>
                             </thead>
                             <tbody id = "table-retirados-centro-dados"></tbody>

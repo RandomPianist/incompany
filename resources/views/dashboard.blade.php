@@ -592,7 +592,7 @@
                     resultado +=
                         "<tr>" +
                             "<td width = '75%'>" + linha.nome + "</td>" +
-                            "<td width = '25%'>" + dinheiro(linha.valor) + "</td>" +
+                            "<td width = '25%' class = 'text-right'>" + dinheiro(linha.valor) + "</td>" +
                         "</tr>";
                 });
                 document.getElementById("retiradasCentroModalLabel").innerHTML = `Consumo do centro de custo (${nome})`;
