@@ -73,7 +73,7 @@ class DashboardController extends Controller {
                 "retirados" => $itens->sum("retirados"),
                 "valor" => $itens->sum("valor")
             ];
-        })->values()->all();
+        })->sortByDesc("valor")->values()->all();
     }
 
     private function maquinas_main($inicio, $fim) {
@@ -300,7 +300,7 @@ class DashboardController extends Controller {
                 "retirados" => $itens->sum("retirados"),
                 "valor" => $itens->sum("valor")
             ];
-        })->values()->all();
+        })->sortByDesc("valor")->values()->all();
     }
 
     // API

@@ -205,7 +205,7 @@
                     .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3') // Adiciona ponto após o quinto dígito
                     .replace(/\.(\d{3})(\d)/, '.$1/$2') // Adiciona barra após o oitavo dígito
                     .replace(/(\d{4})(\d)/, '$1-$2') // Adiciona traço após o décimo segundo dígito
-                    .replace(/(-\d{2})\d+?$/, '$1'); // Impede a entrada de mais de 14 dígitos
+                    .replace(/(-\d{2})\d+?$/, '$1') // Impede a entrada de mais de 14 dígitos
             );
         }
 
