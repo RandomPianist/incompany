@@ -131,8 +131,8 @@
                             else $(this).removeClass("d-none");
                         });
                         $(".referencia").each(function() {
-                            if (!referencia) $(el).addClass("d-none");
-                            else $(el).removeClass("d-none");
+                            if (!referencia) $(this).addClass("d-none");
+                            else $(this).removeClass("d-none");
                         });
                     });
                 });
