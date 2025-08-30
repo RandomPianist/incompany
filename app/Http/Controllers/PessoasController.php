@@ -73,7 +73,7 @@ class PessoasController extends Controller {
                         }
                     )
                     ->leftjoinSub(
-                        DB::table("atribuicoes_associadas")
+                        DB::table("vpendentes")
                             ->selectRaw("DISTINCTROW id_pessoa"),
                         "atb",
                         "atb.id_pessoa",
