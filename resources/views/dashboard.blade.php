@@ -413,7 +413,9 @@
         }
 
         function gerarGraficoRetiradasCentro(retiradasPorSetor) {
-            const retiradas = retiradasPorSetor.retiradas;
+            const retiradas = [...retiradasPorSetor.retiradas].sort((a, b) => {
+                return b.retirados - a.retirados;
+            });
             const total = retiradasPorSetor.totalQtd;
 
             const transformedArray = retiradas.map(item => ({
