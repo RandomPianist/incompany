@@ -317,7 +317,7 @@
                     `<tr onclick="retiradasSetor(${item.id}, '${item.descr}')">
                          <td width="65%" class = "pl-4">${item.descr}</td>
                          <td class="text-right" width = "35%">
-                             R$ ${Number(item.valor).toFixed(2).toString().replace(".", ",")}
+                            ${dinheiro(item.valor)}
                          </td>
                      </tr>`;
                 });
@@ -326,7 +326,7 @@
                     `<tr>
                          <td width="65%" class = "pl-4"><strong>Total</strong></td>
                          <td class="text-right" width = "35%"><strong>
-                             R$ ${Number(retiradasPorSetor.totalVal).toFixed(2).toString().replace(".", ",")}
+                            ${dinheiro(retiradasPorSetor.totalVal)}
                          </strong></td>
                      </tr>`;
 
@@ -592,7 +592,7 @@
                     resultado +=
                         "<tr>" +
                             "<td width = '75%'>" + linha.nome + "</td>" +
-                            "<td width = '25%'>R$ " + Number(linha.valor).toFixed(2).toString().replace(".", ",") + "</td>" +
+                            "<td width = '25%'>" + dinheiro(linha.valor) + "</td>" +
                         "</tr>";
                 });
                 document.getElementById("retiradasCentroModalLabel").innerHTML = `Consumo do centro de custo (${nome})`;

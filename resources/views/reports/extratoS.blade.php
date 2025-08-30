@@ -45,7 +45,7 @@
                     @foreach ($item["maquina"]["produtos"] as $produto)
                         <tr class = "report-row">
                             <td width = "84%">{{ $produto["descr"] }}</td>
-                            <td width = "8%" class = "text-right">R$ {{ str_replace(".", ",", $produto["preco"]) }}</td>
+                            <td width = "8%" class = "text-right dinheiro">{{ $produto["preco"] }}</td>
                             <td width = "8%" class = "text-right">{{ $produto["saldo_res"] }}</td>
                         </tr>
                     @endforeach

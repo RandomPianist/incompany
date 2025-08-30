@@ -209,7 +209,8 @@
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/bootstrap.min.js') }}"></script>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/highcharts.js')    }}"></script>
         @if (!intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa) || ((isset($alias) ? $alias : "maquinas") == "maquinas"))
-            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/my-functions.js')  }}"></script>
+            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/my-functions.js') }}"></script>
+            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/dinheiro.js')     }}"></script>
         @else
             <script type = "text/javascript" language = "JavaScript">
                 window.onload = function() {
