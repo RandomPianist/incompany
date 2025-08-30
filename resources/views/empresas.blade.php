@@ -108,7 +108,7 @@
                 });
                 $("#principal > details").each(function() {
                     if ($(this).attr("open")) {
-                        aux.concat(obterVisiveis(el, aux));
+                        aux.concat(obterVisiveis($(this), aux));
                         ativar = true;
                     }
                 });
