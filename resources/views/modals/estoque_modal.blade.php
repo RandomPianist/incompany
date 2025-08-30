@@ -32,7 +32,7 @@
                             </div>
                             <div class = "col-2 p-0 px-1">
                                 <label for = "es-1" class = "custom-label-form">E/S: *</label>
-                                <select id = "es-1" name = "es[]" class = "form-control es" onchange = "carrega_obs(1)">
+                                <select id = "es-1" name = "es[]" class = "form-control es" onchange = "carrega_obs(1, true)">
                                     <option value = "E">ENTRADA</option>
                                     <option value = "S">SAÍDA</option>
                                     <option value = "A">AJUSTE</option>
@@ -152,7 +152,7 @@
         });
     }
 
-    function carrega_obs(seq) {
+    function carrega_obs(seq, focar) {
         switch($("#es-" + seq).val()) {
             case "E":
                 var obs = "ENTRADA";
@@ -164,7 +164,7 @@
                 var obs = "AJUSTE";
         }
         $("#obs-" + seq).val(obs);
-        $("#qtd-" + seq).focus();
+        if (focar) $("#qtd-" + seq).focus();
     }
 
     function atualizaPreco(seq) {
@@ -191,7 +191,7 @@
         $($(linha).find(".obs")[0]).attr("id", "obs-" + cont);
 
         $($(linha).find(".id-produto")[0]).on("change", () => atualizaPreco(cont));
-        $($(linha).find(".es")[0]).on("change", () => carrega_obs(cont));
+        $($(linha).find(".es")[0]).on("change", () => carrega_obs(cont, true));
 
         $($(linha).find(".remove-produto")[0]).on("click", function() {
             $(linha).remove();
@@ -208,7 +208,7 @@
         carrega_dinheiro();
         $($(linha).find(".obs")[0]).trigger("keyup");
         $($(linha).find(".qtd")[0]).trigger("keyup");
-        $($(linha).find(".es")[0]).trigger("change");
+        carrega_obs(cont, false);
 
         $(".form-control").keydown(function() {
             $(this).removeClass("invalido");
