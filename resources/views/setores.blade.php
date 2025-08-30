@@ -133,7 +133,7 @@
 
         function muda_cria_usuario(el) {
             const escrever = function(container, texto) {
-                $(container).html(texto);
+                $(container).append(texto);
                 $("#setoresModal .linha-usuario:last-child").addClass("mb-4");
                 $(".form-control").each(function() {
                     $(this).keydown(function() {
@@ -144,7 +144,9 @@
 
             $(el).prev().val($(el).prop("checked") ? "S" : "N");
             const id = parseInt($("#id").val());
-            $("#setoresModal .container").html("");
+            $(".linha-usuario").each(function() {
+                $(this).remove();
+            })
             if (id) {
                 $.get(URL + "/setores/permissao", function(permissao) {
                     if (parseInt(permissao)) {
