@@ -58,6 +58,11 @@ function Pessoa(_id) {
         const aux = verifica_vazios(lista, erro);
         erro = aux.erro;
         let alterou = aux.alterou;
+        if ($("#pessoa-setor-select").val() == "0") {
+            if (!erro) erro = "Preencha o campo";
+            else erro = "Preencha os campos";
+            $("#pessoa-setor-select").addClass("invalido");
+        }
         if (validaUsuario) {
             if (!erro && !validar_email($("#email").val())) {
                 erro = "E-mail inválido";
