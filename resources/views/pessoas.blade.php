@@ -45,8 +45,12 @@
     </div>
     @include("components.naoencontrado")
     @include("components.add")
+    <div class = "loader-container">
+        <div class = "loader"></div>
+    </div>
     <script type = "text/javascript" language = "JavaScript">
         function listar(coluna) {
+            document.querySelector(".loader-container").classList.remove("d-none");
             $.get(URL + "/colaboradores/listar/", {
                 filtro : $("#busca").val(),
                 tipo : $("#titulo-tela").html().charAt(0)
@@ -82,6 +86,7 @@
                     $("#table-dados").html(resultado);
                     ordenar(coluna);
                 } else mostrarImagemErro();
+                document.querySelector(".loader-container").classList.add("d-none");
             });
         }
 

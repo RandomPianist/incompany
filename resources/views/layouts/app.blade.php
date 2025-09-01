@@ -42,7 +42,7 @@
         <div id = "app">
             <main class = "py-4">
                 <div class = "main-toolbar shadow-sm">
-                    <a id = "link-home" href = "{{ config('app.address') }}/{{ config('app.root_url') }}">
+                    <a id = "link-home" href = "{{ config('app.address') }}{{ config('app.root_url') }}">
                         <img src = "{{ asset('img/logo.png') }}" style = "height:100px">
                     </a>
                     <div class = "btn-toolbar px-3 mr-auto">
