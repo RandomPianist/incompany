@@ -33,7 +33,8 @@ class AppServiceProvider extends ServiceProvider
                 if (Auth::user() !== null) {
                     $emp = Empresas::find(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
                     $view->with([
-                        'empresa_descr' => $emp !== null ? $emp->nome_fantasia : "Todas"
+                        'empresa_descr' => $emp !== null ? $emp->nome_fantasia : "Todas",
+                        'root_url' => config("app.root_url")
                     ]);
                 }
             });

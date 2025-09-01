@@ -42,7 +42,7 @@
         <div id = "app">
             <main class = "py-4">
                 <div class = "main-toolbar shadow-sm">
-                    <a id = "link-home" href = "{{ config('app.root_url') }}">
+                    <a id = "link-home" href = "{{ config('app.address') }}/{{ config('app.root_url') }}">
                         <img src = "{{ asset('img/logo.png') }}" style = "height:100px">
                     </a>
                     <div class = "btn-toolbar px-3 mr-auto">
@@ -65,17 +65,17 @@
                             <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
                             <ul class = "dropdown-toolbar">
                                 @if (!intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa))
-                                    <li onclick = "redirect('/colaboradores/pagina/A')">
+                                    <li onclick = "redirect('{{ $root_url }}/colaboradores/pagina/A')">
                                         <span>Administradores</span>
                                     </li>
                                 @endif
-                                <li onclick = "redirect('/colaboradores/pagina/F')">
+                                <li onclick = "redirect('{{ $root_url }}/colaboradores/pagina/F')">
                                     <span>Funcionários</span>
                                 </li>
-                                <li onclick = "redirect('/colaboradores/pagina/S')">
+                                <li onclick = "redirect('{{ $root_url }}/colaboradores/pagina/S')">
                                     <span>Supervisores</span>
                                 </li>
-                                <li onclick = "redirect('/colaboradores/pagina/U')">
+                                <li onclick = "redirect('{{ $root_url }}/colaboradores/pagina/U')">
                                     <span>Usuários</span>
                                 </li>
                             </ul>
@@ -86,10 +86,10 @@
                                 <span>Itens</span>
                                 <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
                                 <ul class = "dropdown-toolbar">
-                                    <li onclick = "redirect('/valores/categorias')">
+                                    <li onclick = "redirect('{{ $root_url }}/valores/categorias')">
                                         <span>Categorias</span>
                                     </li>
-                                    <li onclick = "redirect('/produtos')">
+                                    <li onclick = "redirect('{{ $root_url }}/produtos')">
                                         <span>Produtos</span>
                                     </li>
                                 </ul>
@@ -122,7 +122,7 @@
                                         <span>Extrato de itens</span>
                                     </li>
                                 @if (!intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa))
-                                    <li onclick = "window.open('/relatorios/comodatos', '_blank')">
+                                    <li onclick = "window.open('{{ $root_url }}/relatorios/comodatos', '_blank')">
                                         <span>Locação</span>
                                     </li>
                                 @endif

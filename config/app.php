@@ -195,5 +195,6 @@ return [
     ])->toArray(),
 
     'root_url' => '',
+    'address' => 'https://app.lojaincompany.com.br',
     'msg_inexistente' => 'O produto não existe no ERP TargetX'
 ];
