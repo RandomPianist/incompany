@@ -471,6 +471,12 @@ class PessoasController extends Controller {
     }
 
     public function senha(Request $request) {
+        if (!sizeof(
+            DB::table("pessoas")
+                ->where("id", $request->id)
+                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "pessoas"))
+                ->get()
+        )) return 401;
         return Pessoas::find($request->id)->senha;
     }
 }
