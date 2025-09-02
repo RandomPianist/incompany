@@ -17,8 +17,12 @@ class SetoresController extends Controller {
                         "empresas.nome_fantasia AS empresa"
                     )
                     ->leftjoin("empresas", "setores.id_empresa", "empresas.id")
+                    ->where(function($sql) {
+                        if (!intval(Pessoas::find(Auth::user()->id_pessoa)->supervisor)) $sql->where("cria_usuario", 0);
+                    })
                     ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores"))
                     ->whereRaw($param)
+                    ->where("empresas.lixeira", 0)
                     ->get();
     }
 
@@ -50,14 +54,23 @@ class SetoresController extends Controller {
 
     private function aviso_main($id) {
         $resultado = new \stdClass;
+        $resultado->permitir = 0;
         $nome = Setores::find($id)->descr;
         if (sizeof(
+            DB::table("log")
+                ->where("acao", "C")
+                ->where("origem", "SYS")
+                ->where("tabela", "setores")
+                ->where("fk", $id)
+                ->get()
+        )) {
+            $resultado->aviso = "Não é possível excluir um setor do sistema";
+        } else if (sizeof(
             DB::table("pessoas")
                 ->where("id_setor", $id)
                 ->where("lixeira", 0)
                 ->get()
         )) {
-            $resultado->permitir = 0;
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a esse setor";
         } else {
             $resultado->permitir = 1;
@@ -196,12 +209,34 @@ class SetoresController extends Controller {
         $this->log_inserir("D", "setores", $linha->id);
     }
 
-    public function primeiro_admin() {
+    public function primeiro_admin($id_emp) {
         return json_encode(
             DB::table("setores")
-                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores"))
+                ->where(function($sql) use ($id_emp) {
+                    if (intval($id_emp)) {
+                        $sql->where("id_empresa", $id_emp)
+                            ->where("lixeira", 0);
+                    } else $sql->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores"));
+                })
                 ->where("cria_usuario", 1)
                 ->first()
         );
+    }
+
+    public function por_empresa($id_emp) {
+        return DB::table("setores")
+                    ->select(
+                        "id",
+                        "descr"
+                    )
+                    ->where(function($sql) use ($id_emp) {
+                        if (intval($id_emp)) {
+                            $sql->where("id_empresa", $id_emp)
+                                ->where("lixeira", 0);
+                        } else $sql->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores"));
+                        if (!intval(Pessoas::find(Auth::user()->id_pessoa)->supervisor)) $sql->where("cria_usuario", 0);
+                    })
+                    ->orderby("descr")
+                    ->get();
     }
 }

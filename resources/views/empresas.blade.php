@@ -207,7 +207,13 @@
             );
         }
 
-        function validar() {
+        async function validar() {
+            const concluir = function(atu_filiais) {
+                $("#atu-filiais").val(atu_filiais ? "S" : "N");
+                $("#cnpj").val($("#cnpj").val().replace(/\D/g, ""));
+                $("#empresasModal form").submit();
+            }
+
             limpar_invalido();
             let erro = "";
 
@@ -223,31 +229,45 @@
                 $("#cnpj").addClass("invalido");
             }
             if ($("#cnpj").val() != anteriores.cnpj) alterou = true;
+            if ($("#mostrar-ret").val() != anteriores.mostrar_ret) alterou = true;
+            if ($("#travar-ret").val() != anteriores.travar_ret) alterou = true;
 
-            $.get(URL + "/empresas/consultar/", {
-                cnpj : $("#cnpj").val().replace(/\D/g, "")
-            }, function(data) {
-                if (!erro && parseInt(data) && !parseInt($("#id").val())) {
-                    erro = "Já existe um registro com esse CNPJ";
-                    $("#cnpj").addClass("invalido");
-                }
-                if (!erro && !alterou) erro = "Altere pelo menos um campo para salvar";
-                if (!erro) {
-                    $("#cnpj").val($("#cnpj").val().replace(/\D/g, ""));
-                    $("#empresasModal form").submit();
-                } else s_alert(erro);
+            const data = await $.get(URL + "/empresas/consultar/", {
+                id : $("#id").val(),
+                cnpj : $("#cnpj").val().replace(/\D/g, ""),
+                mostrar_ret : $("#mostrar_ret").val(),
+                travar_ret : $("#travar_ret").val()
             });
+            if (!erro && data == "R" && !parseInt($("#id").val())) {
+                erro = "Já existe um registro com esse CNPJ";
+                $("#cnpj").addClass("invalido");
+            }
+            if (!erro && !alterou) erro = "Altere pelo menos um campo para salvar";
+            if (!erro) {
+                if (data == "F") {
+                    const resp = await Swal.fire({
+                        html : "Deseja alterar essas informações para todas as filiais?",
+                        showDenyButton : true,
+                        confirmButtonText : "SIM",
+                        confirmButtonColor : "rgb(31, 41, 55)",
+                        denyButtonText : "NÃO"
+                    });
+                    concluir(resp.isConfirmed);
+                } else concluir(false);
+            } else s_alert(erro);
         }
 
         function chamar_modal(id, e) {
             if (e !== undefined) e.preventDefault();
-            $("empresasModalLabel").html((id ? "Editando" : "Cadastrando") + " empresa");
+            $("#empresasModalLabel").html((id ? "Editando" : "Cadastrando") + " empresa");
             if (id) {
                 $.get(URL + "/empresas/mostrar/" + id, function(data) {
                     if (typeof data == "string") data = $.parseJSON(data);
-                    $("#id_matriz, #cnpj, #razao_social, #nome_fantasia").each(function() {
+                    $("#id_matriz, #cnpj, #razao_social, #nome_fantasia, #mostrar_ret, #travar_ret").each(function() {
                         $(this).val(data[$(this).attr("id")]);
                     });
+                    $("#mostrar_ret-chk").prop("checked", parseInt(data.mostrar_ret) == 1);
+                    $("#travar_ret-chk").prop("checked", parseInt(data.travar_ret) == 1);
                     if (parseInt(data.id_matriz)) $("#empresasModalLabel").html("Editando filial");
                     modal("empresasModal", id);
                 });

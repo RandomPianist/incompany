@@ -12,84 +12,93 @@ use App\Models\Empresas;
 
 class PessoasController extends Controller {
     private function busca($where, $tipo) {
-        return DB::table("pessoas")
-                    ->select(
-                        "pessoas.id",
-                        DB::raw("
-                            CASE 
-                                WHEN pessoas.id_empresa <> 0 THEN 
-                                    CASE
-                                        WHEN pessoas.biometria <> '' THEN 'possui'
-                                        ELSE 'nao-possui'
-                                    END
-                                ELSE 'sem-foto'
-                            END AS possui_biometria
-                        "),
-                        DB::raw("
-                            CONCAT(
-                                pessoas.nome,
-                                CASE
-                                    WHEN pessoas.id = ".Auth::user()->id_pessoa." THEN ' (você)'
-                                    ELSE ''
-                                END
-                            ) AS nome
-                        "),
-                        DB::raw("IFNULL(setores.descr, 'A CLASSIFICAR') AS setor"),
-                        DB::raw("IFNULL(empresas.nome_fantasia, 'A CLASSIFICAR') AS empresa"),
-                        DB::raw("
-                            CASE
-                                WHEN ret.id_pessoa IS NULL THEN 0
-                                ELSE 1
-                            END AS possui_retiradas
-                        "),
-                        DB::raw("
-                            CASE
-                                WHEN atb.id_pessoa IS NULL THEN 0
-                                ELSE 1
-                            END AS possui_atribuicoes
-                        ")
-                    )
-                    ->leftjoin("setores", "setores.id", "pessoas.id_setor")
-                    ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
-                    ->leftjoinSub(
-                        DB::table("retiradas")
-                            ->select(
-                                "id_pessoa",
-                                "id_empresa"
-                            )
-                            ->groupby(
-                                "id_pessoa",
-                                "id_empresa"
-                            ),
-                        "ret",
-                        function($join) {
-                            $join->on(function($sql) {
-                                $sql->on("pessoas.id", "ret.id_pessoa")
-                                    ->where("pessoas.id_empresa", 0);
-                            })->orOn(function($sql) {
-                                $sql->on("pessoas.id", "ret.id_pessoa")
-                                    ->on("pessoas.id_empresa", "ret.id_empresa");
-                            });
-                        }
-                    )
-                    ->leftjoinSub(
-                        DB::table("vpendentes")
-                            ->selectRaw("DISTINCTROW id_pessoa"),
-                        "atb",
-                        "atb.id_pessoa",
-                        "pessoas.id"
-                    )
-                    ->where(function($sql) use($tipo) {
-                        $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
-                        if ($id_emp) $sql->whereRaw($id_emp." IN (empresas.id, empresas.id_matriz)");
-                        if (in_array($tipo, ["A", "U"])) {
-                            $sql->where("setores.cria_usuario", 1);
-                            if ($tipo == "A") $sql->where("pessoas.id_empresa", 0);
-                        } else $sql->where("pessoas.supervisor", ($tipo == "S" ? 1 : 0));
-                    })
-                    ->whereRaw($where)
-                    ->where("pessoas.lixeira", 0)
-                    ->get();
+        $consulta = DB::table("pessoas")
+                        ->select(
+                            "pessoas.id",
+                            DB::raw("IFNULL(empresas.mostrar_ret, 1) AS mostrar_ret")
+                        )
+                        ->leftjoin("setores", "setores.id", "pessoas.id_setor")
+                        ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
+                        ->where(function($sql) use($tipo) {
+                            $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+                            if ($id_emp) $sql->whereRaw($id_emp." IN (empresas.id, empresas.id_matriz)");
+                            if (in_array($tipo, ["A", "U"])) {
+                                $sql->where("setores.cria_usuario", 1);
+                                if ($tipo == "A") $sql->where("pessoas.id_empresa", 0);
+                            } else $sql->where("pessoas.supervisor", ($tipo == "S" ? 1 : 0));
+                        })
+                        ->whereRaw($where)
+                        ->where("pessoas.lixeira", 0)
+                        ->get();
+        $mostrar_ret = false;
+        $pessoas = array();
+        foreach ($consulta as $linha) {
+            if (sizeof($pessoas) <= 60) array_push($pessoas, $linha->id);
+            if (intval($linha->mostrar_ret)) $mostrar_ret = true;
+        }
+        $query = "
+            SELECT
+                pessoas.id,
+                CASE 
+                    WHEN pessoas.id_empresa <> 0 THEN 
+                        CASE
+                            WHEN pessoas.biometria <> '' THEN 'possui'
+                            ELSE 'nao-possui'
+                        END
+                    ELSE 'sem-foto'
+                END AS possui_biometria,
+                CONCAT(
+                    pessoas.nome,
+                    CASE
+                        WHEN pessoas.id = ".Auth::user()->id_pessoa." THEN ' (você)'
+                        ELSE ''
+                    END
+                ) AS nome,
+                IFNULL(setores.descr, 'A CLASSIFICAR') AS setor,
+                IFNULL(empresas.nome_fantasia, 'A CLASSIFICAR') AS empresa,
+                CASE
+                    WHEN ret.id_pessoa IS NULL THEN 0
+                    ELSE 1
+                END AS possui_retiradas,
+            ".(
+                $mostrar_ret ? "
+                    CASE
+                        WHEN atb.id_pessoa IS NULL THEN 0
+                        ELSE 1
+                    END
+                " : "0"
+            )." AS possui_atribuicoes
+            
+            FROM pessoas
+
+            LEFT JOIN empresas
+                ON empresas.id = pessoas.id_empresa
+            
+            LEFT JOIN setores
+                ON setores.id = pessoas.id_setor
+            
+            LEFT JOIN (
+                SELECT
+                    id_pessoa,
+                    id_empresa
+
+                FROM retiradas
+
+                GROUP BY
+                    id_pessoa,
+                    id_empresa
+            ) AS ret ON (ret.id_empresa = pessoas.id_empresa OR pessoas.id_empresa = 0) AND ret.id_pessoa = pessoas.id
+        ";
+        if ($mostrar_ret) {
+            $query .= "
+                LEFT JOIN (
+                    SELECT DISTINCTROW id_pessoa
+                    FROM vpendentes
+                ) AS atb ON atb.id_pessoa = pessoas.id
+            ";
+        }
+        $query .= " WHERE pessoas.id IN (".join(",", $pessoas).")";
+        return DB::select(DB::raw($query));
     }
 
     private function criar_usuario($id_pessoa, Request $request, $tipo) {
@@ -259,14 +268,6 @@ class PessoasController extends Controller {
         }
         $resultado->filial = $filial;
         $resultado->empresas = $empresas;
-        $resultado->setores = DB::table("setores")
-                                    ->select(
-                                        "id",
-                                        "descr"
-                                    )
-                                    ->whereRaw($this->obter_where($id_pessoa, "setores"))
-                                    ->orderby("descr")
-                                    ->get();
         return $resultado;
     }
 
@@ -371,7 +372,8 @@ class PessoasController extends Controller {
         }
 
         $linha = 0;
-        $setores = [$request->id_setor];
+        $setores = array();
+        if ($request->id_setor) array_push($setores, $request->id_setor);
         if ($request->id) {
             $modelo = Pessoas::find($request->id);
             $setor_ant = $modelo->id_setor;
@@ -383,32 +385,34 @@ class PessoasController extends Controller {
                 !$this->comparar_texto($admissao->format('Y-m-d'), strval($modelo->admissao))
             ) return 400;
             if ($setor_ant != $request->id_setor) array_push($setores, $setor_ant);
-            if (
-                $this->cria_usuario($request->id_setor) && $this->cria_usuario($setor_ant) && (
-                    $request->password ||
-                    $this->comparar_texto($request->email, $modelo->email) ||
-                    $this->comparar_texto($request->nome, $modelo->nome)
-                )
-            ) {
-                if (!$this->permissao_usuario($request->id)) return 401;
-                $senha = Hash::make($request->password);
-                $atualiza_senha = $request->password ? "password = '".$senha."'," : "";
-                DB::statement("
-                    UPDATE users SET
-                        ".$atualiza_senha."
-                        name = '".trim($request->nome)."',
-                        email = '".trim($request->email)."'
-                    WHERE id_pessoa = ".$request->id
-                );
-                $this->log_inserir("E", "users", DB::table("users")
-                                                    ->where("id_pessoa", $request->id)
-                                                    ->value("id")
-                );
-            } else if ($this->cria_usuario($request->id_setor) != $this->cria_usuario($setor_ant)) {
-                if ($this->cria_usuario($setor_ant)) {
+            if ($request->id_setor) {
+                if (
+                    $this->cria_usuario($request->id_setor) && $this->cria_usuario($setor_ant) && (
+                        $request->password ||
+                        $this->comparar_texto($request->email, $modelo->email) ||
+                        $this->comparar_texto($request->nome, $modelo->nome)
+                    )
+                ) {
                     if (!$this->permissao_usuario($request->id)) return 401;
-                    $this->deletar_usuario($request->id);
-                } else if (!$this->criar_usuario($request->id, $request, "permissao")) return 401;
+                    $senha = Hash::make($request->password);
+                    $atualiza_senha = $request->password ? "password = '".$senha."'," : "";
+                    DB::statement("
+                        UPDATE users SET
+                            ".$atualiza_senha."
+                            name = '".trim($request->nome)."',
+                            email = '".trim($request->email)."'
+                        WHERE id_pessoa = ".$request->id
+                    );
+                    $this->log_inserir("E", "users", DB::table("users")
+                                                        ->where("id_pessoa", $request->id)
+                                                        ->value("id")
+                    );
+                } else if ($this->cria_usuario($request->id_setor) != $this->cria_usuario($setor_ant)) {
+                    if ($this->cria_usuario($setor_ant)) {
+                        if (!$this->permissao_usuario($request->id)) return 401;
+                        $this->deletar_usuario($request->id);
+                    } else if (!$this->criar_usuario($request->id, $request, "permissao")) return 401;
+                }
             }
             $linha = $this->salvar_main($modelo, $request);
         } else {
@@ -464,5 +468,9 @@ class PessoasController extends Controller {
 
     public function modal() {
         return json_encode($this->obter_dados());
+    }
+
+    public function senha(Request $request) {
+        return Pessoas::find($request->id)->senha;
     }
 }

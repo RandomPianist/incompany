@@ -2,6 +2,10 @@ function Pessoa(_id) {
     let that = this;
     let ant_id_setor, ant_id_empresa, validaUsuario;
 
+    let tipo = function() {
+        return $("#pessoa-empresa-select").val() == "0" ? "administrador" : "usuário";
+    }
+
     this.toggle_user = function(setor) {
         $.get(URL + "/setores/mostrar/" + setor, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
@@ -12,15 +16,70 @@ function Pessoa(_id) {
             let palavras = $("#pessoasModalLabel").html().split(" ");
             if (parseInt(data.cria_usuario)) {
                 $("#pes-info").addClass("d-none");
-                palavras[1] = "administrador";
+                $("#line-pass").addClass("d-none");
+                $("#line-sup").addClass("mb-3");
+                palavras[1] = tipo();
                 validaUsuario = true;
             } else {
                 $("#pes-info").removeClass("d-none");
-                palavras[1] = "colaborador";
+                palavras[1] = "funcionário";
                 validaUsuario = false;
+                if (_id) {
+                    $("#line-pass").removeClass("d-none");
+                    $("#line-sup").removeClass("mb-3");
+                } else {
+                    $("#line-pass").addClass("d-none");
+                    $("#line-sup").addClass("mb-3");
+                }
             }
             $("#pessoasModalLabel").html(palavras.join(" "));
         })
+    }
+
+    this.setorPorEmpresa = function(callback) {
+        $.get(URL + "/setores/por-empresa/" + $("#pessoa-empresa-select").val(), function(data) {
+            if (typeof data == "string") data = $.parseJSON(data);
+            let resultado = "<option value = '0'>--</option>";
+            data.forEach((setor) => {
+                resultado += "<option value = '" + setor.id + "'>" + setor.descr + "</option>";
+            });
+            $("#pessoa-setor-select").html(resultado);
+            if (TIPO == "A" || TIPO == "U") {
+                $.get(URL + "/setores/primeiro-admin/" + $("#pessoa-empresa-select").val(), function(resp) {
+                    if (typeof resp == "string") resp = $.parseJSON(resp);
+                    $("#pessoa-setor-select").val(resp.id);
+                    that.toggle_user(resp.id);
+                    if (callback !== undefined) callback();
+                });
+            } else {
+                that.toggle_user(0);
+                if (callback !== undefined) callback();
+            }
+        })
+    }
+
+    this.toggle_emp = function() {
+        that.setorPorEmpresa(function() {
+            $("#cpf").focus();
+        });
+    }
+
+    this.mostrar_senha = function() {
+        setTimeout(function() {
+            const chk = $("#mostrar-senha-chk").prop("checked");
+            const concluir = function(senha) {
+                $("#senha").attr("type", chk ? "text" : "password");
+                $("#senha").val(senha);
+            }
+            if (chk) {
+                $.post(URL + "/colaboradores/senha", {
+                    _token : $("meta[name='csrf-token']").attr("content"),
+                    id : _id 
+                }, function(data) {
+                    concluir(data);
+                });
+            } else concluir("");
+        }, 10);
     }
 
     this.validar = function() {
@@ -92,9 +151,10 @@ function Pessoa(_id) {
                 erro = "Já existe um registro com esse " + data.dado;
                 $("#" + data.dado.replace("-", "").toLowerCase()).addClass("invalido");
             }
-            if (!erro && data.tipo == "permissao") erro = "Você não tem permissão para " + (_id ? "editar esse" : "criar um") + " administrador";
+            if (!erro && data.tipo == "permissao") erro = "Você não tem permissão para " + (_id ? "editar esse" : "criar um") + " " + tipo();
             if (!erro && !alterou && !document.querySelector("#pessoasModal input[type=file]").value) erro = "Altere pelo menos um campo para salvar";
             if (!erro) {
+                $("#pessoa-setor-select").attr("disabled", false);
                 $("#cpf").val($("#cpf").val().replace(/\D/g, ""));
                 $("#pessoasModal form").submit();
             } else s_alert(erro);
@@ -144,12 +204,11 @@ function Pessoa(_id) {
                     $(this).html("Senha: *");
                 });
                 $($("#pessoasModal .user-pic").parent()).removeClass("d-none");
-                const tipo = $("#titulo-tela").html().charAt(0);
-                $("#supervisor-chk").prop("checked", tipo == "S");
-                $("#supervisor").val(tipo == "S" ? "1" : "0");
+                $("#supervisor-chk").prop("checked", TIPO == "S");
+                $("#supervisor").val(TIPO == "S" ? "1" : "0");
 
-                if (tipo == "A" || tipo == "U") {
-                    $.get(URL + "/setores/primeiro-admin", function(data) {
+                if (TIPO == "A" || TIPO == "U") {
+                    $.get(URL + "/setores/primeiro-admin/" + $("#pessoa-empresa-select").val(), function(data) {
                         if (typeof data == "string") data = $.parseJSON(data);
                         $("#pessoa-setor-select").val(data.id);
                         that.toggle_user(data.id);

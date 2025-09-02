@@ -7,6 +7,7 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Empresas;
 use App\Models\Pessoas;
+use App\Models\Setores;
 
 class EmpresasController extends Controller {
     private function validar_cnpj($cnpj) {
@@ -111,8 +112,18 @@ class EmpresasController extends Controller {
                 ->where("lixeira", 0)
                 ->where("cnpj", $request->cnpj)
                 ->get()
-        ) && !$request->id) return "1";
-        return "0";
+        ) && !$request->id) return "R";
+        if (sizeof(
+            DB::table("empresas")
+                ->where("lixeira", 0)
+                ->where("id_matriz", $request->id)
+                ->where(function($sql) use($request) {
+                    $sql->where("travar_ret", "<>", $request->travar_ret)
+                        ->orWhere("mostrar_ret", "<>", $request->mostrar_ret);
+                })
+                ->get()
+        )) return "F";
+        return "A";
     }
 
     public function mostrar($id) {
@@ -127,21 +138,47 @@ class EmpresasController extends Controller {
         if (!trim($request->cnpj)) return 400;
         if (!trim($request->razao_social)) return 400;
         if (!trim($request->nome_fantasia)) return 400;
-        if (intval($this->consultar($request))) return 401;
+        if ($this->consultar($request) == "R") return 401;
         $linha = Empresas::firstOrNew(["id" => $request->id]);
         if (
             $request->id &&
             !$this->comparar_texto($request->cnpj, $linha->cnpj) &&
             !$this->comparar_texto($request->razao_social, $linha->razao_social) &&
-            !$this->comparar_texto($request->nome_fantasia, $linha->nome_fantasia)
+            !$this->comparar_texto($request->nome_fantasia, $linha->nome_fantasia) &&
+            !$this->comparar_num($request->mostrar_ret, $linha->mostrar_ret) &&
+            !$this->comparar_num($request->travar_ret, $linha->travar_ret)
         ) return 400;
         if (!$this->validar_cnpj($request->cnpj)) return 400;
         $linha->nome_fantasia = mb_strtoupper($request->nome_fantasia);
         $linha->razao_social = mb_strtoupper($request->razao_social);
         $linha->cnpj = $request->cnpj;
         $linha->id_matriz = $request->id_matriz ? $request->id_matriz : 0;
+        $linha->travar_ret = $request->travar_ret;
+        $linha->mostrar_ret = $request->mostrar_ret;
         $linha->save();
         $this->log_inserir($request->id ? "E" : "C", "empresas", $linha->id);
+        if (!$request->id) {
+            $setor = new Setores;
+            $setor->descr = "ADMINISTRADORES";
+            $setor->id_empresa = $linha->id;
+            $setor->cria_usuario = 1;
+            $setor->save();
+            $log = $this->log_inserir("C", "setores", $setor->id, "SYS", "SISTEMA");
+            $log->id_pessoa = Auth::user()->id_pessoa;
+            $log->save();
+        }
+        if ($request->atu_filiais == "S") {
+            $filiais = DB::table("empresas")
+                            ->where("id_matriz", $linha->id)
+                            ->pluck("id");
+            foreach ($filiais as $filial) {
+                $modelo = Empresas::find($filial);
+                $modelo->travar_ret = $request->travar_ret;
+                $modelo->mostrar_ret = $request->mostrar_ret;
+                $modelo->save();
+                $this->log_inserir("E", "empresas", $modelo->id);
+            }
+        }
         return redirect("/empresas?grupo=".$request->id_matriz);
     }
 

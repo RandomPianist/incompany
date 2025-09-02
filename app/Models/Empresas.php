@@ -9,11 +9,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property int    $created_at
  * @property int    $id_matriz
  * @property int    $lixeira
+ * @property int    $mostrar_ret
+ * @property int    $travar_ret
  * @property int    $updated_at
  * @property string $cnpj
+ * @property string $cod_externo
  * @property string $nome_fantasia
  * @property string $razao_social
- * @property string $cod_externo
  */
 class Empresas extends Model
 {
@@ -37,7 +39,7 @@ class Empresas extends Model
      * @var array
      */
     protected $fillable = [
-        'cnpj', 'created_at', 'id_matriz', 'lixeira', 'nome_fantasia', 'razao_social', 'cod_externo', 'updated_at'
+        'cnpj', 'cod_externo', 'created_at', 'id_matriz', 'lixeira', 'mostrar_ret', 'nome_fantasia', 'razao_social', 'travar_ret', 'updated_at'
     ];
 
     /**
@@ -55,7 +57,7 @@ class Empresas extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'cnpj' => 'string', 'created_at' => 'timestamp', 'id_matriz' => 'int', 'lixeira' => 'int', 'nome_fantasia' => 'string', 'razao_social' => 'string', 'cod_externo' => 'string', 'updated_at' => 'timestamp'
+        'id' => 'int', 'cnpj' => 'string', 'cod_externo' => 'string', 'created_at' => 'timestamp', 'id_matriz' => 'int', 'lixeira' => 'int', 'mostrar_ret' => 'int', 'nome_fantasia' => 'string', 'razao_social' => 'string', 'travar_ret' => 'int', 'updated_at' => 'timestamp'
     ];
 
     /**

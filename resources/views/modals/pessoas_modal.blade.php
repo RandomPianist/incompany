@@ -49,7 +49,7 @@
                         <div class = "row">
                             <div class = "col-11 pr-0">
                                 <label for = "pessoa-empresa" class = "custom-label-form">Empresa: *</label>
-                                <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control" onchange = "$('#cpf').focus()"></select>
+                                <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control" onchange = "pessoa.toggle_emp()"></select>
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
                                 <a href = "{{ config('app.root_url') }}/empresas" title = "Cadastro de empresas" target = "_blank">
@@ -90,12 +90,20 @@
                                 <input id = "senha" name = "senha" class = "form-control" autocomplete = "off" type = "password" onkeyup = "numerico(this)" />
                             </div>
                         </div>
-                        <div class = "row mb-3" style = "padding-top:5px">
+                        <div class = "row pb5-px" id = "line-sup">
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">
                                     <input id = "supervisor" name = "supervisor" type = "hidden" />
                                     <input id = "supervisor-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "$('#supervisor').val($(this).prop('checked') ? '1' : '0')" />
                                     <label for = "supervisor-chk" class = "custom-control-label">Supervisor<label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class = "row mb-3" id = "line-pass">
+                            <div class = "col-12">
+                                <div class = "custom-control custom-switch">
+                                    <input id = "mostrar-senha-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "pessoa.mostrar_senha()" />
+                                    <label for = "mostrar-senha-chk" class = "custom-control-label">Mostrar senha<label>
                                 </div>
                             </div>
                         </div>

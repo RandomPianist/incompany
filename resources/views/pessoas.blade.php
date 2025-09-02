@@ -44,16 +44,20 @@
         </div>
     </div>
     @include("components.naoencontrado")
-    @include("components.add")
+    @if (($titulo == "Usuários" && intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->supervisor)) || $titulo != "Usuários")
+        @include("components.add")
+    @endif
     <div class = "loader-container">
         <div class = "loader"></div>
     </div>
     <script type = "text/javascript" language = "JavaScript">
+        const TIPO = "{{ $titulo }}".charAt(0);
+
         function listar(coluna) {
             document.querySelector(".loader-container").classList.remove("d-none");
             $.get(URL + "/colaboradores/listar/", {
                 filtro : $("#busca").val(),
-                tipo : $("#titulo-tela").html().charAt(0)
+                tipo : TIPO
             }, function(data) {
                 const img_biometria = '{{ asset("img/biometria-sim.png") }}';
                 let resultado = "";

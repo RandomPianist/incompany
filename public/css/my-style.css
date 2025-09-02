@@ -832,3 +832,7 @@ option:disabled {
     margin: auto;
     margin-top: calc(25% - 60px)
 }
+
+.pb5-px {
+    padding-bottom: 5px
+}

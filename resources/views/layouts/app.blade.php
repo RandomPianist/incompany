@@ -51,10 +51,10 @@
                             <span>Corporativo</span>
                             <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
                             <ul class = "dropdown-toolbar">
-                                <li onclick = "redirect('/empresas')">
+                                <li onclick = "redirect('{{ $root_url }}/empresas')">
                                     <span>Empresas</span>
                                 </li>
-                                <li onclick = "redirect('/setores')">
+                                <li onclick = "redirect('{{ $root_url }}/setores')">
                                     <span>Centro de custos</span>
                                 </li>
                             </ul>

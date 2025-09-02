@@ -52,18 +52,18 @@ $(document).ready(function() {
         const enter = event.key == "Enter";
         if (enter && !validacao_bloqueada) {
             try {
-                validar();
+                pessoa.validar();
             } catch(err) {
                 try {
-                    validar_estoque();
+                    relatorio.validar();
                 } catch(err) {
                     try {
-                        validar_comodato();
+                        validar_estoque();    
                     } catch(err) {
                         try {
-                            relatorio.validar();
+                            validar_comodato();
                         } catch(err) {
-                            pessoa.validar();
+                            validar();
                         }
                     }
                 }
@@ -252,28 +252,36 @@ function modal(nome, id, callback) {
     limpar_invalido();
     if (callback === undefined) callback = function() {}
     if (id) $("#" + (nome == "pessoasModal" ? "pessoa-id" : "id")).val(id);
-    $("#" + nome + " input, #" + nome + " textarea").each(function() {
+    $("#" + nome + " input[type=text], #" + nome + " input[type=number], #" + nome + " input[type=hidden], #" + nome + " textarea").each(function() {
         if (!id && $(this).attr("name") != "_token" && (!(nome == "pessoasModal" && $(this).attr("name") == "tipo"))) $(this).val("");
         if (!$(this).hasClass("autocomplete")) $(this).trigger("keyup");
         anteriores[$(this).attr("id")] = $(this).val();
     });
+    if (!id) {
+        $("#" + nome + " input[type=checkbox]").each(function() {
+            $(this).prop("checked", false);
+        });
+    }
     if (nome == "pessoasModal") {
         $.get(URL + "/colaboradores/modal", function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
+            let primeiro = 0;
             let resultado = !EMPRESA ? "<option value = '0'>--</option>" : "";
             data.empresas.forEach((empresa) => {
                 resultado += "<option value = '" + empresa.id + "'" + (data.filial == "S" ? " disabled" : "") + ">" + empresa.nome_fantasia + "</option>";
+                if (data.filial != "S" && !primeiro) primeiro = parseInt(empresa.id);
                 empresa.filiais.forEach((filial) => {
                     resultado += "<option value = '" + filial.id + "'>- " + filial.nome_fantasia + "</option>";
+                    if (!primeiro) primeiro = parseInt(filial.id);
                 });
             });
             $("#pessoa-empresa-select").html(resultado);
-            resultado = "<option value = '0'>--</option>";
-            data.setores.forEach((setor) => {
-                resultado += "<option value = '" + setor.id + "'>" + setor.descr + "</option>";
+            if (TIPO !== undefined) {
+                if (TIPO != "A") $("#pessoa-empresa-select").val(primeiro);
+            }
+            pessoa.setorPorEmpresa(function() {
+                concluir();
             });
-            $("#pessoa-setor-select").html(resultado);
-            concluir();
         });
     } else concluir();
 }
@@ -298,6 +306,8 @@ function excluirMain(_id, prefixo, aviso, callback) {
 }
 
 function s_confirm(texto, funcao) {
+    let el = document.getElementsByClassName("custom-scrollbar")[0];
+    if (el !== undefined) var scroll = el.scrollTop;
     Swal.fire({
         title: "Aviso",
         html : texto,
@@ -307,6 +317,11 @@ function s_confirm(texto, funcao) {
         denyButtonText : "SIM"
     }).then((result) => {
         if (result.isDenied) funcao();
+        if (el !== undefined) {
+            setTimeout(function() {
+                el.scrollTo(0, scroll);
+            }, 400);
+        }
     });
 }
 
@@ -322,13 +337,20 @@ function excluir(_id, prefixo, e) {
     });
 }
 
-function s_alert(texto) {
-    Swal.fire({
+async function s_alert(texto) {
+    let el = document.getElementsByClassName("custom-scrollbar")[0];
+    if (el !== undefined) var scroll = el.scrollTop;
+    await Swal.fire({
         icon : "warning",
         title : "Atenção",
         html : texto,
         confirmButtonColor : "rgb(31, 41, 55)"
     });
+    if (el !== undefined) {
+        setTimeout(function() {
+            el.scrollTo(0, scroll);
+        }, 400);
+    }
 }
 
 function autocomplete(_this) {
