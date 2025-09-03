@@ -7,6 +7,7 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Atribuicoes;
 use App\Models\Pessoas;
+use App\Models\Setores;
 
 class AtribuicoesController extends Controller {
     private function atualizar_aa(Atribuicoes $atribuicao) {
@@ -68,7 +69,7 @@ class AtribuicoesController extends Controller {
         $linha->qtd = $request->qtd;
         $linha->validade = $request->validade;
         $linha->obrigatorio = $request->obrigatorio;
-        $linha->id_empresa = Pessoas::find(Auth::user()->id_pessoa)->id_empresa;
+        $linha->id_empresa = $request->pessoa_ou_setor_chave == "P" ? Pessoas::find($request->pessoa_ou_setor_valor)->id_empresa : Setores::find($request->pessoa_ou_setor_valor)->id_empresa;
         $linha->save();
         $this->atualizar_aa($linha);
         $this->log_inserir($request->id ? "E" : "C", "atribuicoes", $linha->id);

@@ -7,10 +7,10 @@
         <title>Loja Incompany</title>
         <link rel = "icon shortcut" href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
         <link rel = "icon"          href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
-        <link href = "{{ asset('css/bootstrap.min.css') }}" rel = "stylesheet" />
-        <link href = "{{ asset('css/jquery-ui.min.css') }}" rel = "stylesheet" />
-        <link href = "{{ asset('css/my-style.css')      }}" rel = "stylesheet" />
-        <link href = "{{ asset('css/fa.css')            }}" rel = "stylesheet" />
+        <link rel = "stylesheet"    href = "{{ asset('css/lib/bootstrap.min.css') }}" />
+        <link rel = "stylesheet"    href = "{{ asset('css/lib/jquery-ui.min.css') }}" />
+        <link rel = "stylesheet"    href = "{{ asset('css/geral/app.css')         }}" />
+        <link rel = "stylesheet"    href = "{{ asset('css/lib/fa.css')            }}" />
         <style type = "text/css">
             .form-search::after, .form-search-2::after {
                 background: url("{{ config('app.root_url') }}/img/keyboard.png") no-repeat;
@@ -64,7 +64,7 @@
                             <span>Pessoas</span>
                             <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
                             <ul class = "dropdown-toolbar">
-                                @if (!intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa))
+                                @if ($admin)
                                     <li onclick = "redirect('{{ $root_url }}/colaboradores/pagina/A')">
                                         <span>Administradores</span>
                                     </li>
@@ -80,7 +80,7 @@
                                 </li>
                             </ul>
                         </a>
-                        @if (!intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa))
+                        @if ($admin)
                             <a href = "#">
                                 <img src = "{{ asset('img/itens.png') }}" class = "img-menu" />
                                 <span>Itens</span>
@@ -121,7 +121,7 @@
                                     <li onclick = "relatorio = new RelatorioItens(false)">
                                         <span>Extrato de itens</span>
                                     </li>
-                                @if (!intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa))
+                                @if ($admin)
                                     <li onclick = "window.open('{{ $root_url }}/relatorios/comodatos', '_blank')">
                                         <span>Locação</span>
                                     </li>
@@ -203,14 +203,13 @@
                 else document.location.href = url;
             }
         </script>
-        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/sweetalert2.js')   }}"></script>
-        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/jquery.min.js')    }}"></script>
-        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/jquery-ui.min.js') }}"></script>
-        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/bootstrap.min.js') }}"></script>
-        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/highcharts.js')    }}"></script>
-        @if (!intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa) || ((isset($alias) ? $alias : "maquinas") == "maquinas"))
-            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/my-functions.js') }}"></script>
-            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/dinheiro.js')     }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/sweetalert2.js')   }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/jquery.min.js')    }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/jquery-ui.min.js') }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/bootstrap.min.js') }}"></script>
+        @if ($admin || ((isset($alias) ? $alias : "maquinas") == "maquinas"))
+            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/app.js')      }}"></script>
+            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/dinheiro.js') }}"></script>
         @else
             <script type = "text/javascript" language = "JavaScript">
                 window.onload = function() {
@@ -218,6 +217,7 @@
                 }
             </script>
         @endif
-        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/pessoa.js') }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/pessoa.js') }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/alerta.js') }}"></script>
     </body>
 </html>

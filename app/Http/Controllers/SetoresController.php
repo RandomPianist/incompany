@@ -52,18 +52,22 @@ class SetoresController extends Controller {
         return $resultado;
     }
 
-    private function aviso_main($id) {
-        $resultado = new \stdClass;
-        $resultado->permitir = 0;
-        $nome = Setores::find($id)->descr;
-        if (sizeof(
+    private function setor_do_sistema($id) {
+        return sizeof(
             DB::table("log")
                 ->where("acao", "C")
                 ->where("origem", "SYS")
                 ->where("tabela", "setores")
                 ->where("fk", $id)
                 ->get()
-        )) {
+        ) > 0;
+    }
+
+    private function aviso_main($id) {
+        $resultado = new \stdClass;
+        $resultado->permitir = 0;
+        $nome = Setores::find($id)->descr;
+        if ($this->setor_do_sistema($id)) {
             $resultado->aviso = "Não é possível excluir um setor do sistema";
         } else if (sizeof(
             DB::table("pessoas")
@@ -110,7 +114,10 @@ class SetoresController extends Controller {
                                     ->where("pessoas.id_setor", $id)
                                     ->where("pessoas.lixeira", 0)
                                     ->get();
-        $resultado->bloquear = Pessoas::find(Auth::user()->id_pessoa)->id_setor == $id ? "1" : "0";
+        $cod = 200;
+        if ($this->setor_do_sistema($id)) $cod = 401;
+        if (Pessoas::find(Auth::user()->id_pessoa)->id_setor == $id) $cod = 400;
+        $resultado->cod = $cod;
         return json_encode($resultado);
     }
 
@@ -141,7 +148,7 @@ class SetoresController extends Controller {
                 ->selectRaw("IFNULL(id_usuario, 0) AS id_usuario")
                 ->where("id", Auth::user()->id_pessoa)
                 ->value("id_usuario")
-        ) && !intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa) ? 1 : 0;
+        ) && !$this->obter_empresa() ? 1 : 0;
     }
 
     public function salvar(Request $request) {

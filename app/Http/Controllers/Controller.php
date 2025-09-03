@@ -20,6 +20,10 @@ use Illuminate\Routing\Controller as BaseController;
 class Controller extends BaseController {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
+    protected function obter_empresa() {
+        return intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+    }
+
     protected function comparar_num($a, $b) {
         if ($a === null) $a = 0;
         if ($b === null) $b = 0;
@@ -70,7 +74,7 @@ class Controller extends BaseController {
                         "comodatos.id_empresa"
                     )
                     ->whereRaw($where)
-                    ->where("minhas_empresas.id_empresa", Pessoas::find(Auth::user()->id_pessoa)->id_empresa)                    
+                    ->where("minhas_empresas.id_empresa", $this->obter_empresa())                    
                     ->pluck("id_maquina")
                     ->toArray();
     }
@@ -127,7 +131,7 @@ class Controller extends BaseController {
     }
 
     protected function log_consultar($tabela, $param = "") {
-        if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) return "";
+        if ($this->obter_empresa()) return "";
         $query = "
             SELECT
                 IFNULL(log.nome, log.origem) AS nome,
@@ -566,7 +570,7 @@ class Controller extends BaseController {
                             "descr"
                         )
                         ->where(function($sql) use($request, $inicio, $fim, &$criterios) {
-                            if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) $sql->whereIn("id", $this->maquinas_periodo($inicio, $fim));
+                            if ($this->obter_empresa()) $sql->whereIn("id", $this->maquinas_periodo($inicio, $fim));
                             if ($request->id_maquina) {
                                 $maquina = Valores::find($request->id_maquina);
                                 array_push($criterios, "Máquina: ".$maquina->descr);
@@ -674,5 +678,9 @@ class Controller extends BaseController {
                 ->where("tabela", "solicitacoes")
                 ->where("acao", "C")
                 ->value("id_pessoa");
+    }
+
+    protected function view_mensagem($icon, $text) {
+        return view("mensagem", compact("icon", "text"));
     }
 }

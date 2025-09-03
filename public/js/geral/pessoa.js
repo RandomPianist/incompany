@@ -22,15 +22,10 @@ function Pessoa(_id) {
                 validaUsuario = true;
             } else {
                 $("#pes-info").removeClass("d-none");
+                $("#line-pass").removeClass("d-none");
+                $("#line-sup").removeClass("mb-3");
                 palavras[1] = "funcionário";
-                validaUsuario = false;
-                if (_id) {
-                    $("#line-pass").removeClass("d-none");
-                    $("#line-sup").removeClass("mb-3");
-                } else {
-                    $("#line-pass").addClass("d-none");
-                    $("#line-sup").addClass("mb-3");
-                }
+                validaUsuario = false;                    
             }
             $("#pessoasModalLabel").html(palavras.join(" "));
         })
@@ -72,12 +67,14 @@ function Pessoa(_id) {
                 $("#senha").val(senha);
             }
             if (chk) {
-                $.post(URL + "/colaboradores/senha", {
-                    _token : $("meta[name='csrf-token']").attr("content"),
-                    id : _id 
-                }, function(data) {
-                    concluir(data);
-                });
+                if (_id) {
+                    $.post(URL + "/colaboradores/senha", {
+                        _token : $("meta[name='csrf-token']").attr("content"),
+                        id : _id 
+                    }, function(data) {
+                        concluir(data);
+                    });
+                } else concluir($("#senha").val());
             } else concluir("");
         }, 10);
     }

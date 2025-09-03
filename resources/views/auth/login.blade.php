@@ -18,13 +18,13 @@
         </form>
     </div>
     @if ($errors->any())
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/sweetalert2.js') }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/alerta.js')    }}"></script>
         <script type = "text/javascript" language = "JavaScript">
             window.onload = function() {
-                Swal.fire({
+                s_alert({
                     icon : "error",
-                    title : "Erro",
-                    text : "Email ou senha inválidos",
-                    confirmButtonColor : "rgb(31, 41, 55)"
+                    html : "Email ou senha inválidos"
                 });
             }
         </script>

@@ -7,8 +7,8 @@
         <title>Loja Incompany</title>
         <link rel = "icon shortcut" href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
         <link rel = "icon"          href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
-        <link href = "{{ asset('css/relatorio.css') }}" rel = "stylesheet" />
-        <link href = "{{ asset('css/fa.css')        }}" rel = "stylesheet" />
+        <link href = "{{ asset('css/geral/rel.css') }}" rel = "stylesheet" />
+        <link href = "{{ asset('css/lib/fa.css')    }}" rel = "stylesheet" />
     </head>
     <body>
         <div class = "report">
@@ -31,48 +31,8 @@
                 <i class = "fa fa-cart-arrow-down"></i>
             </div>
         </div>
-        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/jquery.min.js')  }}"></script>
-        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/sweetalert2.js') }}"></script>
-        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/dinheiro.js')    }}"></script>
-        <script type = "text/javascript" language = "JavaScript">
-            const URL = "{{ config('app.root_url') }}";
-
-            $(document).ready(function() {
-                $(".traduzir").each(function() {
-                    $(this).html(
-                        $(this).html()
-                            .replace("Monday", "Segunda-feira")
-                            .replace("Tuesday", "Terça-feira")
-                            .replace("Wednesday", "Quarta-feira")
-                            .replace("Thursday", "Quinta-feira")
-                            .replace("Friday", "Sexta-feira")
-                            .replace("Saturday", "Sábado")
-                            .replace("Sunday", "Domingo")
-                            .replace("January", "janeiro")
-                            .replace("February", "fevereiro")
-                            .replace("March", "março")
-                            .replace("April", "abril")
-                            .replace("May", "maio")
-                            .replace("June", "junho")
-                            .replace("July", "julho")
-                            .replace("August", "agosto")
-                            .replace("September", "setembro")
-                            .replace("October", "outubro")
-                            .replace("November", "novembro")
-                            .replace("December", "dezembro")
-                    );      
-                    if (location.href.indexOf("solicitacoes") > -1) {
-                        $("#btn-print").addClass("d-none");
-                        carregar();
-                    } else $("#menu").addClass("d-none");
-                });
-
-                $(".dinheiro").each(function() {
-                    let resultado = dinheiro($(this).html());
-                    if ($(this).hasClass("analitico")) resultado = "Preço: " + resultado;
-                    $(this).html(resultado);
-                });
-            });
-        </script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/jquery.min.js') }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/dinheiro.js') }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/rel.js')      }}"></script>
     </body>
 </html>

@@ -294,35 +294,19 @@ function modal2(nome, limpar) {
     $("#" + nome).modal();
 }
 
-function excluirMain(_id, prefixo, aviso, callback) {
-    s_confirm(aviso, function() {
-        $.post(URL + prefixo + "/excluir", {
+async function excluirMain(_id, prefixo, aviso, callback) {
+    const resp = await s_alert({
+        icon : "warning",
+        html : aviso,
+        invert : true
+    });
+    if (resp) {
+        await $.post(URL + prefixo + "/excluir", {
             _token : $("meta[name='csrf-token']").attr("content"),
             id : _id
-        }, function() {
-            callback();
         });
-    });
-}
-
-function s_confirm(texto, funcao) {
-    let el = document.getElementsByClassName("custom-scrollbar")[0];
-    if (el !== undefined) var scroll = el.scrollTop;
-    Swal.fire({
-        title: "Aviso",
-        html : texto,
-        showDenyButton : true,
-        confirmButtonText : "NÃO",
-        confirmButtonColor : "rgb(31, 41, 55)",
-        denyButtonText : "SIM"
-    }).then((result) => {
-        if (result.isDenied) funcao();
-        if (el !== undefined) {
-            setTimeout(function() {
-                el.scrollTo(0, scroll);
-            }, 400);
-        }
-    });
+        callback();
+    }
 }
 
 function excluir(_id, prefixo, e) {
@@ -335,22 +319,6 @@ function excluir(_id, prefixo, e) {
             });
         } else s_alert(data.aviso);
     });
-}
-
-async function s_alert(texto) {
-    let el = document.getElementsByClassName("custom-scrollbar")[0];
-    if (el !== undefined) var scroll = el.scrollTop;
-    await Swal.fire({
-        icon : "warning",
-        title : "Atenção",
-        html : texto,
-        confirmButtonColor : "rgb(31, 41, 55)"
-    });
-    if (el !== undefined) {
-        setTimeout(function() {
-            el.scrollTo(0, scroll);
-        }, 400);
-    }
 }
 
 function autocomplete(_this) {
@@ -1094,25 +1062,21 @@ async function avisarSolicitacao() {
                     texto += ".<br>Deseja verificar";
                     if (retorno.status != "A") texto += " as diferenças";
                     texto += "?";
-                    let viz = await Swal.fire({
+                    let viz = await s_alert({
                         icon : "success",
                         html : texto,
-                        showDenyButton : true,
-                        confirmButtonText : "SIM",
-                        confirmButtonColor : "rgb(31, 41, 55)",
-                        denyButtonText : "NÃO"
-                    })
-                    if (viz.isConfirmed) {
+                        yn : true
+                    });
+                    if (viz) {
                         let link = document.createElement("a");
                         link.href = URL + "/relatorios/solicitacao/" + retorno.id;
                         link.target = "_blank";
                         link.click();
                     }
                 } else {
-                    await Swal.fire({
-                        icon: "EF".indexOf(retorno.status) > -1 ? "success" : "warning",
-                        text: texto,
-                        confirmButtonColor: "rgb(31, 41, 55)"
+                    await s_alert({
+                        icon : "EF".indexOf(retorno.status) > -1 ? "success" : "warning",
+                        html : texto
                     });
                 }
             }

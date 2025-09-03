@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use DB;
-use Auth;
 use Illuminate\Http\Request;
-use App\Models\Pessoas;
 use App\Models\Valores;
 
 class ValoresController extends Controller {
@@ -65,7 +63,7 @@ class ValoresController extends Controller {
                     "aux3", "aux3.id_maquina", "valores.id")
                     ->where(function($sql) use ($alias) {
                         if ($alias == "maquinas") {
-                            $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+                            $id_emp = $this->obter_empresa();
                             if ($id_emp) $sql->whereRaw($id_emp." IN (aux2.id, aux2.id_matriz)");
                         }
                     })

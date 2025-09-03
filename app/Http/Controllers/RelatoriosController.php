@@ -69,7 +69,7 @@ class RelatoriosController extends Controller {
         if ($request->id_empresa) array_push($criterios, "Empresa: ".$request->empresa);
         $criterios = join(" | ", $criterios);
         $titulo = "Máquinas por empresa";
-        return sizeof($resultado) ? view("reports/bilateral", compact("resultado", "criterios", "titulo")) : view("nada");
+        return sizeof($resultado) ? view("reports/bilateral", compact("resultado", "criterios", "titulo")) : $this->view_mensagem("warning", "Não há nada para exibir");
     }
 
     private function empresas_por_maquina(Request $request) {
@@ -86,7 +86,7 @@ class RelatoriosController extends Controller {
         if ($request->id_empresa) array_push($criterios, "Empresa: ".$request->empresa);
         $criterios = join(" | ", $criterios);
         $titulo = "Empresas por máquina";
-        return sizeof($resultado) ? view("reports/bilateral", compact("resultado", "criterios", "titulo")) : view("nada");
+        return sizeof($resultado) ? view("reports/bilateral", compact("resultado", "criterios", "titulo")) : $this->view_mensagem("warning", "Não há nada para exibir");
     }
 
     private function controleMain(Request $request) {
@@ -132,7 +132,7 @@ class RelatoriosController extends Controller {
                         }
                         array_push($criterios, $periodo);
                     }
-                    $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+                    $id_emp = $this->obter_empresa();
                     if ($request->id_pessoa) {
                         array_push($criterios, "Colaborador: ".Pessoas::find($request->id_pessoa)->nome);
                         $sql->where("retiradas.id_pessoa", $request->id_pessoa);
@@ -196,14 +196,14 @@ class RelatoriosController extends Controller {
     }
 
     public function comodatos() {
-        if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) return 401;
+        if ($this->obter_empresa()) return 401;
         $resultado = $this->comum("
             valores.descr AS maquina,
             empresas.nome_fantasia AS empresa,
             DATE_FORMAT(comodatos.inicio, '%d/%m/%Y') AS inicio,
             DATE_FORMAT(comodatos.fim, '%d/%m/%Y') AS fim
         ")->orderby("comodatos.inicio")->get();
-        return sizeof($resultado) ? view("reports/comodatos", compact("resultado")) : view("nada");
+        return sizeof($resultado) ? view("reports/comodatos", compact("resultado")) : $this->view_mensagem("warning", "Não há nada para exibir");
     }
 
     public function extrato_consultar(Request $request) {
@@ -217,7 +217,7 @@ class RelatoriosController extends Controller {
         $criterios = $tela->criterios;
         $mostrar_giro = $tela->mostrar_giro;
         if (sizeof($resultado)) return view("reports/saldo", compact("resultado", "criterios", "mostrar_giro"));
-        return view("nada");
+        return $this->view_mensagem("warning", "Não há nada para exibir");
     }
 
     public function extrato(Request $request) {
@@ -309,7 +309,7 @@ class RelatoriosController extends Controller {
                         array_push($criterios, "Produto: ".$produto->descr);
                         $sql->where("mp.id_produto", $produto->id);
                     }
-                    if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) $sql->whereIn("mp.id_maquina", $this->maquinas_periodo($inicio, $fim));
+                    if ($this->obter_empresa()) $sql->whereIn("mp.id_maquina", $this->maquinas_periodo($inicio, $fim));
                 })
                 ->whereRaw("log.data >= '".$inicio."'")
                 ->whereRaw("log.data <= '".$fim."'")
@@ -347,7 +347,7 @@ class RelatoriosController extends Controller {
         })->sortBy("descr")->values()->all();
         $criterios = join(" | ", $criterios);
         if (sizeof($resultado)) return view("reports/extrato".($lm ? "A" : "S"), compact("resultado", "lm", "criterios"));
-        return view("nada");
+        return $this->view_mensagem("warning", "Não há nada para exibir");
     }
 
     public function controle(Request $request) {
@@ -357,7 +357,7 @@ class RelatoriosController extends Controller {
         $criterios = $principal->criterios;
         $cidade = $principal->cidade;
         $data_extenso = $principal->data_extenso;
-        return sizeof($resultado) ? view("reports/controle", compact("resultado", "criterios", "cidade", "data_extenso")) : view("nada");
+        return sizeof($resultado) ? view("reports/controle", compact("resultado", "criterios", "cidade", "data_extenso")) : $this->view_mensagem("warning", "Não há nada para exibir");
     }
 
     public function controle_consultar(Request $request) {
@@ -372,7 +372,7 @@ class RelatoriosController extends Controller {
         return json_encode(
             DB::table("pessoas")
                 ->where(function($sql) {
-                    $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+                    $id_emp = $this->obter_empresa();
                     if ($id_emp) {
                         $sql->where(function($query) use($id_emp) {
                             $query->where(function($query2) use($id_emp) {
@@ -515,7 +515,7 @@ class RelatoriosController extends Controller {
             $retorno->val_total = $val_total;
             return json_encode($retorno);
         }
-        return sizeof($resultado) ? view("reports/retiradas".$request->tipo, compact("resultado", "criterios", "quebra", "val_total", "qtd_total", "titulo")) : view("nada");
+        return sizeof($resultado) ? view("reports/retiradas".$request->tipo, compact("resultado", "criterios", "quebra", "val_total", "qtd_total", "titulo")) : $this->view_mensagem("warning", "Não há nada para exibir");
     }
 
     public function ranking(Request $request) {
@@ -586,7 +586,7 @@ class RelatoriosController extends Controller {
             ];
         })->values()->all();
         $criterios = join(" | ", $criterios);
-        return sizeof($resultado) ? view("reports/ranking", compact("resultado", "criterios", "qtd_total")) : view("nada");
+        return sizeof($resultado) ? view("reports/ranking", compact("resultado", "criterios", "qtd_total")) : $this->view_mensagem("warning", "Não há nada para exibir");
     }
 
     public function solicitacao($id) {

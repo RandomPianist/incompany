@@ -20,7 +20,7 @@ class PessoasController extends Controller {
                         ->leftjoin("setores", "setores.id", "pessoas.id_setor")
                         ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
                         ->where(function($sql) use($tipo) {
-                            $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+                            $id_emp = $this->obter_empresa();
                             if ($id_emp) $sql->whereRaw($id_emp." IN (empresas.id, empresas.id_matriz)");
                             if (in_array($tipo, ["A", "U"])) {
                                 $sql->where("setores.cria_usuario", 1);
@@ -186,7 +186,7 @@ class PessoasController extends Controller {
                         }
                     })
                     ->where(function($sql) {
-                        $m_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+                        $m_emp = $this->obter_empresa();
                         if ($m_emp) {
                             $possiveis = [$m_emp];
                             $matriz = intval(Empresas::find($possiveis[0])->id_matriz);
@@ -359,7 +359,7 @@ class PessoasController extends Controller {
         if ($admissao->greaterThan($hj)) return 400;
         if ($this->consultar_main($request)->tipo != "ok") return 401;
 
-        if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) {
+        if ($this->obter_empresa()) {
             $dados = $this->obter_dados();
             $empresas_possiveis_obj = $dados->empresas;
             $empresas_possiveis_arr = array();

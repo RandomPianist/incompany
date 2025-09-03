@@ -48,7 +48,7 @@ class SolicitacoesController extends Controller {
         $criterios = $tela->criterios;
         $mostrar_giro = $tela->mostrar_giro;
         if (sizeof($resultado)) return view("solicitacoes", compact("resultado", "criterios", "mostrar_giro"));
-        return view("nada");
+        return $this->view_mensagem("warning", "Não há nada para exibir");
     }
 
     public function consultar($id_comodato) {
@@ -192,7 +192,7 @@ class SolicitacoesController extends Controller {
         $where = "id_comodato = ".$request->id_comodato;
         DB::statement("UPDATE previas SET confirmado = 1 WHERE ".$where);
         $this->log_inserir_lote("E", "previas", $where);
-        return view("sucesso");
+        return $this->view_mensagem("success", "Solicitação realizada");
     }
 
     public function cancelar(Request $request) {

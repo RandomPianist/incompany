@@ -8,13 +8,12 @@
         <link rel = "icon shortcut" href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
         <link rel = "icon"          href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
         <link rel = "stylesheet" href = "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" />
-        <link rel = "stylesheet" href = "{{ asset('css/app.css')           }}" />
-        <link rel = "stylesheet" href = "{{ asset('css/my-style.css')      }}" />
-        <link rel = "stylesheet" href = "{{ asset('css/login.css')         }}" />
-        <link rel = "stylesheet" href = "{{ asset('css/bootstrap.min.css') }}" />
-        <link rel = "stylesheet" href = "{{ asset('css/fa.css')            }}" />
-        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/app.js') }}" defer></script>
-        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/sweetalert2.js') }}"></script>
+        <link rel = "stylesheet" href = "{{ asset('css/lib/app.css')           }}" />
+        <link rel = "stylesheet" href = "{{ asset('css/lib/bootstrap.min.css') }}" />
+        <link rel = "stylesheet" href = "{{ asset('css/geral/app.css')         }}" />
+        <link rel = "stylesheet" href = "{{ asset('css/especifico/login.css')  }}" />
+        <link rel = "stylesheet" href = "{{ asset('css/lib/fa.css')            }}" />
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/app.js') }}" defer></script>        
     </head>
     <body class = "body-login row">
         <div class = "secao-esquerda d-flex flex-column justify-content-center align-items-center bg-primary text-white col-4">

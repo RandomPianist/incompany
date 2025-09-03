@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use DB;
 use Auth;
-use App\Models\Pessoas;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller {
@@ -39,7 +38,7 @@ class HomeController extends Controller {
     }
 
     public function index() {
-        if (intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa)) return redirect("/colaboradores/pagina/F");
+        if ($this->obter_empresa()) return redirect("/colaboradores/pagina/F");
         return redirect("/valores/categorias");
     }
 

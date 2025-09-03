@@ -1,0 +1,57 @@
+.btn-table-action {
+    position: absolute;
+    right: 22px;
+    margin-top: -25px
+}
+
+.btn-table-action i {
+    width: 22px;
+    margin: 0px 5px
+}
+
+.btn-table-action:hover i:not(:hover) {
+    color: #000 !important
+}
+
+.espacamento {
+    margin-left: 70rem
+}
+
+.par {
+    background: #EEE !important
+}
+
+.texto-tabela {
+    color: #333;
+    text-decoration: none;
+    background-color: transparent;
+    padding-bottom: 5px;
+    padding-top: 2px
+}
+
+.texto-tabela:hover {
+    color: #000;
+    background: #DDD !important
+}
+
+summary.texto-tabela {
+    list-style: revert;
+    padding-left: 5px
+}
+
+details .sem-filhos .fa-plus,
+summary.texto-tabela .fa-trash-alt {
+    display: none
+}
+
+div.filho {
+    padding-left: 21px
+}
+
+.sem-filhos {
+    padding-left: 3px
+}
+
+details .sem-filhos {
+    padding-left: 23px
+}

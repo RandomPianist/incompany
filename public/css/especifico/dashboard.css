@@ -1,0 +1,8 @@
+.header-card-dashboard {
+    position: sticky;
+    top: 0; 
+    background-color: white; 
+    z-index: 2; 
+    padding: 10px 0; 
+    border-bottom: 1px solid #eee; 
+}

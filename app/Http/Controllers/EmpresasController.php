@@ -6,7 +6,6 @@ use DB;
 use Auth;
 use Illuminate\Http\Request;
 use App\Models\Empresas;
-use App\Models\Pessoas;
 use App\Models\Setores;
 
 class EmpresasController extends Controller {
@@ -36,9 +35,8 @@ class EmpresasController extends Controller {
                         "id_matriz"
                     )
                     ->where(function($sql) use($param) {
-                        $id_emp = Pessoas::find(Auth::user()->id_pessoa)->id_empresa;
-                        if (intval($id_emp)) {
-                            $empresa_usuario = Empresas::find($id_emp);
+                        $empresa_usuario = Empresas::find($id_emp);
+                        if ($empresa_usuario !== null) {
                             if ($param == "filial" && !intval($empresa_usuario->id_matriz)) $sql->where("id_matriz", $empresa_usuario->id);
                             else $sql->where("id", $param == "matriz" ? !intval($empresa_usuario->id_matriz) ? $empresa_usuario->id : $empresa_usuario->id_matriz : $empresa_usuario->id);
                         } else $sql->where("id_matriz", $param == "matriz" ? "=" : ">", 0);
@@ -76,12 +74,11 @@ class EmpresasController extends Controller {
 
     public function ver() {
         $ultima_atualizacao = $this->log_consultar("empresas");
-        $pode_criar_matriz = !intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
-        return view("empresas", compact("ultima_atualizacao", "pode_criar_matriz"));
+        return view("empresas", compact("ultima_atualizacao"));
     }
 
     public function listar() {
-        $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+        $id_emp = $this->obter_empresa();
         $resultado = new \stdClass;
         $resultado->inicial = $this->busca("matriz");
         $resultado->final = $this->busca("filial");
