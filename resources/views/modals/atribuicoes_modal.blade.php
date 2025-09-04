@@ -78,4 +78,3 @@
 </div>
 
 @include("modals.detalhar_atb_modal")
-@include("modals.retiradas_modal")
