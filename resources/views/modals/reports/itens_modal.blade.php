@@ -71,7 +71,7 @@
                                 <input id = "rel-fim1" name = "fim" class = "form-control data" autocomplete = "off" type = "text" />
                             </div>
                         </div>
-                        <div class = "row" style = "padding-top:5px">
+                        <div class = "row pb5-px">
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">
                                     <input id = "rel-lm" name = "lm" type = "hidden" />
