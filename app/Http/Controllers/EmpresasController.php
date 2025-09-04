@@ -37,9 +37,9 @@ class EmpresasController extends Controller {
                     ->where(function($sql) use($param) {
                         $empresa_usuario = Empresas::find($id_emp);
                         if ($empresa_usuario !== null) {
-                            if ($param == "filial" && !intval($empresa_usuario->id_matriz)) $sql->where("id_matriz", $empresa_usuario->id);
-                            else $sql->where("id", $param == "matriz" ? !intval($empresa_usuario->id_matriz) ? $empresa_usuario->id : $empresa_usuario->id_matriz : $empresa_usuario->id);
-                        } else $sql->where("id_matriz", $param == "matriz" ? "=" : ">", 0);
+                            if ($param == "F" && !intval($empresa_usuario->id_matriz)) $sql->where("id_matriz", $empresa_usuario->id);
+                            else $sql->where("id", $param == "M" ? !intval($empresa_usuario->id_matriz) ? $empresa_usuario->id : $empresa_usuario->id_matriz : $empresa_usuario->id);
+                        } else $sql->where("id_matriz", $param == "M" ? "=" : ">", 0);
                     })
                     ->where("lixeira", 0)
                     ->orderBy("nome_fantasia")
@@ -79,8 +79,8 @@ class EmpresasController extends Controller {
     public function listar() {
         $id_emp = $this->obter_empresa();
         $resultado = new \stdClass;
-        $resultado->inicial = $this->busca("matriz");
-        $resultado->final = $this->busca("filial");
+        $resultado->inicial = $this->busca("M");
+        $resultado->final = $this->busca("F");
         $resultado->matriz_editavel = $id_emp ? sizeof(DB::table("empresas")->where("id_matriz", $id_emp)->where("lixeira", 0)->get()) > 0 ? 1 : 0 : 1;
         return json_encode($resultado);
     }

@@ -595,7 +595,6 @@ class Controller extends BaseController {
         $tela = new \stdClass;
         $tela->resultado = $resultado;
         $tela->criterios = join(" | ", $criterios);
-        $tela->mostrar_giro = $tipo == "G";
         return $tela;
     }
 

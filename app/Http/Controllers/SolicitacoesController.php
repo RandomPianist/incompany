@@ -46,8 +46,7 @@ class SolicitacoesController extends Controller {
         $tela = $this->sugestao_main($request);
         $resultado = $tela->resultado;
         $criterios = $tela->criterios;
-        $mostrar_giro = $tela->mostrar_giro;
-        if (sizeof($resultado)) return view("solicitacoes", compact("resultado", "criterios", "mostrar_giro"));
+        if (sizeof($resultado)) return view("solicitacoes", compact("resultado", "criterios"));
         return $this->view_mensagem("warning", "Não há nada para exibir");
     }
 

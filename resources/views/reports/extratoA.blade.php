@@ -40,47 +40,39 @@
                         <h6 class = "pl-3 fw-600 dinheiro analitico">{{ $produto["preco"] }}</h6>
                     </td>
                     <td class = "manter-junto">
-                        <h6 class = "pl-3 fw-600">
-                            @if ($lm)
-                                Saldo anterior: {{ $produto["saldo_ant"] }}
-                            @else
-                                Saldo resultante: {{ $produto["saldo_res"] }}
-                            @endif
-                        </h6>
+                        <h6 class = "pl-3 fw-600">Saldo anterior: {{ $produto["saldo_ant"] }}</h6>
                     </td>
                 </tr>
             </table>
-            @if ($lm)
-                <h6 class = "pl-3 fw-600">Movimentações do produto</h6>
-                <table class = "report-body table table-sm table-bordered table-striped px-5">
-                    <thead>
-                        <tr class = "report-row">
-                            <td width = "20%" class = "text-center">Data</td>
-                            <td width = "20%">E/S</td>
-                            <td width = "20%" class = "text-right">Quantidade</td>
-                            <td width = "40%">Autor</td>
-                        </tr>
-                    </thead>
+            <h6 class = "pl-3 fw-600">Movimentações do produto</h6>
+            <table class = "report-body table table-sm table-bordered table-striped px-5">
+                <thead>
+                    <tr class = "report-row">
+                        <td width = "20%" class = "text-center">Data</td>
+                        <td width = "20%">E/S</td>
+                        <td width = "20%" class = "text-right">Quantidade</td>
+                        <td width = "40%">Autor</td>
+                    </tr>
+                </thead>
+            </table>
+            <div class = "mb-3">
+                <table class = "report-body table table-sm table-bordered table-striped">
+                    <tbody>
+                        @foreach ($produto["movimentacao"] as $movimentacao)
+                            <tr class = "report-row">
+                                <td width = "20%" class = "text-center">{{ $movimentacao["data"] }}</td>
+                                <td width = "20%">
+                                    @if ($movimentacao["es"] == 'E') Entrada @else Saída @endif
+                                </td>
+                                <td width = "20%" class = "text-right">{{ $movimentacao["qtd"] }}</td>
+                                <td width = "40%">{{ $movimentacao["autor"] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
                 </table>
-                <div class = "mb-3">
-                    <table class = "report-body table table-sm table-bordered table-striped">
-                        <tbody>
-                            @foreach ($produto["movimentacao"] as $movimentacao)
-                                <tr class = "report-row">
-                                    <td width = "20%" class = "text-center">{{ $movimentacao["data"] }}</td>
-                                    <td width = "20%">
-                                        @if ($movimentacao["es"] == 'E') Entrada @else Saída @endif
-                                    </td>
-                                    <td width = "20%" class = "text-right">{{ $movimentacao["qtd"] }}</td>
-                                    <td width = "40%">{{ $movimentacao["autor"] }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <h6 class = "text-right fw-600">Saldo resultante: {{ $produto["saldo_res"] }}</h6>
-                <div class = "line-div"></div>
-            @endif
+            </div>
+            <h6 class = "text-right fw-600">Saldo resultante: {{ $produto["saldo_res"] }}</h6>
+            <div class = "line-div"></div>
         @endforeach
     @endforeach
 @endsection

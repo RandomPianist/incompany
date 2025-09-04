@@ -215,8 +215,7 @@ class RelatoriosController extends Controller {
         $tela = $this->sugestao_main($request);
         $resultado = $tela->resultado;
         $criterios = $tela->criterios;
-        $mostrar_giro = $tela->mostrar_giro;
-        if (sizeof($resultado)) return view("reports/saldo", compact("resultado", "criterios", "mostrar_giro"));
+        if (sizeof($resultado)) return view("reports/saldo", compact("resultado", "criterios"));
         return $this->view_mensagem("warning", "Não há nada para exibir");
     }
 
@@ -240,7 +239,6 @@ class RelatoriosController extends Controller {
         $fim = Carbon::createFromFormat('d/m/Y', $r_fim)->format('Y-m-d');
 
         $criterios = ["Período de ".$r_inicio." até ".$r_fim];
-        $lm = $request->lm == "S";
         $resultado = collect(
             DB::table("log")
                 ->select(
@@ -346,7 +344,7 @@ class RelatoriosController extends Controller {
             ];
         })->sortBy("descr")->values()->all();
         $criterios = join(" | ", $criterios);
-        if (sizeof($resultado)) return view("reports/extrato".($lm ? "A" : "S"), compact("resultado", "lm", "criterios"));
+        if (sizeof($resultado)) return view("reports/extrato".($request->lm == "S" ? "A" : "S"), compact("resultado", "criterios"));
         return $this->view_mensagem("warning", "Não há nada para exibir");
     }
 

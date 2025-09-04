@@ -41,7 +41,7 @@
                     <td width = "8%" class = "text-right">Saídas totais</td>
                     <td width = "8%" class = "text-right">Saldo final</td>
                     <td width = "8%" class = "text-right">
-                        @if ($mostrar_giro) Giro de estoque @else Qtde. mínima @endif
+                        @if (request("tipo") == "G") Giro de estoque @else Qtde. mínima @endif
                     </td>
                     <td width = "8%" class = "text-right">Qtde. Sugerida</td>
                 </tr>
@@ -59,11 +59,9 @@
                             <td width = "8%" class = "text-right">{{ $produto["retiradas"] }}</td>
                             <td width = "8%" class = "text-right">{{ $produto["saidas_totais"] }}</td>
                             <td width = "8%" class = "text-right">{{ $produto["saldo_res"] }}</td>
-                            @if ($mostrar_giro)
-                                <td width = "8%" class = "text-right">{{ $produto["giro"] }}</td>
-                            @else
-                                <td width = "8%" class = "text-right">{{ $produto["minimo"] }}</td>
-                            @endif
+                            <td width = "8%" class = "text-right">
+                                @if (request("tipo") == "G") {{ $produto["giro"] }} @else {{ $produto["minimo"] }} @endif
+                            </td>
                             <td width = "8%" class = "text-right">{{ $produto["sugeridos"] }}</td>
                         </tr>
                     @endforeach
