@@ -315,6 +315,7 @@ function gerarGraficoRetiradasCentro(retiradasPorSetor) {
     Highcharts.chart('container', {
         chart: {
             type: 'pie',
+            height : 350,
             custom: {},
             events: {
                 render() {
@@ -346,7 +347,6 @@ function gerarGraficoRetiradasCentro(retiradasPorSetor) {
                     customLabel.css({
                         fontSize: `${series.center[2] / 12}px`
                     });
-                    document.querySelector(".highcharts-figure #container > div").style.height = "300px";
                 }
             }
         },

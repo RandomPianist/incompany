@@ -38,7 +38,7 @@
                 <div id="card-retiradas-colab-dados"></div>
             </div>           
 
-            <div class = "card-dashboard mx-1 bg-white rounded-lg shadow-sm custom-scrollbar" id = "card-retiradas-centro">
+            <div class = "card-dashboard mx-1 bg-white rounded-lg shadow-sm" id = "card-retiradas-centro" style = "min-width:405px;overflow:hidden">
                 <div class = "header-card-dashboard d-flex justify-content-between border-bottom">
                     <div class = "d-flex flex-column justify-content-center align-items-start ml-3 mr-3">
                         <span class = "titulo-card-dashboard">Qtd. de retiradas por centro de custo</span>
