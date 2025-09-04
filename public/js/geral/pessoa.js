@@ -3,7 +3,7 @@ function Pessoa(_id) {
     let ant_id_setor, ant_id_empresa, validaUsuario;
 
     let tipo = function() {
-        return $("#pessoa-empresa-select").val() == "0" ? "administrador" : "usuário";
+        return !parseInt($("#pessoa-empresa-select").val()) ? "administrador" : "usuário";
     }
 
     this.toggle_user = function(setor) {
@@ -24,8 +24,8 @@ function Pessoa(_id) {
                 $("#pes-info").removeClass("d-none");
                 $("#line-pass").removeClass("d-none");
                 $("#line-sup").removeClass("mb-3");
-                palavras[1] = "funcionário";
-                validaUsuario = false;                    
+                palavras[1] = parseInt($("#supervisor").val()) ? "supervisor" : "funcionário";
+                validaUsuario = false;
             }
             $("#pessoasModalLabel").html(palavras.join(" "));
         })
@@ -77,6 +77,11 @@ function Pessoa(_id) {
                 } else concluir($("#senha").val());
             } else concluir("");
         }, 10);
+    }
+
+    this.toggle_sup = function() {
+        $("#supervisor").val($(this).prop("checked") ? "1" : "0");
+        that.toggle_user($("#pessoa-setor-select").val());
     }
 
     this.validar = function() {
