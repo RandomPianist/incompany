@@ -621,7 +621,7 @@ function RelatorioItens(tipo, maquina) {
             $("#rel-id_maquina2").val(maquina !== undefined ? maquina : 0);
             $("#relatorioItensModalLabel").html(resumido ? maquina === undefined ? "Sugestão de compra" : "Solicitação de compra" : "Extrato de itens");
             $("#resumo").val(resumido ? "S" : "N");
-            $("#rel-lm-chk").prop("checked", tipo == "P");
+            $("#rel-lm-chk").prop("checked", tipo == "E");
             $("#rel-lm-chk").trigger("change");
             let pai = $($($($("#rel-lm-chk").parent()).parent()).parent());
             if (!resumido) $(pai).addClass("d-none");
