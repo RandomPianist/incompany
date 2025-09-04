@@ -31,7 +31,7 @@ class MaquinasController extends Controller {
 
         if (!$texto) {
             for ($i = 0; $i < sizeof($produtos_id); $i++) {
-                $saldo = $this->retorna_saldo_mp($id_maquina, $produtos_id[$i]);
+                $saldo = $this->retorna_saldo_mp($id_maquina, $produtos_id[$i]); // App\Http\Controllers\Controller.php
                 if (
                     $es[$i] == "S" &&
                     ($saldo - floatval($quantidades[$i])) < 0
@@ -84,7 +84,7 @@ class MaquinasController extends Controller {
     private function consultar_comodato_main(Request $request) {
         $resultado = new \stdClass;
         $resultado->texto = "";
-        if ($this->empresa_consultar($request)) $resultado->texto = "Empresa não encontrada";
+        if ($this->empresa_consultar($request)) $resultado->texto = "Empresa não encontrada"; // App\Http\Controllers\Controller.php
         if (!$resultado->texto) {
             $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
             $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
@@ -140,7 +140,7 @@ class MaquinasController extends Controller {
             $qtdRequest = floatval($request->qtd[$i]);
             $ajusteIgualEstoque = false;
             if ($request->es[$i] == "A") {
-                $saldo = $this->retorna_saldo_mp($request->id_maquina, $request->id_produto[$i]);
+                $saldo = $this->retorna_saldo_mp($request->id_maquina, $request->id_produto[$i]); // App\Http\Controllers\Controller.php
                 if ($saldo > $qtdRequest) {
                     $linha->es = "S";
                     $linha->qtd = $saldo - $qtdRequest;
@@ -161,11 +161,11 @@ class MaquinasController extends Controller {
                                     ->where("id_maquina", $request->id_maquina)
                                     ->value("id");
                 $linha->save();
-                $this->log_inserir("C", "estoque", $linha->id);
+                $this->log_inserir("C", "estoque", $linha->id); // App\Http\Controllers\Controller.php
                 $gestor = MaquinasProdutos::find($linha->id_mp);
                 if ($gestor->preco != $linha->preco) {
                     $gestor->preco = $linha->preco;
-                    $this->log_inserir("E", "maquinas_produtos", $gestor->id);
+                    $this->log_inserir("E", "maquinas_produtos", $gestor->id); // App\Http\Controllers\Controller.php
                 }
             }
         }
@@ -191,12 +191,12 @@ class MaquinasController extends Controller {
     }
 
     public function consultar_comodato(Request $request) {
-        return json_encode($this->consultar_comodato_main($request));
+        return json_encode($this->consultar_comodato_main($request)); // App\Http\Controllers\Controller.php
     }
 
     public function criar_comodato(Request $request) {
         if ($this->consultar_comodato_main($request)->texto) return 401;
-        $this->criar_comodato_main($request->id_maquina, $request->id_empresa, $request->inicio, $request->fim);
+        $this->criar_comodato_main($request->id_maquina, $request->id_empresa, $request->inicio, $request->fim); // App\Http\Controllers\Controller.php
         return redirect("/valores/maquinas");
     }
 
@@ -209,7 +209,7 @@ class MaquinasController extends Controller {
         );
         $modelo->fim = date('Y-m-d');
         $modelo->save();
-        $this->log_inserir("E", "comodatos", $modelo->id);
+        $this->log_inserir("E", "comodatos", $modelo->id); // App\Http\Controllers\Controller.php
         return redirect("/valores/maquinas");
     }
 }

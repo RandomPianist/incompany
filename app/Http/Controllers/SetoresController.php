@@ -20,7 +20,7 @@ class SetoresController extends Controller {
                     ->where(function($sql) {
                         if (!intval(Pessoas::find(Auth::user()->id_pessoa)->supervisor)) $sql->where("cria_usuario", 0);
                     })
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores"))
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores")) // App\Http\Controllers\Controller.php
                     ->whereRaw($param)
                     ->where("empresas.lixeira", 0)
                     ->get();
@@ -29,7 +29,7 @@ class SetoresController extends Controller {
     private function consultar_main(Request $request) {
         $resultado = new \stdClass;
 
-        if ($this->empresa_consultar($request)) {
+        if ($this->empresa_consultar($request)) { // App\Http\Controllers\Controller.php
             $resultado->msg = "Empresa não encontrada";
             $resultado->el = "setor-empresa";
             return $resultado;
@@ -67,7 +67,7 @@ class SetoresController extends Controller {
         $resultado = new \stdClass;
         $resultado->permitir = 0;
         $nome = Setores::find($id)->descr;
-        if ($this->setor_do_sistema($id)) {
+        if ($this->setor_do_sistema($id)) { // App\Http\Controllers\Controller.php
             $resultado->aviso = "Não é possível excluir um setor do sistema";
         } else if (sizeof(
             DB::table("pessoas")
@@ -114,7 +114,7 @@ class SetoresController extends Controller {
                                     ->where("pessoas.lixeira", 0)
                                     ->get();
         $cod = 200;
-        if ($this->setor_do_sistema($id)) $cod = 401;
+        if ($this->setor_do_sistema($id)) $cod = 401; // App\Http\Controllers\Controller.php
         if (Pessoas::find(Auth::user()->id_pessoa)->id_setor == $id) $cod = 400;
         $resultado->cod = $cod;
         return json_encode($resultado);
@@ -134,7 +134,7 @@ class SetoresController extends Controller {
     }
 
     public function mostrar($id) {
-        return json_encode($this->setor_mostrar($id));
+        return json_encode($this->setor_mostrar($id)); // App\Http\Controllers\Controller.php
     }
 
     public function aviso($id) {
@@ -147,7 +147,7 @@ class SetoresController extends Controller {
                 ->selectRaw("IFNULL(id_usuario, 0) AS id_usuario")
                 ->where("id", Auth::user()->id_pessoa)
                 ->value("id_usuario")
-        ) && !$this->obter_empresa() ? 1 : 0;
+        ) && !$this->obter_empresa() ? 1 : 0; // App\Http\Controllers\Controller.php
     }
 
     public function salvar(Request $request) {
@@ -161,7 +161,7 @@ class SetoresController extends Controller {
             if (
                 $adm_ant == $cria_usuario &&
                 $linha->id_empresa == $request->id_empresa &&
-                !$this->comparar_texto($request->descr, $linha->descr)
+                !$this->comparar_texto($request->descr, $linha->descr) // App\Http\Controllers\Controller.php
             ) return 400;
             if ($adm_ant != $cria_usuario) {
                 if ($adm_ant) {
@@ -173,7 +173,7 @@ class SetoresController extends Controller {
                                     ->pluck("id");
                     foreach($consulta as $usuario) {
                         array_push($lista, $usuario);
-                        $this->log_inserir("D", "users", $usuario);
+                        $this->log_inserir("D", "users", $usuario); // App\Http\Controllers\Controller.php
                     }
                     $lista = join(",", $lista);
                     if ($lista) {
@@ -182,7 +182,7 @@ class SetoresController extends Controller {
                                 $modelo = Pessoas::find($request->id_pessoa[$i]);
                                 $modelo->senha = $request->password[$i];
                                 $modelo->save();
-                                $this->log_inserir("E", "pessoas", $modelo->id);
+                                $this->log_inserir("E", "pessoas", $modelo->id); // App\Http\Controllers\Controller.php
                             }
                         }
                         DB::statement("DELETE FROM users WHERE id IN (".$lista.")");
@@ -194,7 +194,7 @@ class SetoresController extends Controller {
                         $this->log_inserir("C", "users", DB::table("users")
                                                             ->selectRaw("MAX(id) AS id")
                                                             ->value("id")
-                        );
+                        ); // App\Http\Controllers\Controller.php
                     }
                 }
             }
@@ -203,7 +203,7 @@ class SetoresController extends Controller {
         $linha->id_empresa = $request->id_empresa;
         $linha->cria_usuario = $cria_usuario;
         $linha->save();
-        $this->log_inserir($request->id ? "E" : "C", "setores", $linha->id);
+        $this->log_inserir($request->id ? "E" : "C", "setores", $linha->id); // App\Http\Controllers\Controller.php
         return redirect("/setores");
     }
 
@@ -212,7 +212,8 @@ class SetoresController extends Controller {
         $linha = Setores::find($request->id);
         $linha->lixeira = 1;
         $linha->save();
-        $this->log_inserir("D", "setores", $linha->id);
+        $this->log_inserir("D", "setores", $linha->id); // App\Http\Controllers\Controller.php
+        return 200;
     }
 
     public function primeiro_admin($id_emp) {
@@ -222,7 +223,7 @@ class SetoresController extends Controller {
                     if (intval($id_emp)) {
                         $sql->where("id_empresa", $id_emp)
                             ->where("lixeira", 0);
-                    } else $sql->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores"));
+                    } else $sql->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores")); // App\Http\Controllers\Controller.php
                 })
                 ->where("cria_usuario", 1)
                 ->first()
@@ -239,7 +240,7 @@ class SetoresController extends Controller {
                         if (intval($id_emp)) {
                             $sql->where("id_empresa", $id_emp)
                                 ->where("lixeira", 0);
-                        } else $sql->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores"));
+                        } else $sql->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores")); // App\Http\Controllers\Controller.php
                         if (!intval(Pessoas::find(Auth::user()->id_pessoa)->supervisor)) $sql->where("cria_usuario", 0);
                     })
                     ->orderby("descr")

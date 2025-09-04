@@ -38,7 +38,7 @@ class HomeController extends Controller {
     }
 
     public function index() {
-        if ($this->obter_empresa()) return redirect("/colaboradores/pagina/F");
+        if ($this->obter_empresa()) return redirect("/colaboradores/pagina/F"); // App\Http\Controllers\Controller.php
         return redirect("/valores/categorias");
     }
 
@@ -54,7 +54,7 @@ class HomeController extends Controller {
                 FROM vprodutos
                 WHERE ".($request->table == "produtos" ? "qtd > 0" : "1")." AND id_pessoa = ".Auth::user()->id_pessoa.
             ")";
-        } else if (in_array($tabela, ["empresas", "pessoas", "setores"])) $where .= $this->obter_where(Auth::user()->id_pessoa, $tabela, true);
+        } else if (in_array($tabela, ["empresas", "pessoas", "setores"])) $where .= $this->obter_where(Auth::user()->id_pessoa, $tabela, true); // App\Http\Controllers\Controller.php
         else $where .= "1";
 
         if ($request->filter_col) {

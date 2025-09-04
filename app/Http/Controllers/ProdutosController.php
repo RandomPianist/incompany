@@ -113,7 +113,7 @@ class ProdutosController extends Controller {
     }
 
     public function salvar(Request $request) {
-        if ($this->verifica_vazios($request, ["cod_externo", "descr", "ca", "validade", "categoria", "tamanho", "validade_ca"])) return 400;
+        if ($this->verifica_vazios($request, ["cod_externo", "descr", "ca", "validade", "categoria", "tamanho", "validade_ca"])) return 400; // App\Http\Controllers\Controller.php
         $validade_ca = Carbon::createFromFormat('d/m/Y', $request->validade_ca)->format('Y-m-d');
         if ($this->consultar($request)) return 401;
         $linha = Produtos::firstOrNew(["id" => $request->id]);
@@ -121,17 +121,17 @@ class ProdutosController extends Controller {
             $request->id &&
             !$request->file("foto") &&
             $validade_ca == strval($linha->validade_ca) &&
-            !$this->comparar_texto($request->descr, $linha->descr) &&
-            !$this->comparar_texto($request->tamanho, $linha->tamanho) &&
-            !$this->comparar_texto($request->detalhes, $linha->detalhes) &&
-            !$this->comparar_texto($request->referencia, $linha->referencia) &&
-            !$this->comparar_num($request->ca, $linha->ca) &&
-            !$this->comparar_num($request->preco, $linha->preco) &&
-            !$this->comparar_num($request->consumo, $linha->consumo) &&
-            !$this->comparar_num($request->validade, $linha->validade) &&
-            !$this->comparar_num($request->id_categoria, $linha->id_categoria)
+            !$this->comparar_texto($request->descr, $linha->descr) && // App\Http\Controllers\Controller.php
+            !$this->comparar_texto($request->tamanho, $linha->tamanho) && // App\Http\Controllers\Controller.php
+            !$this->comparar_texto($request->detalhes, $linha->detalhes) && // App\Http\Controllers\Controller.php
+            !$this->comparar_texto($request->referencia, $linha->referencia) && // App\Http\Controllers\Controller.php
+            !$this->comparar_num($request->ca, $linha->ca) && // App\Http\Controllers\Controller.php
+            !$this->comparar_num($request->preco, $linha->preco) && // App\Http\Controllers\Controller.php
+            !$this->comparar_num($request->consumo, $linha->consumo) && // App\Http\Controllers\Controller.php
+            !$this->comparar_num($request->validade, $linha->validade) && // App\Http\Controllers\Controller.php
+            !$this->comparar_num($request->id_categoria, $linha->id_categoria)// App\Http\Controllers\Controller.php
         ) return 400;
-        $this->atribuicao_atualiza_ref($request->id, $linha->referencia, $request->referencia);
+        $this->atribuicao_atualiza_ref($request->id, $linha->referencia, $request->referencia); // App\Http\Controllers\Controller.php
         $linha->descr = mb_strtoupper($request->descr);
         $linha->preco = $request->preco;
         $linha->validade = $request->validade;
@@ -145,8 +145,8 @@ class ProdutosController extends Controller {
         $linha->validade_ca = Carbon::createFromFormat('d/m/Y', $request->validade_ca)->format('Y-m-d');
         if ($request->file("foto")) $linha->foto = $request->file("foto")->store("uploads", "public");
         $linha->save();
-        $this->log_inserir($request->id ? "E" : "C", "produtos", $linha->id);
-        $this->criar_mp($linha->id, "valores.id");
+        $this->log_inserir($request->id ? "E" : "C", "produtos", $linha->id); // App\Http\Controllers\Controller.php
+        $this->criar_mp($linha->id, "valores.id"); // App\Http\Controllers\Controller.php
         return redirect("/produtos");
     }
 
@@ -154,7 +154,7 @@ class ProdutosController extends Controller {
         $linha = Produtos::find($request->id);
         $linha->lixeira = 1;
         $linha->save();
-        $this->log_inserir("D", "produtos", $linha->id);
+        $this->log_inserir("D", "produtos", $linha->id); // App\Http\Controllers\Controller.php
         
         $lista_atb = DB::table("atribuicoes")
                         ->where(function($sql) use($linha) {
@@ -171,8 +171,8 @@ class ProdutosController extends Controller {
         if (sizeof($lista_atb)) {
             $where = "id IN (".join(",", $lista_atb).")";
             DB::statement("UPDATE atribuicoes SET lixeira = 1 WHERE ".$where);
-            $this->log_inserir_lote("D", "atribuicoes", $where);
-            $this->atualizar_aa_main($this->atb_pessoa()->whereIn("atribuicoes.id", $lista_atb));
+            $this->log_inserir_lote("D", "atribuicoes", $where); // App\Http\Controllers\Controller.php
+            $this->atualizar_aa_main($this->atb_pessoa()->whereIn("atribuicoes.id", $lista_atb)); // App\Http\Controllers\Controller.php
         }
     }
 }

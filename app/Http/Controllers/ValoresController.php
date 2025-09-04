@@ -63,7 +63,7 @@ class ValoresController extends Controller {
                     "aux3", "aux3.id_maquina", "valores.id")
                     ->where(function($sql) use ($alias) {
                         if ($alias == "maquinas") {
-                            $id_emp = $this->obter_empresa();
+                            $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
                             if ($id_emp) $sql->whereRaw($id_emp." IN (aux2.id, aux2.id_matriz)");
                         }
                     })
@@ -144,7 +144,7 @@ class ValoresController extends Controller {
                 if ($linha->comodato != "---") $comodato = true;
             }
         }
-        $ultima_atualizacao = $this->log_consultar("valores", $alias);
+        $ultima_atualizacao = $this->log_consultar("valores", $alias); // App\Http\Controllers\Controller.php
         $titulo = $alias == "maquinas" ? "Máquinas" : "Categorias";
         return view("valores", compact("alias", "titulo", "ultima_atualizacao", "comodato"));
     }
@@ -184,7 +184,7 @@ class ValoresController extends Controller {
         if (intval($this->consultar($alias, $request))) return 401;
         $linha = Valores::firstOrNew(["id" => $request->id]);
         if ($request->id) {
-            if (!$this->comparar_texto($request->descr, $linha->descr)) return 400;
+            if (!$this->comparar_texto($request->descr, $linha->descr)) return 400; // App\Http\Controllers\Controller.php
         }
         $linha->descr = mb_strtoupper($request->descr);
         $linha->alias = $alias;
@@ -197,19 +197,20 @@ class ValoresController extends Controller {
             ) + 1;
         }
         $linha->save();
-        $this->log_inserir($request->id ? "E" : "C", "valores", $linha->id);
-        if ($alias == "maquinas") $this->criar_mp("produtos.id", $linha->id);
+        $this->log_inserir($request->id ? "E" : "C", "valores", $linha->id); // App\Http\Controllers\Controller.php
+        if ($alias == "maquinas") $this->criar_mp("produtos.id", $linha->id); // App\Http\Controllers\Controller.php
         return redirect("/valores/$alias");
     }
 
     public function excluir($alias, Request $request) {
-        if (!$this->aviso_main($alias, $request->id)->permitir) return 401;
+        if (!$this->aviso_main($alias, $request->id)->permitir) return 401; // App\Http\Controllers\Controller.php
         $linha = Valores::find($request->id);
         $linha->lixeira = 1;
         $linha->save();
         $where = "id_categoria = ".$request->id;
         DB::statement("UPDATE produtos SET id_categoria = NULL ".$where);
-        $this->log_inserir("D", "valores", $linha->id);
-        $this->log_inserir_lote("E", "produtos", $where);
+        $this->log_inserir("D", "valores", $linha->id); // App\Http\Controllers\Controller.php
+        $this->log_inserir_lote("E", "produtos", $where); // App\Http\Controllers\Controller.php
+        return 200;
     }
 }

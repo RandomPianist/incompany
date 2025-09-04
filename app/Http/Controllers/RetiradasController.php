@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class RetiradasController extends Controller {
     public function consultar(Request $request) {
-        return $this->retirada_consultar($request->atribuicao, $request->qtd, $request->pessoa);
+        return $this->retirada_consultar($request->atribuicao, $request->qtd, $request->pessoa); // App\Http\Controllers\Controller.php
     }
 
     public function salvar(Request $request) {
@@ -22,12 +22,12 @@ class RetiradasController extends Controller {
             "data" => Carbon::createFromFormat('d/m/Y', $request->data)->format('Y-m-d')
         );
         if (intval($request->supervisor)) $json["id_supervisor"] = $request->supervisor;
-        $this->retirada_salvar($json);
+        $this->retirada_salvar($json); // App\Http\Controllers\Controller.php
     }
 
     public function desfazer(Request $request) {
         $where = "id_pessoa = ".$request->id_pessoa;
-        $this->log_inserir_lote("D", "retiradas", $where);
+        $this->log_inserir_lote("D", "retiradas", $where); // App\Http\Controllers\Controller.php
         DB::statement("DELETE FROM retiradas WHERE ".$where);
     }
 

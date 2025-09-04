@@ -20,7 +20,7 @@ class PessoasController extends Controller {
                         ->leftjoin("setores", "setores.id", "pessoas.id_setor")
                         ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
                         ->where(function($sql) use($tipo) {
-                            $id_emp = $this->obter_empresa();
+                            $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
                             if ($id_emp) $sql->whereRaw($id_emp." IN (empresas.id, empresas.id_matriz)");
                             if (in_array($tipo, ["A", "U"])) {
                                 $sql->where("setores.cria_usuario", 1);
@@ -101,27 +101,6 @@ class PessoasController extends Controller {
         return DB::select(DB::raw($query));
     }
 
-    private function criar_usuario($id_pessoa, Request $request, $tipo) {
-        if (($tipo == "supervisor" && Pessoas::find(Auth::user()->id_pessoa)->supervisor) || ($tipo == "permissao" && $this->permissao_usuario($id_pessoa))) {
-            $senha = Hash::make($request->password);
-            DB::statement("INSERT INTO users (name, email, password, id_pessoa) VALUES ('".trim($request->nome)."', '".trim($request->email)."', '".$senha."', ".$id_pessoa.")");
-            $this->log_inserir("C", "users", DB::table("users")
-                                                ->selectRaw("MAX(id) AS id")
-                                                ->value("id")
-            );
-            return true;
-        }
-        return false;
-    }
-
-    private function deletar_usuario($id_pessoa) {
-        $fk = DB::table("users")
-                ->where("id_pessoa", $id_pessoa)
-                ->value("id");
-        DB::statement("DELETE FROM users WHERE id_pessoa = ".$id_pessoa);
-        $this->log_inserir("D", "users", $fk);
-    }
-
     private function criados_por_mim($usuarios) {
         $consulta = DB::table("pessoas")
                         ->select("users.id")
@@ -146,6 +125,27 @@ class PessoasController extends Controller {
         return in_array(Pessoas::find($id_pessoa)->id_usuario, $this->criados_por_mim([Auth::user()->id]));
     }
 
+    private function criar_usuario($id_pessoa, Request $request, $tipo) {
+        if (($tipo == "supervisor" && Pessoas::find(Auth::user()->id_pessoa)->supervisor) || ($tipo == "permissao" && $this->permissao_usuario($id_pessoa))) {
+            $senha = Hash::make($request->password);
+            DB::statement("INSERT INTO users (name, email, password, id_pessoa) VALUES ('".trim($request->nome)."', '".trim($request->email)."', '".$senha."', ".$id_pessoa.")");
+            $this->log_inserir("C", "users", DB::table("users")
+                                                ->selectRaw("MAX(id) AS id")
+                                                ->value("id")
+            ); // App\Http\Controllers\Controller.php
+            return true;
+        }
+        return false;
+    }
+
+    private function deletar_usuario($id_pessoa) {
+        $fk = DB::table("users")
+                ->where("id_pessoa", $id_pessoa)
+                ->value("id");
+        DB::statement("DELETE FROM users WHERE id_pessoa = ".$id_pessoa);
+        $this->log_inserir("D", "users", $fk); // App\Http\Controllers\Controller.php
+    }
+
     private function salvar_main(Pessoas $modelo, Request $request) {
         $modelo->nome = mb_strtoupper($request->nome);
         $modelo->cpf = $request->cpf;
@@ -158,12 +158,12 @@ class PessoasController extends Controller {
         if ($request->file("foto")) $modelo->foto = $request->file("foto")->store("uploads", "public");
         $modelo->id_usuario = Auth::user()->id;
         $modelo->save();
-        $this->log_inserir($request->id ? "E" : "C", "pessoas", $modelo->id);
+        $this->log_inserir($request->id ? "E" : "C", "pessoas", $modelo->id); // App\Http\Controllers\Controller.php
         return $modelo;
     }
 
     private function cria_usuario($id) {
-        return intval($this->setor_mostrar($id)->cria_usuario);
+        return intval($this->setor_mostrar($id)->cria_usuario); // App\Http\Controllers\Controller.php
     }
 
     private function busca_emp($id_emp, $id_matriz) {
@@ -186,7 +186,7 @@ class PessoasController extends Controller {
                         }
                     })
                     ->where(function($sql) {
-                        $m_emp = $this->obter_empresa();
+                        $m_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
                         if ($m_emp) {
                             $possiveis = [$m_emp];
                             $matriz = intval(Empresas::find($possiveis[0])->id_matriz);
@@ -348,7 +348,7 @@ class PessoasController extends Controller {
     }
 
     public function salvar(Request $request) {
-        if ($this->verifica_vazios($request, ["nome", "funcao", "admissao", "cpf"])) return 400;
+        if ($this->verifica_vazios($request, ["nome", "funcao", "admissao", "cpf"])) return 400; // App\Http\Controllers\Controller.php
         if ($this->cria_usuario($request->id_setor)) {
             if (!trim($request->email)) return 400;
             if (!filter_var($request->email, FILTER_VALIDATE_EMAIL)) return 400;
@@ -358,7 +358,7 @@ class PessoasController extends Controller {
         if ($admissao->greaterThan($hj)) return 400;
         if ($this->consultar_main($request)->tipo != "ok") return 401;
 
-        if ($this->obter_empresa()) {
+        if ($this->obter_empresa()) { // App\Http\Controllers\Controller.php
             $dados = $this->obter_dados();
             $empresas_possiveis_obj = $dados->empresas;
             $empresas_possiveis_arr = array();
@@ -377,19 +377,19 @@ class PessoasController extends Controller {
             $modelo = Pessoas::find($request->id);
             $setor_ant = $modelo->id_setor;
             if (
-                !$this->comparar_texto($request->cpf, $modelo->cpf) &&
-                !$this->comparar_texto($request->nome, $modelo->nome) &&
-                !$this->comparar_texto($request->funcao, $modelo->funcao) &&
-                !$this->comparar_num($request->id_setor, $setor_ant) &&
-                !$this->comparar_texto($admissao->format('Y-m-d'), strval($modelo->admissao))
+                !$this->comparar_texto($request->cpf, $modelo->cpf) && // App\Http\Controllers\Controller.php
+                !$this->comparar_texto($request->nome, $modelo->nome) && // App\Http\Controllers\Controller.php
+                !$this->comparar_texto($request->funcao, $modelo->funcao) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($request->id_setor, $setor_ant) && // App\Http\Controllers\Controller.php
+                !$this->comparar_texto($admissao->format('Y-m-d'), strval($modelo->admissao)) // App\Http\Controllers\Controller.php
             ) return 400;
             if ($setor_ant != $request->id_setor) array_push($setores, $setor_ant);
             if ($request->id_setor) {
                 if (
                     $this->cria_usuario($request->id_setor) && $this->cria_usuario($setor_ant) && (
                         $request->password ||
-                        $this->comparar_texto($request->email, $modelo->email) ||
-                        $this->comparar_texto($request->nome, $modelo->nome)
+                        $this->comparar_texto($request->email, $modelo->email) || // App\Http\Controllers\Controller.php
+                        $this->comparar_texto($request->nome, $modelo->nome) // App\Http\Controllers\Controller.php
                     )
                 ) {
                     if (!$this->permissao_usuario($request->id)) return 401;
@@ -439,7 +439,7 @@ class PessoasController extends Controller {
             DB::table("pessoas")
                 ->where("lixeira", 0)
                 ->whereIn("id_setor", $setores)
-        );
+        ); // App\Http\Controllers\Controller.php
         return redirect("/colaboradores/pagina/".$tipo);
     }
 
@@ -451,6 +451,7 @@ class PessoasController extends Controller {
         $this->log_inserir("D", "pessoas", $linha->id);
         if ($this->cria_usuario($linha->id_setor)) $this->deletar_usuario($linha->id);
         DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa = ".$linha->id);
+        return 200;
     }
 
     public function supervisor(Request $request) {
@@ -473,7 +474,7 @@ class PessoasController extends Controller {
         if (!sizeof(
             DB::table("pessoas")
                 ->where("id", $request->id)
-                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "pessoas"))
+                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "pessoas")) // App\Http\Controllers\Controller.php
                 ->get()
         )) return 401;
         return Pessoas::find($request->id)->senha;

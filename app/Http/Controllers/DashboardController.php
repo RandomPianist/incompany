@@ -32,14 +32,14 @@ class DashboardController extends Controller {
                                 ->joinsub(
                                     DB::table("retiradas")
                                         ->selectRaw("DISTINCTROW id_pessoa")
-                                        ->whereRaw($this->obter_where($id_pessoa, "retiradas"))
+                                        ->whereRaw($this->obter_where($id_pessoa, "retiradas")) // App\Http\Controllers\Controller.php
                                         ->whereRaw("retiradas.data >= '".$inicio."'")
                                         ->whereRaw("retiradas.data <= '".$fim."'"),
                                     "ret",
                                     "ret.id_pessoa",
                                     "pessoas.id"
                                 )
-                                ->whereRaw($this->obter_where($id_pessoa, "pessoas", true))
+                                ->whereRaw($this->obter_where($id_pessoa, "pessoas", true)) // App\Http\Controllers\Controller.php
                                 ->get();
         foreach ($ultimas_retiradas as $retirada) $retirada->foto = asset("storage/".$retirada->foto);
         return $ultimas_retiradas;
@@ -59,8 +59,8 @@ class DashboardController extends Controller {
                 ->join("setores", "setores.id", "retiradas.id_setor")
                 ->whereRaw("retiradas.data >= '".$inicio."'")
                 ->whereRaw("retiradas.data <= '".$fim."'")
-                ->whereRaw($this->obter_where($id_pessoa, "retiradas"))
-                ->whereRaw($this->obter_where($id_pessoa, "setores"))
+                ->whereRaw($this->obter_where($id_pessoa, "retiradas")) // App\Http\Controllers\Controller.php
+                ->whereRaw($this->obter_where($id_pessoa, "setores")) // App\Http\Controllers\Controller.php
                 ->groupby(
                     "setores.id",
                     "setores.descr"
@@ -148,7 +148,7 @@ class DashboardController extends Controller {
                             "pendente.id_pessoa",
                             "pessoas.id"
                         )
-                        ->whereRaw($this->obter_where($id_pessoa))
+                        ->whereRaw($this->obter_where($id_pessoa)) // App\Http\Controllers\Controller.php
                         ->orderby("pendente.qtd", "DESC")
                         ->get();
 
@@ -192,8 +192,8 @@ class DashboardController extends Controller {
                         DB::raw("SUM(retiradas.qtd) AS retirados")
                     )
                     ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
-                    ->whereRaw($this->obter_where($id_pessoa, "pessoas", true))
-                    ->whereRaw($this->obter_where($id_pessoa, "retiradas"))
+                    ->whereRaw($this->obter_where($id_pessoa, "pessoas", true)) // App\Http\Controllers\Controller.php
+                    ->whereRaw($this->obter_where($id_pessoa, "retiradas")) // App\Http\Controllers\Controller.php
                     ->whereRaw("retiradas.data >= '".$inicio."'")
                     ->whereRaw("retiradas.data <= '".$fim."'")
                     ->groupby(
@@ -283,8 +283,8 @@ class DashboardController extends Controller {
                         DB::raw("SUM(retiradas.preco) AS valor")
                     )
                     ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa))
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas"))
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa)) // App\Http\Controllers\Controller.php
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas")) // App\Http\Controllers\Controller.php
                     ->whereRaw("retiradas.data >= '".$inicio."'")
                     ->whereRaw("retiradas.data <= '".$fim."'")
                     ->where("retiradas.id_setor", $id_setor)

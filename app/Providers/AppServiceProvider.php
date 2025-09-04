@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
 
             View::composer('*', function ($view) use($servico) {
                 if (Auth::user() !== null) {
-                    $emp = Empresas::find($servico->srv_obter_empresa());
+                    $emp = Empresas::find($servico->srv_obter_empresa()); // App\Services\GlobaisService.php
                     $view->with([
                         'admin' => $emp === null,
                         'empresa_descr' => $emp !== null ? $emp->nome_fantasia : "Todas"
@@ -45,7 +45,7 @@ class AppServiceProvider extends ServiceProvider
             });
 
             View::composer(['produtos', 'setores', 'pessoas', 'empresas'], function ($view) use ($servico) {
-                $view->with('ultima_atualizacao', $servico->srv_log_consultar($view->getName()));
+                $view->with('ultima_atualizacao', $servico->srv_log_consultar($view->getName())); // App\Services\GlobaisService.php
             });
         }
     }

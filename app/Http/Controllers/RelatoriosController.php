@@ -14,7 +14,7 @@ use App\Models\Produtos;
 
 class RelatoriosController extends Controller {
     private function consultar_empresa(Request $request) {
-        return ($this->empresa_consultar($request) && trim($request->empresa)) || (trim($request->id_empresa) && !trim($request->empresa));
+        return ($this->empresa_consultar($request) && trim($request->empresa)) || (trim($request->id_empresa) && !trim($request->empresa)); // App\Http\Controllers\Controller.php
     }
 
     private function consultar_pessoa(Request $request, $considerar_lixeira) {
@@ -34,7 +34,7 @@ class RelatoriosController extends Controller {
                     ->join("valores", "valores.id", "comodatos.id_maquina")
                     ->join("empresas", "empresas.id", "comodatos.id_empresa")
                     ->select(DB::raw($select))
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "empresas"))
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "empresas")) // App\Http\Controllers\Controller.php
                     ->where("valores.lixeira", 0);
     }
 
@@ -132,7 +132,7 @@ class RelatoriosController extends Controller {
                         }
                         array_push($criterios, $periodo);
                     }
-                    $id_emp = $this->obter_empresa();
+                    $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
                     if ($request->id_pessoa) {
                         array_push($criterios, "Colaborador: ".Pessoas::find($request->id_pessoa)->nome);
                         $sql->where("retiradas.id_pessoa", $request->id_pessoa);
@@ -196,34 +196,34 @@ class RelatoriosController extends Controller {
     }
 
     public function comodatos() {
-        if ($this->obter_empresa()) return 401;
+        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
         $resultado = $this->comum("
             valores.descr AS maquina,
             empresas.nome_fantasia AS empresa,
             DATE_FORMAT(comodatos.inicio, '%d/%m/%Y') AS inicio,
             DATE_FORMAT(comodatos.fim, '%d/%m/%Y') AS fim
         ")->orderby("comodatos.inicio")->get();
-        return sizeof($resultado) ? view("reports/comodatos", compact("resultado")) : $this->view_mensagem("warning", "Não há nada para exibir");
+        return sizeof($resultado) ? view("reports/comodatos", compact("resultado")) : $this->view_mensagem("warning", "Não há nada para exibir"); // App\Http\Controllers\Controller.php
     }
 
     public function extrato_consultar(Request $request) {
-        return json_encode($this->extrato_consultar_main($request));
+        return json_encode($this->extrato_consultar_main($request)); // App\Http\Controllers\Controller.php
     }
 
     public function sugestao(Request $request) {
-        if ($this->extrato_consultar_main($request)->el) return 401;
-        $tela = $this->sugestao_main($request);
+        if ($this->extrato_consultar_main($request)->el) return 401; // App\Http\Controllers\Controller.php
+        $tela = $this->sugestao_main($request); // App\Http\Controllers\Controller.php
         $resultado = $tela->resultado;
         $criterios = $tela->criterios;
         if (sizeof($resultado)) return view("reports/saldo", compact("resultado", "criterios"));
-        return $this->view_mensagem("warning", "Não há nada para exibir");
+        return $this->view_mensagem("warning", "Não há nada para exibir"); // App\Http\Controllers\Controller.php
     }
 
     public function extrato(Request $request) {
-        $consulta = $this->extrato_consultar_main($request);
+        $consulta = $this->extrato_consultar_main($request); // App\Http\Controllers\Controller.php
         $el_erro = $consulta->el;
         if (in_array($el_erro, ["maquina", "produto"])) return 401;
-        $dados = $this->dados_comodato($request);
+        $dados = $this->dados_comodato($request); // App\Http\Controllers\Controller.php
 
         $r_inicio = $request->inicio;
         if ($r_inicio) {
@@ -307,7 +307,7 @@ class RelatoriosController extends Controller {
                         array_push($criterios, "Produto: ".$produto->descr);
                         $sql->where("mp.id_produto", $produto->id);
                     }
-                    if ($this->obter_empresa()) $sql->whereIn("mp.id_maquina", $this->maquinas_periodo($inicio, $fim));
+                    if ($this->obter_empresa()) $sql->whereIn("mp.id_maquina", $this->maquinas_periodo($inicio, $fim)); // App\Http\Controllers\Controller.php
                 })
                 ->whereRaw("log.data >= '".$inicio."'")
                 ->whereRaw("log.data <= '".$fim."'")
@@ -345,7 +345,7 @@ class RelatoriosController extends Controller {
         })->sortBy("descr")->values()->all();
         $criterios = join(" | ", $criterios);
         if (sizeof($resultado)) return view("reports/extrato".($request->lm == "S" ? "A" : "S"), compact("resultado", "criterios"));
-        return $this->view_mensagem("warning", "Não há nada para exibir");
+        return $this->view_mensagem("warning", "Não há nada para exibir"); // App\Http\Controllers\Controller.php
     }
 
     public function controle(Request $request) {
@@ -370,7 +370,7 @@ class RelatoriosController extends Controller {
         return json_encode(
             DB::table("pessoas")
                 ->where(function($sql) {
-                    $id_emp = $this->obter_empresa();
+                    $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
                     if ($id_emp) {
                         $sql->where(function($query) use($id_emp) {
                             $query->where(function($query2) use($id_emp) {
@@ -421,9 +421,9 @@ class RelatoriosController extends Controller {
                 ->join("setores", "setores.id", "retiradas.id_setor")
                 ->join("produtos", "produtos.id", "retiradas.id_produto")
                 ->leftjoin("empresas", "empresas.id", "retiradas.id_empresa")
-                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas"))
-                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "pessoas", true))
-                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores", true))
+                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas")) // App\Http\Controllers\Controller.php
+                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "pessoas", true)) // App\Http\Controllers\Controller.php
+                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores", true)) // App\Http\Controllers\Controller.php
                 ->where(function($sql) use($request, &$criterios) {
                     $inicio = "";
                     $fim = "";
@@ -513,7 +513,7 @@ class RelatoriosController extends Controller {
             $retorno->val_total = $val_total;
             return json_encode($retorno);
         }
-        return sizeof($resultado) ? view("reports/retiradas".$request->tipo, compact("resultado", "criterios", "quebra", "val_total", "qtd_total", "titulo")) : $this->view_mensagem("warning", "Não há nada para exibir");
+        return sizeof($resultado) ? view("reports/retiradas".$request->tipo, compact("resultado", "criterios", "quebra", "val_total", "qtd_total", "titulo")) : $this->view_mensagem("warning", "Não há nada para exibir"); // App\Http\Controllers\Controller.php
     }
 
     public function ranking(Request $request) {
@@ -558,9 +558,9 @@ class RelatoriosController extends Controller {
                             array_push($criterios, "Apenas ".$request->tipo);
                         }
                     })
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "pessoas", true))
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores", true))
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas"))
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "pessoas", true)) // App\Http\Controllers\Controller.php
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores", true)) // App\Http\Controllers\Controller.php
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas")) // App\Http\Controllers\Controller.php
                     ->groupby(
                         "pessoas.id_setor",
                         "pessoas.id",
@@ -584,7 +584,7 @@ class RelatoriosController extends Controller {
             ];
         })->values()->all();
         $criterios = join(" | ", $criterios);
-        return sizeof($resultado) ? view("reports/ranking", compact("resultado", "criterios", "qtd_total")) : $this->view_mensagem("warning", "Não há nada para exibir");
+        return sizeof($resultado) ? view("reports/ranking", compact("resultado", "criterios", "qtd_total")) : $this->view_mensagem("warning", "Não há nada para exibir"); // App\Http\Controllers\Controller.php
     }
 
     public function solicitacao($id) {
@@ -593,7 +593,7 @@ class RelatoriosController extends Controller {
                         ->where("id_solicitacao", $id)
                         ->pluck("obs");
         $solicitacao = Solicitacoes::find($id);
-        if ($this->obter_autor_da_solicitacao($solicitacao->id) != Auth::user()->id_pessoa) return 401;
+        if ($this->obter_autor_da_solicitacao($solicitacao->id) != Auth::user()->id_pessoa) return 401; // App\Http\Controllers\Controller.php
         $resultado = array();
         foreach ($consulta as $obs) {
             $aux = explode("|", $obs);

@@ -218,7 +218,7 @@ class ApiController extends Controller {
         $linha->save();
         $nome = "";
         if (isset($request->usu)) $nome = $request->usu;
-        $this->log_inserir($request->id ? "E" : "C", "categorias", $linha->id, "ERP", $nome);
+        $this->log_inserir($request->id ? "E" : "C", "categorias", $linha->id, "ERP", $nome); // App\Http\Controllers\Controller.php
         $resultado = new \stdClass;
         $resultado->id = $linha->id;
         $resultado->descr = $linha->descr;
@@ -229,7 +229,7 @@ class ApiController extends Controller {
         $linha = Produtos::firstOrNew(["id" => $request->id]);
         $nome = "";
         if (isset($request->usu)) $nome = $request->usu;
-        $this->atribuicao_atualiza_ref($request->id, $linha->referencia, $request->refer, $nome, true);
+        $this->atribuicao_atualiza_ref($request->id, $linha->referencia, $request->refer, $nome, true); // App\Http\Controllers\Controller.php
         $linha->descr = mb_strtoupper($request->descr);
         $linha->preco = $request->preco;
         $linha->validade = $request->validade;
@@ -248,8 +248,8 @@ class ApiController extends Controller {
         if (intval($request->lixeira)) $letra_log = "D";
         $nome = "";
         if (isset($request->usu)) $nome = $request->usu;
-        $this->log_inserir($letra_log, "produtos", $linha->id, "ERP", $nome);
-        $this->criar_mp($linha->id, "valores.id", true, $nome);
+        $this->log_inserir($letra_log, "produtos", $linha->id, "ERP", $nome); // App\Http\Controllers\Controller.php
+        $this->criar_mp($linha->id, "valores.id", true, $nome); // App\Http\Controllers\Controller.php
         $consulta = DB::table("produtos")
                         ->select(
                             "id",
@@ -288,7 +288,7 @@ class ApiController extends Controller {
             $linha->save();
             $nome = "";
             if (isset($request->usu)) $nome = $request->usu;
-            $this->log_inserir("C", "estoque", $linha->id, "ERP", $nome);
+            $this->log_inserir("C", "estoque", $linha->id, "ERP", $nome); // App\Http\Controllers\Controller.php
         }
         return 200;
     }
@@ -312,7 +312,7 @@ class ApiController extends Controller {
         );
         $nome = "";
         if (isset($request->usu)) $nome = $request->usu;
-        $this->log_inserir_lote("E", "maquinas_produtos", $where, "ERP", $nome);
+        $this->log_inserir_lote("E", "maquinas_produtos", $where, "ERP", $nome); // App\Http\Controllers\Controller.php
     }
 
     public function validar_app(Request $request) {
@@ -387,13 +387,13 @@ class ApiController extends Controller {
             if (
                 intval($emp->travar_ret) &&
                 !isset($retirada["id_supervisor"]) &&
-                !$this->retirada_consultar($retirada["id_atribuicao"], $retirada["qtd"], $retirada["id_pessoa"])
+                !$this->retirada_consultar($retirada["id_atribuicao"], $retirada["qtd"], $retirada["id_pessoa"]) // App\Http\Controllers\Controller.php
             ) {
                 $resultado->code = 401;
                 $resultado->msg = "Essa quantidade de produtos não é permitida para essa pessoa";
                 return json_encode($resultado);
             }
-            if (floatval($retirada["qtd"]) > $this->retorna_saldo_mp($maquinas[0]->id, $retirada["id_produto"])) {
+            if (floatval($retirada["qtd"]) > $this->retorna_saldo_mp($maquinas[0]->id, $retirada["id_produto"])) { // App\Http\Controllers\Controller.php
                 $resultado->code = 500;
                 $resultado->msg = "Essa quantidade de produtos não está disponível em estoque";
                 return json_encode($resultado);
@@ -414,7 +414,7 @@ class ApiController extends Controller {
                 ];
             }
             if (isset($retirada["biometria_ou_senha"])) $salvar += ["biometria_ou_senha" => $retirada["biometria_ou_senha"]];
-            array_push($excluir_ret, $this->retirada_salvar($salvar));
+            array_push($excluir_ret, $this->retirada_salvar($salvar)); // App\Http\Controllers\Controller.php
             $linha = new Estoque;
             $linha->es = "S";
             $linha->descr = "RETIRADA";
@@ -424,7 +424,7 @@ class ApiController extends Controller {
                                 ->where("id_maquina", $maquinas[0]->id)
                                 ->value("id");
             $linha->save();
-            $reg_log = $this->log_inserir("C", "estoque", $linha->id, "APP");
+            $reg_log = $this->log_inserir("C", "estoque", $linha->id, "APP"); // App\Http\Controllers\Controller.php
             $reg_log->id_pessoa = $retirada["id_pessoa"];
             $reg_log->nome = Pessoas::find($retirada["id_pessoa"])->nome;
             $reg_log->save();
@@ -465,7 +465,7 @@ class ApiController extends Controller {
     }
 
     public function validar_spv(Request $request) {
-        return $this->supervisor_consultar($request);
+        return $this->supervisor_consultar($request); // App\Http\Controllers\Controller.php
     }
 
     public function marcar_gerou_pedido(Request $request) {
@@ -476,7 +476,7 @@ class ApiController extends Controller {
             $retirada->save();
             $nome = "";
             if (isset($request->usu)) $nome = $request->usu;
-            $this->log_inserir("E", "retiradas", $id, "ERP", $nome);
+            $this->log_inserir("E", "retiradas", $id, "ERP", $nome); // App\Http\Controllers\Controller.php
         }
         return "salvou";
     }
@@ -487,7 +487,7 @@ class ApiController extends Controller {
         $empresa->save();
         $nome = "";
         if (isset($request->usu)) $nome = $request->usu;
-        $this->log_inserir("E", "empresas", $empresa->id, "APP", $nome);
+        $this->log_inserir("E", "empresas", $empresa->id, "APP", $nome); // App\Http\Controllers\Controller.php
         return $empresa->id;
     }
 
@@ -510,7 +510,7 @@ class ApiController extends Controller {
         if ($pessoa == null) return [];
         $pessoa->biometria = $request->biometria;
         $pessoa->save();
-        $this->log_inserir("E", "pessoas", $pessoa->id, "APP");
+        $this->log_inserir("E", "pessoas", $pessoa->id, "APP"); // App\Http\Controllers\Controller.php
         return 200;
     }
 

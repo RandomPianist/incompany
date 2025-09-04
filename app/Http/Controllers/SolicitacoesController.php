@@ -28,7 +28,7 @@ class SolicitacoesController extends Controller {
             $resultado->continuar = 1;
             return $resultado;
         }
-        $id_autor = $this->obter_autor_da_solicitacao($solicitacao->id);
+        $id_autor = $this->obter_autor_da_solicitacao($solicitacao->id); // App\Http\Controllers\Controller.php
         $resultado->continuar = 0;
         $resultado->status = $solicitacao->status;
         $resultado->data = DB::table("solicitacoes")
@@ -42,12 +42,12 @@ class SolicitacoesController extends Controller {
     }
 
     public function ver(Request $request) {
-        if ($this->extrato_consultar_main($request)->el) return 401;
-        $tela = $this->sugestao_main($request);
+        if ($this->extrato_consultar_main($request)->el) return 401; // App\Http\Controllers\Controller.php
+        $tela = $this->sugestao_main($request); // App\Http\Controllers\Controller.php
         $resultado = $tela->resultado;
         $criterios = $tela->criterios;
         if (sizeof($resultado)) return view("solicitacoes", compact("resultado", "criterios"));
-        return $this->view_mensagem("warning", "Não há nada para exibir");
+        return $this->view_mensagem("warning", "Não há nada para exibir"); // App\Http\Controllers\Controller.php
     }
 
     public function consultar($id_comodato) {
@@ -111,7 +111,7 @@ class SolicitacoesController extends Controller {
         return json_encode(
             DB::table("comodatos")
                     ->whereRaw("((CURDATE() BETWEEN inicio AND fim) OR (CURDATE() BETWEEN inicio AND fim))")
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "comodatos"))
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "comodatos")) // App\Http\Controllers\Controller.php
                     ->where(function($sql) use($request) {
                         if (isset($request->id_maquina)) $sql->where("id_maquina", $request->id_maquina);
                     })
@@ -130,12 +130,12 @@ class SolicitacoesController extends Controller {
         if ($solicitacao === null) return 200;
         if (
             !intval($solicitacao->avisou) &&
-            $solicitacao->status <> "C" &&
-            Auth::user()->id_pessoa == $this->obter_autor_da_solicitacao($solicitacao->id)
+            $solicitacao->status != "C" &&
+            Auth::user()->id_pessoa == $this->obter_autor_da_solicitacao($solicitacao->id) // App\Http\Controllers\Controller.php
         ) {
             $solicitacao->avisou = 1;
             $solicitacao->save();
-            $this->log_inserir("E", "solicitacoes", $solicitacao->id);
+            $this->log_inserir("E", "solicitacoes", $solicitacao->id); // App\Http\Controllers\Controller.php
             $possui_inconsistencias = "";
             $consulta = DB::table("solicitacoes_produtos")
                             ->whereRaw("IFNULL(obs, '') <> ''")
@@ -172,7 +172,7 @@ class SolicitacoesController extends Controller {
         $solicitacao->id_comodato = $request->id_comodato;
         $solicitacao->usuario_web = Pessoas::find(Auth::user()->id_pessoa)->nome;
         $solicitacao->save();
-        $this->log_inserir("C", "solicitacoes", $solicitacao->id);
+        $this->log_inserir("C", "solicitacoes", $solicitacao->id); // App\Http\Controllers\Controller.php
         for ($i = 0; $i < sizeof($request->id_produto); $i++) {
             if (intval($request->qtd[$i])) {
                 $sp = new SolicitacoesProdutos;
@@ -185,20 +185,21 @@ class SolicitacoesController extends Controller {
                                     ->value("preco");
                 $sp->id_solicitacao = $solicitacao->id;
                 $sp->save();
-                $this->log_inserir("C", "solicitacoes_produtos", $solicitacao->id);
+                $this->log_inserir("C", "solicitacoes_produtos", $solicitacao->id); // App\Http\Controllers\Controller.php
             }
         }
         $where = "id_comodato = ".$request->id_comodato;
         DB::statement("UPDATE previas SET confirmado = 1 WHERE ".$where);
-        $this->log_inserir_lote("E", "previas", $where);
-        return $this->view_mensagem("success", "Solicitação realizada");
+        $this->log_inserir_lote("E", "previas", $where); // App\Http\Controllers\Controller.php
+        return $this->view_mensagem("success", "Solicitação realizada"); // App\Http\Controllers\Controller.php
     }
 
     public function cancelar(Request $request) {
         $solicitacao = Solicitacoes::find($request->id);
-        if ($solicitacao->status != "A" || $this->obter_autor_da_solicitacao($solicitacao->id) != Auth::user()->id_pessoa) return 401;
+        if ($solicitacao->status != "A" || $this->obter_autor_da_solicitacao($solicitacao->id) != Auth::user()->id_pessoa) return 401; // App\Http\Controllers\Controller.php
         $solicitacao->status = "C";
         $solicitacao->save();
-        $this->log_inserir("D", "solicitacoes", $solicitacao->id);
+        $this->log_inserir("D", "solicitacoes", $solicitacao->id); // App\Http\Controllers\Controller.php
+        return 200;
     }
 }

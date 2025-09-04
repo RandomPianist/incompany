@@ -23,7 +23,7 @@ class Controller extends BaseController {
 
     protected function obter_empresa() {
         $servico = new GlobaisService;
-        return $servico->srv_obter_empresa();
+        return $servico->srv_obter_empresa(); // App\Services\GlobaisService.php
     }
 
     protected function comparar_num($a, $b) {
@@ -134,7 +134,7 @@ class Controller extends BaseController {
 
     protected function log_consultar($tabela, $param = "") {
         $servico = new GlobaisService;
-        return $servico->srv_log_consultar($tabela, $param);
+        return $servico->srv_log_consultar($tabela, $param); // App\Services\GlobaisService.php
     }
 
     protected function retirada_consultar($id_atribuicao, $qtd, $id_pessoa) {

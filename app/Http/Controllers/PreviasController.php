@@ -22,12 +22,12 @@ class PreviasController extends Controller {
         $linha->id_produto = $request->id_produto;
         $linha->qtd = $request->qtd;
         $linha->save();
-        $this->log_inserir($id === null ? "C" : "E", "previas", $linha->id);
+        $this->log_inserir($id === null ? "C" : "E", "previas", $linha->id); // App\Http\Controllers\Controller.php
     }
 
     public function excluir(Request $request) {
         $where = "id_comodato = ".$request->id_comodato." AND id_pessoa = ".Auth::user()->id_pessoa;
-        $this->log_inserir_lote("D", "previas", $where);
+        $this->log_inserir_lote("D", "previas", $where); // App\Http\Controllers\Controller.php
         DB::statement("DELETE FROM previas WHERE ".$where);
     }
 

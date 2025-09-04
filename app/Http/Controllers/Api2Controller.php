@@ -59,21 +59,21 @@ class Api2Controller extends Controller {
             $inserir_log = true;
             $validade_ca = Carbon::createFromFormat('d-m-Y', $req_produto->validade_ca)->format('Y-m-d');
             if ($produto !== null) {
-                if ($this->comparar_texto($req_produto->cod, $produto->cod_externo)) $continua = true;
-                if ($this->comparar_texto($req_produto->descr, $produto->descr)) $continua = true;
-                if ($this->comparar_texto($req_produto->ca, $produto->ca)) $continua = true;
-                if ($this->comparar_texto($validade_ca, $produto->validade_ca)) $continua = true;
-                if ($this->comparar_texto($req_produto->refer, $produto->referencia)) {
-                    $this->atribuicao_atualiza_ref($req_produto->id, $produto->referencia, $req_produto->refer, $usuario, true);
+                if ($this->comparar_texto($req_produto->cod, $produto->cod_externo)) $continua = true; // App\Http\Controllers\Controller.php
+                if ($this->comparar_texto($req_produto->descr, $produto->descr)) $continua = true; // App\Http\Controllers\Controller.php
+                if ($this->comparar_texto($req_produto->ca, $produto->ca)) $continua = true; // App\Http\Controllers\Controller.php
+                if ($this->comparar_texto($validade_ca, $produto->validade_ca)) $continua = true; // App\Http\Controllers\Controller.php
+                if ($this->comparar_texto($req_produto->refer, $produto->referencia)) { // App\Http\Controllers\Controller.php
+                    $this->atribuicao_atualiza_ref($req_produto->id, $produto->referencia, $req_produto->refer, $usuario, true); // App\Http\Controllers\Controller.php
                     $continua = true;
                 }
-                if ($this->comparar_texto($req_produto->cod_fab, $produto->cod_fab)) $continua = true;
-                if ($this->comparar_texto($req_produto->tamanho, $produto->tamanho)) $continua = true;
-                if ($this->comparar_texto($req_produto->foto, $produto->foto)) $continua = true;
-                if ($this->comparar_num($req_produto->prcad, $produto->preco)) $continua = true;
-                if ($this->comparar_num($req_produto->prmin, $produto->prmin)) $continua = true;
-                if ($this->comparar_num($req_produto->validade, $produto->validade)) $continua = true;
-                if ($this->comparar_num($req_produto->consumo, $produto->consumo)) $continua = true;
+                if ($this->comparar_texto($req_produto->cod_fab, $produto->cod_fab)) $continua = true; // App\Http\Controllers\Controller.php
+                if ($this->comparar_texto($req_produto->tamanho, $produto->tamanho)) $continua = true; // App\Http\Controllers\Controller.php
+                if ($this->comparar_texto($req_produto->foto, $produto->foto)) $continua = true; // App\Http\Controllers\Controller.php
+                if ($this->comparar_num($req_produto->prcad, $produto->preco)) $continua = true; // App\Http\Controllers\Controller.php
+                if ($this->comparar_num($req_produto->prmin, $produto->prmin)) $continua = true; // App\Http\Controllers\Controller.php
+                if ($this->comparar_num($req_produto->validade, $produto->validade)) $continua = true; // App\Http\Controllers\Controller.php
+                if ($this->comparar_num($req_produto->consumo, $produto->consumo)) $continua = true; // App\Http\Controllers\Controller.php
             } else {
                 $produto = new Produtos;
                 $continua = true;
@@ -93,29 +93,29 @@ class Api2Controller extends Controller {
                 $produto->consumo = $req_produto->consumo;
                 $produto->save();
                 $inserir_log = false;
-                $this->log_inserir(intval($req_produto->id) ? "E" : "C", "produtos", $produto->id, "ERP", $usuario);
+                $this->log_inserir(intval($req_produto->id) ? "E" : "C", "produtos", $produto->id, "ERP", $usuario); // App\Http\Controllers\Controller.php
             }
             $where_mp = "id_maquina = ".$maquina." AND id_produto = ".$produto->id;
             if (!intval($req_produto->id)) {
-                $this->criar_mp($produto->id, "valores.id", true, $usuario);
+                $this->criar_mp($produto->id, "valores.id", true, $usuario); // App\Http\Controllers\Controller.php
                 array_push($ids_itm, $produto->id);
                 array_push($cods_itm, $produto->cod_externo);
             }
-            if ($this->comparar_num($req_produto->preco, $req_produto->prcad)) {
+            if ($this->comparar_num($req_produto->preco, $req_produto->prcad)) { // App\Http\Controllers\Controller.php
                 DB::statement("
                     UPDATE maquinas_produtos
                     SET preco = ".$req_produto->preco."
                     WHERE ".$where_mp
                 );
-                if (intval($req_produto->id)) $this->log_inserir_lote("E", "maquinas_produtos", $where_mp, "ERP", $usuario);
+                if (intval($req_produto->id)) $this->log_inserir_lote("E", "maquinas_produtos", $where_mp, "ERP", $usuario); // App\Http\Controllers\Controller.php
             }
             $req_categoria = (object) $req_produto->categoria;
             if (intval($req_categoria->cod)) {
                 $categoria = Valores::find($req_categoria->id);
                 $continua = false;
                 if ($categoria !== null) {
-                    if ($this->comparar_num($req_categoria->cod, $categoria->id_externo)) $continua = true;
-                    if ($this->comparar_texto($req_categoria->descr, $categoria->descr)) $continua = true;
+                    if ($this->comparar_num($req_categoria->cod, $categoria->id_externo)) $continua = true; // App\Http\Controllers\Controller.php
+                    if ($this->comparar_texto($req_categoria->descr, $categoria->descr)) $continua = true; // App\Http\Controllers\Controller.php
                 } else {
                     $categoria = new Valores;
                     $continua = true;
@@ -131,10 +131,10 @@ class Api2Controller extends Controller {
                         array_push($cods_cdp, $categoria->id_externo);
                     }
                 }
-                if ($this->comparar_num($produto->id_categoria, $categoria->id)) {
+                if ($this->comparar_num($produto->id_categoria, $categoria->id)) { // App\Http\Controllers\Controller.php
                     $produto->id_categoria = $categoria->id;
                     $produto->save();
-                    if ($inserir_log && !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario);
+                    if ($inserir_log && !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario); // App\Http\Controllers\Controller.php
                 }
             } else {
                 $id_cat = 0;
@@ -142,7 +142,7 @@ class Api2Controller extends Controller {
                 if ($id_cat) {
                     $produto->id_categoria = 0;
                     $produto->save();
-                    if ($inserir_log && !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario);
+                    if ($inserir_log && !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario); // App\Http\Controllers\Controller.php
                 }
             }
             $estq = new Estoque;
@@ -151,9 +151,9 @@ class Api2Controller extends Controller {
             $estq->id_mp = DB::table("maquinas_produtos")
                                 ->whereRaw($where_mp)
                                 ->value("id");
-            $estq->preco = MaquinasPrecos::find($estq->id_mp)->preco;
+            $estq->preco = MaquinasProdutos::find($estq->id_mp)->preco;
             $estq->save();
-            $this->log_inserir("C", "estoque", $estq->id, "ERP", $usuario);
+            $this->log_inserir("C", "estoque", $estq->id, "ERP", $usuario); // App\Http\Controllers\Controller.php
         }
         $resultado = new \stdClass;
         $resultado->ids_cdp = $ids_cdp;
@@ -161,6 +161,18 @@ class Api2Controller extends Controller {
         $resultado->ids_itm = $ids_itm;
         $resultado->cods_itm = $cods_itm;
         return $resultado;
+    }
+
+    private function alterar_solicitacao(Request $request, $status) {
+        if ($request->token != config("app.key")) return 401;
+        $solicitacao = Solicitacoes::find($request->id);
+        $solicitacao->data = $status == "E" ? Carbon::createFromFormat('d-m-Y', $request->prazo)->format('Y-m-d') : date("Y-m-d");
+        $solicitacao->status = $status;
+        $solicitacao->avisou = 0;
+        $solicitacao->usuario_erp = $request->usu;
+        $solicitacao->save();
+        $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
+        return 200;
     }
 
     public function maquinas_por_cliente(Request $request) {
@@ -218,9 +230,9 @@ class Api2Controller extends Controller {
         if ($id_empresa !== null) {
             $empresa = Empresas::find($id_empresa);
             if (intval($empresa->lixeira)) return "EXCLUIDO";
-            if ($this->comparar_texto($empresa->cnpj, $cnpj)) $continua = true;
-            if ($this->comparar_texto($empresa->razao_social, $request->emp_razao)) $continua = true;
-            if ($this->comparar_texto($empresa->nome_fantasia, $request->emp_fantasia)) $continua = true;   
+            if ($this->comparar_texto($empresa->cnpj, $cnpj)) $continua = true; // App\Http\Controllers\Controller.php
+            if ($this->comparar_texto($empresa->razao_social, $request->emp_razao)) $continua = true; // App\Http\Controllers\Controller.php
+            if ($this->comparar_texto($empresa->nome_fantasia, $request->emp_fantasia)) $continua = true; // App\Http\Controllers\Controller.php
         } else {
             $empresa = new Empresas;
             $continua = true;
@@ -231,7 +243,7 @@ class Api2Controller extends Controller {
             $empresa->nome_fantasia = $request->emp_fantasia;
             $empresa->cod_externo = $request->emp_cod;
             $empresa->save();
-            $this->log_inserir($id_empresa !== null ? "E" : "C", "empresas", $empresa->id, "ERP", $request->usu);
+            $this->log_inserir($id_empresa !== null ? "E" : "C", "empresas", $empresa->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
         }
         $maquina = new Valores;
         $maquina->descr = mb_strtoupper($request->maq);
@@ -243,9 +255,9 @@ class Api2Controller extends Controller {
                 ->value("ultimo")
         ) + 1;
         $maquina->save();
-        $this->log_inserir("C", "valores", $maquina->id, "ERP", $request->usu);
-        $this->criar_mp("produtos.id", $maquina->id, true, $request->usu);
-        $this->criar_comodato_main($maquina->id, $empresa->id, str_replace("-", "/", $request->ini), str_replace("-", "/", $request->fim));
+        $this->log_inserir("C", "valores", $maquina->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
+        $this->criar_mp("produtos.id", $maquina->id, true, $request->usu); // App\Http\Controllers\Controller.php
+        $this->criar_comodato_main($maquina->id, $empresa->id, str_replace("-", "/", $request->ini), str_replace("-", "/", $request->fim)); // App\Http\Controllers\Controller.php
         return $empresa->id;
     }
 
@@ -356,8 +368,9 @@ class Api2Controller extends Controller {
             $solicitacao = Solicitacoes::find($req_solicitacao["id"]);
             $solicitacao->id_externo = $req_solicitacao["recntf"];
             $solicitacao->save();
-            $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
+            $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
         }
+        return 200;
     }
 
     public function gravar_inexistentes(Request $request) {
@@ -375,36 +388,23 @@ class Api2Controller extends Controller {
             $sp = SolicitacoesProdutos::find($consulta[0]->id);
             $sp->obs = "Item removido: ".$req_sp["cod"]." - ".$consulta[0]->descr."|".config("app.msg_inexistente");
             $sp->save();
-            $this->log_inserir("E", "solicitacoes_produtos", $sp->id, "ERP", $request->usu);
+            $this->log_inserir("E", "solicitacoes_produtos", $sp->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
             $solicitacao = Solicitacoes::find($req_sp["id_solicitacao"]);
             if (intval($solicitacao->avisou)) {
                 $solicitacao->avisou = 0;
                 $solicitacao->save();
-                $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
+                $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
             }
         }
+        return 200;
     }
 
     public function aceitar_solicitacao(Request $request) {
-        if ($request->token != config("app.key")) return 401;
-        $solicitacao = Solicitacoes::find($request->id);
-        $solicitacao->data = Carbon::createFromFormat('d-m-Y', $request->prazo)->format('Y-m-d');
-        $solicitacao->status = "E";
-        $solicitacao->avisou = 0;
-        $solicitacao->usuario_erp = $request->usu;
-        $solicitacao->save();
-        $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
+        return $this->alterar_solicitacao($request, "E");
     }
 
     public function recusar_solicitacao(Request $request) {
-        if ($request->token != config("app.key")) return 401;
-        $solicitacao = Solicitacoes::find($request->id);
-        $solicitacao->data = date("Y-m-d");
-        $solicitacao->status = "R";
-        $solicitacao->avisou = 0;
-        $solicitacao->usuario_erp = $request->usu;
-        $solicitacao->save();
-        $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
+        return $this->alterar_solicitacao($request, "R");
     }
 
     public function receber_solicitacao(Request $request) {
@@ -421,7 +421,7 @@ class Api2Controller extends Controller {
             $solicitacao->usuario_erp2 = $request->usu;
             $solicitacao->data = Carbon::createFromFormat('d-m-Y', $req_solicitacao->data)->format('Y-m-d');
             $solicitacao->save();
-            $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu);
+            $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
             $maquina = Comodatos::find($solicitacao->id_comodato)->id_maquina;
             $sincronizacao = $this->sincronizar_produtos($maquina, $request->usu, $req_solicitacao->produtos);
             $ids_cdp_tmp = $sincronizacao->ids_cdp;
@@ -455,7 +455,7 @@ class Api2Controller extends Controller {
                                 ->value("preco");
                 if (!intval($id_sp)) $sp->origem = "ERP";
                 $sp->save();
-                $this->log_inserir(!intval($id_sp) ? "C" : "E", "solicitacoes_produtos", $sp->id, "ERP", $request->usu);
+                $this->log_inserir(!intval($id_sp) ? "C" : "E", "solicitacoes_produtos", $sp->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
             }
         }
         return json_encode(array(
@@ -510,7 +510,8 @@ class Api2Controller extends Controller {
             $retirada = Retiradas::find($req_retirada->id);
             $retirada->numero_ped = $req_retirada->cod_ods;
             $retirada->save();
-            $this->log_inserir("E", "retiradas", $retirada->id, "ERP", $request->usu);
+            $this->log_inserir("E", "retiradas", $retirada->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
         }
+        return 200;
     }
 }

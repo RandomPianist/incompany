@@ -15,7 +15,7 @@ class AtribuicoesController extends Controller {
             DB::table("pessoas")
                 ->where("lixeira", 0)
                 ->where($atribuicao->pessoa_ou_setor_chave == "S" ? "id_setor" : "id", $atribuicao->pessoa_ou_setor_valor)
-        );
+        ); // App\Http\Controllers\Controller.php
     }
 
     private function consulta_main($select) {
@@ -71,8 +71,8 @@ class AtribuicoesController extends Controller {
         $linha->obrigatorio = $request->obrigatorio;
         $linha->id_empresa = $request->pessoa_ou_setor_chave == "P" ? Pessoas::find($request->pessoa_ou_setor_valor)->id_empresa : Setores::find($request->pessoa_ou_setor_valor)->id_empresa;
         $linha->save();
-        $this->atualizar_aa($linha);
-        $this->log_inserir($request->id ? "E" : "C", "atribuicoes", $linha->id);
+        $this->atualizar_aa($linha); // App\Http\Controllers\Controller.php
+        $this->log_inserir($request->id ? "E" : "C", "atribuicoes", $linha->id); // App\Http\Controllers\Controller.php
         return 201;
     }
 
@@ -80,8 +80,8 @@ class AtribuicoesController extends Controller {
         $linha = Atribuicoes::find($request->id);
         $linha->lixeira = 1;
         $linha->save();
-        $this->atualizar_aa($linha);
-        $this->log_inserir("D", "atribuicoes", $linha->id);
+        $this->atualizar_aa($linha); // App\Http\Controllers\Controller.php
+        $this->log_inserir("D", "atribuicoes", $linha->id); // App\Http\Controllers\Controller.php
     }
 
     public function listar(Request $request) {

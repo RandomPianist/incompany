@@ -77,7 +77,7 @@ class EmpresasController extends Controller {
     }
 
     public function listar() {
-        $id_emp = $this->obter_empresa();
+        $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
         $resultado = new \stdClass;
         $resultado->inicial = $this->busca("M");
         $resultado->final = $this->busca("F");
@@ -138,11 +138,11 @@ class EmpresasController extends Controller {
         $linha = Empresas::firstOrNew(["id" => $request->id]);
         if (
             $request->id &&
-            !$this->comparar_texto($request->cnpj, $linha->cnpj) &&
-            !$this->comparar_texto($request->razao_social, $linha->razao_social) &&
-            !$this->comparar_texto($request->nome_fantasia, $linha->nome_fantasia) &&
-            !$this->comparar_num($request->mostrar_ret, $linha->mostrar_ret) &&
-            !$this->comparar_num($request->travar_ret, $linha->travar_ret)
+            !$this->comparar_texto($request->cnpj, $linha->cnpj) && // App\Http\Controllers\Controller.php
+            !$this->comparar_texto($request->razao_social, $linha->razao_social) && // App\Http\Controllers\Controller.php
+            !$this->comparar_texto($request->nome_fantasia, $linha->nome_fantasia) && // App\Http\Controllers\Controller.php
+            !$this->comparar_num($request->mostrar_ret, $linha->mostrar_ret) && // App\Http\Controllers\Controller.php
+            !$this->comparar_num($request->travar_ret, $linha->travar_ret) // App\Http\Controllers\Controller.php
         ) return 400;
         if (!$this->validar_cnpj($request->cnpj)) return 400;
         $linha->nome_fantasia = mb_strtoupper($request->nome_fantasia);
@@ -152,14 +152,14 @@ class EmpresasController extends Controller {
         $linha->travar_ret = $request->travar_ret;
         $linha->mostrar_ret = $request->mostrar_ret;
         $linha->save();
-        $this->log_inserir($request->id ? "E" : "C", "empresas", $linha->id);
+        $this->log_inserir($request->id ? "E" : "C", "empresas", $linha->id); // App\Http\Controllers\Controller.php
         if (!$request->id) {
             $setor = new Setores;
             $setor->descr = "ADMINISTRADORES";
             $setor->id_empresa = $linha->id;
             $setor->cria_usuario = 1;
             $setor->save();
-            $log = $this->log_inserir("C", "setores", $setor->id, "SYS", "SISTEMA");
+            $log = $this->log_inserir("C", "setores", $setor->id, "SYS", "SISTEMA"); // App\Http\Controllers\Controller.php
             $log->id_pessoa = Auth::user()->id_pessoa;
             $log->save();
         }
@@ -172,7 +172,7 @@ class EmpresasController extends Controller {
                 $modelo->travar_ret = $request->travar_ret;
                 $modelo->mostrar_ret = $request->mostrar_ret;
                 $modelo->save();
-                $this->log_inserir("E", "empresas", $modelo->id);
+                $this->log_inserir("E", "empresas", $modelo->id); // App\Http\Controllers\Controller.php
             }
         }
         return redirect("/empresas?grupo=".$request->id_matriz);
@@ -183,6 +183,7 @@ class EmpresasController extends Controller {
         $linha = Empresas::find($request->id);
         $linha->lixeira = 1;
         $linha->save();
-        $this->log_inserir("D", "empresas", $linha->id);
+        $this->log_inserir("D", "empresas", $linha->id); // App\Http\Controllers\Controller.php
+        return 200;
     }
 }
