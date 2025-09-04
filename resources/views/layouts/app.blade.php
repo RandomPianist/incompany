@@ -168,7 +168,7 @@
                                 <li onclick = "pessoa = new Pessoa(USUARIO)">
                                     <span>Editar</span>
                                 </li>
-                                <li onclick = "document.getElementById('logout-form').submit()">
+                                <li onclick = "$('#logout-form').submit()">
                                     <span>Sair</span>
                                 </li>
                             </ul>
