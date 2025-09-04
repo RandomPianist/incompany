@@ -43,7 +43,7 @@ function proximas_retiradas(id_pessoa) {
     $("#table-ret").addClass("d-none");
     $.get(URL + "/colaboradores/mostrar/" + id_pessoa, function(resp) {
         if (typeof resp == "string") resp = $.parseJSON(resp);
-        $("proximasRetiradasModalLabel").html("Próximas retiradas (" + resp.nome + ")");
+        $("#proximasRetiradasModalLabel").html("Próximas retiradas (" + resp.nome + ")");
         modal("proximasRetiradasModal", 0, function() {
             $.get(URL + "/retiradas/proximas/" + id_pessoa, function(data) {
                 if (typeof data == "string") data = $.parseJSON(data);
