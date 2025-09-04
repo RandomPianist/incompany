@@ -15,7 +15,7 @@ async function s_alert(obj) {
     };
     if (obj.icon !== undefined) {
         json.icon = obj.icon;
-        switch(obj.title) {
+        switch(json.icon) {
             case "success":
                 json.title = "Sucesso";
                 break;
