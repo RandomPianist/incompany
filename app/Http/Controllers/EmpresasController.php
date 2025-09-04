@@ -73,8 +73,7 @@ class EmpresasController extends Controller {
     }
 
     public function ver() {
-        $ultima_atualizacao = $this->log_consultar("empresas");
-        return view("empresas", compact("ultima_atualizacao"));
+        return view("empresas");
     }
 
     public function listar() {

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use App\Models\Pessoas;
 use App\Models\Empresas;
+use App\Services\GlobaisService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,16 +29,23 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        View::share("root_url", config("app.root_url"));
+
         if (strpos(Route::getCurrentRoute(), "api") === false) {
-            View::composer('*', function ($view) {
+            $servico = new GlobaisService;
+
+            View::composer('*', function ($view) use($servico) {
                 if (Auth::user() !== null) {
-                    $emp = Empresas::find(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+                    $emp = Empresas::find($servico->srv_obter_empresa());
                     $view->with([
                         'admin' => $emp === null,
-                        'empresa_descr' => $emp !== null ? $emp->nome_fantasia : "Todas",
-                        'root_url' => config("app.root_url")
+                        'empresa_descr' => $emp !== null ? $emp->nome_fantasia : "Todas"
                     ]);
                 }
+            });
+
+            View::composer(['produtos', 'setores', 'pessoas', 'empresas'], function ($view) use ($servico) {
+                $view->with('ultima_atualizacao', $servico->srv_log_consultar($view->getName()));
             });
         }
     }

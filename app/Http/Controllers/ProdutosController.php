@@ -29,8 +29,7 @@ class ProdutosController extends Controller {
     }
 
     public function ver() {
-        $ultima_atualizacao = $this->log_consultar("produtos");
-        return view("produtos", compact("ultima_atualizacao"));
+        return view("produtos");
     }
 
     public function listar(Request $request) {

@@ -84,8 +84,7 @@ class SetoresController extends Controller {
     }
 
     public function ver() {
-        $ultima_atualizacao = $this->log_consultar("setores");
-        return view("setores", compact("ultima_atualizacao"));
+        return view("setores");
     }
 
     public function listar(Request $request) {
