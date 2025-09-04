@@ -979,7 +979,7 @@ async function controleTodos(ids) {
     loader.removeProperty("display");
     $(elementos.id_pessoa).val("");
     if (!algum_existe) {
-        elementos.pessoa.classList.add("invalido");
+        $(elementos.pessoa).addClass("invalido");
         s_alert("Colaborador não encontrado");
     }
 }
