@@ -6,7 +6,7 @@
         <title>Loja Incompany</title>
         <link rel = "icon shortcut" href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
         <link rel = "icon"          href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
-        <link href = "{{ asset('css/my-style.css') }}" rel = "stylesheet" />
+        <link href = "{{ asset('css/geral/app.css') }}" rel = "stylesheet" />
     </head>
     <body>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/sweetalert2.js') }}"></script>

@@ -41,5 +41,5 @@ async function s_alert(obj) {
             el.scrollTo(0, scroll);
         }, 400);
     }
-    return showDenyButton ? obj.invert ? resultado.isDenied : resultado.isConfirmed : true;
+    return json.showDenyButton ? obj.invert ? resultado.isDenied : resultado.isConfirmed : true;
 }
