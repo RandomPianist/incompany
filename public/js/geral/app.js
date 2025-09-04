@@ -568,6 +568,11 @@ function RelatorioItens(tipo, maquina) {
     
     this.validar = function() {
         limpar_invalido();
+        if (tipo == "P") {
+            $(elementos.inicio).val("01/01/2000");
+            $(elementos.fim).val("01/01/3000");
+        }
+
         let erro = "";
         if (resumido && (!($(elementos.inicio).val() && $(elementos.fim).val())) && $("#rel-tipo").val() == "G") {
             if (!$(elementos.inicio).val()) $(elementos.inicio).addClass("invalido");
@@ -592,11 +597,13 @@ function RelatorioItens(tipo, maquina) {
                     $(elementos[el]).val(data[el + "_correto"]);
                 });
                 if (["maquina", "produto"].indexOf(data.el) == -1) {
-                    if (lista.length > 1) {
-                        erro = "As datas foram corrigidas";
-                        if (data.varias_maquinas == "N") erro += " para o início e o fim programado para a locação desta máquina";
-                    } else erro = "A locação " + (data.varias_maquinas == "S" ? "desta máquina" : data.el == "inicio" ? "mais antiga" : "mais recente") + (data.el == "inicio" ? " foi iniciada em " + data.inicio_correto : " tem seu término programado para " + data.fim_correto) + ", sendo essa a " + (data.el == "inicio" ? "menor" : "maior") + " data possível para pesquisar.<br>A data foi corrigida";
-                    erro += ".<br>Tente novamente.";
+                    if (tipo != "P") {
+                        if (lista.length > 1) {
+                            erro = "As datas foram corrigidas";
+                            if (data.varias_maquinas == "N") erro += " para o início e o fim programado para a locação desta máquina";
+                        } else erro = "A locação " + (data.varias_maquinas == "S" ? "desta máquina" : data.el == "inicio" ? "mais antiga" : "mais recente") + (data.el == "inicio" ? " foi iniciada em " + data.inicio_correto : " tem seu término programado para " + data.fim_correto) + ", sendo essa a " + (data.el == "inicio" ? "menor" : "maior") + " data possível para pesquisar.<br>A data foi corrigida";
+                        erro += ".<br>Tente novamente.";
+                    }
                 } else erro = erro == "maquina" ? "Máquina não encontrada" : "Produto não encontrado";
             }
             if (!erro) $("#relatorioItensModal form").submit();
@@ -619,7 +626,7 @@ function RelatorioItens(tipo, maquina) {
             $(elementos.inicio).val(hoje());
             $(elementos.fim).val(hoje());
             $("#rel-id_maquina2").val(maquina !== undefined ? maquina : 0);
-            $("#relatorioItensModalLabel").html(resumido ? maquina === undefined ? "Sugestão de compra" : "Solicitação de compra" : "Extrato de itens");
+            $("#relatorioItensModalLabel").html(resumido ? maquina === undefined ? "Sugestão de compra" : "Solicitação de compra" : tipo == "E" ? "Extrato de itens" : "Posição de estoque");
             $("#resumo").val(resumido ? "S" : "N");
             $("#rel-lm-chk").prop("checked", tipo == "E");
             $("#rel-lm-chk").trigger("change");
@@ -633,6 +640,8 @@ function RelatorioItens(tipo, maquina) {
             else $(el_maq).removeClass("d-none");
             if (resumido) $("#rel-modo-resumo").removeClass("d-none");
             else $("#rel-modo-resumo").addClass("d-none");
+            if (tipo == "P") $("#rel-datas").addClass("d-none");
+            else $("#rel-datas").removeClass("d-none");
         });
     }, 0);
 }

@@ -61,7 +61,7 @@ function extrato_maquina_dashboard(id_maquina) {
     req.inicio = dataInicialFormatada;
     req.fim = dataFinalFormatada;
 
-    req.lm = "S";
+    req.lm = "N";
     req.id_maquina = id_maquina;
     let link = document.createElement("a");
     link.href = URL + "/relatorios/extrato?" + $.param(req);

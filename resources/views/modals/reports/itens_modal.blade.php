@@ -61,7 +61,7 @@
                                 <input id = "rel-id_produto" name = "id_produto" type = "hidden" />
                             </div>
                         </div>
-                        <div class = "row">
+                        <div class = "row" id = "rel-datas">
                             <div class = "col-6">
                                 <label for = "rel-inicio1" class = "custom-label-form">Início:</label>
                                 <input id = "rel-inicio1" name = "inicio" class = "form-control data" autocomplete = "off" type = "text" data-prox = "rel-fim1" />
