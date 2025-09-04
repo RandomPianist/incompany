@@ -4,7 +4,7 @@
     <div class = "modal-dialog modal-lg" role = "document">
         <div class = "modal-content">
             <div class = "modal-header">
-                <h6 class = "modal-title header-color">Controle de Entrega</h6>
+                <h6 class = "modal-title header-color">Termo de retirada</h6>
                 <button type = "button" class = "close" data-dismiss = "modal" aria-label = "Close">
                     <span aria-hidden = "true">&times;</span>
                 </button>
