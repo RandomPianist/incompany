@@ -393,7 +393,10 @@ class ApiController extends Controller {
                 $resultado->msg = "Essa quantidade de produtos não é permitida para essa pessoa";
                 return json_encode($resultado);
             }
-            if (floatval($retirada["qtd"]) > $this->retorna_saldo_mp($maquinas[0]->id, $retirada["id_produto"])) { // App\Http\Controllers\Controller.php
+            if (
+                intval($emp->travar_ret) &&
+                floatval($retirada["qtd"]) > $this->retorna_saldo_mp($maquinas[0]->id, $retirada["id_produto"]) // App\Http\Controllers\Controller.php
+            ) {
                 $resultado->code = 500;
                 $resultado->msg = "Essa quantidade de produtos não está disponível em estoque";
                 return json_encode($resultado);
