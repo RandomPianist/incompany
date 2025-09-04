@@ -9,7 +9,7 @@
                     <span aria-hidden = "true">&times;</span>
                 </button>
             </div>
-            <form action = "{{ config('app.root_url') }}/maquinas/estoque" method = "POST">
+            <form action = "{{ $root_url }}/maquinas/estoque" method = "POST">
                 <div class = "modal-body">
                     <div class = "container">
                         @csrf

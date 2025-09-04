@@ -9,7 +9,7 @@
                     <span aria-hidden = "true">&times;</span>
                 </button>
             </div>
-            <form action = "{{ config('app.root_url') }}/relatorios/controle" method = "GET" target = "_blank">
+            <form action = "{{ $root_url }}/relatorios/controle" method = "GET" target = "_blank">
                 <div class = "modal-body">
                     <div class = "container">
                         <div class = "row">

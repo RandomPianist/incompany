@@ -13,7 +13,7 @@
         <link rel = "stylesheet"    href = "{{ asset('css/lib/fa.css')            }}" />
         <style type = "text/css">
             .form-search::after, .form-search-2::after {
-                background: url("{{ config('app.root_url') }}/img/keyboard.png") no-repeat;
+                background: url("{{ $root_url }}/img/keyboard.png") no-repeat;
                 background-size: contain;
                 bottom: 4.5px;
                 content: " ";
@@ -42,7 +42,7 @@
         <div id = "app">
             <main class = "py-4">
                 <div class = "main-toolbar shadow-sm">
-                    <a id = "link-home" href = "{{ config('app.address') }}{{ config('app.root_url') }}">
+                    <a id = "link-home" href = "{{ config('app.address') }}{{ $root_url }}">
                         <img src = "{{ asset('img/logo.png') }}" style = "height:100px">
                     </a>
                     <div class = "btn-toolbar px-3 mr-auto">
@@ -95,7 +95,7 @@
                                 </ul>
                             </a>
                         @endif
-                        <a href = "{{ config('app.root_url') }}/valores/maquinas">
+                        <a href = "{{ $root_url }}/valores/maquinas">
                             <img src = "{{ asset('img/maquinas.png') }}"  class = "img-menu" />
                             <span>Máquinas</span>
                         </a>
@@ -194,7 +194,7 @@
             <div></div>
         </div>
         <script type = "text/javascript" language = "JavaScript">
-            const URL = "{{ config('app.root_url') }}";
+            const URL = "{{ $root_url }}";
             const USUARIO = {{ Auth::user()->id_pessoa }};
             const EMPRESA = {{ App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa }};
 

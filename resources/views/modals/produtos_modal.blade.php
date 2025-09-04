@@ -9,7 +9,7 @@
                     <span aria-hidden = "true">&times;</span>
                 </button>
             </div>
-            <form action = "{{ config('app.root_url') }}/produtos/salvar" method = "POST" enctype = "multipart/form-data">
+            <form action = "{{ $root_url }}/produtos/salvar" method = "POST" enctype = "multipart/form-data">
                 <div class = "modal-body">
                     <div class = "container">
                         @csrf
@@ -76,7 +76,7 @@
                                 <input id = "id_categoria" name = "id_categoria" type = "hidden"/>
                             </div>
                             <div class = "col-1 d-flex align-items-center pl-0 pt-3 j-end">
-                                <a href = "{{ config('app.root_url') }}/valores/categorias" title = "Cadastro de categorias" target = "_blank">
+                                <a href = "{{ $root_url }}/valores/categorias" title = "Cadastro de categorias" target = "_blank">
                                     <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
                                 </a>
                             </div>

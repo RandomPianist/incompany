@@ -9,7 +9,7 @@
                     <span aria-hidden = "true">&times;</span>
                 </button>
             </div>
-            <form action = "{{ config('app.root_url') }}/setores/salvar" method = "POST">
+            <form action = "{{ $root_url }}/setores/salvar" method = "POST">
                 <div class = "modal-body">
                     <div class = "container">
                         @csrf
@@ -38,7 +38,7 @@
                                 <input id = "setor-id_empresa" name = "id_empresa" type = "hidden" />
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
-                                <a href = "{{ config('app.root_url') }}/empresas" title = "Cadastro de empresas" target = "_blank">
+                                <a href = "{{ $root_url }}/empresas" title = "Cadastro de empresas" target = "_blank">
                                     <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
                                 </a>
                             </div>

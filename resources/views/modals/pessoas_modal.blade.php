@@ -9,7 +9,7 @@
                     <span aria-hidden = "true">&times;</span>
                 </button>
             </div>
-            <form action = "{{ config('app.root_url') }}/colaboradores/salvar" method = "POST" enctype = "multipart/form-data">
+            <form action = "{{ $root_url }}/colaboradores/salvar" method = "POST" enctype = "multipart/form-data">
                 <div class = "modal-body">
                     <div class = "container">
                         @csrf
@@ -52,7 +52,7 @@
                                 <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control" onchange = "pessoa.toggle_emp()"></select>
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
-                                <a href = "{{ config('app.root_url') }}/empresas" title = "Cadastro de empresas" target = "_blank">
+                                <a href = "{{ $root_url }}/empresas" title = "Cadastro de empresas" target = "_blank">
                                     <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
                                 </a>
                             </div>
@@ -67,7 +67,7 @@
                                 <select id = "pessoa-setor-select" name = "id_setor" class = "form-control" onchange = "pessoa.toggle_user($(this).val())"></select>
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
-                                <a href = "{{ config('app.root_url') }}/setores" title = "Cadastro de centro de custos" target = "_blank">
+                                <a href = "{{ $root_url }}/setores" title = "Cadastro de centro de custos" target = "_blank">
                                     <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
                                 </a>
                             </div>

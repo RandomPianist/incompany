@@ -28,7 +28,7 @@
         </div>
     </div>
     <div class = "mt-2 mb-3 linha"></div>
-    <form action = "{{ config('app.root_url') }}/solicitacoes/criar" method = "POST" class = "d-none">
+    <form action = "{{ $root_url }}/solicitacoes/criar" method = "POST" class = "d-none">
         @csrf
         @foreach ($resultado AS $item)
             <input type = "hidden" name = "id_comodato" id = "id_comodato" />
@@ -117,7 +117,7 @@
     </form>
 
     <script type = "text/javascript" language = "JavaScript">
-        const URL = "{{ config('app.root_url') }}";
+        const URL = "{{ $root_url }}";
         const INICIO = "{{ request('inicio') }}";
         const FIM = "{{ request('fim') }}";
     </script>
