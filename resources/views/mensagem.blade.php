@@ -24,6 +24,5 @@
                 principal();
             }
         </script>
-        @yield("content")
     </body>
 </html>
