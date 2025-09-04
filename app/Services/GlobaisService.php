@@ -6,7 +6,7 @@ use DB;
 use Auth;
 use App\Models\Pessoas;
 
-class ConsultaService {
+class GlobaisService {
     public function srv_obter_empresa() {
         return intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
     }
