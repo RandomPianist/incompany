@@ -9,8 +9,8 @@
         <link rel = "icon"          href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
         <link rel = "stylesheet" href = "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" />
         <link rel = "stylesheet" href = "{{ asset('css/lib/app.css')           }}" />
-        <link rel = "stylesheet" href = "{{ asset('css/lib/bootstrap.min.css') }}" />
         <link rel = "stylesheet" href = "{{ asset('css/geral/app.css')         }}" />
+        <link rel = "stylesheet" href = "{{ asset('css/lib/bootstrap.min.css') }}" />
         <link rel = "stylesheet" href = "{{ asset('css/especifico/login.css')  }}" />
         <link rel = "stylesheet" href = "{{ asset('css/lib/fa.css')            }}" />
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/app.js') }}" defer></script>        

@@ -35,7 +35,7 @@ class EmpresasController extends Controller {
                         "id_matriz"
                     )
                     ->where(function($sql) use($param) {
-                        $empresa_usuario = Empresas::find($id_emp);
+                        $empresa_usuario = Empresas::find($this->obter_empresa()); // App\Http\Controllers\Controller.php
                         if ($empresa_usuario !== null) {
                             if ($param == "F" && !intval($empresa_usuario->id_matriz)) $sql->where("id_matriz", $empresa_usuario->id);
                             else $sql->where("id", $param == "M" ? !intval($empresa_usuario->id_matriz) ? $empresa_usuario->id : $empresa_usuario->id_matriz : $empresa_usuario->id);

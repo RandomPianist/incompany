@@ -74,7 +74,7 @@ function proximas_retiradas(id_pessoa) {
                         "<td class = 'align-middle'>" + linha.tamanho + "</td>" +
                         "<td class = 'align-middle text-right'>" + linha.qtd + "</td>" +
                         "<td class = 'align-middle'>" + linha.proxima_retirada + "</td>" +
-                        "<td class = 'align-middle' style = 'background:" + (dias < 0 ? "#ff0000" + op_vermelho : "#00ff00" + op_verde) + "'>" + Math.abs(dias) + "</td>" +
+                        "<td class = 'align-middle text-right' style = 'background:" + (dias < 0 ? "#ff0000" + op_vermelho : "#00ff00" + op_verde) + "'>" + Math.abs(dias) + "</td>" +
                     "</tr>";
                 });
                 $("#table-ret-dados").html(resultado);

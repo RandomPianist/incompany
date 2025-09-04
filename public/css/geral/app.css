@@ -675,54 +675,8 @@ table.atribuicoes th, table.atribuicoes td  {
     margin: auto
 }
 
-.card-dashboard {
-    height: calc(100vh - 203px);
-    overflow-y: auto;
-    min-width: 386px;
-}
-
-.header-card-dashboard {
-    height: 56px;
-}
-
-.titulo-card-dashboard {
-    font-size: 1.3rem;
-    color: #333;
-    font-weight: 600;
-}
-
-.subtitulo-card-dashboard {
-    font-size: 10pt;
-    color: #333;
-}
-
-.conteudo-card-dashboard {
-    margin:auto;
-}
-
-.table-body-dashboard {
-    width: 100%;
-    border: none;
-}
-
-.table-body-dashboard td {
-    font-weight: 400;
-    vertical-align: middle;
-    height: 80px;
-}
-
-.table-body-dashboard tr:first-child td {
-    border: none;
-}
-
 .clickable * {
     cursor: pointer
-}
-
-.foto-funcionario-dashboard {
-    width: 50px;
-    height:50px;
-    border-radius: .75rem;
 }
 
 .td-foto {

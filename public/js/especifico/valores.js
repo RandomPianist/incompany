@@ -9,7 +9,7 @@ function listar(coluna) {
             data.forEach((linha) => {
                 resultado += "<tr>" +
                     "<td class = 'text-right' width = '10%'>" + linha.seq.toString().padStart(4, "0") + "</td>";
-                if (comodato) {
+                if (COMODATO) {
                     resultado += "<td width = '30%'>" + linha.descr + "</td>" +
                         "<td width = '45%'>" + linha.comodato + "</td>";
                 } else resultado += "<td width = '75%'>" + linha.descr + "</td>";
@@ -28,13 +28,17 @@ function listar(coluna) {
                     resultado += "<i class = 'my-icon far fa-edit' title = 'Editar' onclick = 'chamar_modal(" + linha.id + ")'></i>" +
                         "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/valores/" + ALIAS + ""' + ")'></i>";
                 }
-                if (linha.alias == "maquinas" && EMPRESA && linha.tem_cod == "S") resultado += "<i class = 'my-icon far fa-cart-arrow-down' title = 'Solicitar compra' onclick = 'relatorio = new RelatorioItens(true, " + linha.id + ")'></i>";
+                if (linha.alias == "maquinas" && EMPRESA && linha.tem_cod == "S") resultado += "<i class = 'my-icon far fa-cart-arrow-down' title = 'Solicitar compra' onclick = 'chamarRelatorioItens(" + linha.id + ")'></i>";
                 resultado += "</td></tr>";
             });
             $("#table-dados").html(resultado);
             ordenar(coluna);
         } else mostrarImagemErro();
     });
+}
+
+function chamarRelatorioItens(id) {
+    relatorio = new RelatorioItens("S", id);
 }
 
 function extrato_maquina(id_maquina) {

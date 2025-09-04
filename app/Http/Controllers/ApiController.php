@@ -383,7 +383,7 @@ class ApiController extends Controller {
                 $resultado->msg = "Máquina não comodatada para nenhuma empresa";
                 return json_encode($resultado);
             }
-            $emp = Empresas::find(Pessoas::find($retirada["id_pessoa"]));
+            $emp = Empresas::find(Pessoas::find($retirada["id_pessoa"])->id_empresa);
             if (
                 intval($emp->travar_ret) &&
                 !isset($retirada["id_supervisor"]) &&

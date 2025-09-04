@@ -437,7 +437,7 @@ class Controller extends BaseController {
 
                     // DETALHES
                     "produtos.id AS id_produto",
-                    "produtos.descr AS produto",
+                    DB::raw("CONCAT(produtos.cod_externo, ' - ', produtos.descr) AS produto"),
                     "mp.minimo",
 
                     DB::raw("

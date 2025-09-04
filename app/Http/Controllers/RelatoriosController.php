@@ -248,7 +248,7 @@ class RelatoriosController extends Controller {
 
                     // GRUPO 2
                     "produtos.id AS id_produto",
-                    "produtos.descr AS produto",
+                    DB::raw("CONCAT(produtos.cod_externo, ' - ', produtos.descr) AS produto"),
                     DB::raw("IFNULL(tot.qtd, 0) AS saldo"),
                     "mp.preco",
 

@@ -44,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
                 }
             });
 
-            View::composer(['produtos', 'setores', 'pessoas', 'empresas'], function ($view) use ($servico) {
+            View::composer(['produtos', 'setores', 'empresas'], function ($view) use ($servico) {
                 $view->with('ultima_atualizacao', $servico->srv_log_consultar($view->getName())); // App\Services\GlobaisService.php
             });
         }

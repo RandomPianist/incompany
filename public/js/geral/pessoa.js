@@ -73,6 +73,10 @@ function Pessoa(_id) {
                         id : _id 
                     }, function(data) {
                         concluir(data);
+                        setTimeout(function() {
+                            $("#mostrar-senha-chk").prop("checked", false);
+                            that.mostrar_senha();
+                        }, 2000);
                     });
                 } else concluir($("#senha").val());
             } else concluir("");

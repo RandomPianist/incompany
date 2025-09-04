@@ -562,7 +562,8 @@ function RelatorioBilateral(_grupo) {
     }, 0);
 }
 
-function RelatorioItens(resumido, maquina) {
+function RelatorioItens(tipo, maquina) {
+    const resumido = tipo == "S";
     let elementos = relObterElementos(["inicio1", "fim1", "produto", "maquina2"]);
     
     this.validar = function() {
@@ -620,7 +621,11 @@ function RelatorioItens(resumido, maquina) {
             $("#rel-id_maquina2").val(maquina !== undefined ? maquina : 0);
             $("#relatorioItensModalLabel").html(resumido ? maquina === undefined ? "Sugestão de compra" : "Solicitação de compra" : "Extrato de itens");
             $("#resumo").val(resumido ? "S" : "N");
-            $("#rel-lm-chk").prop("checked", false);
+            $("#rel-lm-chk").prop("checked", tipo == "P");
+            $("#rel-lm-chk").trigger("change");
+            let pai = $($($($("#rel-lm-chk").parent()).parent()).parent());
+            if (!resumido) $(pai).addClass("d-none");
+            else $(pai).removeClass("d-none");
             $("label[for='rel-lm-chk']").html(resumido ? "Listar apenas produtos cuja compra é sugerida" : "Listar movimentação");
             $("#relatorioItensModal form").attr("action", resumido ? maquina === undefined ? URL + "/relatorios/sugestao" : URL + "/solicitacoes" : URL + "/relatorios/extrato");
             let el_maq = $($($("#rel-maquina2").parent()).parent());

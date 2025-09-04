@@ -8,8 +8,8 @@
         <link rel = "icon shortcut" href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
         <link rel = "icon"          href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
         <link rel = "stylesheet"    href = "{{ asset('css/lib/bootstrap.min.css') }}" />
-        <link rel = "stylesheet"    href = "{{ asset('css/lib/jquery-ui.min.css') }}" />
         <link rel = "stylesheet"    href = "{{ asset('css/geral/app.css')         }}" />
+        <link rel = "stylesheet"    href = "{{ asset('css/lib/jquery-ui.min.css') }}" />
         <link rel = "stylesheet"    href = "{{ asset('css/lib/fa.css')            }}" />
         <style type = "text/css">
             .form-search::after, .form-search-2::after {
@@ -105,38 +105,52 @@
                             <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
                             <ul class = "dropdown-toolbar">
                                 <li>
-                                    <span>Consumo<img class = "dropdown-icon" src = "/img/sort-down.png"></span>
+                                    <span>Pessoas & consumo<img class = "dropdown-icon" src = "/img/sort-down.png"></span>
                                     <ul class = "subdropdown-toolbar">
-                                        <li onclick = "relatorio = new RelatorioRetiradas('pessoa')">por colaborador</li>
-                                        <li onclick = "relatorio = new RelatorioRetiradas('setor')">por centro de custo</li>
+                                        <li onclick = "relatorio = new RelatorioControle()">
+                                            <span>Termo de retirada</span>
+                                        </li>
+                                        <li onclick = "relatorio = new RelatorioRetiradas('pessoa')">
+                                            <span>Consumo por pessoa</span>
+                                        </li>
+                                        <li onclick = "relatorio = new RelatorioRetiradas('setor')">
+                                            <span>Consumo por setor</span>
+                                        </li>
+                                        <li onclick = "relatorio = new RelatorioRanking()">
+                                            <span>Ranking de retiradas</span>
+                                        </li>
                                     </ul>
                                 </li>
-                                <li onclick = "relatorio = new RelatorioControle()">
-                                    <span>Controle de Entrega</span>
+                                <li>
+                                    <span>Estoque<img class = "dropdown-icon" src = "/img/sort-down.png"></span>
+                                    <ul class = "subdropdown-toolbar">
+                                        <li onclick = "relatorio = new RelatorioItens('E')">
+                                            <span>Extrato de itens</span>
+                                        </li>
+                                        <li onclick = "relatorio = new RelatorioItens('P')">
+                                            <span>Posição de estoque</span>
+                                        </li>
+                                        <li onclick = "relatorio = new RelatorioItens('S')">
+                                            <span>Sugestão de compra</span>
+                                        </li>
+                                    </ul>
                                 </li>
-
-                                    <li onclick = "relatorio = new RelatorioBilateral('empresas-por-maquina')">
-                                        <span>Empresas por máquina</span>
-                                    </li>
-                                    <li onclick = "relatorio = new RelatorioItens(false)">
-                                        <span>Extrato de itens</span>
-                                    </li>
-                                @if ($admin)
-                                    <li onclick = "window.open('{{ $root_url }}/relatorios/comodatos', '_blank')">
-                                        <span>Locação</span>
-                                    </li>
-                                @endif
-                                    <li onclick = "relatorio = new RelatorioBilateral('maquinas-por-empresa')">
-                                        <span>Máquinas por empresa</span>
-                                    </li>
-                                
-                                <li onclick = "relatorio = new RelatorioRanking()">
-                                    <span>Ranking de retiradas</span>
+                                <li>
+                                    <span>Outros<img class = "dropdown-icon" src = "/img/sort-down.png"></span>
+                                    <ul class = "subdropdown-toolbar">
+                                        <li onclick = "relatorio = new RelatorioBilateral('empresas-por-maquina')">
+                                            <span>Empresas por máquina</span>
+                                        </li>
+                                        <li onclick = "relatorio = new RelatorioBilateral('maquinas-por-empresa')">
+                                            <span>Máquinas por empresa</span>
+                                        </li>
+                                        @if ($admin)
+                                            <li onclick = "window.open('{{ $root_url }}/relatorios/comodatos', '_blank')">
+                                                <span>Locação</span>
+                                            </li>
+                                        @endif
+                                    </ul>
                                 </li>
-
-                                    <li onclick = "relatorio = new RelatorioItens(true)">
-                                        <span>Sugestão de compra</span>
-                                    </li>
                             </ul>
                         </a>
                     </div>

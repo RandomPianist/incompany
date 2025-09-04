@@ -36,6 +36,7 @@ class PessoasController extends Controller {
             if (sizeof($pessoas) <= 60) array_push($pessoas, $linha->id);
             if (intval($linha->mostrar_ret)) $mostrar_ret = true;
         }
+        if (!sizeof($pessoas)) return [];
         $query = "
             SELECT
                 pessoas.id,
@@ -291,11 +292,12 @@ class PessoasController extends Controller {
             $where = "setores1.cria_usuario = 1";
             if ($tipo == "A") $where .= " AND aux1.id_empresa = 0";
         }
+        $ultima_atualizacao = $this->log_consultar("pessoas", $where);
         $consulta = DB::table("atribuicoes")
                         ->selectRaw("MAX(qtd) AS qtd")
                         ->get();
         $max_atb = sizeof($consulta) ? $consulta[0]->qtd : 0;
-        return view("pessoas", compact("titulo", "tipo", "max_atb"));
+        return view("pessoas", compact("ultima_atualizacao", "titulo", "tipo", "max_atb"));
     }
 
     public function listar(Request $request) {
