@@ -247,8 +247,8 @@ class RelatoriosController extends Controller {
                     "valores.descr AS maquina",
 
                     // GRUPO 2
-                    "produtos.id AS id_produto",
-                    DB::raw("CONCAT(produtos.cod_externo, ' - ', produtos.descr) AS produto"),
+                    "vprodaux.id AS id_produto",
+                    "vprodaux.descr AS produto",
                     DB::raw("IFNULL(tot.qtd, 0) AS saldo"),
                     "mp.preco",
 
@@ -278,7 +278,7 @@ class RelatoriosController extends Controller {
                 )
                 ->join("estoque", "estoque.id", "log.fk")
                 ->join("maquinas_produtos AS mp", "mp.id", "estoque.id_mp")
-                ->join("produtos", "produtos.id", "mp.id_produto")
+                ->join("vprodaux", "vprodaux.id", "mp.id_produto")
                 ->join("valores", "valores.id", "mp.id_maquina")
                 ->leftjoin("pessoas", "pessoas.id", "log.id_pessoa")
                 ->leftjoinsub(
@@ -312,7 +312,7 @@ class RelatoriosController extends Controller {
                 ->whereRaw("log.data >= '".$inicio."'")
                 ->whereRaw("log.data <= '".$fim."'")
                 ->where("log.tabela", "estoque")
-                ->where("produtos.lixeira", 0)
+                ->where("vprodaux.lixeira", 0)
                 ->where("valores.lixeira", 0)
                 ->orderby("log.data")
                 ->get()

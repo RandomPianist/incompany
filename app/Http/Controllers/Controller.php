@@ -436,8 +436,8 @@ class Controller extends BaseController {
                     "mq.descr AS maquina",
 
                     // DETALHES
-                    "produtos.id AS id_produto",
-                    DB::raw("CONCAT(produtos.cod_externo, ' - ', produtos.descr) AS produto"),
+                    "vprodaux.id AS id_produto",
+                    "vprodaux.descr AS produto",
                     "mp.minimo",
 
                     DB::raw("
@@ -489,7 +489,7 @@ class Controller extends BaseController {
                         ) AS retiradas
                     ")
                 )
-                ->join("produtos", "produtos.id", "mp.id_produto")
+                ->join("vprodaux", "vprodaux.id", "mp.id_produto")
                 ->joinSub(
                     DB::table("valores")
                         ->select(
@@ -541,15 +541,15 @@ class Controller extends BaseController {
                     if ($request->id_produto) {
                         $produto = Produtos::find($request->id_produto);
                         array_push($criterios, "Produto: ".$produto->descr);
-                        $sql->where("produtos.id", $produto->id);
+                        $sql->where("vprodaux.id", $produto->id);
                     }
                 })
-                ->where("produtos.lixeira", 0)
+                ->where("vprodaux.lixeira", 0)
                 ->groupby(
                     "mq.id",
                     "mq.descr",
-                    "produtos.id",
-                    "produtos.descr",
+                    "vprodaux.id",
+                    "vprodaux.descr",
                     "mp.minimo"
                 )
                 ->get()
