@@ -321,18 +321,14 @@ class DashboardController extends Controller {
                 )
                 ->where("id_pessoa", $id_pessoa)
                 ->where("esta_pendente", 1)
-                ->groupby(
+                ->groupBy(
                     "id_produto",
                     "validade",
                     "qtd",
                     "nome_produto",
                     "produto_ou_referencia_chave",
-                    DB::raw("
-                        CASE
-                            WHEN produto_ou_referencia_chave = 'P' THEN descr
-                            ELSE referencia
-                        END
-                    ")
+                    "descr",
+                    "referencia"
                 )
                 ->orderby("qtd", "DESC")
                 ->get()

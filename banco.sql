@@ -294,8 +294,7 @@ CREATE VIEW vprodutos AS (
     JOIN empresas
         ON empresas.id = minhas_empresas.id_empresa
 
-    WHERE vestoque.qtd > 0
-      AND produtos.lixeira = 0
+    WHERE produtos.lixeira = 0
       AND empresas.lixeira = 0
       AND pessoas.lixeira = 0
       AND ((DATE(CONCAT(YEAR(CURDATE()), '-', MONTH(CURDATE()), '-01')) BETWEEN comodatos.inicio AND comodatos.fim) OR (CURDATE() BETWEEN comodatos.inicio AND comodatos.fim))
@@ -360,7 +359,7 @@ CREATE VIEW vatbaux AS (
         SELECT 
             p.id AS id_pessoa,
             a.id AS id_atribuicao,
-            NULL AS cod,
+            prod.cod_externo AS cod,
             a.produto_ou_referencia_valor AS ref,
             'PR' AS src
 
@@ -369,7 +368,11 @@ CREATE VIEW vatbaux AS (
         JOIN pessoas AS p
             ON p.id = a.pessoa_ou_setor_valor
         
-        WHERE a.lixeira = 0
+        JOIN produtos AS prod 
+            ON prod.cod_externo = a.produto_ou_referencia_valor
+        
+        WHERE prod.lixeira = 0
+          AND a.lixeira = 0
           AND a.pessoa_ou_setor_chave = 'P'
           AND a.produto_ou_referencia_chave = 'R'
     )
@@ -400,7 +403,7 @@ CREATE VIEW vatbaux AS (
         SELECT 
             p.id AS id_pessoa,
             a.id AS id_atribuicao,
-            NULL AS cod,
+            prod.cod_externo AS cod,
             a.produto_ou_referencia_valor AS ref,
             'SR' AS src
         
@@ -409,7 +412,11 @@ CREATE VIEW vatbaux AS (
         JOIN pessoas AS p
             ON p.id_setor = a.pessoa_ou_setor_valor
 
-        WHERE a.lixeira = 0
+        JOIN produtos AS prod 
+            ON prod.referencia = a.produto_ou_referencia_valor
+
+        WHERE prod.lixeira = 0
+          AND a.lixeira = 0
           AND a.pessoa_ou_setor_chave = 'S'
           AND a.produto_ou_referencia_chave = 'R'
     )
@@ -596,7 +603,28 @@ CREATE VIEW vpendentes AS (
             OR (produtos.referencia = atribuicoes.produto_ou_referencia_valor AND atribuicoes.produto_ou_referencia_chave = 'R')
 
     JOIN (
-        SELECT * FROM vprodutos WHERE qtd > 0
+        SELECT * FROM (
+            SELECT
+                vprodutos.*,
+                CASE
+                    WHEN empresas.travar_ret = 1 THEN
+                        CASE
+                            WHEN vprodutos.qtd > 0 THEN 1
+                            ELSE 0
+                        END
+                    ELSE 1
+                END AS correto
+
+            FROM vprodutos
+
+            JOIN pessoas
+                ON pessoas.id = vprodutos.id_pessoa
+
+            LEFT JOIN empresas
+                ON empresas.id = pessoas.id_empresa
+        ) AS auxvprod
+
+        WHERE correto = 1
     ) AS lim_prod ON lim_prod.id_produto = produtos.id AND lim_prod.id_pessoa = aa.id_pessoa
         
     JOIN vestoque
