@@ -134,7 +134,7 @@
                                             <span>Consumo por pessoa</span>
                                         </li>
                                         <li onclick = "relatorio = new RelatorioRetiradas('setor')">
-                                            <span>Consumo por setor</span>
+                                            <span>Consumo por centro de custo</span>
                                         </li>
                                         <li onclick = "relatorio = new RelatorioRanking()">
                                             <span>Ranking de retiradas</span>
