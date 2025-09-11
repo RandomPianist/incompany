@@ -9,7 +9,7 @@ function comodatoListeners() {
 }
 
 function mostrarComAtb() {
-    const ativo = $("#atb-todos-chk").prop("checked");
+    const ativo = $("#atb_todos-chk").prop("checked");
     $("#atb_todos").val(ativo ? "1" : "0");
     $(".com-atb-row").each(function() {
         if (ativo) $(this).removeClass("d-none");
