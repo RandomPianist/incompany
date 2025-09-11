@@ -684,7 +684,8 @@ class MaquinasController extends Controller {
         $comodato->save();
         $this->log_inserir("C", "comodatos", $linha->id);
         if ($this->comparar_num($atb_todos_ant, $request->atb_todos)) { // App\Http\Controllers\Controller.php
-            if ($this->gerar_atribuicoes($comodato)) $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
+            $this->gerar_atribuicoes($comodato);
+            $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
         }
         return redirect("/maquinas");
     }
