@@ -36,7 +36,7 @@ function validar_estoque() {
         }
         if (!erro) {
             $("#estoqueModal .preco").each(function() {
-                $(this).val(parseInt($(this).val().replace(/\D/g, "")) / 100);
+                $(this).val(parseInt($(this).val().replace(/\D/g, "").replace(",", "")) / 100);
             });
             $("#estoqueModal form").submit();
         } else s_alert(erro);

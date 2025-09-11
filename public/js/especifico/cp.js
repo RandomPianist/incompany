@@ -32,7 +32,7 @@ function cp_listeners() {
             const linha = $($($(this).parent()).parent())[0];
             if ($(this).val().trim()) {
                 $.get(URL + "/maquinas/produto/verificar-novo", {
-                    preco : parseInt($($(linha).find(".preco")[0]).val().replace(/\D/g, "")) / 100,
+                    preco : parseInt($($(linha).find(".preco")[0]).val().replace(/\D/g, "").replace(",", "")) / 100,
                     minimo : $($(linha).find(".minimo")[0]).val(),
                     maximo : $($(linha).find(".maximo")[0]).val(),
                     id_produto : $($(linha).find(".id-produto")[0]).val(),
@@ -43,7 +43,7 @@ function cp_listeners() {
                     else $(el).addClass("old").removeClass("new");
                 });
             } else $($(linha).find(".form-search")[0]).addClass("new").removeClass("old");
-            if ($(this).hasClass("id-produto")) atualizaPreco($(this).attr("id").replace(/\D/g, ""), "cp");
+            if ($(this).hasClass("id-produto")) atualizaPreco($(this).attr("id").replace(/\D/g, "").replace(",", ""), "cp");
             if ($(this).hasClass("maximo") || $(this).hasClass("minimo")) limitar($(this), true);
         });
     }).off("keyup").on("keyup", function() {
@@ -114,7 +114,7 @@ async function validar_cp_main() {
     }
     if (erro) return erro;
     $("#cpModal .preco").each(function() {
-        $(this).val(parseInt($(this).val().replace(/\D/g, "")) / 100);
+        $(this).val(parseInt($(this).val().replace(/\D/g, "").replace(",", "")) / 100);
     });
     $("#cpModal form").submit();
     return "";

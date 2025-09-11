@@ -106,7 +106,7 @@ function validar_cnpj(cnpj) {
 
 function formatar_cnpj(el) {
     el.classList.remove("invalido");
-    let rawValue = $(el).val().replace(/\D/g, "");
+    let rawValue = $(el).val().replace(/\D/g, "").replace(",", "");
     if (rawValue.length === 15 && rawValue.startsWith("0")) {
         let potentialCNPJ = rawValue.substring(1);
         if (validar_cnpj(potentialCNPJ)) rawValue = potentialCNPJ;
@@ -140,7 +140,7 @@ async function validar() {
 
     const data = await $.get(URL + "/empresas/consultar/", {
         id : $("#id").val(),
-        cnpj : $("#cnpj").val().replace(/\D/g, ""),
+        cnpj : $("#cnpj").val().replace(/\D/g, "").replace(",", ""),
         mostrar_ret : $("#mostrar_ret").val()
     });
     if (!erro && data == "R" && !parseInt($("#id").val())) {
@@ -157,7 +157,7 @@ async function validar() {
             });
         }
         $("#atu-filiais").val(atu_filiais ? "S" : "N");
-        $("#cnpj").val($("#cnpj").val().replace(/\D/g, ""));
+        $("#cnpj").val($("#cnpj").val().replace(/\D/g, "").replace(",", ""));
         $("#empresasModal form").submit();
     } else s_alert(erro);
 }

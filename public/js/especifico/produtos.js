@@ -42,7 +42,7 @@ async function validar() {
     const aux = verifica_vazios(["cod_externo", "descr", "ca", "validade", "categoria", "tamanho", "validade_ca"]);
     let erro = aux.erro;
     let alterou = aux.alterou;
-    if (!erro && parseInt($("#preco").val().replace(/\D/g, "")) <= 0) {
+    if (!erro && parseInt($("#preco").val().replace(/\D/g, "").replace(",", "")) <= 0) {
         erro = "Valor inválido";
         $("#preco").addClass("invalido");
     }
@@ -53,7 +53,7 @@ async function validar() {
         categoria : $("#categoria").val(),
         id_categoria : $("#id_categoria").val(),
         referencia : $("#referencia").val(),
-        preco : parseInt($("#preco").val().replace(/\D/g, "")) / 100
+        preco : parseInt($("#preco").val().replace(/\D/g, "").replace(",", "")) / 100
     });
     if (!erro && data == "invalido") {
         erro = "Categoria não encontrada";
@@ -78,7 +78,7 @@ async function validar() {
             });
         }
         if (resp) {
-            $("#preco").val(parseInt($("#preco").val().replace(/\D/g, "")) / 100);
+            $("#preco").val(parseInt($("#preco").val().replace(/\D/g, "").replace(",", "")) / 100);
             $("#produtosModal form").submit();
         }
     } else s_alert(erro);

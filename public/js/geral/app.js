@@ -155,7 +155,7 @@ $(document).ready(function() {
             }
         });
         $(that).keyup(function() {
-            let resultado = $(that).val().replace(/\D/g, "");
+            let resultado = $(that).val().replace(/\D/g, "").replace(",", "");
             if (resultado.length >= 8) {
                 resultado = resultado.substring(0, 8);
                 resultado = resultado.substring(0, 2) + "/" + resultado.substring(2, 4) + "/" + resultado.substring(4, 8);
@@ -646,13 +646,13 @@ function relObterElementosValor(elementos, chaves) {
 function limitar(el, zero) {
     let minimo = 1;
     if (zero !== undefined) minimo = 0;
-    let texto = $(el).val().toString().replace(/\D/g, "");
+    let texto = $(el).val().toString().replace(/\D/g, "").replace(",", "");
     if (!texto.length || parseInt(texto) < minimo) $(el).val(minimo);
     if (texto.length > 11) $(el).val("".padStart(11, "9"));
 }
 
 function numerico(el) {
-    $(el).val($(el).val().replace(/\D/g, "").substring(0, 4));
+    $(el).val($(el).val().replace(/\D/g, "").replace(",", "").substring(0, 4));
 }
 
 function foto_pessoa(seletor, caminho) {
@@ -680,7 +680,7 @@ function formatar_cpf(el) {
 }
 
 function validar_cpf(__cpf) {
-    __cpf = __cpf.replace(/\D/g, "");
+    __cpf = __cpf.replace(/\D/g, "").replace(",", "");
     if (__cpf == "00000000000") return false;
     if (__cpf.length != 11) return false;
     let soma = 0;
@@ -978,7 +978,7 @@ function Atribuicoes(grade, _psm_valor) {
         if (!erro) {
             $.post(URL + "/colaboradores/supervisor", {
                 _token : $("meta[name='csrf-token']").attr("content"),
-                cpf : $("#cpf2").val().replace(/\D/g, ""),
+                cpf : $("#cpf2").val().replace(/\D/g, "").replace(",", ""),
                 senha : $("#senha2").val()
             }, function(ok) {
                 if (parseInt(ok)) retirarMain(idatb, ok);
