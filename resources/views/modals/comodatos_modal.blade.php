@@ -48,7 +48,7 @@
                         <div class = "row pb5-px">
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">
-                                    <input id = "atb_todos-chk" name = "atb_todos" type = "hidden" />
+                                    <input id = "atb_todos" name = "atb_todos" type = "hidden" />
                                     <input id = "atb_todos-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "mostrarComAtb()" />
                                     <label for = "atb_todos-chk" class = "custom-control-label">Atribuir todos os produtos do contrato para todos os usuários da máquina<label>
                                 </div>
