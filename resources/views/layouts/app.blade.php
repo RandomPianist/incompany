@@ -242,7 +242,6 @@
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/jquery-ui.min.js') }}"></script>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/bootstrap.min.js') }}"></script>
         @if ($admin || (
-            url()->current() != route('maquinas') && 
             url()->current() != route('produtos') && 
             url()->current() != route('categorias')
         ))

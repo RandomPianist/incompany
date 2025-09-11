@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware("auth")->group(function () {
-    Route::get("/",             [DashboardController::class, "iniciar"]);
+    Route::get("/",             [DashboardController::class, "iniciar"])->name("home");
     Route::get("/autocomplete", [HomeController::class, "autocomplete"]);
 
     Route::group(["prefix" => "dashboard"], function() {
@@ -41,7 +41,7 @@ Route::middleware("auth")->group(function () {
     });
 
     Route::group(["prefix" => "categorias"], function() {
-        Route::get ("/",             [CategoriasController::class, "ver"]);
+        Route::get ("/",             [CategoriasController::class, "ver"])->name("categorias");
         Route::get ("/listar",       [CategoriasController::class, "listar"]);
         Route::get ("/consultar",    [CategoriasController::class, "consultar"]);
         Route::get ("/mostrar/{id}", [CategoriasController::class, "mostrar"]);
@@ -51,7 +51,7 @@ Route::middleware("auth")->group(function () {
     });
 
     Route::group(["prefix" => "solicitacoes"], function() {
-        Route::get ("/",                        [SolicitacoesController::class, "ver"]);
+        Route::get ("/",                        [SolicitacoesController::class, "ver"])->name("solicitacoes");
         Route::get ("/meus-comodatos",          [SolicitacoesController::class, "meus_comodatos"]);
         Route::get ("/mostrar",                 [SolicitacoesController::class, "mostrar"]);
         Route::get ("/aviso/{id_comodato}",     [SolicitacoesController::class, "aviso"]);
@@ -67,7 +67,7 @@ Route::middleware("auth")->group(function () {
     });
 
     Route::group(["prefix" => "setores"], function() {
-        Route::get ("/",                        [SetoresController::class, "ver"]);
+        Route::get ("/",                        [SetoresController::class, "ver"])->name("setores");
         Route::get ("/listar",                  [SetoresController::class, "listar"]);
         Route::get ("/consultar",               [SetoresController::class, "consultar"]);
         Route::get ("/usuarios/{id}",           [SetoresController::class, "usuarios"]);
@@ -82,7 +82,7 @@ Route::middleware("auth")->group(function () {
     });
 
     Route::group(["prefix" => "empresas"], function() {
-        Route::get ("/",             [EmpresasController::class, "ver"]);
+        Route::get ("/",             [EmpresasController::class, "ver"])->name("empresas");
         Route::get ("/listar",       [EmpresasController::class, "listar"]);
         Route::get ("/todas",        [EmpresasController::class, "todas"]);
         Route::get ("/consultar",    [EmpresasController::class, "consultar"]);
@@ -93,7 +93,7 @@ Route::middleware("auth")->group(function () {
     });
 
     Route::group(["prefix" => "colaboradores"], function() {
-        Route::get ("/pagina/{tipo}",   [PessoasController::class, "ver"]);
+        Route::get ("/pagina/{tipo}",   [PessoasController::class, "ver"])->name("pessoas");
         Route::get ("/listar",          [PessoasController::class, "listar"]);
         Route::get ("/consultar",       [PessoasController::class, "consultar"]);
         Route::get ("/mostrar/{id}",    [PessoasController::class, "mostrar"]);
@@ -107,7 +107,7 @@ Route::middleware("auth")->group(function () {
     });
 
     Route::group(["prefix" => "produtos"], function() {
-        Route::get ("/",             [ProdutosController::class, "ver"]);
+        Route::get ("/",             [ProdutosController::class, "ver"])->name("produtos");
         Route::get ("/listar",       [ProdutosController::class, "listar"]);
         Route::get ("/consultar",    [ProdutosController::class, "consultar"]);
         Route::get ("/mostrar/{id}", [ProdutosController::class, "mostrar"]);
@@ -140,7 +140,7 @@ Route::middleware("auth")->group(function () {
     });
 
     Route::group(["prefix" => "maquinas"], function() {
-        Route::get ("/",             [MaquinasController::class, "ver"]);
+        Route::get ("/",             [MaquinasController::class, "ver"])->name("maquinas");
         Route::get ("/preco",        [MaquinasController::class, "preco"]);
         Route::get ("/listar",       [MaquinasController::class, "listar"]);
         Route::get ("/consultar",    [MaquinasController::class, "consultar"]);
