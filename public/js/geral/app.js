@@ -647,6 +647,7 @@ function limitar(el, zero) {
     let minimo = 1;
     if (zero !== undefined) minimo = 0;
     let texto = $(el).val().toString().replace(/\D/g, "").replace(",", "");
+    $(el).val(texto);
     if (!texto.length || parseInt(texto) < minimo) $(el).val(minimo);
     if (texto.length > 11) $(el).val("".padStart(11, "9"));
 }
