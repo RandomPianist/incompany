@@ -367,7 +367,15 @@ class MaquinasController extends Controller {
 
     private function gerar_atribuicoes(Comodatos $comodato) {
         $ret = false;
-        if (!intval($comodato->atb_todos)) return $ret;
+        $where = "lixeira = 0 AND id_maquina = ".$comodato->id_maquina." AND id_empresa = ".$comodato->id_empresa;
+        if (!intval($comodato->atb_todos)) {
+            DB::statement("
+                UPDATE atribuicoes
+                SET lixeira = 1
+                WHERE ".$where." AND gerado = 1
+            ");
+            return $ret;
+        }
         $lista_itens = DB::table("produtos")
                             ->select(
                                 DB::raw("IFNULL(produtos.cod_externo, '') AS cod_externo"),
@@ -387,10 +395,8 @@ class MaquinasController extends Controller {
                             "id",
                             "gerado"
                         )
+                        ->whereRaw($where)
                         ->where("referencia", $item->referencia)
-                        ->where("id_maquina", $comodato->id_maquina)
-                        ->where("id_empresa", $comodato->id_empresa)
-                        ->where("lixeira", 0)
                         ->first();
             if ($atb !== null) {
                 if (intval($atb->gerado)) $modelo = Atribuicoes::find($atb->id);
@@ -402,10 +408,8 @@ class MaquinasController extends Controller {
                                 "id",
                                 "gerado"
                             )
+                            ->whereRaw($where)
                             ->where("cod_produto", $item->cod_externo)
-                            ->where("id_maquina", $comodato->id_maquina)
-                            ->where("id_empresa", $comodato->id_empresa)
-                            ->where("lixeira", 0)
                             ->first();
                 if ($atb !== null) {
                     if (intval($atb->gerado)) $modelo = Atribuicoes::find($atb->id);
