@@ -178,6 +178,6 @@ async function cp_pergunta_salvar() {
         }
     } else if (resp.isDenied) {
         limpar_cp();
-        $("#cpModal #busca-prod").val("");""
+        $("#cpModal #busca-prod").val("");
     } else $("#cpModal").modal();
 }
