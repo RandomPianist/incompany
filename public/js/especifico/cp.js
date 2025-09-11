@@ -27,7 +27,7 @@ function cp(id) {
 }
 
 function cp_listeners() {
-    $("#cpModal .id-produto, #cpModal .minimo, #cpModal .maximo, #cpModal .preco").each(function() {
+    $("#cpModal .id-produto, #cpModal .minimo, #cpModal .maximo, #cpModal .preco, #cpModal .lixeira").each(function() {
         $(this).off("change").on("change", function() {
             const linha = $($($(this).parent()).parent())[0];
             if ($(this).val().trim()) {
@@ -35,6 +35,7 @@ function cp_listeners() {
                     preco : parseInt($($(linha).find(".preco")[0]).val().replace(/\D/g, "").replace(",", "")) / 100,
                     minimo : $($(linha).find(".minimo")[0]).val(),
                     maximo : $($(linha).find(".maximo")[0]).val(),
+                    lixeira : $($(linha).find(".lixeira")[0]).val().replace("opt-", ""),
                     id_produto : $($(linha).find(".id-produto")[0]).val(),
                     id_maquina : $($(".id_maquina")[0]).val()
                 }, function(novo) {

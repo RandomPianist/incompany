@@ -737,6 +737,11 @@ class MaquinasController extends Controller {
         $id_cp = $this->obter_cp($this->obter_comodato($request->id_maquina)->id, $request->id_produto); // App\Http\Controllers\Controller.php
         if ($id_cp === null) return "1";
         $cp = ComodatosProdutos::find($id_cp);
-        return ($this->comparar_num($cp->minimo, $request->minimo) || $this->comparar_num($cp->maximo, $request->maximo) || $this->comparar_num($cp->preco, $request->preco)) ? "1" : "0"; // App\Http\Controllers\Controller.php
+        return (
+            $this->comparar_num($cp->minimo, $request->minimo) ||
+            $this->comparar_num($cp->maximo, $request->maximo) ||
+            $this->comparar_num($cp->preco, $request->preco) ||
+            $this->comparar_num($cp->lixeira, $request->lixeira)
+        ) ? "1" : "0"; // App\Http\Controllers\Controller.php
     }
 }
