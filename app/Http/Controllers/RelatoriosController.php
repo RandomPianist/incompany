@@ -167,7 +167,7 @@ class RelatoriosController extends Controller {
                         "obs" => $retirada->obs,
                         "ca" => $retirada->ca,
                         "validade_ca" => $retirada->validade_ca,
-                        "qtd" => $retirada->qtd
+                        "qtd" => intval($retirada->qtd)
                     ];
                 })->values()->all()
             ];
