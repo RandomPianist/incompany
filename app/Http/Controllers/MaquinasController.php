@@ -496,7 +496,7 @@ class MaquinasController extends Controller {
                 ->where("lixeira", 0)
                 ->where("descr", $request->descr)
                 ->get()
-        ) && !$request->id) return "1";
+        ) && !intval($request->id)) return "1";
         return "0";
     }
 

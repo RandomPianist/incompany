@@ -67,7 +67,8 @@ function validar() {
         if (!alterou) erro = "Altere pelo menos um campo para salvar";
     }
     
-    $.get(URL + "/maquinas/consultar/", {
+    $.get(URL + "/maquinas/consultar", {
+        id : $("#id").val(),
         descr : $("#descr").val().toUpperCase().trim()
     }, function(data) {
         if (!erro && parseInt(data) && !parseInt($("#id").val())) erro = "Já existe um registro com essa descrição";

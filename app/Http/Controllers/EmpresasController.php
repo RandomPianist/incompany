@@ -7,6 +7,7 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Empresas;
 use App\Models\Setores;
+use App\Models\Maquinas;
 
 class EmpresasController extends Controller {
     private function validar_cnpj($cnpj) {
@@ -154,6 +155,13 @@ class EmpresasController extends Controller {
             $log = $this->log_inserir("C", "setores", $setor->id, "SYS", "SISTEMA"); // App\Http\Controllers\Controller.php
             $log->id_pessoa = Auth::user()->id_pessoa;
             $log->save();
+        }
+        if ($request->maq_igual == "S") {
+            $maquina = new Maquinas;
+            $maquina->descr = $linha->nome_fantasia;
+            $maquina->save();
+            $this->log_inserir("C", "maquinas", $maquina->id);
+            return redirect("/maquinas");
         }
         return redirect("/empresas?grupo=".$request->id_matriz);
     }

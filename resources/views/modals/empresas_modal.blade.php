@@ -15,6 +15,7 @@
                         @csrf
                         <input id = "id" name = "id" type = "hidden" />
                         <input id = "id_matriz" name = "id_matriz" type = "hidden" />
+                        <input id = "maq_igual" name = "maq_igual" type = "hidden" />
                         <div class = "row">
                             <div class = "col-12">
                                 <label for = "cnpj" class = "custom-label-form">CNPJ: *</label>

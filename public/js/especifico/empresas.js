@@ -147,6 +147,18 @@ async function validar() {
     }
     if (!erro && !alterou) erro = "Altere pelo menos um campo para salvar";
     if (!erro) {
+        const _descr = $("#nome_fantasia").val().toUpperCase().trim();
+        const ha_maq = await $.get(URL + "/maquinas/consultar", {
+            id : $("#id").val(),
+            descr : _descr
+        });
+        if (!parseInt(ha_maq)) {
+            const resp = await s_alert({
+                html : "Deseja criar a máquina " + _descr + "?",
+                yn : true
+            });
+            $("#maq_igual").val(resp ? "S" : "N");
+        } else $("#maq_igual").val("N");
         $("#cnpj").val($("#cnpj").val().replace(/\D/g, "").replace(",", ""));
         $("#empresasModal form").submit();
     } else s_alert(erro);
