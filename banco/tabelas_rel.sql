@@ -121,7 +121,7 @@ CREATE TABLE comodatos (
 	fim_orig DATE,
     travar_ret TINYINT DEFAULT 1,
     travar_estq TINYINT DEFAULT 1,
-    atb_todos TINYINT DEFAULT 1,
+    atb_todos TINYINT DEFAULT 0,
     qtd NUMERIC(10,5) DEFAULT 99,
 	validade INT DEFAULT 1,
 	obrigatorio TINYINT DEFAULT 0,
