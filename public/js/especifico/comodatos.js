@@ -4,7 +4,7 @@ function comodatoListeners() {
             limitar($(this), true);
         }).off("keyup").on("keyup", function() {
             $(this).trigger("change");
-        });
+        }).trigger("change");
     });
 }
 
