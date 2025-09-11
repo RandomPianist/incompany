@@ -4,6 +4,7 @@ USE incompany_;
 CREATE TABLE maquinas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     descr VARCHAR(32),
+    patrimonio VARCHAR(128),
     id_ant INT,
     lixeira TINYINT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -27,7 +28,6 @@ CREATE TABLE empresas (
 	nome_fantasia VARCHAR(64),
 	cnpj VARCHAR(32),
 	cod_externo VARCHAR(32),
-    mostrar_ret TINYINT DEFAULT 1,
     lixeira TINYINT DEFAULT 0,
 	id_matriz INT,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

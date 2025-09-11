@@ -22,12 +22,11 @@ function listar(coluna) {
                     resultado += "<i class = 'my-icon fa-light fa-file' title = 'Retiradas' onclick = 'retirada_pessoa(" + linha.id + ")'></i>";
                     if (!EMPRESA) resultado += "<i class = 'my-icon fa-regular fa-clock-rotate-left' title = 'Desfazer retiradas' onclick = 'desfazer_retiradas(" + linha.id + ")'></i>";
                 }
-                if (parseInt(linha.possui_atribuicoes)) resultado += "<i class = 'my-icon far fa-calendar-alt' title = 'Próximas retiradas' onclick = 'proximas_retiradas(" + linha.id + ")'></i>";
-                resultado += "" +
-                        "<i class = 'my-icon far fa-box'       title = 'Atribuir produto' onclick = 'atribuicao = new Atribuicoes(false, " + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-tshirt'    title = 'Atribuir grade'   onclick = 'atribuicao = new Atribuicoes(true, " + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-edit'      title = 'Editar'           onclick = 'pessoa = new Pessoa(" + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-trash-alt' title = 'Excluir'          onclick = 'excluir(" + linha.id + ", " + '"/colaboradores"' + ")'></i>" +
+                resultado += "<i class = 'my-icon far fa-calendar-alt' title = 'Próximas retiradas' onclick = 'proximas_retiradas(" + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-box'               title = 'Atribuir produto'   onclick = 'atribuicao = new Atribuicoes(false, " + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-tshirt'            title = 'Atribuir grade'     onclick = 'atribuicao = new Atribuicoes(true, " + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-edit'              title = 'Editar'             onclick = 'pessoa = new Pessoa(" + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-trash-alt'         title = 'Excluir'            onclick = 'excluir(" + linha.id + ", " + '"/colaboradores"' + ")'></i>" +
                     "</td>" +
                 "</tr>";
             });
@@ -36,6 +35,11 @@ function listar(coluna) {
         } else mostrarImagemErro();
         document.querySelector(".loader-container").classList.add("d-none");
     });
+}
+
+async function aviso_nada() {
+    await s_alert("Não há nada para exibir");
+    $("#proximasRetiradasModal").modal("hide");
 }
 
 function proximas_retiradas(id_pessoa) {
@@ -47,46 +51,48 @@ function proximas_retiradas(id_pessoa) {
         modal("proximasRetiradasModal", 0, function() {
             $.get(URL + "/retiradas/proximas/" + id_pessoa, function(data) {
                 if (typeof data == "string") data = $.parseJSON(data);
-                let referencia = false;
-                let tamanho = false;
-                let resultado = "";
-                let maximo_verde = 0;
-                let maximo_vermelho = 0;
-                data.forEach((linha) => {
-                    let dias = parseInt(linha.dias);
-                    if (dias > 0) {
-                        if (dias > maximo_verde) maximo_verde = dias;
-                    } else {
-                        if (Math.abs(dias) > maximo_vermelho) maximo_vermelho = Math.abs(dias);
-                    }
-                });
-                const hex = ["11", "22", "33", "44", "55", "66", "77", "88", "99", "AA", "BB", "CC", "DD", "EE", "FF"];
-                data.forEach((linha) => {
-                    let dias = parseInt(linha.dias);
-                    if (linha.tamanho) tamanho = true;
-                    if (linha.referencia) referencia = true;
-                    let op_verde = hex[parseInt((((dias / maximo_verde) * 100) * 14) / 100)];
-                    let op_vermelho = hex[parseInt((((Math.abs(dias) / maximo_vermelho) * 100) * 14) / 100)];
-                    resultado += "<tr>" +
-                        "<td class = 'align-middle'>" + linha.id_produto.toString().padStart(6, "0") + "</td>" +
-                        "<td class = 'align-middle'>" + linha.descr + "</td>" +
-                        "<td class = 'align-middle'>" + linha.referencia + "</td>" +
-                        "<td class = 'align-middle'>" + linha.tamanho + "</td>" +
-                        "<td class = 'align-middle text-right'>" + linha.qtd + "</td>" +
-                        "<td class = 'align-middle'>" + linha.proxima_retirada + "</td>" +
-                        "<td class = 'align-middle text-right' style = 'background:" + (dias < 0 ? "#ff0000" + op_vermelho : "#00ff00" + op_verde) + "'>" + Math.abs(dias) + "</td>" +
-                    "</tr>";
-                });
-                $("#table-ret-dados").html(resultado);
-                $("#table-ret").removeClass("d-none");
-                $(".tamanho").each(function() {
-                    if (!tamanho) $(this).addClass("d-none");
-                    else $(this).removeClass("d-none");
-                });
-                $(".referencia").each(function() {
-                    if (!referencia) $(this).addClass("d-none");
-                    else $(this).removeClass("d-none");
-                });
+                if (data.length) {
+                    let referencia = false;
+                    let tamanho = false;
+                    let resultado = "";
+                    let maximo_verde = 0;
+                    let maximo_vermelho = 0;
+                    data.forEach((linha) => {
+                        let dias = parseInt(linha.dias);
+                        if (dias > 0) {
+                            if (dias > maximo_verde) maximo_verde = dias;
+                        } else {
+                            if (Math.abs(dias) > maximo_vermelho) maximo_vermelho = Math.abs(dias);
+                        }
+                    });
+                    const hex = ["11", "22", "33", "44", "55", "66", "77", "88", "99", "AA", "BB", "CC", "DD", "EE", "FF"];
+                    data.forEach((linha) => {
+                        let dias = parseInt(linha.dias);
+                        if (linha.tamanho) tamanho = true;
+                        if (linha.referencia) referencia = true;
+                        let op_verde = hex[parseInt((((dias / maximo_verde) * 100) * 14) / 100)];
+                        let op_vermelho = hex[parseInt((((Math.abs(dias) / maximo_vermelho) * 100) * 14) / 100)];
+                        resultado += "<tr>" +
+                            "<td class = 'align-middle'>" + linha.id_produto.toString().padStart(6, "0") + "</td>" +
+                            "<td class = 'align-middle'>" + linha.descr + "</td>" +
+                            "<td class = 'align-middle'>" + linha.referencia + "</td>" +
+                            "<td class = 'align-middle'>" + linha.tamanho + "</td>" +
+                            "<td class = 'align-middle text-right'>" + linha.qtd + "</td>" +
+                            "<td class = 'align-middle'>" + linha.proxima_retirada + "</td>" +
+                            "<td class = 'align-middle text-right' style = 'background:" + (dias < 0 ? "#ff0000" + op_vermelho : "#00ff00" + op_verde) + "'>" + Math.abs(dias) + "</td>" +
+                        "</tr>";
+                    });
+                    $("#table-ret-dados").html(resultado);
+                    $("#table-ret").removeClass("d-none");
+                    $(".tamanho").each(function() {
+                        if (!tamanho) $(this).addClass("d-none");
+                        else $(this).removeClass("d-none");
+                    });
+                    $(".referencia").each(function() {
+                        if (!referencia) $(this).addClass("d-none");
+                        else $(this).removeClass("d-none");
+                    });
+                } else aviso_nada();
             });
         });
     });

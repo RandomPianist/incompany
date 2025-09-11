@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int    $created_at
  * @property int    $updated_at
  * @property string $descr
+ * @property string $patrimonio
  */
 class Maquinas extends Model
 {
@@ -34,7 +35,7 @@ class Maquinas extends Model
      * @var array
      */
     protected $fillable = [
-        'descr', 'id_ant', 'lixeira', 'created_at', 'updated_at'
+        'descr', 'patrimonio', 'id_ant', 'lixeira', 'created_at', 'updated_at'
     ];
 
     /**
@@ -52,7 +53,7 @@ class Maquinas extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'descr' => 'string', 'id_ant' => 'int', 'lixeira' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
+        'id' => 'int', 'descr' => 'string', 'patrimonio' => 'string', 'id_ant' => 'int', 'lixeira' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
     ];
 
     /**

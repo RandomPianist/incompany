@@ -12,94 +12,69 @@ use App\Models\Empresas;
 
 class PessoasController extends Controller {
     private function busca($where, $tipo) {
-        $consulta = DB::table("pessoas")
-                        ->select(
-                            "pessoas.id",
-                            DB::raw("IFNULL(empresas.mostrar_ret, 1) AS mostrar_ret")
-                        )
-                        ->leftjoin("setores", "setores.id", "pessoas.id_setor")
-                        ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
-                        ->where(function($sql) use($tipo) {
-                            $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
-                            if ($id_emp) $sql->whereRaw($id_emp." IN (empresas.id, empresas.id_matriz)");
-                            if (in_array($tipo, ["A", "U"])) {
-                                $sql->where("setores.cria_usuario", 1);
-                                if ($tipo == "A") $sql->where("pessoas.id_empresa", 0);
-                            } else $sql->where("pessoas.supervisor", ($tipo == "S" ? 1 : 0));
-                        })
-                        ->whereRaw($where)
-                        ->where("pessoas.lixeira", 0)
-                        ->get();
-        $mostrar_ret = false;
-        $pessoas = array();
-        foreach ($consulta as $linha) {
-            if (sizeof($pessoas) <= 60) array_push($pessoas, $linha->id);
-            if (intval($linha->mostrar_ret)) $mostrar_ret = true;
-        }
-        if (!sizeof($pessoas)) return [];
-        $query = "
-            SELECT
-                pessoas.id,
-                CASE 
-                    WHEN pessoas.id_empresa <> 0 THEN 
-                        CASE
-                            WHEN pessoas.biometria <> '' THEN 'possui'
-                            ELSE 'nao-possui'
-                        END
-                    ELSE 'sem-foto'
-                END AS possui_biometria,
-                CONCAT(
-                    pessoas.nome,
-                    CASE
-                        WHEN pessoas.id = ".Auth::user()->id_pessoa." THEN ' (você)'
-                        ELSE ''
-                    END
-                ) AS nome,
-                IFNULL(setores.descr, 'A CLASSIFICAR') AS setor,
-                IFNULL(empresas.nome_fantasia, 'A CLASSIFICAR') AS empresa,
-                CASE
-                    WHEN ret.id_pessoa IS NULL THEN 0
-                    ELSE 1
-                END AS possui_retiradas,
-            ".(
-                $mostrar_ret ? "
-                    CASE
-                        WHEN atb.id_pessoa IS NULL THEN 0
-                        ELSE 1
-                    END
-                " : "0"
-            )." AS possui_atribuicoes
-            
-            FROM pessoas
-
-            LEFT JOIN empresas
-                ON empresas.id = pessoas.id_empresa
-            
-            LEFT JOIN setores
-                ON setores.id = pessoas.id_setor
-            
-            LEFT JOIN (
-                SELECT
-                    id_pessoa,
-                    id_empresa
-
-                FROM retiradas
-
-                GROUP BY
-                    id_pessoa,
-                    id_empresa
-            ) AS ret ON (ret.id_empresa = pessoas.id_empresa OR pessoas.id_empresa = 0) AND ret.id_pessoa = pessoas.id
-        ";
-        if ($mostrar_ret) {
-            $query .= "
-                LEFT JOIN (
-                    SELECT DISTINCTROW id_pessoa
-                    FROM vpendentesgeral
-                ) AS atb ON atb.id_pessoa = pessoas.id
-            ";
-        }
-        $query .= " WHERE pessoas.id IN (".join(",", $pessoas).")";
-        return DB::select(DB::raw($query));
+        return DB::table("pessoas")
+                    ->select(
+                        "pessoas.id",
+                        DB::raw("
+                            CASE 
+                                WHEN pessoas.id_empresa <> 0 THEN 
+                                    CASE
+                                        WHEN pessoas.biometria <> '' THEN 'possui'
+                                        ELSE 'nao-possui'
+                                    END
+                                ELSE 'sem-foto'
+                            END AS possui_biometria,
+                            CONCAT(
+                                pessoas.nome,
+                                CASE
+                                    WHEN pessoas.id = ".Auth::user()->id_pessoa." THEN ' (você)'
+                                    ELSE ''
+                                END
+                            ) AS nome
+                        "),
+                        DB::raw("IFNULL(setores.descr, 'A CLASSIFICAR') AS setor"),
+                        DB::raw("IFNULL(empresas.nome_fantasia, 'A CLASSIFICAR') AS empresa"),
+                        DB::raw("
+                            CASE
+                                WHEN ret.id_pessoa IS NULL THEN 0
+                                ELSE 1
+                            END AS possui_retiradas
+                        ")
+                    )
+                    ->leftjoin("setores", "setores.id", "pessoas.id_setor")
+                    ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
+                    ->leftjoinSub(
+                        DB::table("retiradas")
+                            ->select(
+                                "id_pessoa",
+                                "id_empresa"
+                            )
+                            ->groupby(
+                                "id_pessoa",
+                                "id_empresa"
+                            ),
+                        "ret",
+                        function($join) {
+                            $join->on(function($sql) {
+                                $sql->on("pessoas.id", "ret.id_pessoa")
+                                    ->where("pessoas.id_empresa", 0);
+                            })->orOn(function($sql) {
+                                $sql->on("pessoas.id", "ret.id_pessoa")
+                                    ->on("pessoas.id_empresa", "ret.id_empresa");
+                            });
+                        }
+                    )
+                    ->where(function($sql) use($tipo) {
+                        $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+                        if ($id_emp) $sql->whereRaw($id_emp." IN (empresas.id, empresas.id_matriz)");
+                        if (in_array($tipo, ["A", "U"])) {
+                            $sql->where("setores.cria_usuario", 1);
+                            if ($tipo == "A") $sql->where("pessoas.id_empresa", 0);
+                        } else $sql->where("pessoas.supervisor", ($tipo == "S" ? 1 : 0));
+                    })
+                    ->whereRaw($where)
+                    ->where("pessoas.lixeira", 0)
+                    ->get();
     }
 
     private function criados_por_mim($usuarios) {

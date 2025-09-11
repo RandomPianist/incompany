@@ -145,7 +145,6 @@ class ProdutosController extends Controller {
         if ($request->file("foto")) $linha->foto = $request->file("foto")->store("uploads", "public");
         $linha->save();
         $this->log_inserir($request->id ? "E" : "C", "produtos", $linha->id); // App\Http\Controllers\Controller.php
-        $this->criar_mp($linha->id, "maquinas.id"); // App\Http\Controllers\Controller.php
         return redirect("/produtos");
     }
 

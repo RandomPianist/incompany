@@ -136,12 +136,10 @@ async function validar() {
         $("#cnpj").addClass("invalido");
     }
     if ($("#cnpj").val() != anteriores.cnpj) alterou = true;
-    if ($("#mostrar-ret").val() != anteriores.mostrar_ret) alterou = true;
 
     const data = await $.get(URL + "/empresas/consultar/", {
         id : $("#id").val(),
-        cnpj : $("#cnpj").val().replace(/\D/g, "").replace(",", ""),
-        mostrar_ret : $("#mostrar_ret").val()
+        cnpj : $("#cnpj").val().replace(/\D/g, "").replace(",", "")
     });
     if (!erro && data == "R" && !parseInt($("#id").val())) {
         erro = "Já existe um registro com esse CNPJ";
@@ -149,14 +147,6 @@ async function validar() {
     }
     if (!erro && !alterou) erro = "Altere pelo menos um campo para salvar";
     if (!erro) {
-        let atu_filiais = false;
-        if (data == "F") {
-            atu_filiais = await s_alert({
-                html : "Deseja alterar essas informações para todas as filiais?",
-                yn : true
-            });
-        }
-        $("#atu-filiais").val(atu_filiais ? "S" : "N");
         $("#cnpj").val($("#cnpj").val().replace(/\D/g, "").replace(",", ""));
         $("#empresasModal form").submit();
     } else s_alert(erro);
@@ -168,10 +158,9 @@ function chamar_modal(id, e) {
     if (id) {
         $.get(URL + "/empresas/mostrar/" + id, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
-            $("#id_matriz, #cnpj, #razao_social, #nome_fantasia, #mostrar_ret").each(function() {
+            $("#id_matriz, #cnpj, #razao_social, #nome_fantasia").each(function() {
                 $(this).val(data[$(this).attr("id")]);
             });
-            $("#mostrar_ret-chk").prop("checked", parseInt(data.mostrar_ret) == 1);
             if (parseInt(data.id_matriz)) $("#empresasModalLabel").html("Editando filial");
             modal("empresasModal", id);
         });

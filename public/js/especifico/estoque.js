@@ -1,6 +1,7 @@
 function estoque(id) {
-    $.get(URL + "/maquinas/mostrar/" + id, function(descr) {
-        $("#estoqueModalLabel").html(descr + " - movimentar estoque");
+    $.get(URL + "/maquinas/mostrar/" + id, function(maq) {
+        if (typeof maq == "string") maq = $.parseJSON(maq);
+        $("#estoqueModalLabel").html(maq.descr + " - movimentar estoque");
         $(".id_maquina").each(function() {
             $(this).val(id);
         });

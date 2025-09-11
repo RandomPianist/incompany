@@ -59,13 +59,20 @@ function validar() {
     limpar_invalido();
     let erro = "";
     if (!$("#descr").val()) erro = "Preencha o campo";
-    if (!erro && $("#descr").val().toUpperCase().trim() == anteriores.descr.toUpperCase().trim()) erro = "Não há alterações para salvar";
+
+    if (!erro) {
+        let alterou = false;
+        if ($("#descr").val().toUpperCase().trim() != anteriores.descr.toUpperCase().trim()) alterou = true;
+        if ($("#patrimonio").val().toUpperCase().trim() != anteriores.patrimonio.toUpperCase().trim()) alterou = true;
+        if (!alterou) erro = "Altere pelo menos um campo para salvar";
+    }
+    
     $.get(URL + "/maquinas/consultar/", {
         descr : $("#descr").val().toUpperCase().trim()
     }, function(data) {
         if (!erro && parseInt(data) && !parseInt($("#id").val())) erro = "Já existe um registro com essa descrição";
         if (erro) {
-            $("#descr").addClass("invalido");
+            if (!$("#descr").val()) $("#descr").addClass("invalido");
             s_alert(erro);
         } else $("#maquinasModal form").submit();
     });
@@ -74,8 +81,10 @@ function validar() {
 function chamar_modal(id) {
     $("#maquinasModalLabel").html((id ? "Editando" : "Cadastrando") + " máquina");
     if (id) {
-        $.get(URL + "/maquinas/mostrar/" + id, function(descr) {
-            $("#descr").val(descr);
+        $.get(URL + "/maquinas/mostrar/" + id, function(maq) {
+            if (typeof maq == "string") maq = $.parseJSON(maq);
+            $("#descr").val(maq.descr);
+            $("#patrimonio").val(maq.patrimonio);
             modal("maquinasModal", id); 
         });
     } else modal("maquinasModal", id); 
@@ -101,8 +110,9 @@ function atualizaPreco(seq, nome) {
 }
 
 function contrato(id_maquina, mostrarExtrato, mostrarProdutos) {
-    $.get(URL + "/maquinas/mostrar/" + id_maquina, function(descr) {
-        $("#contratoModalLabel").html(descr + " - opções do contrato");
+    $.get(URL + "/maquinas/mostrar/" + id_maquina, function(maq) {
+        if (typeof maq == "string") maq = $.parseJSON(maq);
+        $("#contratoModalLabel").html(maq.descr + " - opções do contrato");
         $("#btn-extrato").off("click").on("click", function() {
             extrato_maquina(id_maquina);
             $("#contratoModal").modal("hide");

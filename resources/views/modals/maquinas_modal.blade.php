@@ -20,6 +20,11 @@
                                 <input id = "descr" name = "descr" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 32)" />
                                 <span class = "custom-label-form tam-max"></span>
                             </div>
+                            <div class = "col-12">
+                                <label for = "patrimonio" class = "custom-label-form">Patrimônio:</label>
+                                <input id = "patrimonio" name = "patrimonio" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 128)" />
+                                <span class = "custom-label-form tam-max"></span>
+                            </div>
                         </div>
                     </div>
                 </div>

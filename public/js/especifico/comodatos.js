@@ -18,8 +18,9 @@ function mostrarComAtb() {
 }
 
 function comodatar(id) {
-    $.get(URL + "/maquinas/mostrar/" + id, function(descr) {
-        $("#comodatosModalLabel").html("Locando " + descr);
+    $.get(URL + "/maquinas/mostrar/" + id, function(maq) {
+        if (typeof maq == "string") maq = $.parseJSON(maq);
+        $("#comodatosModalLabel").html("Locando " + maq.descr);
         $(".id_maquina").each(function() {
             $(this).val(id);
         });

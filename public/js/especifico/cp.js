@@ -1,7 +1,8 @@
 function cp(id) {
-    $.get(URL + "/maquinas/mostrar/" + id, function(descr) {
+    $.get(URL + "/maquinas/mostrar/" + id, function(maq) {
+        if (typeof maq == "string") maq = $.parseJSON(maq);
         limpar_invalido();
-        $("#cpModalLabel").html(descr + " - produtos do contrato");
+        $("#cpModalLabel").html(maq.descr + " - produtos do contrato");
         $(".id_maquina").each(function() {
             $(this).val(id);
         });

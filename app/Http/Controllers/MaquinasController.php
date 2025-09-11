@@ -501,7 +501,7 @@ class MaquinasController extends Controller {
     }
 
     public function mostrar($id) {
-        return Maquinas::find($id)->descr;
+        return json_encode(Maquinas::find($id));
     }
 
     public function aviso($id) {
@@ -513,12 +513,15 @@ class MaquinasController extends Controller {
         if (intval($this->consultar($request))) return 401;
         $linha = Maquinas::firstOrNew(["id" => $request->id]);
         if ($request->id) {
-            if (!$this->comparar_texto($request->descr, $linha->descr)) return 400; // App\Http\Controllers\Controller.php
+            if (
+                !$this->comparar_texto($request->descr, $linha->descr) && 
+                !$this->comparar_texto($request->patrimonio, $linha->patrimonio)
+            ) return 400; // App\Http\Controllers\Controller.php
         }
         $linha->descr = mb_strtoupper($request->descr);
+        $linha->patrimonio = mb_strtoupper($request->patrimonio);
         $linha->save();
         $this->log_inserir($request->id ? "E" : "C", "maquinas", $linha->id); // App\Http\Controllers\Controller.php
-        $this->criar_mp("produtos.id", $linha->id); // App\Http\Controllers\Controller.php
         return redirect("/maquinas");
     }
 

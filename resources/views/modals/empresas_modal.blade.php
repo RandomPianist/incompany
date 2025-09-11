@@ -15,7 +15,6 @@
                         @csrf
                         <input id = "id" name = "id" type = "hidden" />
                         <input id = "id_matriz" name = "id_matriz" type = "hidden" />
-                        <input id = "atu-filiais" name = "atu_filiais" type = "hidden" />
                         <div class = "row">
                             <div class = "col-12">
                                 <label for = "cnpj" class = "custom-label-form">CNPJ: *</label>
@@ -34,15 +33,6 @@
                                 <label for = "nome_fantasia" class = "custom-label-form">Nome fantasia: *</label>
                                 <input id = "nome_fantasia" name = "nome_fantasia" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 64)" />
                                 <span class = "custom-label-form tam-max"></span>
-                            </div>
-                        </div>
-                        <div class = "row pb5-px mb-3">
-                            <div class = "col-12">
-                                <div class = "custom-control custom-switch">
-                                    <input id = "mostrar_ret" name = "mostrar_ret" type = "hidden" />
-                                    <input id = "mostrar_ret-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "$('#mostrar_ret').val($(this).prop('checked') ? '1' : '0')" />
-                                    <label for = "mostrar_ret-chk" class = "custom-control-label">Mostrar seção "Próximas retiradas"<label>
-                                </div>
                             </div>
                         </div>
                     </div>
