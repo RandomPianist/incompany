@@ -76,9 +76,12 @@
                                 <input id = "id_categoria" name = "id_categoria" type = "hidden"/>
                             </div>
                             <div class = "col-1 d-flex align-items-center pl-0 pt-3 j-end">
-                                <a href = "{{ $root_url }}/categorias" title = "Cadastro de categorias" target = "_blank">
-                                    <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
-                                </a>
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "categorias"
+                                    data-campo_id = "id_categoria"
+                                    data-campo_descr = "categoria"
+                                ></i>
                             </div>
                             <div class = "col-3">
                                 <button type = "button" class = "btn btn-target btn-target-black w-100 mt-4" onclick = "$(this).next().trigger('click')">Adicionar imagem</button>

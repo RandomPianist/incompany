@@ -94,7 +94,7 @@ function chamar_modal(id) {
 function obter_vetor(classe, nome) {
     let resultado = new Array();
     $("#" + nome + "Modal ." + classe).each(function() {
-        resultado.push(classe == "preco" ? $(this).val().replace(/\D/g, "").replace(",", "") : $(this).val());
+        resultado.push(classe == "preco" ? apenasNumeros($(this).val()) : $(this).val());
     });
     return resultado.join("|!|");
 }

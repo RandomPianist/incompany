@@ -2,6 +2,7 @@ let relatorio, pessoa, atribuicao, excecao, colGlobal;
 let anteriores = new Array();
 let validacao_bloqueada = false;
 let focar = true;
+let grupo_emp2 = 0;
 
 jQuery.fn.sortElements = (function() {
     var sort = [].sort;
@@ -155,7 +156,7 @@ $(document).ready(function() {
             }
         });
         $(that).keyup(function() {
-            let resultado = $(that).val().replace(/\D/g, "").replace(",", "");
+            let resultado = apenasNumeros($(that).val());
             if (resultado.length >= 8) {
                 resultado = resultado.substring(0, 8);
                 resultado = resultado.substring(0, 2) + "/" + resultado.substring(2, 4) + "/" + resultado.substring(4, 8);
@@ -245,9 +246,32 @@ $(document).ready(function() {
         })
     }, 200);
     
-    listar(location.href.indexOf("produtos") > -1 ? 1 : 0);
+    let url = "";
+    ["categorias", "empresas", "maquinas", "pessoas", "produtos", "setores"].forEach((view) => {
+        if (location.href.indexOf(view) > -1) url = view;
+    });
 
-    avisarSolicitacao();
+    try {
+        if (ID) {
+            $.get(URL + "/obter-descr", {
+                id : ID,
+                tabela : url
+            }, function (val) {
+                if (url == "empresas") grupo_emp2 = val;
+                // else $("#busca").val(val);
+                listar(url == "produtos" ? 1 : 0);
+                avisarSolicitacao();
+            });
+        } else if (FILTRO) $("#busca").val(FILTRO);
+        
+        if (!ID) {
+            listar(url == "produtos" ? 1 : 0);
+            avisarSolicitacao();
+        }
+    } catch(err) {
+        listar(url == "produtos" ? 1 : 0);
+        avisarSolicitacao();
+    }
 });
 
 async function avisarSolicitacao() {
@@ -361,6 +385,7 @@ function ordenar(coluna) {
         $($(".sortable-columns").children()[coluna]).addClass("nao-inverte");
     }
     $($(".sortable-columns").children()[coluna]).trigger("click");
+    if (ID && !EMPRESA) chamar_modal(ID);
 }
 
 function contar_char(el, max) {
@@ -449,6 +474,65 @@ function excluir(_id, prefixo, e) {
     });
 }
 
+function carrega_atalhos() {
+    Array.from(document.getElementsByClassName("atalho")).forEach((el) => {
+        el.title = "Cadastro de " + (el.dataset.atalho == "setores" ? "centro de custos" : el.dataset.atalho);
+        el.onclick = function() {
+            const concluir = function(_link, _req, _achou) {
+                let caminho = URL + "/" + _link;
+                console.log(_req);
+                if (_achou) caminho += "?" + $.param(_req);
+                let clique = document.createElement("a");
+                clique.href = caminho;
+                clique.target = "_blank";
+                clique.click();
+            }
+
+            let req = {};
+            let _id = "";
+            let _filtro = "";
+            let achou = false;
+            let link = el.dataset.atalho;
+            let campoId = el.dataset.campo_id;
+            let campoDescr = el.dataset.campo_descr;
+            if (link == "pessoas") link = "colaboradores/pagina/F";
+            if (campoId && campoId.indexOf("#") == -1) campoId = "#" + campoId;
+            if (campoDescr && campoDescr.indexOf("#") == -1) campoDescr = "#" + campoDescr;            
+            
+            let elCampoId = document.querySelector(campoId);
+            if (elCampoId !== null) {
+                if (elCampoId.value.trim()) {
+                    _id = elCampoId.value.trim();
+                    achou = true;
+                }
+            }
+            let elCampoDescr = document.querySelector(campoDescr);
+            if (elCampoDescr !== null) {
+                if (elCampoDescr.value.trim()) {
+                    _filtro = elCampoDescr.value.trim();
+                    achou = true;
+                }
+            }
+
+            achou = achou && !EMPRESA;
+            if (achou) {
+                if (elCampoDescr !== null && elCampoId !== null) {
+                    $.get(URL + "/consultar-geral", {
+                        id : _id,
+                        filtro : _filtro,
+                        tabela : el.dataset.atalho
+                    }, function(ret) {
+                        if (parseInt(ret)) req.id = _id;
+                        else req.filtro = _filtro;
+                        concluir(link, req, achou);
+                    });
+                } else if (_id) req.id = _id;
+                else if (_filtro) req.filtro = _filtro;
+            } else concluir(link, req, achou);
+        }
+    });
+}
+
 function autocomplete(_this) {
     var _table = _this.data().table,
         _column = _this.data().column,
@@ -529,6 +613,7 @@ function carrega_autocomplete() {
             }
         });
     });
+    carrega_atalhos();
 }
 
 function seta_autocomplete(direcao, _this) {
@@ -646,14 +731,14 @@ function relObterElementosValor(elementos, chaves) {
 function limitar(el, zero) {
     let minimo = 1;
     if (zero !== undefined) minimo = 0;
-    let texto = $(el).val().toString().replace(/\D/g, "").replace(",", "");
+    let texto = apenasNumeros($(el).val().toString());
     $(el).val(texto);
     if (!texto.length || parseInt(texto) < minimo) $(el).val(minimo);
     if (texto.length > 11) $(el).val("".padStart(11, "9"));
 }
 
 function numerico(el) {
-    $(el).val($(el).val().replace(/\D/g, "").replace(",", "").substring(0, 4));
+    $(el).val(apenasNumeros($(el).val()).substring(0, 4));
 }
 
 function foto_pessoa(seletor, caminho) {
@@ -681,19 +766,19 @@ function formatar_cpf(el) {
 }
 
 function validar_cpf(__cpf) {
-    __cpf = __cpf.replace(/\D/g, "").replace(",", "");
-    if (__cpf == "00000000000") return false;
-    if (__cpf.length != 11) return false;
+    cpf = apenasNumeros(cpf);
+    if (cpf == "00000000000") return false;
+    if (cpf.length != 11) return false;
     let soma = 0;
-    for (let i = 1; i <= 9; i++) soma = soma + (parseInt(__cpf.substring(i - 1, i)) * (11 - i));
+    for (let i = 1; i <= 9; i++) soma = soma + (parseInt(cpf.substring(i - 1, i)) * (11 - i));
     let resto = (soma * 10) % 11;
     if ((resto == 10) || (resto == 11)) resto = 0;
-    if (resto != parseInt(__cpf.substring(9, 10))) return false;
+    if (resto != parseInt(cpf.substring(9, 10))) return false;
     soma = 0;
-    for (i = 1; i <= 10; i++) soma = soma + (parseInt(__cpf.substring(i - 1, i)) * (12 - i));
+    for (i = 1; i <= 10; i++) soma = soma + (parseInt(cpf.substring(i - 1, i)) * (12 - i));
     resto = (soma * 10) % 11;
     if ((resto == 10) || (resto == 11)) resto = 0;
-    if (resto != parseInt(__cpf.substring(10, 11))) return false;
+    if (resto != parseInt(cpf.substring(10, 11))) return false;
     return true;
 }
 
@@ -981,7 +1066,7 @@ function Atribuicoes(grade, _psm_valor) {
         if (!erro) {
             $.post(URL + "/colaboradores/supervisor", {
                 _token : $("meta[name='csrf-token']").attr("content"),
-                cpf : $("#cpf2").val().replace(/\D/g, "").replace(",", ""),
+                cpf : apenasNumeros($("#cpf2").val()),
                 senha : $("#senha2").val()
             }, function(ok) {
                 if (parseInt(ok)) retirarMain(idatb, ok);
@@ -1006,7 +1091,7 @@ function Atribuicoes(grade, _psm_valor) {
             } else var descr = data;
             $("#atribuicoesModalLabel").html(descr + " - Atribuindo " + (grade ? "grades" : "produtos"));
             if (grade) {
-                $("#referencia").data().filter = _psm_valor;
+                $("#referencia").attr("data-filter", _psm_valor);
                 $("#div-produto").addClass("d-none");
                 $("#div-referencia").removeClass("d-none");
             } else {
@@ -1148,17 +1233,12 @@ function Excecoes(_id_atribuicao) {
 
     this.mudarTipo = function(chave) {
         $("#lbl-exc-ps-valor").html((chave == "P" ? "Nome" : "Descrição") + ": *");
-        $("#exc-ps-valor").data("table", chave == "P" ? "pessoas" : "setores");
-        $("#exc-ps-valor").data("column", chave == "P" ? "nome" : "descr");
-        if (atribuicao.obter_psm() == "M") {
-            $("#exc-ps-valor").data("filter", atribuicao.psm_val);
-            $("#exc-ps-valor").data("filter_col", "v_maquina");
-        } else {
-            $("#exc-ps-valor").data("filter", atribuicao.psm_val);
-            $("#exc-ps-valor").data("filter_col", "id_setor");
-        }
-        $("#exc-atalho").attr("href", URL + (chave == "P" ? "/colaboradores/pagina/F" : "/setores"));
-        $("#exc-atalho").attr("title", "Cadastro de " + (chave == "P" ? "funcionários" : "centro de custos"));
+        $("#exc-ps-valor").attr("data-table", chave == "P" ? "pessoas" : "setores");
+        $("#exc-ps-valor").attr("data-column", chave == "P" ? "nome" : "descr");
+        $("#exc-ps-valor").attr("data-filter", atribuicao.psm_val);
+        $("#exc-ps-valor").attr("data-filter_col", atribuicao.obter_psm() == "M" ? "v_maquina" : "id_setor");
+        $("#exc-atalho").attr("data-atalho", chave == "P" ? "pessoas" : "setores");
+        carrega_atalhos();
     }
     
     modal("excecoesModal", 0, function() {
@@ -1359,7 +1439,7 @@ function RelatorioRetiradas(quebra) {
         }
 
         $("#rel-pessoa2").val("");
-        $("#rel-pessoa2").data("table", tabela);
+        $("#rel-pessoa2").attr("data-table", tabela);
         $("#rel-id_pessoa2").val("");
     }
 

@@ -33,7 +33,7 @@ function cp_listeners() {
             const linha = $($($(this).parent()).parent())[0];
             if ($(this).val().trim()) {
                 $.get(URL + "/maquinas/produto/verificar-novo", {
-                    preco : parseInt($($(linha).find(".preco")[0]).val().replace(/\D/g, "").replace(",", "")) / 100,
+                    preco : parseInt(apenasNumeros($($(linha).find(".preco")[0]).val())) / 100,
                     minimo : $($(linha).find(".minimo")[0]).val(),
                     maximo : $($(linha).find(".maximo")[0]).val(),
                     lixeira : $($(linha).find(".lixeira")[0]).val().replace("opt-", ""),
@@ -45,7 +45,7 @@ function cp_listeners() {
                     else $(el).addClass("old").removeClass("new");
                 });
             } else $($(linha).find(".form-search")[0]).addClass("new").removeClass("old");
-            if ($(this).hasClass("id-produto")) atualizaPreco($(this).attr("id").replace(/\D/g, "").replace(",", ""), "cp");
+            if ($(this).hasClass("id-produto")) atualizaPreco(apenasNumeros($(this).attr("id")), "cp");
             if ($(this).hasClass("maximo") || $(this).hasClass("minimo")) limitar($(this), true);
         });
     }).off("keyup").on("keyup", function() {
@@ -116,7 +116,7 @@ async function validar_cp_main() {
     }
     if (erro) return erro;
     $("#cpModal .preco").each(function() {
-        $(this).val(parseInt($(this).val().replace(/\D/g, "").replace(",", "")) / 100);
+        $(this).val(parseInt(apenasNumeros($(this).val())) / 100);
     });
     $("#cpModal form").submit();
     return "";
@@ -132,7 +132,7 @@ function adicionar_campo_cp() {
 
     let linha = $($("#cpModal #template-linha").html());
 
-    $($(linha).find(".produto")[0]).attr("id", "produto-" + cont).data("input", "#id_produto-" + cont);
+    $($(linha).find(".produto")[0]).attr("id", "produto-" + cont).attr("data-input", "#id_produto-" + cont);
     $($(linha).find(".id-produto")[0]).attr("id", "id_produto-" + cont);
     $($(linha).find(".lixeira")[0]).attr("id", "lixeira-" + cont).html($("#lixeira-1").html());
     $($(linha).find(".preco")[0]).attr("id", "preco-" + cont);

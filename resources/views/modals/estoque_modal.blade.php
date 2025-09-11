@@ -32,10 +32,13 @@
                                     <input id = "id_produto-1" class = "id-produto" name = "id_produto[]" type = "hidden" onchange = "atualizaPreco(1, 'estoque')" />
                                 </div>
                                 <div class = "col-1 d-flex align-items-center pl-0 pt-0 j-center col-atalho">
-                                    <a href = "{{ $root_url }}/produtos" title = "Cadastro de produtos" target = "_blank">
-                                        <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
-                                    </a>
-                                </div>
+                                    <i
+                                        class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                        data-atalho = "produtos"
+                                        data-campo_id = "#estoqueModal #id_produto-1"
+                                        data-campo_descr = "#estoqueModal #produto-1"
+                                    ></i>
+                               </div>
                                 <div class = "col-2 p-0 px-1">
                                     <label for = "es-1" class = "custom-label-form">E/S: *</label>
                                     <select id = "es-1" name = "es[]" class = "form-control es" onchange = "carrega_obs(1, true)">
@@ -63,7 +66,7 @@
                             </div>
                             <template id = "template-linha">
                                 <div class = "row mt-1">
-                                    <div class = "col-4 form-search pr-1">
+                                    <div class = "col-3 form-search pr-1 col-prod">
                                         <input name = "produto[]"
                                             class = "form-control autocomplete produto"
                                             data-table = "produtos_todos"
@@ -74,6 +77,9 @@
                                             autocomplete = "off"
                                         />
                                         <input type = "hidden" class = "id-produto" name = "id_produto[]" />
+                                    </div>
+                                    <div class = "col-1 d-flex align-items-center pl-0 pt-0 j-center col-atalho col-atalho2">
+                                        <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho" data-atalho = "produtos"></i>
                                     </div>
                                     <div class = "col-2 p-0 px-1">
                                         <select class = "form-control es" name = "es[]"></select>

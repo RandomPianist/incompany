@@ -45,6 +45,11 @@
     </div>
     
     @include("components.naoencontrado")
+
+    <script type = "text/javascript" language = "JavaScript">
+        const ID = "{{ request('id') ?? '' }}";
+        const FILTRO = "{{ request('filtro') ?? '' }}";
+    </script>
     
     <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/especifico/produtos.js') }}"></script>
 

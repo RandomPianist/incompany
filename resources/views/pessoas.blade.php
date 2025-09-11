@@ -55,6 +55,8 @@
     <link rel = "stylesheet" href = "{{ asset('css/especifico/pessoa.css') }}" />
     
     <script type = "text/javascript" language = "JavaScript">
+        const ID = "{{ request('id') ?? '' }}";
+        const FILTRO = "{{ request('filtro') ?? '' }}";
         const TIPO = "{{ $titulo }}".charAt(0);
         const IMG_BIOMETRIA = '{{ asset("img/biometria-sim.png") }}';
     </script>

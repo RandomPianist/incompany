@@ -67,13 +67,16 @@ function listar() {
             if (!$($(this).parent()).find("details").length) $($(this).parent()).replaceWith("<div class = 'sem-filhos texto-tabela' id = '" + $(this).attr("id") + "'>" + $(this).html() + "</div>");
         });
         zebrar();
-        const elGrupo = document.getElementById("empresa-" + GRUPO);
+        let gp = grupo_emp2;
+        if (gp === undefined) gp = GRUPO;
+        const elGrupo = document.getElementById("empresa-" + gp);
         if (elGrupo !== null) {
             elGrupo.parentElement.open = true;
             setTimeout(function() {
                 zebrar();
             }, 100);
         }
+        if (grupo_emp2 !== undefined && ID && !EMPRESA) chamar_modal(ID);
     });
 }
 
@@ -106,7 +109,7 @@ function validar_cnpj(cnpj) {
 
 function formatar_cnpj(el) {
     el.classList.remove("invalido");
-    let rawValue = $(el).val().replace(/\D/g, "").replace(",", "");
+    let rawValue = apenasNumeros($(el).val());
     if (rawValue.length === 15 && rawValue.startsWith("0")) {
         let potentialCNPJ = rawValue.substring(1);
         if (validar_cnpj(potentialCNPJ)) rawValue = potentialCNPJ;
@@ -139,7 +142,7 @@ async function validar() {
 
     const data = await $.get(URL + "/empresas/consultar/", {
         id : $("#id").val(),
-        cnpj : $("#cnpj").val().replace(/\D/g, "").replace(",", "")
+        cnpj : apenasNumeros($("#cnpj").val())
     });
     if (!erro && data == "R" && !parseInt($("#id").val())) {
         erro = "Já existe um registro com esse CNPJ";
@@ -159,7 +162,7 @@ async function validar() {
             });
             $("#maq_igual").val(resp ? "S" : "N");
         } else $("#maq_igual").val("N");
-        $("#cnpj").val($("#cnpj").val().replace(/\D/g, "").replace(",", ""));
+        $("#cnpj").val(apenasNumeros($("#cnpj").val()));
         $("#empresasModal form").submit();
     } else s_alert(erro);
 }

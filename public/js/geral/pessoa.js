@@ -147,7 +147,7 @@ function Pessoa(_id) {
             }
         }
         $.get(URL + "/colaboradores/consultar/", {
-            cpf : $("#cpf").val().replace(/\D/g, "").replace(",", ""),
+            cpf : apenasNumeros($("#cpf").val()),
             email : $("#email").val(),
             id : _id,
             id_setor : $("#pessoa-setor-select").val()
@@ -161,7 +161,7 @@ function Pessoa(_id) {
             if (!erro && !alterou && !document.querySelector("#pessoasModal input[type=file]").value) erro = "Altere pelo menos um campo para salvar";
             if (!erro) {
                 $("#pessoa-setor-select").attr("disabled", false);
-                $("#cpf").val($("#cpf").val().replace(/\D/g, "").replace(",", ""));
+                $("#cpf").val(apenasNumeros($("#cpf").val()));
                 $("#pessoasModal form").submit();
             } else s_alert(erro);
         });

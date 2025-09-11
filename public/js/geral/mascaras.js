@@ -1,6 +1,10 @@
+function apenasNumeros(val) {
+    return val.replace(/\D/g, "").replace(",", "");
+}
+
 function dinheiro(texto_final) {
     if (texto_final !== texto_final.toString()) texto_final = texto_final.toFixed(2);
-    texto_final = texto_final.toString().replace(/\D/g, "").replace(",", "");
+    texto_final = apenasNumeros(texto_final.toString());
     if (texto_final.length > 2) {
         let valor_inteiro = parseInt(texto_final.substring(0, texto_final.length - 2)).toString();
         let resultado_pontuado = "";

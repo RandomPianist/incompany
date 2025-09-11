@@ -101,4 +101,46 @@ class HomeController extends Controller {
         }
         return json_encode($resultado);
     }
+
+    public function obter_descr(Request $request) {
+        $coluna = "";
+        if ($request->tabela == "pessoas") $coluna .= "nome AS ";
+        $coluna .= "descr";
+        if ($request->tabela == "empresas") {
+            if (sizeof(
+                DB::table("empresas")
+                    ->where("id_matriz", $request->id)
+                    ->where("lixeira", 0)
+                    ->get()
+            )) return $request->id;
+            return DB::table("empresas")
+                        ->where("id", $request->id)
+                        ->value("id_matriz");
+        }
+        return DB::table($request->tabela)
+                    ->select($coluna)
+                    ->where("id", $request->id)
+                    ->value($coluna);
+    }
+
+    public function consultar_geral(Request $request) {
+        $coluna = "descr";
+        switch ($request->tabela) {
+            case "empresas":
+                $coluna = "nome_fantasia";
+                break;
+            case "pessoas":
+                $coluna = "nome";
+                break;
+        }
+        $tabela = $request->tabela;
+        if ($tabela == "produtos") $tabela = "vprodaux";
+        return sizeof(
+            DB::table($tabela)
+                ->where("id", $request->id)
+                ->where($coluna, $request->filtro)
+                ->where("lixeira", 0)
+                ->get()
+        ) ? "1" : "0";
+    }
 }

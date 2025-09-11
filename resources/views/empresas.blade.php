@@ -24,6 +24,7 @@
     <link rel = "stylesheet" href = "{{ asset('css/especifico/empresas.css') }}" />
 
     <script type = "text/javascript" language = "JavaScript">
+        const ID = "{{ request('id') ?? '' }}";
         const GRUPO = "{{ request('grupo') ?? '' }}";
     </script>
     

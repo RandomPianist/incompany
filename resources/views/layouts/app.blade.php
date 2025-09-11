@@ -246,7 +246,7 @@
             url()->current() != route('categorias')
         ))
             <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/app.js')      }}"></script>
-            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/dinheiro.js') }}"></script>
+            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/mascaras.js') }}"></script>
         @else
             <script type = "text/javascript" language = "JavaScript">
                 window.onload = function() {

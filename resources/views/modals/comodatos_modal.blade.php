@@ -32,9 +32,12 @@
                                 <input id = "comodato-id_empresa" name = "id_empresa" type = "hidden" />
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
-                                <a href = "{{ $root_url }}/empresas" title = "Cadastro de empresas" target = "_blank">
-                                    <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
-                                </a>
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "empresas"
+                                    data-campo_id = "comodato-id_empresa"
+                                    data-campo_descr = ""
+                                ></i>
                             </div>
                             <div class = "col-2">
                                 <label for = "comodato-inicio" class = "custom-label-form">Início: *</label>

@@ -43,6 +43,11 @@
         @include("components.add")
     @endif
 
+    <script type = "text/javascript" language = "JavaScript">
+        const ID = "{{ request('id') ?? '' }}";
+        const FILTRO = "{{ request('filtro') ?? '' }}";
+    </script>
+
     <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/especifico/categorias.js') }}"></script>
 
     @include("modals.categorias_modal")

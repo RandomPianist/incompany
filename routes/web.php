@@ -28,8 +28,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware("auth")->group(function () {
-    Route::get("/",             [DashboardController::class, "iniciar"])->name("home");
-    Route::get("/autocomplete", [HomeController::class, "autocomplete"]);
+    Route::get("/",                [DashboardController::class, "iniciar"])->name("home");
+    Route::get("/autocomplete",    [HomeController::class, "autocomplete"]);
+    Route::get("/obter-descr",     [HomeController::class, "obter_descr"]);
+    Route::get("/consultar-geral", [HomeController::class, "consultar_geral"]);
 
     Route::group(["prefix" => "dashboard"], function() {
         Route::get("/dados",                           [DashboardController::class, "dados"]);

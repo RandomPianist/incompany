@@ -43,9 +43,12 @@
                             />
                         </div>
                         <div class = "col-1 d-flex align-items-center pl-0 pt-3 j-end">
-                            <a href = "{{ $root_url }}/produtos" title = "Cadastro de produtos" target = "_blank">
-                                <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
-                            </a>
+                            <i
+                                class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                data-atalho = "produtos"
+                                data-campo_id = "id_produto"
+                                data-campo_descr = "produto"
+                            ></i>
                         </div>
                         <div class = "col-2">
                             <label for = "quantidade" class = "custom-label-form">Quantidade: *</label>

@@ -32,9 +32,12 @@
                             <input id = "exc-ps-id" type = "hidden" />
                         </div>
                         <div class = "col-1 d-flex align-items-center pl-0 pt-3 j-end">
-                            <a target = "_blank" id = "exc-atalho">
-                                <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
-                            </a>
+                            <i
+                                id = "exc-atalho"
+                                data-campo_id = "exc-ps-id"
+                                data-campo_descr = "exc-ps-valor"
+                                class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                            ></i>
                         </div>
                     </div>
                     <div class = "d-flex">

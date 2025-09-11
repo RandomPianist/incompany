@@ -38,9 +38,11 @@
                                 <input id = "setor-id_empresa" name = "id_empresa" type = "hidden" />
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
-                                <a href = "{{ $root_url }}/empresas" title = "Cadastro de empresas" target = "_blank">
-                                    <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
-                                </a>
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "empresas"
+                                    data-campo_id = "setor-id_empresa"
+                                ></i>
                             </div>
                         </div>
                         <div class = "row mb-3 pt-3 @if (!$admin) d-none @endif">

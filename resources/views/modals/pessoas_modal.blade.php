@@ -52,9 +52,12 @@
                                 <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control" onchange = "pessoa.toggle_emp()"></select>
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
-                                <a href = "{{ $root_url }}/empresas" title = "Cadastro de empresas" target = "_blank">
-                                    <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
-                                </a>
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "empresas"
+                                    data-campo_id = "pessoa-empresa-select"
+                                    data-campo_descr = ""
+                                ></i>
                             </div>
                         </div>
                         <div class = "row">
@@ -67,9 +70,12 @@
                                 <select id = "pessoa-setor-select" name = "id_setor" class = "form-control" onchange = "pessoa.toggle_user($(this).val())"></select>
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
-                                <a href = "{{ $root_url }}/setores" title = "Cadastro de centro de custos" target = "_blank">
-                                    <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
-                                </a>
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "setores"
+                                    data-campo_id = "pessoa-setor-select"
+                                    data-campo_descr = ""
+                                ></i>
                             </div>
                         </div>
                         <div class = "row usr-info">

@@ -32,7 +32,7 @@
             </div>
         </div>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/jquery.min.js') }}"></script>
-        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/dinheiro.js') }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/mascaras.js') }}"></script>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/rel.js')      }}"></script>
     </body>
 </html>

@@ -19,9 +19,12 @@
                                 <input id = "busca-prod" type = "text" class = "form-control form-control-lg" placeholder = "Produto" aria-label = "Produto" aria-describedby = "btn-filtro2" />
                             </div>
                             <div class = "col-1 d-flex align-items-center col-atalho">
-                                <a href = "{{ $root_url }}/produtos" title = "Cadastro de produtos" target = "_blank">
-                                    <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
-                                </a>
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "produtos"
+                                    data-campo_id = ""
+                                    data-campo_descr = "busca-prod"
+                                ></i>
                             </div>
                             <div class = "col-3">
                                 <input id = "busca-refer" type = "text" class = "form-control form-control-lg" placeholder = "Referência" aria-label = "Referência" aria-describedby = "btn-filtro2" />
@@ -30,9 +33,12 @@
                                 <input id = "busca-cat" type = "text" class = "form-control form-control-lg" placeholder = "Categoria" aria-label = "Categoria" aria-describedby = "btn-filtro2" />
                             </div>
                             <div class = "col-1 d-flex align-items-center col-atalho">
-                                <a href = "{{ $root_url }}/categorias" title = "Cadastro de categorias" target = "_blank">
-                                    <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
-                                </a>
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "categorias"
+                                    data-campo_id = ""
+                                    data-campo_descr = "busca-cat"
+                                ></i>
                             </div>
                             <div class = "col-1">
                                 <button id = "btn-filtro2" type = "button" class = "btn btn-target mr-2 px-20" onclick = "listar_cp()">

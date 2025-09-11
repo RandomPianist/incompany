@@ -774,3 +774,16 @@ div.atribuicoes,
 div.atribuicoes {
     max-height: 300px
 }
+
+.atalho {
+    color: #0416b4 !important
+}
+
+.col-atalho {
+    cursor: pointer;
+    font-weight: 600
+}
+
+.col-atalho2 {
+    margin-top: -26px
+}

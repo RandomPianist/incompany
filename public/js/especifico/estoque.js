@@ -37,7 +37,7 @@ function validar_estoque() {
         }
         if (!erro) {
             $("#estoqueModal .preco").each(function() {
-                $(this).val(parseInt($(this).val().replace(/\D/g, "").replace(",", "")) / 100);
+                $(this).val(parseInt(apenasNumeros($(this).val())) / 100);
             });
             $("#estoqueModal form").submit();
         } else s_alert(erro);
@@ -64,23 +64,33 @@ function adicionar_campo_estoque() {
 
     let linha = $($("#estoqueModal #template-linha").html());
 
-    $($(linha).find(".produto")[0]).attr("id", "produto-" + cont).data("input", "#estoqueModal #id_produto-" + cont);
+    $($(linha).find(".produto")[0]).attr("id", "produto-" + cont).attr("data-input", "#estoqueModal #id_produto-" + cont);
     $($(linha).find(".id-produto")[0]).attr("id", "id_produto-" + cont);
     $($(linha).find(".es")[0]).attr("id", "es-" + cont).html($("#es-1").html());
     $($(linha).find(".qtd")[0]).attr("id", "qtd-" + cont);
     $($(linha).find(".preco")[0]).attr("id", "preco-" + cont);
     $($(linha).find(".obs")[0]).attr("id", "obs-" + cont);
 
-    $($(linha).find(".id-produto")[0]).on("change", () => atualizaPreco(cont, "estoque"));
-    $($(linha).find(".es")[0]).on("change", () => carrega_obs(cont, true));
+    $($(linha).find(".id-produto")[0]).off("change").on("change", () => atualizaPreco(cont, "estoque"));
+    $($(linha).find(".es")[0]).off("change").on("change", () => carrega_obs(cont, true));
+    $($(linha).find(".atalho")[0]).attr("data-campo_id", "#estoqueModal #id_produto-" + cont);
+    $($(linha).find(".atalho")[0]).attr("data-campo_descr", "#estoqueModal #produto-" + cont);
+    carrega_atalhos();
 
     $($(linha).find(".remove-produto")[0]).on("click", function() {
         $(linha).remove();
-        ["produto", "id_produto", "es", "qtd", "preco", "obs"].forEach((classe) => {
+        ["produto", "id_produto", "es", "qtd", "preco", "obs", "atalho"].forEach((classe) => {
             $("#estoqueModal ." + classe).each(function(i) {
                 $(this).attr("id", classe + "-" + (i + 1));
+                if ($(this).hasClass("atalho")) {
+                    $(this).attr("data-campo_id", "#estoqueModal #id_produto-" + (i + 1));
+                    $(this).attr("data-campo_descr", "#estoqueModal #produto-" + (i + 1));
+                } else if ($(this).hasClass("produto")) $(this).attr("data-input", "#estoqueModal #id_produto-" + (i + 1));
+                else if ($(this).hasClass("id-produto")) $(this).off("change").on("change", () => atualizaPreco(i + 1, "estoque"));
+                else if ($(this).hasClass("es")) $(this).off("change").on("change", () => carrega_obs(i + 1, true));
             });
         });
+        carrega_atalhos();
     });
 
     $("#estoqueModal .modal-tudo").append($(linha));

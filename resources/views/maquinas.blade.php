@@ -51,6 +51,8 @@
     <link rel = "stylesheet" href = "{{ asset('css/especifico/maquinas.css') }}" />
     
     <script type = "text/javascript" language = "JavaScript">
+        const ID = "{{ request('id') ?? '' }}";
+        const FILTRO = "{{ request('filtro') ?? '' }}";
         const COMODATO = {{ $comodato ? "true" : "false"}};
     </script>
 
