@@ -653,7 +653,6 @@ class MaquinasController extends Controller {
                     DB::raw("DATE_FORMAT(comodatos.inicio, '%d/%m/%Y') AS inicio"),
                     DB::raw("DATE_FORMAT(comodatos.fim, '%d/%m/%Y') AS fim"),
                     "comodatos.atb_todos",
-                    "comodatos.atb_todos_dinamico",
                     "comodatos.travar_ret",
                     "comodatos.travar_estq",
                     "comodatos.obrigatorio",
