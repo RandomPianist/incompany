@@ -77,41 +77,12 @@ class DashboardController extends Controller {
     }
 
     private function maquinas_main($inicio, $fim) {
-        return DB::table("valores")
+        return DB::table("maquinas")
                     ->select(
-                        "id",
-                        "descr"
+                        "maquinas.id",
+                        "maquinas.descr"
                     )
-                    ->whereIn(
-                        "id",
-                        DB::table("comodatos")
-                            ->select(
-                                "minhas_empresas.id_pessoa",
-                                "comodatos.id_maquina"
-                            )
-                            ->joinsub(
-                                DB::table("pessoas")
-                                    ->select(
-                                        "id AS id_pessoa",
-                                        "id_empresa"
-                                    )
-                                    ->unionAll(
-                                        DB::table("pessoas")
-                                            ->select(
-                                                "pessoas.id AS id_pessoa",
-                                                "filiais.id AS id_empresa"
-                                            )
-                                            ->join("empresas AS filiais", "filiais.id_matriz", "pessoas.id_empresa")
-                                    ),
-                                "minhas_empresas",
-                                "minhas_empresas.id_empresa",
-                                "comodatos.id_empresa"
-                            )
-                            ->whereRaw("(('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim) OR ('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim))")
-                            ->where("id_pessoa", Auth::user()->id_pessoa)
-                            ->pluck("id_maquina")
-                            ->toArray()
-                    )
+                    ->whereIn("id", $this->maquinas_periodo($inicio, $fim)) // App\Http\Controllers\Controller.php
                     ->get();
     }
 
@@ -130,7 +101,7 @@ class DashboardController extends Controller {
                                     id_pessoa,
                                     qtd
                                     
-                                FROM vpendentes
+                                FROM vpendentesgeral
 
                                 WHERE esta_pendente = 1
                                 
@@ -258,7 +229,6 @@ class DashboardController extends Controller {
                         DB::raw("ROUND(retiradas.qtd) AS qtd"),
                         DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data")
                     )
-                    ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
                     ->join("produtos", "produtos.id", "retiradas.id_produto")
                     ->where("retiradas.id_pessoa", $id_pessoa)
                     ->whereRaw("retiradas.data >= '".$inicio."'")
@@ -306,7 +276,7 @@ class DashboardController extends Controller {
     // API
     public function produtos_em_atraso($id_pessoa) {
         return json_encode(
-            DB::table("vpendentes")
+            DB::table("vpendentesgeral")
                 ->select(
                     "id_produto AS id",
                     "validade",
@@ -321,14 +291,18 @@ class DashboardController extends Controller {
                 )
                 ->where("id_pessoa", $id_pessoa)
                 ->where("esta_pendente", 1)
-                ->groupBy(
+                ->groupby(
                     "id_produto",
                     "validade",
                     "qtd",
                     "nome_produto",
                     "produto_ou_referencia_chave",
-                    "descr",
-                    "referencia"
+                    DB::raw("
+                        CASE
+                            WHEN produto_ou_referencia_chave = 'P' THEN descr
+                            ELSE referencia
+                        END
+                    ")
                 )
                 ->orderby("qtd", "DESC")
                 ->get()

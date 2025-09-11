@@ -28,7 +28,7 @@
                 </div>
             </div>
             <div class = "d-flex">
-                <button type = "button" class = "btn btn-target mx-auto my-4 px-5" onclick = "validar()">Validar</button>
+                <button type = "button" class = "btn btn-target mx-auto my-4 px-5" onclick = "atribuicao.validarSpv()">Validar</button>
             </div>
         </div>
     </div>

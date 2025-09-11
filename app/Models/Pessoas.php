@@ -6,21 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int    $id
- * @property int    $created_at
- * @property int    $id_empresa
- * @property int    $id_setor
- * @property int    $id_usuario
- * @property int    $lixeira
- * @property int    $senha
  * @property int    $supervisor
+ * @property int    $lixeira
+ * @property int    $id_setor
+ * @property int    $id_empresa
+ * @property int    $id_usuario
+ * @property int    $created_at
  * @property int    $updated_at
- * @property Date   $admissao
- * @property string $biometria
- * @property string $cpf
- * @property string $foto
- * @property string $foto64
- * @property string $funcao
  * @property string $nome
+ * @property string $cpf
+ * @property string $funcao
+ * @property string $foto
+ * @property string $senha
+ * @property string $foto64
+ * @property string $biometria
+ * @property Date   $admissao
  */
 class Pessoas extends Model
 {
@@ -44,7 +44,7 @@ class Pessoas extends Model
      * @var array
      */
     protected $fillable = [
-        'admissao', 'biometria', 'cpf', 'created_at', 'foto', 'foto64', 'funcao', 'id_empresa', 'id_setor', 'id_usuario', 'lixeira', 'nome', 'senha', 'supervisor', 'updated_at'
+        'nome', 'cpf', 'funcao', 'foto', 'senha', 'admissao', 'foto64', 'biometria', 'supervisor', 'lixeira', 'id_setor', 'id_empresa', 'id_usuario', 'created_at', 'updated_at'
     ];
 
     /**
@@ -62,7 +62,7 @@ class Pessoas extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'admissao' => 'date', 'biometria' => 'string', 'cpf' => 'string', 'created_at' => 'timestamp', 'foto' => 'string', 'foto64' => 'string', 'funcao' => 'string', 'id_empresa' => 'int', 'id_setor' => 'int', 'id_usuario' => 'int', 'lixeira' => 'int', 'nome' => 'string', 'senha' => 'int', 'supervisor' => 'int', 'updated_at' => 'timestamp'
+        'id' => 'int', 'nome' => 'string', 'cpf' => 'string', 'funcao' => 'string', 'foto' => 'string', 'senha' => 'string', 'admissao' => 'date', 'foto64' => 'string', 'biometria' => 'string', 'supervisor' => 'int', 'lixeira' => 'int', 'id_setor' => 'int', 'id_empresa' => 'int', 'id_usuario' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
     ];
 
     /**

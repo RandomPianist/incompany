@@ -6,14 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int    $id
- * @property int    $pessoa_ou_setor_valor
  * @property int    $validade
+ * @property int    $obrigatorio
+ * @property int    $gerado
  * @property int    $lixeira
+ * @property int    $id_pessoa
+ * @property int    $id_setor
+ * @property int    $id_maquina
+ * @property int    $id_empresa
+ * @property int    $id_empresa_autor
  * @property int    $created_at
  * @property int    $updated_at
- * @property int    $obrigatorio
- * @property int    $id_empresa
- * @property string $produto_ou_referencia_valor
+ * @property Date   $data
+ * @property string $cod_produto
+ * @property string $referencia
  */
 class Atribuicoes extends Model
 {
@@ -37,7 +43,7 @@ class Atribuicoes extends Model
      * @var array
      */
     protected $fillable = [
-        'pessoa_ou_setor_chave', 'pessoa_ou_setor_valor', 'produto_ou_referencia_chave', 'produto_ou_referencia_valor', 'qtd', 'validade', 'lixeira', 'created_at', 'updated_at', 'obrigatorio', 'id_empresa'
+        'qtd', 'data', 'validade', 'obrigatorio', 'gerado', 'lixeira', 'id_pessoa', 'id_setor', 'id_maquina', 'cod_produto', 'referencia', 'id_empresa', 'id_empresa_autor', 'created_at', 'updated_at'
     ];
 
     /**
@@ -55,7 +61,7 @@ class Atribuicoes extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'pessoa_ou_setor_valor' => 'int', 'produto_ou_referencia_valor' => 'string', 'validade' => 'int', 'lixeira' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp', 'obrigatorio' => 'int', 'id_empresa' => 'int'
+        'id' => 'int', 'data' => 'date', 'validade' => 'int', 'obrigatorio' => 'int', 'gerado' => 'int', 'lixeira' => 'int', 'id_pessoa' => 'int', 'id_setor' => 'int', 'id_maquina' => 'int', 'cod_produto' => 'string', 'referencia' => 'string', 'id_empresa' => 'int', 'id_empresa_autor' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
     ];
 
     /**
@@ -64,7 +70,7 @@ class Atribuicoes extends Model
      * @var array
      */
     protected $dates = [
-        'created_at', 'updated_at'
+        'data', 'created_at', 'updated_at'
     ];
 
     /**

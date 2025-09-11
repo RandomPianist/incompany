@@ -22,7 +22,7 @@
                     <div class = "row">
                         <div class = "col-12">
                             <div class = "w-100">
-                                <input type = "range" id = "quantidade2" min = 1 max = {{ intval($max_atb) }} value = 1 class = "slider" oninput = "atualizaQtd()"/>
+                                <input type = "range" id = "quantidade2" min = 1 max = {{ intval($max_atb) }} value = 1 class = "slider" oninput = "atribuicao.atualizarQtd()"/>
                                 <p class = "custom-label-form">
                                     Quantidade:
                                     <span id = "quantidade2_label"></span>
@@ -46,6 +46,5 @@
 </div>
 
 <link rel = "stylesheet" href = "{{ asset('css/especifico/retiradas.css') }}" />
-<script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/especifico/retiradas.js') }}"></script>
 
 @include("modals.supervisor_modal")

@@ -9,9 +9,10 @@ use Illuminate\Http\Request;
 use App\Models\Log;
 use App\Models\Pessoas;
 use App\Models\Produtos;
-use App\Models\Valores;
+use App\Models\Maquinas;
 use App\Models\Retiradas;
 use App\Models\Comodatos;
+use App\Models\Atribuicoes;
 use App\Services\GlobaisService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -47,33 +48,39 @@ class Controller extends BaseController {
         return $erro;
     }
 
+    protected function obter_comodato($id_maquina) {
+        return Comodatos::find(
+            DB::table("comodatos")
+                ->whereRaw("CURDATE() >= inicio AND CURDATE() < fim")
+                ->where("id_maquina", $id_maquina)
+                ->value("id")
+        );
+    }
+
     protected function maquinas_periodo($inicio, $fim) {
         $where = "";
-        if ($inicio) $where .= "('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim)";
+        if ($inicio) $where .= "('".$inicio."' >= comodatos.inicio AND '".$inicio."' < comodatos.fim)";
         if ($fim) {
             if ($where) $where .= " OR ";
-            $where .= "('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim)";
+            $where .= "('".$fim."' >= comodatos.inicio AND '".$fim."' < comodatos.fim)";
         }
         $where = $where ? "(".$where.")" : "1";
         return DB::table("comodatos")
                     ->selectRaw("DISTINCTROW comodatos.id_maquina")
-                    ->joinsub(
-                        DB::table("pessoas")
-                            ->select(
-                                "id AS id_pessoa",
-                                "id_empresa"
-                            )
-                            ->unionAll(
-                                DB::table("pessoas")
-                                    ->select(
-                                        "pessoas.id AS id_pessoa",
-                                        "filiais.id AS id_empresa"
-                                    )
-                                    ->join("empresas AS filiais", "filiais.id_matriz", "pessoas.id_empresa")
-                            ),
-                        "minhas_empresas",
-                        "minhas_empresas.id_empresa",
-                        "comodatos.id_empresa"
+                    ->join(
+                        DB::raw("(
+                            SELECT
+                                pessoas.id AS id_pessoa,
+                                pessoas.id_empresa
+                            FROM pessoas
+                            JOIN empresas
+                                ON pessoas.id_empresa IN (empresas.id, empresas.id_matriz)
+                            WHERE pessoas.lixeira = 0
+                              AND empresas.lixeira = 0
+                        ) AS minhas_empresas"),
+                        function ($join) {
+                            $join->on("minhas_empresas.id_empresa", "comodatos.id_empresa");
+                        }
                     )
                     ->whereRaw($where)
                     ->where("minhas_empresas.id_empresa", $this->obter_empresa())                    
@@ -138,7 +145,7 @@ class Controller extends BaseController {
     }
 
     protected function retirada_consultar($id_atribuicao, $qtd, $id_pessoa) {
-        $consulta = DB::table("vpendentes")
+        $consulta = DB::table("vpendentesgeral")
                         ->where("esta_pendente", 1)
                         ->where("id_atribuicao", $id_atribuicao)
                         ->where("id_pessoa", $id_pessoa)
@@ -152,13 +159,13 @@ class Controller extends BaseController {
         $api = $comodato > 0;
 
         $consulta = $api ?
-            DB::table("maquinas_produtos AS mp")
+            DB::table("comodatos_produtos AS cp")
                 ->select(
                     "produtos.ca",
-                    DB::raw("IFNULL(mp.preco, produtos.preco) AS preco")
+                    DB::raw("IFNULL(cp.preco, produtos.preco) AS preco")
                 )
-                ->join("produtos", "produtos.id", "mp.id_produto")
-                ->join("comodatos", "comodatos.id_maquina", "mp.id_maquina")
+                ->join("produtos", "produtos.id", "cp.id_produto")
+                ->join("comodatos", "comodatos.id", "cp.id_comodato")
                 ->where("comodatos.id", $comodato)
         :
             DB::table("produtos")
@@ -172,7 +179,7 @@ class Controller extends BaseController {
         $pessoa = Pessoas::find($json["id_pessoa"]);
         $linha = new Retiradas;
         if (isset($json["obs"])) $linha->observacao = $json["obs"];
-        if (isset($json["hora"])) $linha->hora = $json["hora"];
+        if (isset($json["hora"])) $linha->hms = $json["hora"];
         if (isset($json["biometria_ou_senha"])) $linha->biometria_ou_senha = $json["biometria_ou_senha"];
         if (isset($json["id_supervisor"])) {
             if (intval($json["id_supervisor"])) $linha->id_supervisor = $json["id_supervisor"];
@@ -188,6 +195,8 @@ class Controller extends BaseController {
         $linha->preco = $consulta_produto->preco;
         $linha->ca = $consulta_produto->ca;
         $linha->save();
+        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$pessoa->id.", 'R', 'N')");
+        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$pessoa->id.", 'U', 'N')");
         $reg_log = $this->log_inserir("C", "retiradas", $linha->id, $api ? "APP" : "WEB");
         if ($api) {
             $reg_log->id_pessoa = $pessoa->id;
@@ -197,27 +206,33 @@ class Controller extends BaseController {
         return $linha;
     }
 
-    protected function atualizar_aa_main($consulta) {
-        $lista = $consulta->pluck("id")->toArray();
-        if (sizeof($lista)) {
-            $where = "id_pessoa IN (".join(",", $lista).")";
-            DB::statement("DELETE FROM atribuicoes_associadas WHERE ".$where);
-            DB::statement("INSERT INTO atribuicoes_associadas SELECT * FROM vatribuicoes WHERE ".$where);
+    protected function atualizar_tudo($valor, $chave = "M", $completo = false) {
+        $valor_ant = $valor;
+        if (is_iterable($valor)) $valor = implode(",", $valor);
+        $valor = "'(".$valor.")'";
+        if ($completo) {
+            if (is_iterable($valor_ant)) {
+                foreach ($valor_ant as $maq) DB::statement("CALL atualizar_mat_vcomodatos(".$maq.")");
+            } else DB::statement("CALL atualizar_mat_vcomodatos(".$valor_ant.")");
         }
+        DB::statement("CALL atualizar_mat_vatbaux('".$chave."', ".$valor.", 'N')");
+        DB::statement("CALL atualizar_mat_vatribuicoes('".$chave."', ".$valor.", 'N')");
+        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'R', 'N')");
+        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'U', 'N')");
     }
 
-    protected function atb_pessoa() {
-        return DB::table("atribuicoes")
-                    ->selectRaw("DISTINCTROW pessoas.id")
-                    ->join("pessoas", function($join) {
-                        $join->on(function($sql) {
-                            $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id")
-                                ->where("atribuicoes.pessoa_ou_setor_chave", "P");
-                        })->orOn(function($sql) {
-                            $sql->on("atribuicoes.pessoa_ou_setor_valor", "pessoas.id_setor")
-                                ->where("atribuicoes.pessoa_ou_setor_chave", "S");
-                        });
-                    });
+    protected function atualizar_atribuicoes($consulta) {
+        foreach ($consulta as $linha) $this->atualizar_tudo($linha->psm_valor, $linha->psm_chave);
+    }
+
+    protected function obter_atb_ant($id_atribuicao) {
+        return DB::table("vatbold")
+                    ->select(
+                        "psm_chave",
+                        "psm_valor"
+                    )
+                    ->where("id", $id_atribuicao)
+                    ->get();
     }
 
     protected function supervisor_consultar(Request $request) {
@@ -248,59 +263,54 @@ class Controller extends BaseController {
         return $resultado;
     }
 
-    protected function criar_mp($id_produto, $id_maquina, $api = false, $nome = "") {
-        $id_produto = strval($id_produto);
-        $id_maquina = strval($id_maquina);
-        $tabela = $id_maquina == "valores.id" ? "valores" : "produtos";
-        DB::statement("
-            INSERT INTO maquinas_produtos (id_produto, id_maquina) (
-                SELECT
-                    ".$id_produto.",
-                    ".$id_maquina."
-
-                FROM ".$tabela."
-
-                LEFT JOIN maquinas_produtos AS mp
-                    ON mp.id_produto = ".$id_produto." AND mp.id_maquina = ".$id_maquina."
-                
-                WHERE mp.id IS NULL ".($tabela == "valores" ? " AND valores.alias = 'maquinas'" : "")."
-            )
-        ");
-        DB::statement("
-            UPDATE maquinas_produtos AS mp
-            JOIN produtos
-                ON produtos.id = mp.id_produto
-            SET mp.preco = produtos.preco
-            WHERE mp.preco IS NULL
-        ");
-        $query = "
-            SELECT mp.id
-            FROM maquinas_produtos AS mp
-            LEFT JOIN log
-                ON log.tabela = 'maquinas_produtos' AND log.fk = mp.id
-            WHERE log.id IS NULL
-        ";
-        $this->log_inserir_lote("C", "(".$query.") AS tab", "1", $api ? "ERP" : "WEB", $nome, "maquinas_produtos");
-    }
-
     protected function atribuicao_atualiza_ref($id, $antigo, $novo, $nome = "", $api = false) {
         if ($id && $this->comparar_texto($antigo, $novo)) {
             $novo = trim($novo);
-            $where = "produto_ou_referencia_valor = '".$antigo."' AND produto_ou_referencia_chave = 'R'";
+            $where = "referencia = '".$antigo."'";
+            $lista = DB::table("vatbold")
+                        ->select(
+                            "psm_chave",
+                            "psm_valor"
+                        )
+                        ->whereRaw($where)
+                        ->groupby(
+                            "psm_chave",
+                            "psm_valor"
+                        )
+                        ->get();
             DB::statement("
                 UPDATE atribuicoes
-                SET ".($novo ? "produto_ou_referencia_valor = '".$novo."'" : "lixeira = 1")."
+                SET ".($novo ? "referencia = '".$novo."'" : "lixeira = 1")."
                 WHERE ".$where
             );
             $this->log_inserir_lote($novo ? "E" : "D", "atribuicoes", $where, $api ? "ERP" : "WEB", $nome);
-            if (!$novo) {
-                $this->atualizar_aa_main(
-                    $this->atb_pessoa()
-                        ->where("atribuicoes.produto_ou_referencia_chave", "R")
-                        ->where("atribuicoes.produto_ou_referencia_valor", $antigo)
-                );
-            }
+            $this->atualizar_atribuicoes($lista);
         }
+    }
+
+    protected function atribuicao_listar($consulta) {
+        $resultado = array();
+        $aux = DB::table("pessoas")
+                    ->select(
+                        DB::raw("IFNULL(empresas.id, 0) AS id_empresa"),
+                        DB::raw("IFNULL(empresas.id_matriz, 0) AS id_matriz")
+                    )
+                    ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
+                    ->where("pessoas.id", Auth::user()->id_pessoa)
+                    ->first();
+        foreach ($consulta as $linha) {
+            $linha->pode_editar = 1;
+            $mostrar = true;
+            // $mostrar = $linha->psm_chave == "P";
+            // if (!$mostrar) {
+            //     $empresa_atribuicao = intval($linha->id_empresa);
+            //     $empresa_logada = intval($aux->id_empresa);
+            //     $mostrar = in_array($empresa_atribuicao, [0, $empresa_logada, intval($aux->id_matriz)]);
+            //     $linha->pode_editar = $empresa_atribuicao == $empresa_logada ? 1 : 0;
+            // }
+            if ($mostrar) array_push($resultado, $linha);
+        }
+        return $resultado;
     }
 
     protected function obter_where($id_pessoa, $tabela = "pessoas", $inclusive_excluidos = false) {
@@ -321,30 +331,16 @@ class Controller extends BaseController {
         return $where;
     }
 
-    protected function retorna_saldo_mp($id_maquina, $id_produto) {
+    protected function retorna_saldo_cp($id_comodato, $id_produto) {
         return floatval(
-            DB::table("maquinas_produtos AS mp")
+            DB::table("comodatos_produtos AS cp")
                 ->selectRaw("IFNULL(vestoque.qtd, 0) AS saldo")
-                ->leftjoin("vestoque", "vestoque.id_mp", "mp.id")
-                ->where("mp.id_maquina", $id_maquina)
-                ->where("mp.id_produto", $id_produto)
+                ->leftjoin("vestoque", "vestoque.id_cp", "cp.id")
+                ->where("cp.id_comodato", $id_comodato)
+                ->where("cp.id_produto", $id_produto)
                 ->first()
                 ->saldo
         );
-    }
-
-    protected function criar_comodato_main($id_maquina, $id_empresa, $inicio, $fim) {
-        $dtinicio = Carbon::createFromFormat('d/m/Y', $inicio)->format('Y-m-d');
-        $dtfim = Carbon::createFromFormat('d/m/Y', $fim)->format('Y-m-d');
-        
-        $linha = new Comodatos;
-        $linha->id_maquina = $id_maquina;
-        $linha->id_empresa = $id_empresa;
-        $linha->inicio = $dtinicio;
-        $linha->fim = $dtfim;
-        $linha->fim_orig = $dtfim;
-        $linha->save();
-        $this->log_inserir("C", "comodatos", $linha->id);
     }
 
     protected function dados_comodato(Request $request) {
@@ -362,7 +358,7 @@ class Controller extends BaseController {
 
     protected function consultar_maquina(Request $request) {
         return ((!sizeof(
-            DB::table("valores")
+            DB::table("maquinas")
                 ->where("id", $request->id_maquina)
                 ->where("descr", $request->maquina)
                 ->where("lixeira", 0)
@@ -429,7 +425,7 @@ class Controller extends BaseController {
         if (!$diferenca) $diferenca = 1;
         
         $resultado = collect(
-            DB::table("maquinas_produtos AS mp")
+            DB::table("comodatos_produtos AS cp")
                 ->select(
                     // GRUPO
                     "mq.id AS id_maquina",
@@ -438,7 +434,7 @@ class Controller extends BaseController {
                     // DETALHES
                     "vprodaux.id AS id_produto",
                     "vprodaux.descr AS produto",
-                    "mp.minimo",
+                    "cp.minimo",
 
                     DB::raw("
                         SUM(
@@ -455,7 +451,7 @@ class Controller extends BaseController {
                     DB::raw("
                         SUM(
                             CASE
-                                WHEN (estq.data >= '".$inicio."' AND estq.data <= '".$fim."') THEN
+                                WHEN (estq.data >= '".$inicio."' AND estq.data < '".$fim."') THEN
                                     CASE
                                         WHEN estq.es = 'E' THEN estq.qtd
                                         ELSE 0
@@ -467,7 +463,7 @@ class Controller extends BaseController {
                     DB::raw("
                         SUM(
                             CASE
-                                WHEN (estq.data >= '".$inicio."' AND estq.data <= '".$fim."' AND estq.origem = 'ERP') THEN
+                                WHEN (estq.data >= '".$inicio."' AND estq.data < '".$fim."' AND estq.origem = 'ERP') THEN
                                     CASE
                                         WHEN estq.es = 'S' THEN estq.qtd
                                         ELSE 0
@@ -479,7 +475,7 @@ class Controller extends BaseController {
                     DB::raw("
                         SUM(
                             CASE
-                                WHEN (estq.data >= '".$inicio."' AND estq.data <= '".$fim."' AND estq.origem <> 'ERP') THEN
+                                WHEN (estq.data >= '".$inicio."' AND estq.data < '".$fim."' AND estq.origem <> 'ERP') THEN
                                     CASE
                                         WHEN estq.es = 'S' THEN estq.qtd
                                         ELSE 0
@@ -489,9 +485,21 @@ class Controller extends BaseController {
                         ) AS retiradas
                     ")
                 )
-                ->join("vprodaux", "vprodaux.id", "mp.id_produto")
+                ->join("vprodaux", "vprodaux.id", "cp.id_produto")
                 ->joinSub(
-                    DB::table("valores")
+                    DB::table("comodatos")
+                        ->select(
+                            "id",
+                            "id_maquina",
+                            "inicio"
+                        )
+                        ->whereRaw("('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim) OR ('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim)"),
+                    "cm",
+                    "cm.id",
+                    "cp.id_comodato"
+                )
+                ->joinSub(
+                    DB::table("maquinas")
                         ->select(
                             "id",
                             "descr"
@@ -499,7 +507,7 @@ class Controller extends BaseController {
                         ->where(function($sql) use($request, $inicio, $fim, &$criterios) {
                             if ($this->obter_empresa()) $sql->whereIn("id", $this->maquinas_periodo($inicio, $fim));
                             if ($request->id_maquina) {
-                                $maquina = Valores::find($request->id_maquina);
+                                $maquina = Maquinas::find($request->id_maquina);
                                 array_push($criterios, "Máquina: ".$maquina->descr);
                                 $sql->where("id", $maquina->id);
                             }
@@ -507,35 +515,24 @@ class Controller extends BaseController {
                         ->where("lixeira", 0),
                     "mq",
                     "mq.id",
-                    "mp.id_maquina"
-                )
-                ->joinSub(
-                    DB::table("comodatos")
-                        ->select(
-                            "id_maquina",
-                            "inicio"
-                        )
-                        ->whereRaw("('".$inicio."' BETWEEN comodatos.inicio AND comodatos.fim) OR ('".$fim."' BETWEEN comodatos.inicio AND comodatos.fim)"),
-                    "cm",
-                    "cm.id_maquina",
-                    "mp.id_maquina"
+                    "cm.id_maquina"
                 )
                 ->joinSub(
                     DB::table("estoque")
                         ->select(
-                            "estoque.id_mp",
+                            "estoque.id_cp",
                             "estoque.es",
                             "estoque.qtd",
                             "log.data",
                             "log.origem"
                         )
-                        ->join("log", function($join) {
+                        ->leftjoin("log", function($join) {
                             $join->on("log.fk", "estoque.id")
                                 ->where("log.tabela", "estoque");
                         }),
                     "estq",
-                    "estq.id_mp",
-                    "mp.id"
+                    "estq.id_cp",
+                    "cp.id"
                 )
                 ->where(function($sql) use($request, &$criterios) {
                     if ($request->id_produto) {
@@ -550,7 +547,7 @@ class Controller extends BaseController {
                     "mq.descr",
                     "vprodaux.id",
                     "vprodaux.descr",
-                    "mp.minimo"
+                    "cp.minimo"
                 )
                 ->get()
         )->groupBy("id_maquina")->map(function($maquinas) use($dias, $diferenca, $tipo, $lm) {
@@ -608,5 +605,12 @@ class Controller extends BaseController {
 
     protected function view_mensagem($icon, $text) {
         return view("mensagem", compact("icon", "text"));
+    }
+
+    protected function obter_cp($id_comodato, $id_produto) {
+        return DB::table("comodatos_produtos")
+                    ->where("id_produto", $id_produto)
+                    ->where("id_comodato", $id_comodato)
+                    ->value("id");
     }
 }

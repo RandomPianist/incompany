@@ -6,20 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int    $id
- * @property int    $consumo
- * @property int    $created_at
- * @property int    $id_categoria
- * @property int    $lixeira
- * @property int    $updated_at
  * @property int    $validade
- * @property string $ca
- * @property string $cod_externo
- * @property string $cod_fab
+ * @property int    $consumo
+ * @property int    $lixeira
+ * @property int    $id_categoria
+ * @property int    $created_at
+ * @property int    $updated_at
  * @property string $descr
- * @property string $detalhes
- * @property string $foto
  * @property string $referencia
+ * @property string $cod_fab
+ * @property string $ca
+ * @property string $foto
  * @property string $tamanho
+ * @property string $detalhes
+ * @property string $cod_externo
  * @property Date   $validade_ca
  */
 class Produtos extends Model
@@ -44,7 +44,7 @@ class Produtos extends Model
      * @var array
      */
     protected $fillable = [
-        'ca', 'cod_externo', 'cod_fab', 'consumo', 'created_at', 'descr', 'detalhes', 'foto', 'id_categoria', 'lixeira', 'preco', 'prmin', 'referencia', 'tamanho', 'updated_at', 'validade', 'validade_ca'
+        'descr', 'referencia', 'cod_fab', 'ca', 'validade_ca', 'foto', 'tamanho', 'detalhes', 'preco', 'prmin', 'validade', 'consumo', 'cod_externo', 'lixeira', 'id_categoria', 'created_at', 'updated_at'
     ];
 
     /**
@@ -62,7 +62,7 @@ class Produtos extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'ca' => 'string', 'cod_externo' => 'string', 'cod_fab' => 'string', 'consumo' => 'int', 'created_at' => 'timestamp', 'descr' => 'string', 'detalhes' => 'string', 'foto' => 'string', 'id_categoria' => 'int', 'lixeira' => 'int', 'referencia' => 'string', 'tamanho' => 'string', 'updated_at' => 'timestamp', 'validade' => 'int', 'validade_ca' => 'date'
+        'id' => 'int', 'descr' => 'string', 'referencia' => 'string', 'cod_fab' => 'string', 'ca' => 'string', 'validade_ca' => 'date', 'foto' => 'string', 'tamanho' => 'string', 'detalhes' => 'string', 'validade' => 'int', 'consumo' => 'int', 'cod_externo' => 'string', 'lixeira' => 'int', 'id_categoria' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
     ];
 
     /**
@@ -71,7 +71,7 @@ class Produtos extends Model
      * @var array
      */
     protected $dates = [
-        'created_at', 'updated_at', 'validade_ca'
+        'validade_ca', 'created_at', 'updated_at'
     ];
 
     /**

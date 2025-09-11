@@ -8,7 +8,7 @@
         <div class = "float-right">
             <ul class = "m-0">
                 <li class = "text-right">
-                    <h6 class = "m-0 fw-600">Locação</h6>
+                    <h6 class = "m-0 fw-600">Contratos</h6>
                 </li>
                 <li class = "text-right">
                     <h6 class = "m-0 traduzir">

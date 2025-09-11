@@ -36,6 +36,23 @@ class SetoresController extends Controller {
         }
 
         if (sizeof(
+            DB::table("pessoas")
+                ->where("id_setor", $request->id)
+                ->where("lixeira", 0)
+                ->get()
+        ) && !sizeof(
+            DB::table("pessoas")
+                ->where("id_setor", $request->id)
+                ->where("id_empresa", $request->id_empresa)
+                ->where("lixeira", 0)
+                ->get()
+        )) {
+            $nome = Setores::find($id)->descr;
+            $resultado->msg = "Não é possível alterar a empresa de ".$nome." porque existem pessoas vinculadas a esse setor";
+            $resultado->el = "setor-empresa";
+        }
+
+        if (sizeof(
             DB::table("setores")
                 ->where("lixeira", 0)
                 ->where("descr", $request->descr)
@@ -67,7 +84,7 @@ class SetoresController extends Controller {
         $resultado = new \stdClass;
         $resultado->permitir = 0;
         $nome = Setores::find($id)->descr;
-        if ($this->setor_do_sistema($id)) { // App\Http\Controllers\Controller.php
+        if ($this->setor_do_sistema($id)) {
             $resultado->aviso = "Não é possível excluir um setor do sistema";
         } else if (sizeof(
             DB::table("pessoas")
@@ -114,7 +131,7 @@ class SetoresController extends Controller {
                                     ->where("pessoas.lixeira", 0)
                                     ->get();
         $cod = 200;
-        if ($this->setor_do_sistema($id)) $cod = 401; // App\Http\Controllers\Controller.php
+        if ($this->setor_do_sistema($id)) $cod = 401;
         if (Pessoas::find(Auth::user()->id_pessoa)->id_setor == $id) $cod = 400;
         $resultado->cod = $cod;
         return json_encode($resultado);

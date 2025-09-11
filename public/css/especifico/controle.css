@@ -1,0 +1,70 @@
+
+.d-grid {
+	position: relative;
+	display: grid;
+	font-size: 12px;
+	color: #000
+}
+
+.d-grid .c-1 {
+	grid-column: 1;
+	border: 1px solid #000;
+	padding: 3px
+}
+
+.d-grid .c-2 {
+	grid-column: 2;
+	border: 1px solid #000;
+	padding: 3px
+}
+
+.d-grid .c-3 {
+	grid-column: 3;
+	border: 1px solid #000;
+	padding: 3px
+}
+
+.nome-rel {
+	display: grid;
+    background-color: black;
+    color: white;
+    font-weight: 600;
+    font-size: 14px
+}
+
+.rep-ret-rodape {
+	font-family: Arial;
+	font-size: 15px;
+	color: #000
+}
+
+.rep-ret-rodape .data-extenso {
+	display: grid;
+	justify-items: end
+}
+
+.assinatura {
+	position: absolute;
+	left: 150px;
+	display: grid;
+	column-gap: 50px;
+    grid-auto-columns: 450px;
+	padding-top: 45px
+}
+
+.assinatura .asn_1 {
+	grid-column: 1
+}
+
+.assinatura .asn_2 {
+	grid-column: 2
+}
+
+.assinatura div {
+	border-top: solid #000 1px;
+	display: inline-grid
+}
+
+.assinatura div span {
+	margin: auto
+}

@@ -1,15 +1,15 @@
 
 <!-- Modal -->
-<div class = "modal fade" id = "valoresModal" aria-labelledby = "valoresModalLabel" aria-hidden = "true">
+<div class = "modal fade" id = "maquinasModal" aria-labelledby = "maquinasModalLabel" aria-hidden = "true">
     <div class = "modal-dialog modal-dialog-centered" role = "document">
         <div class = "modal-content">
             <div class = "modal-header">
-                <h6 class = "modal-title header-color" id = "valoresModalLabel"></h6>
+                <h6 class = "modal-title header-color" id = "maquinasModalLabel"></h6>
                 <button type = "button" class = "close" data-dismiss = "modal" aria-label = "Close">
                     <span aria-hidden = "true">&times;</span>
                 </button>
             </div>
-            <form action = "{{ $root_url }}/valores/{{ $alias }}/salvar" method = "POST">
+            <form action = "{{ $root_url }}/maquinas/salvar" method = "POST">
                 <div class = "modal-body">
                     <div class = "container">
                         @csrf

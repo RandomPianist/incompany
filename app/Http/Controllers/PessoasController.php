@@ -94,7 +94,7 @@ class PessoasController extends Controller {
             $query .= "
                 LEFT JOIN (
                     SELECT DISTINCTROW id_pessoa
-                    FROM vpendentes
+                    FROM vpendentesgeral
                 ) AS atb ON atb.id_pessoa = pessoas.id
             ";
         }
@@ -437,11 +437,29 @@ class PessoasController extends Controller {
         $tipo = $request->tipo;
         if ($this->cria_usuario($modelo->id_setor)) $tipo = !intval($modelo->id_empresa) ? "A" : "U";
         else $tipo = intval($modelo->supervisor) ? $tipo = "S" : "F";
-        $this->atualizar_aa_main(
-            DB::table("pessoas")
-                ->where("lixeira", 0)
-                ->whereIn("id_setor", $setores)
-        ); // App\Http\Controllers\Controller.php
+        if (sizeof(
+            DB::table("vativos")
+                ->where("id", $linha->id)
+                ->where("atb_todos", ">", 0)
+                ->get()
+        ) && !$request->id) {
+            $this->atualizar_tudo(explode(",", DB::table("vativos")->where("id", $linha->id)->value("maquinas")), "M", true);
+        } else {
+            $this->atualizar_atribuicoes(
+                DB::table("vatbold")
+                    ->select(
+                        "psm_chave",
+                        "psm_valor"
+                    )
+                    ->where("psm_chave", "S")
+                    ->whereIn("psm_valor", $setores)
+                    ->groupby(
+                        "psm_chave",
+                        "psm_valor"
+                    )
+                    ->get()
+            ); // App\Http\Controllers\Controller.php
+        }
         return redirect("/colaboradores/pagina/".$tipo);
     }
 
@@ -452,7 +470,8 @@ class PessoasController extends Controller {
         $linha->save();
         $this->log_inserir("D", "pessoas", $linha->id);
         if ($this->cria_usuario($linha->id_setor)) $this->deletar_usuario($linha->id);
-        DB::statement("DELETE FROM atribuicoes_associadas WHERE id_pessoa = ".$linha->id);
+        $tabelas = ["mat_vatbaux", "mat_vatribuicoes", "mat_vretiradas", "mat_vultretirada"];
+        foreach ($tabelas as $tabela) DB::statement("DELETE FROM ".$tabela." WHERE id_pessoa = ".$linha->id);
         return 200;
     }
 

@@ -326,7 +326,7 @@ main {
 }
 
 .autocomplete {
-    padding-right: 35px
+    padding-right: 57px
 }
 
 .autocomplete-result {
@@ -479,7 +479,8 @@ main {
 
 .btn-table-action > .my-icon:hover,
 .texto-tabela:hover, .texto-tabela:hover i,
-#table-atribuicoes .my-icon:hover {
+#table-atribuicoes .my-icon:hover,
+#table-excecoes .my-icon:hover {
     color: #0416b4
 }
 
@@ -657,6 +658,11 @@ table.atribuicoes th, table.atribuicoes td  {
     padding-right: 20px
 }
 
+.px-15 {
+    padding-left: 15px;
+    padding-right: 15px
+}
+
 #loader {
     position: absolute;
     top: 0;
@@ -687,50 +693,14 @@ table.atribuicoes th, table.atribuicoes td  {
     padding-left:.75rem !important;
 }
 
-.table-itens-em-atraso td {
-    font-weight: 400;
-    vertical-align: middle;
-    padding:13px;
-    color:#333;
-}
-
-.table-itens-em-atraso thead td {
-    font-weight: bold;
-}
-
 .img-menu {
-    margin-left:36px;
-    margin-top:14px;
-    width:37px
+    margin-left: 36px;
+    margin-top: 14px;
+    width: 37px
 }
 
 .fa-ellipsis-vertical {
     display: none !important
-}
-
-.numerico {
-    height: 24px;
-    width: 24px;
-    background: red;
-    border-radius: 50%;
-    color: #FFF;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.imagem-biometria {
-    width: 21px;
-    height: 21px;
-    margin-right: 8px;
-}
-
-.select-dashboard {
-    font-size: 1.3rem;
-    padding: 5px;
-    border:none;
-    color: inherit;
-    font-family: inherit;
 }
 
 footer {
@@ -745,15 +715,6 @@ footer {
 .footer-text {
     font-size: 12px;
     margin-bottom: 0;
-}
-
-.max-13 {
-    max-width: 13%
-}
-
-.col-preco {
-    max-width: 12%;
-    flex: 0 0 12%
 }
 
 option:disabled {
@@ -789,4 +750,27 @@ option:disabled {
 
 .pb5-px {
     padding-bottom: 5px
+}
+
+div.atribuicoes,
+.modal-linha-dinamica .modal-dialog-scrollable .modal-tudo,
+.modal:not(.modal-linha-dinamica) .modal-dialog-scrollable .modal-content {
+    overflow-y: auto;
+    overflow-x: hidden    
+}
+
+.modal:not(.modal-linha-dinamica) .modal-dialog-scrollable .modal-content {
+    max-height: calc(100vh - 3.5rem)
+}
+
+#estoqueModal .modal-dialog-scrollable .modal-tudo {
+    max-height: calc(100vh - 15rem)
+}
+
+#cpModal .modal-dialog-scrollable .modal-tudo {
+    max-height: calc(100vh - 19rem)
+}
+
+div.atribuicoes {
+    max-height: 300px
 }

@@ -5,31 +5,37 @@ namespace App\Http\Controllers;
 use DB;
 use Carbon\Carbon;
 use App\Models\Empresas;
-use App\Models\Valores;
+use App\Models\Maquinas;
+use App\Models\Categorias;
 use App\Models\Produtos;
 use App\Models\Estoque;
 use App\Models\Solicitacoes;
 use App\Models\SolicitacoesProdutos;
-use App\Models\MaquinasProdutos;
 use App\Models\Comodatos;
+use App\Models\ComodatosProdutos;
 use App\Models\Retiradas;
 use Illuminate\Http\Request;
 
 class Api2Controller extends Controller {
     private function maquinas($cft) {
-        return DB::table("valores")
+        return DB::table("maquinas")
                     ->select(
-                        "valores.id",
-                        "valores.seq",
-                        "valores.descr",
+                        "maquinas.id",
                         DB::raw("
                             CASE
-                                WHEN ((CURDATE() BETWEEN comodatos.inicio AND comodatos.fim) OR (CURDATE() BETWEEN comodatos.inicio AND comodatos.fim)) THEN 'S'
+                                WHEN id_ant IS NOT NULL THEN id_ant
+                                ELSE id
+                            END AS seq
+                        "),
+                        "maquinas.descr",
+                        DB::raw("
+                            CASE
+                                WHEN (CURDATE() >= comodatos.inicio AND CURDATE() < comodatos.fim) THEN 'S'
                                 ELSE 'N'
                             END AS ativo
                         ")
                     )
-                    ->join("comodatos", "comodatos.id_maquina", "valores.id")
+                    ->join("comodatos", "comodatos.id_maquina", "maquinas.id")
                     ->whereIn(
                         "comodatos.id_empresa",
                         DB::table("empresas")
@@ -43,8 +49,7 @@ class Api2Controller extends Controller {
                             )
                             ->pluck("id")
                             ->toArray()
-                    )
-                    ->where("valores.lixeira", 0);
+                    );
     }
 
     private function sincronizar_produtos($maquina, $usuario, $produtos) {
@@ -52,12 +57,27 @@ class Api2Controller extends Controller {
         $cods_cdp = array();
         $ids_itm = array();
         $cods_itm = array();
+        $comodato = $this->obter_comodato($maquina); // App\Http\Controllers\Controller.php
         foreach ($produtos as $req_produto_arr) {
             $req_produto = (object) $req_produto_arr;
             $produto = Produtos::find($req_produto->id);
             $continua = false;
             $inserir_log = true;
             $validade_ca = Carbon::createFromFormat('d-m-Y', $req_produto->validade_ca)->format('Y-m-d');
+            $where_cp = "id_comodato = ".$comodato->id." AND id_produto = ".$produto->id;
+            $id_cp = DB::table("comodatos_produtos")
+                        ->whereRaw($where_cp)
+                        ->value("id");
+            if ($id_cp === null) {
+                $cp = new ComodatosProdutos;
+                $cp->id_comodato = $comodato->id;
+                $cp->id_produto = $produto->id;
+                $cp->preco = $produto->preco;
+                $cp->save();
+                array_push($ids_itm, $produto->id);
+                array_push($cods_itm, $produto->cod_externo);
+                $id_cp = $cp->id;
+            }
             if ($produto !== null) {
                 if ($this->comparar_texto($req_produto->cod, $produto->cod_externo)) $continua = true; // App\Http\Controllers\Controller.php
                 if ($this->comparar_texto($req_produto->descr, $produto->descr)) $continua = true; // App\Http\Controllers\Controller.php
@@ -95,37 +115,30 @@ class Api2Controller extends Controller {
                 $inserir_log = false;
                 $this->log_inserir(intval($req_produto->id) ? "E" : "C", "produtos", $produto->id, "ERP", $usuario); // App\Http\Controllers\Controller.php
             }
-            $where_mp = "id_maquina = ".$maquina." AND id_produto = ".$produto->id;
-            if (!intval($req_produto->id)) {
-                $this->criar_mp($produto->id, "valores.id", true, $usuario); // App\Http\Controllers\Controller.php
-                array_push($ids_itm, $produto->id);
-                array_push($cods_itm, $produto->cod_externo);
-            }
             if ($this->comparar_num($req_produto->preco, $req_produto->prcad)) { // App\Http\Controllers\Controller.php
                 DB::statement("
-                    UPDATE maquinas_produtos
+                    UPDATE comodatos_produtos
                     SET preco = ".$req_produto->preco."
-                    WHERE ".$where_mp
+                    WHERE ".$where_cp
                 );
-                if (intval($req_produto->id)) $this->log_inserir_lote("E", "maquinas_produtos", $where_mp, "ERP", $usuario); // App\Http\Controllers\Controller.php
+                if (intval($req_produto->id)) $this->log_inserir("E", "comodatos_produtos", $id_cp, "ERP", $usuario); // App\Http\Controllers\Controller.php
             }
             $req_categoria = (object) $req_produto->categoria;
             if (intval($req_categoria->cod)) {
-                $categoria = Valores::find($req_categoria->id);
+                $categoria = Categorias::find($req_categoria->id);
                 $continua = false;
                 if ($categoria !== null) {
                     if ($this->comparar_num($req_categoria->cod, $categoria->id_externo)) $continua = true; // App\Http\Controllers\Controller.php
                     if ($this->comparar_texto($req_categoria->descr, $categoria->descr)) $continua = true; // App\Http\Controllers\Controller.php
                 } else {
-                    $categoria = new Valores;
+                    $categoria = new Categorias;
                     $continua = true;
                 }
                 if ($continua) {
                     $categoria->id_externo = $req_categoria->cod;
                     $categoria->descr = $req_categoria->descr;
-                    $categoria->alias = "categorias";
                     $categoria->save();
-                    $this->log_inserir(intval($req_categoria->id) ? "E" : "C", "valores", $categoria->id, "ERP", $usuario);
+                    $this->log_inserir(intval($req_categoria->id) ? "E" : "C", "maquinas", $categoria->id, "ERP", $usuario);
                     if (!intval($req_categoria->id)) {
                         array_push($ids_cdp, $categoria->id);
                         array_push($cods_cdp, $categoria->id_externo);
@@ -145,13 +158,15 @@ class Api2Controller extends Controller {
                     if ($inserir_log && !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario); // App\Http\Controllers\Controller.php
                 }
             }
+            
+            $saldo_ant = $this->retorna_saldo_cp($comodato->id, $produto->id);
             $estq = new Estoque;
             $estq->es = "E";
             $estq->qtd = $req_produto->qtd;
-            $estq->id_mp = DB::table("maquinas_produtos")
-                                ->whereRaw($where_mp)
-                                ->value("id");
-            $estq->preco = MaquinasProdutos::find($estq->id_mp)->preco;
+            $estq->id_cp = $id_cp;
+            $estq->preco = ComodatosProdutos::find($estq->id_cp)->preco;
+            $estq->data = date("Y-m-d");
+            $estq->hms = date("H:i:s");
             $estq->save();
             $this->log_inserir("C", "estoque", $estq->id, "ERP", $usuario); // App\Http\Controllers\Controller.php
         }
@@ -206,11 +221,12 @@ class Api2Controller extends Controller {
         if ($request->token != config("app.key")) return 401;
         if (sizeof(
             $this->maquinas($request->cft)
-                ->where("valores.descr", $request->maq)
+                ->where("maquinas.descr", $request->maq)
+                ->where("maquinas.lixeira", 0)
                 ->get()
         )) return "CLIENTE";
         if (sizeof(
-            DB::table("valores")
+            DB::table("maquinas")
                 ->where("descr", $request->maq)
                 ->where("lixeira", 0)
                 ->get()
@@ -245,19 +261,12 @@ class Api2Controller extends Controller {
             $empresa->save();
             $this->log_inserir($id_empresa !== null ? "E" : "C", "empresas", $empresa->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
         }
-        $maquina = new Valores;
+        $maquina = new Maquinas;
         $maquina->descr = mb_strtoupper($request->maq);
-        $maquina->alias = "maquinas";
-        $maquina->seq = intval(
-            DB::table("valores")
-                ->selectRaw("IFNULL(MAX(seq), 0) AS ultimo")
-                ->where("alias", "maquinas")
-                ->value("ultimo")
-        ) + 1;
         $maquina->save();
-        $this->log_inserir("C", "valores", $maquina->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
-        $this->criar_mp("produtos.id", $maquina->id, true, $request->usu); // App\Http\Controllers\Controller.php
-        $this->criar_comodato_main($maquina->id, $empresa->id, str_replace("-", "/", $request->ini), str_replace("-", "/", $request->fim)); // App\Http\Controllers\Controller.php
+        $this->log_inserir("C", "maquinas", $maquina->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
+        $comodato = $this->criar_comodato_main($maquina->id, $empresa->id, str_replace("-", "/", $request->ini), str_replace("-", "/", $request->fim)); // App\Http\Controllers\Controller.php
+        $this->log_inserir("C", "comodatos", $comodato->id, "ERP", $request->usu);
         return $empresa->id;
     }
 
@@ -281,11 +290,11 @@ class Api2Controller extends Controller {
                             DB::raw("IFNULL(produtos.cod_fab, '') AS fab"),
                             DB::raw("IFNULL(produtos.tamanho, '') AS tamanho"),
                             DB::raw("IFNULL(produtos.foto, '') AS foto"),
-                            DB::raw("IFNULL(valores.id, 0) AS iCdp"),
-                            DB::raw("IFNULL(valores.descr, '') AS categoria"),
+                            DB::raw("IFNULL(categorias.id, 0) AS iCdp"),
+                            DB::raw("IFNULL(categorias.descr, '') AS categoria"),
                             "produtos.lixeira"
                         )
-                        ->leftjoin("valores", "valores.id", "produtos.id_categoria")
+                        ->leftjoin("categorias", "categorias.id", "produtos.id_categoria")
                         ->where("produtos.cod_externo", $request->itm)
                         ->first();
         if ($consulta === null) return "";
@@ -308,8 +317,9 @@ class Api2Controller extends Controller {
         if ($request->token != config("app.key")) return 401;
         return sizeof(
             $this->maquinas($request->cft)
-                    ->whereRaw("((CURDATE() BETWEEN comodatos.inicio AND comodatos.fim) OR (CURDATE() BETWEEN comodatos.inicio AND comodatos.fim))")
-                    ->where("valores.id", $request->maq)
+                    ->whereRaw("CURDATE() >= comodatos.inicio")
+                    ->whereRaw("CURDATE() < comodatos.fim")
+                    ->where("maquinas.id", $request->maq)
                     ->get()
         ) ? "OK" : "ERRO";
     }
@@ -325,18 +335,19 @@ class Api2Controller extends Controller {
                     "empresas.cod_externo AS cft",
                     DB::raw("DATE_FORMAT(solicitacoes.data, '%d-%m-%Y') AS data"),
                     "produtos.cod_externo AS cod",
-                    "mp.preco AS vunit",
+                    "cp.preco AS vunit",
                     "sp.qtd_orig AS qtd"
                 )
                 ->join("comodatos", "comodatos.id", "solicitacoes.id_comodato")
                 ->join("empresas", "empresas.id", "comodatos.id_empresa")
                 ->join("solicitacoes_produtos AS sp", "sp.id_solicitacao", "solicitacoes.id")
                 ->join("produtos", "produtos.id", "sp.id_produto_orig")
-                ->join("maquinas_produtos AS mp", function($join) {
-                    $join->on("mp.id_produto", "produtos.id")
-                        ->on("mp.id_maquina", "comodatos.id_maquina");
+                ->join("comodatos_produtos AS cp", function($join) {
+                    $join->on("cp.id_produto", "produtos.id")
+                        ->on("cp.id_comodato", "comodatos.id");
                 })
-                ->whereRaw("((CURDATE() BETWEEN comodatos.inicio AND comodatos.fim) OR (CURDATE() BETWEEN comodatos.inicio AND comodatos.fim))")
+                ->whereRaw("CURDATE() >= comodatos.inicio")
+                ->whereRaw("CURDATE() < comodatos.fim")
                 ->where("empresas.lixeira", 0)
                 ->where(function($sql) {
                     $sql->where("solicitacoes.status", "A")
@@ -449,8 +460,8 @@ class Api2Controller extends Controller {
                 $sp->id_solicitacao = $solicitacao->id;
                 $sp->obs = $req_produto->obs ? $req_produto->obs."|".$req_produto->obs2 : "";
                 $sp->qtd = $req_produto->qtd;
-                $sp->preco = DB::table("maquinas_produtos")
-                                ->where("id_maquina", $maquina)
+                $sp->preco = DB::table("comodatos_produtos")
+                                ->where("id_comodato", $solicitacao->id_comodato)
                                 ->where("id_produto", $sp->id_produto)
                                 ->value("preco");
                 if (!intval($id_sp)) $sp->origem = "ERP";
@@ -496,7 +507,7 @@ class Api2Controller extends Controller {
                         "cod_itm" => $retirada->cod_itm,
                         "qtd" => (int) $retirada->qtd,
                         "vunit" => (float) $retirada->vunit,
-                        "hora" => $retirada->hora
+                        "hora" => $retirada->hms
                     ];
                 })->values()->all()
             ];

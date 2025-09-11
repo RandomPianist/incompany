@@ -51,6 +51,8 @@
     @endif
 
     @include("components.loader")
+
+    <link rel = "stylesheet" href = "{{ asset('css/especifico/pessoa.css') }}" />
     
     <script type = "text/javascript" language = "JavaScript">
         const TIPO = "{{ $titulo }}".charAt(0);

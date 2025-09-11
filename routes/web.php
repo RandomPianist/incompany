@@ -2,14 +2,15 @@
 
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ValoresController;
+use App\Http\Controllers\CategoriasController;
+use App\Http\Controllers\MaquinasController;
 use App\Http\Controllers\SetoresController;
 use App\Http\Controllers\EmpresasController;
 use App\Http\Controllers\PessoasController;
 use App\Http\Controllers\ProdutosController;
 use App\Http\Controllers\AtribuicoesController;
+use App\Http\Controllers\ExcecoesController;
 use App\Http\Controllers\RetiradasController;
-use App\Http\Controllers\MaquinasController;
 use App\Http\Controllers\RelatoriosController;
 use App\Http\Controllers\PreviasController;
 use App\Http\Controllers\SolicitacoesController;
@@ -39,14 +40,14 @@ Route::middleware("auth")->group(function () {
         Route::get("/retiradas-em-atraso/{id_pessoa}", [DashboardController::class, "produtos_em_atraso"]);
     });
 
-    Route::group(["prefix" => "valores/{alias}"], function() {
-        Route::get ("/",             [ValoresController::class, "ver"]);
-        Route::get ("/listar",       [ValoresController::class, "listar"]);
-        Route::get ("/consultar",    [ValoresController::class, "consultar"]);
-        Route::get ("/mostrar/{id}", [ValoresController::class, "mostrar"]);
-        Route::get ("/aviso/{id}",   [ValoresController::class, "aviso"]);
-        Route::post("/salvar",       [ValoresController::class, "salvar"]);
-        Route::post("/excluir",      [ValoresController::class, "excluir"]);
+    Route::group(["prefix" => "categorias"], function() {
+        Route::get ("/",             [CategoriasController::class, "ver"]);
+        Route::get ("/listar",       [CategoriasController::class, "listar"]);
+        Route::get ("/consultar",    [CategoriasController::class, "consultar"]);
+        Route::get ("/mostrar/{id}", [CategoriasController::class, "mostrar"]);
+        Route::get ("/aviso/{id}",   [CategoriasController::class, "aviso"]);
+        Route::post("/salvar",       [CategoriasController::class, "salvar"]);
+        Route::post("/excluir",      [CategoriasController::class, "excluir"]);
     });
 
     Route::group(["prefix" => "solicitacoes"], function() {
@@ -123,6 +124,12 @@ Route::middleware("auth")->group(function () {
         Route::get ("/grade/{id}",    [AtribuicoesController::class, "grade"]);
         Route::post("/salvar",        [AtribuicoesController::class, "salvar"]);
         Route::post("/excluir",       [AtribuicoesController::class, "excluir"]);
+        Route::group(["prefix" => "excecoes"], function() {
+            Route::get ("/listar/{id_atribuicao}", [ExcecoesController::class, "listar"]);
+            Route::get ("/mostrar/{id}",           [ExcecoesController::class, "mostrar"]);
+            Route::post("/salvar",                 [ExcecoesController::class, "salvar"]);
+            Route::post("/excluir",                [ExcecoesController::class, "excluir"]);
+        });
     });
 
     Route::group(["prefix" => "retiradas"], function() {
@@ -133,15 +140,29 @@ Route::middleware("auth")->group(function () {
     });
 
     Route::group(["prefix" => "maquinas"], function() {
-        Route::get("/preco", [MaquinasController::class, "preco"]);
+        Route::get ("/",             [MaquinasController::class, "ver"]);
+        Route::get ("/preco",        [MaquinasController::class, "preco"]);
+        Route::get ("/listar",       [MaquinasController::class, "listar"]);
+        Route::get ("/consultar",    [MaquinasController::class, "consultar"]);
+        Route::get ("/mostrar/{id}", [MaquinasController::class, "mostrar"]);
+        Route::get ("/aviso/{id}",   [MaquinasController::class, "aviso"]);
+        Route::post("/salvar",       [MaquinasController::class, "salvar"]);
+        Route::post("/excluir",      [MaquinasController::class, "excluir"]);
         Route::group(["prefix" => "estoque"], function() {
             Route::post("/",          [MaquinasController::class, "estoque"]);
             Route::get ("/consultar", [MaquinasController::class, "consultar_estoque"]);
         });
+        Route::group(["prefix" => "produto"], function() {
+            Route::post("/",               [MaquinasController::class, "produto"]);
+            Route::get ("/consultar",      [MaquinasController::class, "consultar_produto"]);
+            Route::get ("/verificar-novo", [MaquinasController::class, "verificar_novo_cp"]);
+        });
         Route::group(["prefix" => "comodato"], function() {
-            Route::get ("/consultar", [MaquinasController::class, "consultar_comodato"]);
-            Route::post("/criar",     [MaquinasController::class, "criar_comodato"]);
-            Route::post("/encerrar",  [MaquinasController::class, "encerrar_comodato"]);
+            Route::get ("/mostrar/{id_maquina}", [MaquinasController::class, "mostrar_comodato"]);
+            Route::get ("/consultar",            [MaquinasController::class, "consultar_comodato"]);
+            Route::post("/criar",                [MaquinasController::class, "criar_comodato"]);
+            Route::post("/editar",               [MaquinasController::class, "editar_comodato"]);
+            Route::post("/encerrar",             [MaquinasController::class, "encerrar_comodato"]);
         });
     });
 

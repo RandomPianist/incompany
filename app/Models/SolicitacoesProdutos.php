@@ -6,13 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int    $id
- * @property int    $created_at
- * @property int    $id_produto
  * @property int    $id_produto_orig
+ * @property int    $id_produto
  * @property int    $id_solicitacao
+ * @property int    $created_at
  * @property int    $updated_at
- * @property string $obs
  * @property string $origem
+ * @property string $obs
  */
 class SolicitacoesProdutos extends Model
 {
@@ -36,7 +36,7 @@ class SolicitacoesProdutos extends Model
      * @var array
      */
     protected $fillable = [
-        'created_at', 'id_produto', 'id_produto_orig', 'id_solicitacao', 'obs', 'origem', 'preco', 'preco_orig', 'qtd', 'qtd_orig', 'updated_at'
+        'id_produto_orig', 'qtd_orig', 'preco_orig', 'id_produto', 'qtd', 'preco', 'origem', 'obs', 'id_solicitacao', 'created_at', 'updated_at'
     ];
 
     /**
@@ -54,7 +54,7 @@ class SolicitacoesProdutos extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'created_at' => 'timestamp', 'id_produto' => 'int', 'id_produto_orig' => 'int', 'id_solicitacao' => 'int', 'obs' => 'string', 'origem' => 'string', 'updated_at' => 'timestamp'
+        'id' => 'int', 'id_produto_orig' => 'int', 'id_produto' => 'int', 'origem' => 'string', 'obs' => 'string', 'id_solicitacao' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
     ];
 
     /**

@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  * @property int $confirmado
- * @property int $created_at
  * @property int $id_comodato
- * @property int $id_pessoa
  * @property int $id_produto
+ * @property int $id_pessoa
+ * @property int $created_at
  * @property int $updated_at
  */
 class Previas extends Model
@@ -35,7 +35,7 @@ class Previas extends Model
      * @var array
      */
     protected $fillable = [
-        'confirmado', 'created_at', 'id_comodato', 'id_pessoa', 'id_produto', 'qtd', 'updated_at'
+        'qtd', 'confirmado', 'id_comodato', 'id_produto', 'id_pessoa', 'created_at', 'updated_at'
     ];
 
     /**
@@ -53,7 +53,7 @@ class Previas extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'confirmado' => 'int', 'created_at' => 'timestamp', 'id_comodato' => 'int', 'id_pessoa' => 'int', 'id_produto' => 'int', 'updated_at' => 'timestamp'
+        'id' => 'int', 'confirmado' => 'int', 'id_comodato' => 'int', 'id_produto' => 'int', 'id_pessoa' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
     ];
 
     /**

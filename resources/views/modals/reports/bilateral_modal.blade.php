@@ -38,10 +38,10 @@
                                     name = "maquina"
                                     class = "form-control autocomplete"
                                     data-input = "#rel-id_maquina1"
-                                    data-table = "valores"
+                                    data-table = "maquinas"
                                     data-column = "descr"
-                                    data-filter_col = "alias"
-                                    data-filter = "maquinas"
+                                    data-filter_col = ""
+                                    data-filter = ""
                                     type = "text"
                                     autocomplete = "off"
                                 />

@@ -1,6 +1,7 @@
 @extends("layouts.rel")
 
 @section("content")
+    @foreach ($resultado AS $item)
     <div class = "report-header">
         <div class = "float-left">
             <div>
@@ -14,7 +15,7 @@
     <div class="nome-rel">
         <span class="m-auto">Controle de Entrega e Reposição de Equipamentos de Proteção Individual - E.P.I.</span>
     </div>
-    @foreach ($resultado AS $item)
+    
         <div class = "d-grid">
             <div class = "c-1">Nome do Funcionário: {{ $item["nome"] }}</div>
             <div class = "c-2">CPF: {{ $item["cpf"] }}</div>
@@ -26,10 +27,10 @@
         <table class = "table table-sm table-bordered table-striped">
             <thead>
                 <tr class = "report-row rep-tb-header">
-                    <td width = "65%">
+                    <td width = "67%">
                         <span>RECEBIMENTO DE E.P.I</span>
                     </td>
-                    <td width = "35%">
+                    <td width = "33%">
                         <span>DEVOLUÇÃO DE E.P.I</span>
                     </td>
                 </tr>
@@ -38,15 +39,15 @@
         <table class = "report-body table table-sm table-bordered table-striped px-5 rep-tb-color-black">
             <thead>
                 <tr class = "report-row">
-                    <td width = "7%">Data</td>
+                    <td width = "8%">Data</td>
                     <td width = "20%">E.P.I</td>
                     <td width = "9%">C.A</td>
-                    <td width = "7%">Validade do C.A</td>
-                    <td width = "7%">Quantidade</td>
-                    <td width = "15%">Assinatura</td>
+                    <td width = "8%">Validade do C.A</td>
+                    <td width = "8%">Quantidade</td>
+                    <td width = "14%">Assinatura</td>
                     <td width = "10%">Data</td>
                     <td width = "10%">C.A</td>
-                    <td width = "15%">Assinatura</td>
+                    <td width = "13%">Assinatura</td>
                 </tr>
             </thead>
         </table>
@@ -55,22 +56,22 @@
                 <tbody>
                     @foreach ($item["retiradas"] as $retirada)
                         <tr class = "report-row">
-                            <td width = "7%">{{ $retirada["data"] }}</td>
+                            <td width = "8%">{{ $retirada["data"] }}</td>
                             <td width = "20%">{{ $retirada["produto"] }}</td>
                             <td width = "9%">{{ $retirada["ca"] }}</td>
-                            <td width = "7%">{{ $retirada["validade_ca"] != null ? date_format(date_create($retirada["validade_ca"]), "d/m/Y") : "" }}</td>
-                            <td width = "7%">{{ $retirada["qtd"] }}</td>
-                            <td width = "15%">&nbsp;</td>
+                            <td width = "8%">{{ $retirada["validade_ca"] != null ? date_format(date_create($retirada["validade_ca"]), "d/m/Y") : "" }}</td>
+                            <td width = "8%">{{ $retirada["qtd"] }}</td>
+                            <td width = "14%">&nbsp;</td>
                             <td width = "10%">&nbsp;</td>
                             <td width = "10%">&nbsp;</td>
-                            <td width = "15%">&nbsp;</td>
+                            <td width = "13%">&nbsp;</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
         <div class = "line-div"></div>
-    @endforeach
+    
     <div class="rep-ret-rodape">
         <p>Declaro para os devidos fins, que recebi gratuitamente os E.P.I.s e/ou uniforme acima descritos e me comprometo:
         <ul>
@@ -88,7 +89,21 @@
         </div>
         <div class="assinatura">
             <div class="asn_1"><span>{{$resultado[0]["empresa"]}}</span></div>
-            <div class="asn_2"><span> {{$resultado[0]["nome"]}}</span></div>
+            <div class="asn_2"><span> {{$item["nome"]}}</span></div>
+        </div>
+        <div class="assinatura-print" style = "margin-top:80px">
+            <table class = "table" style = "border-style:border-none">
+                <tr>
+                    <td class = "text-center" width = "50%" style = "vertical-align:bottom">________________________________________________</td>
+                    <td class = "text-center" width = "50%" style = "vertical-align:bottom">________________________________________________</td>
+                </tr>
+                <tr>
+                    <td class = "text-center" width = "50%" style = "vertical-align:top">{{$resultado[0]["empresa"]}}</td>
+                    <td class = "text-center" width = "50%" style = "vertical-align:top">{{$item["nome"]}}</td>
+                </tr>
+            </table>
         </div>
     </div>
+    <div class = "pagebreak2"></div>
+    @endforeach
 @endsection

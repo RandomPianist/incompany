@@ -5,8 +5,8 @@
         <meta name = "viewport" content = "width=device-width, initial-scale=1" />
         <meta name = "csrf-token" content = "{{ csrf_token() }}" />
         <title>Loja Incompany</title>
-        <link rel = "icon shortcut" href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
-        <link rel = "icon"          href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
+        <link rel = "icon shortcut" href = "{{ asset('storage/favicon.ico') }}" type = "image/x-icon" />
+        <link rel = "icon"          href = "{{ asset('storage/favicon.ico') }}" type = "image/x-icon" />
         <link rel = "stylesheet"    href = "{{ asset('css/lib/bootstrap.min.css') }}" />
         <link rel = "stylesheet"    href = "{{ asset('css/geral/app.css')         }}" />
         <link rel = "stylesheet"    href = "{{ asset('css/lib/jquery-ui.min.css') }}" />
@@ -20,7 +20,27 @@
                 position: absolute;
                 right: 20px;
                 height: 30px;
-                width: 30px;
+                width: 30px
+            }
+
+            .form-search.new::before,
+            .form-search.old::before {
+                bottom: 10px;
+                content: " ";
+                position: absolute;
+                left: 24px;
+                height: 22px;
+                width: 22px
+            }
+
+            .form-search.new::before {
+                background: url("{{ $root_url }}/img/new.png") no-repeat;
+                background-size: contain
+            }
+
+            .form-search.old::before {
+                background: url("{{ $root_url }}/img/old.png") no-repeat;
+                background-size: contain
             }
 
             .form-search-2::after {
@@ -86,7 +106,7 @@
                                 <span>Itens</span>
                                 <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
                                 <ul class = "dropdown-toolbar">
-                                    <li onclick = "redirect('{{ $root_url }}/valores/categorias')">
+                                    <li onclick = "redirect('{{ $root_url }}/categorias')">
                                         <span>Categorias</span>
                                     </li>
                                     <li onclick = "redirect('{{ $root_url }}/produtos')">
@@ -95,7 +115,7 @@
                                 </ul>
                             </a>
                         @endif
-                        <a href = "{{ $root_url }}/valores/maquinas">
+                        <a href = "{{ $root_url }}/maquinas">
                             <img src = "{{ asset('img/maquinas.png') }}"  class = "img-menu" />
                             <span>Máquinas</span>
                         </a>
@@ -138,17 +158,17 @@
                                 <li>
                                     <span>Outros<img class = "dropdown-icon" src = "/img/sort-down.png"></span>
                                     <ul class = "subdropdown-toolbar">
+                                        @if ($admin)
+                                            <li onclick = "window.open('{{ $root_url }}/relatorios/comodatos', '_blank')">
+                                                <span>Contratos</span>
+                                            </li>
+                                        @endif
                                         <li onclick = "relatorio = new RelatorioBilateral('empresas-por-maquina')">
                                             <span>Empresas por máquina</span>
                                         </li>
                                         <li onclick = "relatorio = new RelatorioBilateral('maquinas-por-empresa')">
                                             <span>Máquinas por empresa</span>
                                         </li>
-                                        @if ($admin)
-                                            <li onclick = "window.open('{{ $root_url }}/relatorios/comodatos', '_blank')">
-                                                <span>Locação</span>
-                                            </li>
-                                        @endif
                                     </ul>
                                 </li>
                             </ul>
@@ -221,7 +241,11 @@
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/jquery.min.js')    }}"></script>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/jquery-ui.min.js') }}"></script>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/bootstrap.min.js') }}"></script>
-        @if ($admin || ((isset($alias) ? $alias : "maquinas") == "maquinas"))
+        @if ($admin || (
+            url()->current() != route('maquinas') && 
+            url()->current() != route('produtos') && 
+            url()->current() != route('categorias')
+        ))
             <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/app.js')      }}"></script>
             <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/dinheiro.js') }}"></script>
         @else

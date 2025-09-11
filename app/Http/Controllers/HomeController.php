@@ -37,11 +37,6 @@ class HomeController extends Controller {
         return $result;
     }
 
-    public function index() {
-        if ($this->obter_empresa()) return redirect("/colaboradores/pagina/F"); // App\Http\Controllers\Controller.php
-        return redirect("/valores/categorias");
-    }
-
     public function autocomplete(Request $request) {
         $tabela = str_replace("_todos", "", $request->table);
         $tabela = str_replace("_lixeira", "", $tabela);
@@ -51,19 +46,18 @@ class HomeController extends Controller {
             $tabela = "vprodaux";
             $where .= "id IN (
                 SELECT id_produto
-                FROM vprodutos
-                WHERE ".($request->table == "produtos" ? "qtd > 0" : "1")." AND id_pessoa = ".Auth::user()->id_pessoa.
+                FROM vprodutosgeral
+                WHERE id_pessoa = ".Auth::user()->id_pessoa.
             ")";
         } else if (in_array($tabela, ["empresas", "pessoas", "setores"])) $where .= $this->obter_where(Auth::user()->id_pessoa, $tabela, true); // App\Http\Controllers\Controller.php
         else $where .= "1";
 
         if ($request->filter_col) {
             $where .= $request->column != "referencia" ? " AND ".$request->filter_col." = '".$request->filter."'" : " AND referencia NOT IN (
-                SELECT produto_ou_referencia_valor
-                FROM atribuicoes
-                WHERE pessoa_ou_setor_valor = ".$request->filter."
-                    AND produto_ou_referencia_chave = 'R'
-                    AND lixeira = 0
+                SELECT pr_valor
+                FROM vatbold
+                WHERE psm_valor = ".$request->filter."
+                  AND pr_chave = 'R'
             )";
         }
 

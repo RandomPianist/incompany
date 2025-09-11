@@ -17,12 +17,12 @@ class ProdutosController extends Controller {
                         DB::raw("produtos.*"),
                         DB::raw("
                             CASE
-                                WHEN (IFNULL(valores.descr, '') = '') THEN 'A CLASSIFICAR'
-                                ELSE valores.descr
+                                WHEN (IFNULL(categorias.descr, '') = '') THEN 'A CLASSIFICAR'
+                                ELSE categorias.descr
                             END AS categoria
                         ")
                     )
-                    ->leftjoin("valores", "valores.id", "produtos.id_categoria")
+                    ->leftjoin("categorias", "categorias.id", "produtos.id_categoria")
                     ->whereRaw($where)
                     ->where("produtos.lixeira", 0)
                     ->get();
@@ -45,7 +45,7 @@ class ProdutosController extends Controller {
 
     public function consultar(Request $request) {
         if (!sizeof(
-            DB::table("valores")
+            DB::table("categorias")
                 ->where("id", $request->id_categoria)
                 ->where("descr", $request->categoria)
                 ->get()
@@ -68,8 +68,7 @@ class ProdutosController extends Controller {
         }
         if (sizeof(
             DB::table("atribuicoes")
-                ->where("produto_ou_referencia_valor", Produtos::find($request->id)->referencia)
-                ->where("produto_ou_referencia_chave", "R")
+                ->where("referencia", Produtos::find($request->id)->referencia)
                 ->get()
         ) && !trim($request->referencia)) return "aviso";
         return "";
@@ -79,11 +78,11 @@ class ProdutosController extends Controller {
         $produto = DB::table("produtos")
                         ->select(
                             DB::raw("produtos.*"),
-                            DB::raw("IFNULL(valores.descr, 'A CLASSIFICAR') AS categoria"),
+                            DB::raw("IFNULL(categorias.descr, 'A CLASSIFICAR') AS categoria"),
                             DB::raw("IFNULL(produtos.consumo, 0) AS e_consumo"),
                             DB::raw("DATE_FORMAT(produtos.validade_ca, '%d/%m/%Y') AS validade_ca_fmt")
                         )
-                        ->leftjoin("valores", "valores.id", "produtos.id_categoria")
+                        ->leftjoin("categorias", "categorias.id", "produtos.id_categoria")
                         ->where("produtos.id", $id)
                         ->first();
         if ($produto->foto == null) $produto->foto = "";
@@ -129,7 +128,7 @@ class ProdutosController extends Controller {
             !$this->comparar_num($request->preco, $linha->preco) && // App\Http\Controllers\Controller.php
             !$this->comparar_num($request->consumo, $linha->consumo) && // App\Http\Controllers\Controller.php
             !$this->comparar_num($request->validade, $linha->validade) && // App\Http\Controllers\Controller.php
-            !$this->comparar_num($request->id_categoria, $linha->id_categoria)// App\Http\Controllers\Controller.php
+            !$this->comparar_num($request->id_categoria, $linha->id_categoria) // App\Http\Controllers\Controller.php
         ) return 400;
         $this->atribuicao_atualiza_ref($request->id, $linha->referencia, $request->referencia); // App\Http\Controllers\Controller.php
         $linha->descr = mb_strtoupper($request->descr);
@@ -146,33 +145,30 @@ class ProdutosController extends Controller {
         if ($request->file("foto")) $linha->foto = $request->file("foto")->store("uploads", "public");
         $linha->save();
         $this->log_inserir($request->id ? "E" : "C", "produtos", $linha->id); // App\Http\Controllers\Controller.php
-        $this->criar_mp($linha->id, "valores.id"); // App\Http\Controllers\Controller.php
+        $this->criar_mp($linha->id, "maquinas.id"); // App\Http\Controllers\Controller.php
         return redirect("/produtos");
     }
 
     public function excluir(Request $request) {
         $linha = Produtos::find($request->id);
+        $ant = DB::table("vatbold")
+                    ->select(
+                        "psm_chave",
+                        "psm_valor"
+                    )
+                    ->join("produtos", function($join) {
+                        $join->on("produtos.cod_externo", "vatbold.cod_produto")
+                            ->orOn("produtos.referencia", "vatbold.referencia");
+                    })
+                    ->where("produtos.id", $linha->id)
+                    ->groupby(
+                        "psm_chave",
+                        "psm_valor"
+                    )
+                    ->get();
         $linha->lixeira = 1;
         $linha->save();
         $this->log_inserir("D", "produtos", $linha->id); // App\Http\Controllers\Controller.php
-        
-        $lista_atb = DB::table("atribuicoes")
-                        ->where(function($sql) use($linha) {
-                            $sql->where("produto_ou_referencia_valor", $linha->cod_externo)
-                                ->where("produto_ou_referencia_chave", "P");
-                        })
-                        ->orWhere(function($sql) use($linha) {
-                            $sql->where("produto_ou_referencia_valor", $linha->referencia)
-                                ->where("produto_ou_referencia_chave", "R");
-                        })
-                        ->pluck("id")
-                        ->toArray();
-        
-        if (sizeof($lista_atb)) {
-            $where = "id IN (".join(",", $lista_atb).")";
-            DB::statement("UPDATE atribuicoes SET lixeira = 1 WHERE ".$where);
-            $this->log_inserir_lote("D", "atribuicoes", $where); // App\Http\Controllers\Controller.php
-            $this->atualizar_aa_main($this->atb_pessoa()->whereIn("atribuicoes.id", $lista_atb)); // App\Http\Controllers\Controller.php
-        }
+        $this->atualizar_atribuicoes($ant); // App\Http\Controllers\Controller.php
     }
 }

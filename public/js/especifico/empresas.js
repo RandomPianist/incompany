@@ -137,13 +137,11 @@ async function validar() {
     }
     if ($("#cnpj").val() != anteriores.cnpj) alterou = true;
     if ($("#mostrar-ret").val() != anteriores.mostrar_ret) alterou = true;
-    if ($("#travar-ret").val() != anteriores.travar_ret) alterou = true;
 
     const data = await $.get(URL + "/empresas/consultar/", {
         id : $("#id").val(),
         cnpj : $("#cnpj").val().replace(/\D/g, ""),
-        mostrar_ret : $("#mostrar_ret").val(),
-        travar_ret : $("#travar_ret").val()
+        mostrar_ret : $("#mostrar_ret").val()
     });
     if (!erro && data == "R" && !parseInt($("#id").val())) {
         erro = "Já existe um registro com esse CNPJ";
@@ -170,11 +168,10 @@ function chamar_modal(id, e) {
     if (id) {
         $.get(URL + "/empresas/mostrar/" + id, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
-            $("#id_matriz, #cnpj, #razao_social, #nome_fantasia, #mostrar_ret, #travar_ret").each(function() {
+            $("#id_matriz, #cnpj, #razao_social, #nome_fantasia, #mostrar_ret").each(function() {
                 $(this).val(data[$(this).attr("id")]);
             });
             $("#mostrar_ret-chk").prop("checked", parseInt(data.mostrar_ret) == 1);
-            $("#travar_ret-chk").prop("checked", parseInt(data.travar_ret) == 1);
             if (parseInt(data.id_matriz)) $("#empresasModalLabel").html("Editando filial");
             modal("empresasModal", id);
         });

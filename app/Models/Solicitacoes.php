@@ -7,12 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int    $id
  * @property int    $avisou
- * @property int    $created_at
- * @property int    $id_comodato
  * @property int    $id_externo
+ * @property int    $id_comodato
+ * @property int    $created_at
  * @property int    $updated_at
  * @property Date   $data
- * @property string $status
  * @property string $usuario_erp
  * @property string $usuario_erp2
  * @property string $usuario_web
@@ -39,7 +38,7 @@ class Solicitacoes extends Model
      * @var array
      */
     protected $fillable = [
-        'avisou', 'created_at', 'id_comodato', 'id_externo', 'data', 'status', 'updated_at', 'usuario_erp', 'usuario_erp2', 'usuario_web'
+        'situacao', 'avisou', 'data', 'usuario_erp', 'usuario_erp2', 'usuario_web', 'id_externo', 'id_comodato', 'created_at', 'updated_at'
     ];
 
     /**
@@ -57,7 +56,7 @@ class Solicitacoes extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'avisou' => 'int', 'created_at' => 'timestamp', 'id_comodato' => 'int', 'id_externo' => 'int', 'data' => 'date', 'status' => 'string', 'updated_at' => 'timestamp', 'usuario_erp' => 'string', 'usuario_erp2' => 'string', 'usuario_web' => 'string'
+        'id' => 'int', 'avisou' => 'int', 'data' => 'date', 'usuario_erp' => 'string', 'usuario_erp2' => 'string', 'usuario_web' => 'string', 'id_externo' => 'int', 'id_comodato' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
     ];
 
     /**
@@ -66,7 +65,7 @@ class Solicitacoes extends Model
      * @var array
      */
     protected $dates = [
-        'created_at', 'data', 'updated_at'
+        'data', 'created_at', 'updated_at'
     ];
 
     /**

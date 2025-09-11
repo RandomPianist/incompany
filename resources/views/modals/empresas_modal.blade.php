@@ -36,21 +36,12 @@
                                 <span class = "custom-label-form tam-max"></span>
                             </div>
                         </div>
-                        <div class = "row pb5-px">
+                        <div class = "row pb5-px mb-3">
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">
                                     <input id = "mostrar_ret" name = "mostrar_ret" type = "hidden" />
                                     <input id = "mostrar_ret-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "$('#mostrar_ret').val($(this).prop('checked') ? '1' : '0')" />
                                     <label for = "mostrar_ret-chk" class = "custom-control-label">Mostrar seção "Próximas retiradas"<label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class = "row mb-3">
-                            <div class = "col-12">
-                                <div class = "custom-control custom-switch">
-                                    <input id = "travar_ret" name = "travar_ret" type = "hidden" />
-                                    <input id = "travar_ret-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "$('#travar_ret').val($(this).prop('checked') ? '1' : '0')" />
-                                    <label for = "travar_ret-chk" class = "custom-control-label">Travar retiradas fora do prazo<label>
                                 </div>
                             </div>
                         </div>

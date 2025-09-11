@@ -2,7 +2,7 @@
  * Font Awesome Pro 6.0.0-alpha2 by @fontawesome - https://fontawesome.com
  * License - https://fontawesome.com/license (Commercial License)
  */
- .fa {
+.fa {
   font-family: "Font Awesome 6 Pro";
   font-family: var(--fa-style-family, "Font Awesome 6 Pro");
   font-weight: 900;

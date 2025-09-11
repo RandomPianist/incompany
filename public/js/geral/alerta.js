@@ -26,20 +26,28 @@ async function s_alert(obj) {
                 json.title = "Erro";
                 break;
         }
-    } else if (obj.title !== undefined) json.title = obj.title;
+    }
+    if (obj.title !== undefined) json.title = obj.title;
     if (obj.html !== undefined) json.html = obj.html;
+    if (obj.ync !== undefined) {
+        json.cancelButtonText = "CANCELAR";
+        json.showCancelButton = true;
+        obj.yn = true;
+    }
     if (obj.yn !== undefined) {
         if (obj.yn) {
             json.showDenyButton = true;
             json.confirmButtonText = obj.invert ? "NÃO" : "SIM";
+            json.denyButtonText = obj.invert ? "SIM" : "NÃO";
         }
     }
-    json.confirmButtonColor = "rgb(31, 41, 55)";
+    json.confirmButtonColor = obj.ync === undefined ? "rgb(31, 41, 55)" : "#0416b4";
     const resultado = await Swal.fire(json);
     if (el !== undefined) {
         setTimeout(function() {
             el.scrollTo(0, scroll);
         }, 400);
     }
+    if (obj.ync !== undefined) return resultado;
     return json.showDenyButton ? obj.invert ? resultado.isDenied : resultado.isConfirmed : true;
 }

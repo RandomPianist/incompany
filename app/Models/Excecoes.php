@@ -5,21 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property int    $id
- * @property int    $created_at
- * @property int    $id_maquina
- * @property int    $id_produto
- * @property int    $updated_at
- * @property string $descr
+ * @property int $id
+ * @property int $id_atribuicao
+ * @property int $id_pessoa
+ * @property int $id_setor
+ * @property int $lixeira
+ * @property int $created_at
+ * @property int $updated_at
  */
-class MaquinasProdutos extends Model
+class Excecoes extends Model
 {
     /**
      * The database table used by the model.
      *
      * @var string
      */
-    protected $table = 'maquinas_produtos';
+    protected $table = 'excecoes';
 
     /**
      * The primary key for the model.
@@ -34,7 +35,7 @@ class MaquinasProdutos extends Model
      * @var array
      */
     protected $fillable = [
-        'created_at', 'descr', 'id_maquina', 'id_produto', 'maximo', 'minimo', 'preco', 'updated_at'
+        'id_atribuicao', 'id_pessoa', 'id_setor', 'lixeira', 'created_at', 'updated_at'
     ];
 
     /**
@@ -52,7 +53,7 @@ class MaquinasProdutos extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'created_at' => 'timestamp', 'descr' => 'string', 'id_maquina' => 'int', 'id_produto' => 'int', 'updated_at' => 'timestamp'
+        'id' => 'int', 'id_atribuicao' => 'int', 'id_pessoa' => 'int', 'id_setor' => 'int', 'lixeira' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
     ];
 
     /**

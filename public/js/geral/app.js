@@ -1,6 +1,7 @@
-let relatorio, pessoa, pessoa_atribuindo, gradeGlobal, idatbglobal, colGlobal;
+let relatorio, pessoa, atribuicao, excecao, colGlobal;
 let anteriores = new Array();
 let validacao_bloqueada = false;
+let focar = true;
 
 jQuery.fn.sortElements = (function() {
     var sort = [].sort;
@@ -36,7 +37,7 @@ jQuery.fn.sortElements = (function() {
 })();
 
 $(document).ready(function() {
-    $(".modal-body .row").each(function() {
+    $(".modal-body .row:not(.sem-margem)").each(function() {
         if ($(this).prev().hasClass("row")) $(this).css("margin-top", $(this).prev().find(".tam-max").length ? "-14px" : "11px");
     });
 
@@ -46,6 +47,25 @@ $(document).ready(function() {
 
     $("#busca").keyup(function(e) {
         if (e.keyCode == 13) listar();
+    });
+
+    $("#cpModal .form-control-lg").each(function() {
+        $(this).on("keyup", function(e) {
+            if (e.keyCode == 13) {
+                listar_cp(function() {
+                    $("#cpModal .id-produto").each(function() {
+                        $(this).trigger("change");
+                    });
+                    $("#cpModal .minimo, #cpModal .maximo").each(function() {
+                        limitar($(this), true);
+                    });
+                });
+            }
+        }).on("focus", function() {
+            validacao_bloqueada = true;
+        }).on("blur", function() {
+            validacao_bloqueada = false;
+        });
     });
 
     $(document).on("keydown", "form", function(event) { 
@@ -122,7 +142,7 @@ $(document).ready(function() {
             firstDay: 1,
             beforeShow: function(elem, dp) {
                 setTimeout(function() {
-                    $(dp.dpDiv[0]).css("width", (elem.offsetWidth > 244 ? elem.offsetWidth : 244) + "px");
+                    $(dp.dpDiv[0]).css("width", (elem.offsetWidth > 272 ? elem.offsetWidth : 272) + "px");
                 }, 0);
             },
             onSelect: function() {
@@ -153,19 +173,23 @@ $(document).ready(function() {
         if ($("#rel-grupo1").val() == "maquinas-por-empresa") relatorio.inverter();
     });
 
-    $("#atribuicoesModal").on("hide.bs.modal", function() {
-        idatbglobal = 0;
-    });
-
     $("#estoqueModal").on("hide.bs.modal", function() {
-        $(".remove-produto").each(function() {
+        $("#estoqueModal .remove-produto").each(function() {
             $(this).trigger("click");
         });
-        $("#produto-1").val("");
-        $("#id_produto-1").val("");
-        $("#es-1").val("E");
-        $("#qtd-1").val(1);
-        $("#obs-1").val("ENTRADA");
+        $("#estoqueModal #produto-1").val("");
+        $("#estoqueModal #id_produto-1").val("");
+        $("#estoqueModal #es-1").val("E");
+        $("#estoqueModal #preco-1").val(0);
+        $("#estoqueModal #qtd-1").val(1);
+        $("#estoqueModal #obs-1").val("ENTRADA");
+    });
+
+    $("#cpModal").on("hide.bs.modal", function() {
+        if (document.querySelector("#cpModal .form-search.new") === null) {
+            limpar_cp();
+            $("#cpModal #busca-prod").val("");
+        } else cp_pergunta_salvar();
     });
 
     $("#setoresModal").on("hide.bs.modal", function() {
@@ -178,11 +202,13 @@ $(document).ready(function() {
         let that = this;
         $(this).on("shown.bs.modal", function () {
             let cont = 0;
-            do {
-                var el = $($("#" + that.id + " input[type=text]")[cont]);
-                el.focus();
-                cont++;
-            } while ($($(el).parent()).hasClass("d-none") || $(el).attr("disabled"))
+            if (focar) {
+                do {
+                    var el = $($("#" + that.id + " input[type=text]")[cont]);
+                    el.focus();
+                    cont++;
+                } while ($($(el).parent()).hasClass("d-none") || $(el).attr("disabled"))
+            } else focar = true;
             carrega_autocomplete();
         })
     });
@@ -224,6 +250,111 @@ $(document).ready(function() {
     avisarSolicitacao();
 });
 
+async function avisarSolicitacao() {
+    let comodatos = await $.get(URL + "/solicitacoes/meus-comodatos");
+    if (typeof comodatos == "string") comodatos = $.parseJSON(comodatos);
+
+    for (let i = 0; i < comodatos.length; i++) {
+        let retorno;
+        retorno = await $.get(URL + "/solicitacoes/aviso/" + comodatos[i]);
+        retorno = $.parseJSON(retorno);
+        if (retorno !== 200) {
+            let texto = "";
+            if (retorno.status != "A") {
+                texto = "Sua solicitação feita no dia " + retorno.criacao + " foi ";
+                switch (retorno.status) {
+                    case "E":
+                        texto += "aceita";
+                        break;
+                    case "F":
+                        texto += "finalizada";
+                        break;
+                    case "R":
+                        texto += "recusada";
+                        break;
+                }
+                if (retorno.status != "E") texto += " no dia " + retorno.data;
+                texto += " por " + retorno.usuario_erp;
+                if (retorno.status == "E") texto += " e tem prazo para o dia " + retorno.data;
+            } else if (retorno.possui_inconsistencias) texto = "Sua solicitação feita no dia " + retorno.criacao + " teve alguns produtos marcados como inexistentes";
+            if (texto != "") {
+                if (retorno.possui_inconsistencias) {
+                    texto += ".<br>Deseja verificar";
+                    if (retorno.status != "A") texto += " as diferenças";
+                    texto += "?";
+                    let viz = await s_alert({
+                        icon : "success",
+                        html : texto,
+                        yn : true
+                    });
+                    if (viz) {
+                        let link = document.createElement("a");
+                        link.href = URL + "/relatorios/solicitacao/" + retorno.id;
+                        link.target = "_blank";
+                        link.click();
+                    }
+                } else {
+                    await s_alert({
+                        icon : "EF".indexOf(retorno.status) > -1 ? "success" : "warning",
+                        html : texto
+                    });
+                }
+            }
+        }
+    }
+}
+
+async function excluirMain(_id, prefixo, aviso, callback) {
+    const resp = await s_alert({
+        icon : "warning",
+        html : aviso,
+        invert : true
+    });
+    if (resp) {
+        await $.post(URL + prefixo + "/excluir", {
+            _token : $("meta[name='csrf-token']").attr("content"),
+            id : _id
+        });
+        callback();
+    }
+}
+
+async function controleTodos(ids) {
+    let lista = Array.from(document.getElementsByClassName("btn-primary"));
+    let loader = document.getElementById("loader").style;
+    let modal = document.getElementById("relatorioControleModal").style;
+    let algum_existe = false;
+    let elementos = relObterElementos(["pessoa1", "consumo1", "inicio2", "fim2"]);
+    lista.forEach((el) => {
+        el.style.zIndex = "0";
+    });
+    loader.display = "flex";
+    modal.zIndex = "0";
+    for (let i = 0; i < ids.length; i++) {
+        $(elementos.id_pessoa).val(ids[i]);
+        let existe = await $.get(URL + "/relatorios/controle/existe", {
+            id_pessoa : ids[i],
+            consumo : $(elementos.consumo).val(),
+            inicio : $(elementos.inicio).val(),
+            fim : $(elementos.fim).val()
+        });
+        if (parseInt(existe)) {
+            algum_existe = true;
+            $("#relatorioControleModal form").submit();
+        }
+    }
+    lista.forEach((el) => {
+        el.style.removeProperty("z-index");
+    });
+    modal.removeProperty("z-index");
+    loader.removeProperty("display");
+    $(elementos.id_pessoa).val("");
+    if (!algum_existe) {
+        $(elementos.pessoa).addClass("invalido");
+        s_alert("Colaborador não encontrado");
+    }
+}
+
 function ordenar(coluna) {
     if (coluna === undefined) {
         coluna = colGlobal;
@@ -238,9 +369,21 @@ function contar_char(el, max) {
     $(el).next().html($(el).val().length + "/" + max);
 }
 
+function mostrarImagemErro() {
+    $("#nao-encontrado").removeClass("d-none");
+    $($("#nao-encontrado").prev()).find(".card").addClass("d-none");
+    $($("#nao-encontrado").prev()).removeClass("h-100");
+}
+
+function esconderImagemErro() {
+    $("#nao-encontrado").addClass("d-none");
+    $($("#nao-encontrado").prev()).find(".card").removeClass("d-none");
+    $($("#nao-encontrado").prev()).addClass("h-100");
+}
+
 function modal(nome, id, callback) {
     const concluir = function() {
-        if (!id && ["pessoasModal", "setoresModal", "valoresModal"].indexOf(nome) > -1) {
+        if (!id && ["pessoasModal", "setoresModal", "maquinasModal", "categoriasModal"].indexOf(nome) > -1) {
             let el = $("#" + (nome == "pessoasModal" ? "nome" : "descr"));
             $(el).val($("#busca").val());
             $(el).trigger("keyup");
@@ -294,21 +437,6 @@ function modal2(nome, limpar) {
     $("#" + nome).modal();
 }
 
-async function excluirMain(_id, prefixo, aviso, callback) {
-    const resp = await s_alert({
-        icon : "warning",
-        html : aviso,
-        invert : true
-    });
-    if (resp) {
-        await $.post(URL + prefixo + "/excluir", {
-            _token : $("meta[name='csrf-token']").attr("content"),
-            id : _id
-        });
-        callback();
-    }
-}
-
 function excluir(_id, prefixo, e) {
     if (e !== undefined) e.preventDefault();
     $.get(URL + prefixo + "/aviso/" + _id, function(data) {
@@ -338,7 +466,9 @@ function autocomplete(_this) {
     });
 
     if (!element.parent().find(".autocomplete-result").length) {
-        div_result = $("<div class = 'autocomplete-result' style = 'width:" + document.getElementById($(element).attr("id")).offsetWidth + "px'>");
+        div_result = $("<div class = 'autocomplete-result' style = 'width:" + document.querySelector(
+            $(element).data("input").indexOf(" ") == -1 ? ("#" + $(element).attr("id")) : $(element).data("input").replace("id_", "")
+        ).offsetWidth + "px'>");
         element.after(div_result);
     } else {
         div_result = element.parent().find(".autocomplete-result");
@@ -437,11 +567,13 @@ function carrega_dinheiro() {
     });
 }
 
-function verifica_vazios(arr, _erro) {
+function verifica_vazios(arr, _erro, pai) {
     if (_erro === undefined) _erro = "";
+    if (pai === undefined) pai = "";
+    if (pai) pai = "#" + pai + " ";
     let _alterou = false;
     arr.forEach((id) => {
-        let el = $("#" + id);
+        let el = $(pai + "#" + id);
         let erro_ou_vazio = !$(el).val();
         if (!erro_ou_vazio && id.indexOf("qtd-") > -1) erro_ou_vazio = !parseInt($(el).val());
         if (erro_ou_vazio) {
@@ -511,6 +643,529 @@ function relObterElementosValor(elementos, chaves) {
     return resultado;
 }
 
+function limitar(el, zero) {
+    let minimo = 1;
+    if (zero !== undefined) minimo = 0;
+    let texto = $(el).val().toString();
+    if (!texto.length || parseInt(texto) < minimo) $(el).val(minimo);
+    if (texto.length > 11) $(el).val("".padStart(11, "9"));
+}
+
+function numerico(el) {
+    $(el).val($(el).val().replace(/\D/g, "").substring(0, 4));
+}
+
+function foto_pessoa(seletor, caminho) {
+    if (caminho) caminho = URL + "/storage/" + caminho;
+    $(seletor).css("background-image", caminho ? "url('" + caminho + "')" : "");
+    $($($(seletor).children()[0])).removeClass("d-none");
+    if (caminho) {
+        $(seletor).css("background-size", "100% 100%");
+        $($($(seletor).children()[0])).addClass("d-none");
+   }
+}
+
+function formatar_cpf(el) {
+    $(el).removeClass("invalido");
+    let cpf = $(el).val();
+    let num = cpf.replace(/[^\d]/g, '');
+    let len = num.length;
+    if (len <= 6) cpf = num.replace(/(\d{3})(\d{1,3})/g, '$1.$2');
+    else if (len <= 9) cpf = num.replace(/(\d{3})(\d{3})(\d{1,3})/g, '$1.$2.$3');
+    else {
+        cpf = num.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/g, "$1.$2.$3-$4");
+        cpf = cpf.substring(0, 14);
+    }
+    $(el).val(cpf);
+}
+
+function validar_cpf(__cpf) {
+    __cpf = __cpf.replace(/\D/g, "");
+    if (__cpf == "00000000000") return false;
+    if (__cpf.length != 11) return false;
+    let soma = 0;
+    for (let i = 1; i <= 9; i++) soma = soma + (parseInt(__cpf.substring(i - 1, i)) * (11 - i));
+    let resto = (soma * 10) % 11;
+    if ((resto == 10) || (resto == 11)) resto = 0;
+    if (resto != parseInt(__cpf.substring(9, 10))) return false;
+    soma = 0;
+    for (i = 1; i <= 10; i++) soma = soma + (parseInt(__cpf.substring(i - 1, i)) * (12 - i));
+    resto = (soma * 10) % 11;
+    if ((resto == 10) || (resto == 11)) resto = 0;
+    if (resto != parseInt(__cpf.substring(10, 11))) return false;
+    return true;
+}
+
+function trocarEmpresa() {
+    $.post(URL + "/colaboradores/alterar-empresa", {
+        _token : $("meta[name='csrf-token']").attr("content"),
+        idEmpresa : $("#empresa-select").val()
+    }, function() {
+        location.reload();
+    });
+}
+
+function trocarEmpresaModal() {
+    $.get(URL + "/empresas/todas", function(data) {
+        data = $.parseJSON(data);
+        let resultado = "<option value = '0'>Todas</option>";
+        data.forEach((empresa) => {
+            resultado += "<option value = '" + empresa.id + "'>" + empresa.nome_fantasia + "</option>";
+            empresa.filiais.forEach((filial) => {
+                resultado += "<option value = '" + filial.id + "'>- " + filial.nome_fantasia + "</option>";
+            });
+        })
+        $("#empresa-select").html(resultado);
+        $("#empresa-select option[value='" + EMPRESA + "']").attr("selected", true);
+        $("#trocarEmpresaModal").modal();
+    });
+}
+
+function Atribuicoes(grade, _psm_valor) {
+    let idatb = 0;
+    let hab = true;
+    const that = this;
+
+    this.obter_psm = function() {
+        if (location.href.indexOf("colaboradores") > -1) return "P";
+        if (location.href.indexOf("maquinas") > -1) return "M";
+        return "S";
+    }
+
+    const mostrar = function(_id) {
+        if (_id === undefined) _id = 0;
+        idatb = _id;
+        const _tipo2 = that.obter_psm();
+        $.get(URL + "/atribuicoes/listar", {
+            id : _psm_valor,
+            tipo : grade ? "R" : "P",
+            tipo2 : _tipo2
+        }, function(data) {
+            let resultado = "";
+            if (typeof data == "string") data = $.parseJSON(data);
+            if (data.length) {
+                resultado += "<thead>" +
+                    "<tr>" +
+                        "<th>" + (grade ? "Referência" : "Produto") + "</th>" +
+                        "<th>Obrigatório?</th>" +
+                        "<th class = 'text-right'>Qtde.</th>" +
+                        "<th class = 'text-right'>Validade</th>" +
+                        "<th>&nbsp;</th>" +
+                    "</tr>" +
+                "</thead>" +
+                "<tbody>";
+                data.forEach((atribuicao) => {
+                    let acoes = "";
+                    if (grade) acoes += "<i class = 'my-icon far fa-eye' title = 'Detalhar' onclick = 'atribuicao.detalhar(" + atribuicao.id + ")'></i>";
+                    if (_tipo2 == "P") acoes += "<i class = 'my-icon far fa-hand-holding-box' title = 'Retirar' onclick = 'atribuicao.retirar(" + atribuicao.id + ")'></i>";
+                    if (["M", "S"].indexOf(_tipo2) > -1) {
+                        acoes += "<i class = 'my-icon far fa-user" + (_tipo2 == "M" ? "s" : "") + "-slash' title = 'Exceções' onclick = 'excecao = new Excecoes(" + atribuicao.id + ")'></i>";
+                    }
+                    if (parseInt(atribuicao.pode_editar)) {
+                        acoes += "<i class = 'my-icon far fa-edit' title = 'Editar' onclick = 'atribuicao.editar(" + atribuicao.id + ")'></i>" +
+                            "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'atribuicao.excluir(" + atribuicao.id + ")'></i>";
+                    }
+                    if (!acoes) acoes = "---";
+                    resultado += "<tr>" +
+                        "<td>" + atribuicao.pr_valor + "</td>" +
+                        "<td>" + atribuicao.obrigatorio + "</td>" +
+                        "<td class = 'text-right'>" + atribuicao.qtd + "</td>" +
+                        "<td class = 'text-right'>" + atribuicao.validade + "</td>" +
+                        "<td class = 'text-center manter-junto'>" + acoes + "</td>" +
+                    "</tr>";
+                });
+                resultado += "</tbody>";
+                $($("#table-atribuicoes").parent()).addClass("pb-4");
+                if (that.obter_psm() == "M") $($("#atribuicoesModal div.atribuicoes").parent()).addClass("mb-5");
+                else $($("#atribuicoesModal div.atribuicoes").parent()).removeClass("mb-5");
+                hab = true;
+            } else {
+                $($("#table-atribuicoes").parent()).removeClass("pb-4");
+                $($("#atribuicoesModal div.atribuicoes").parent()).removeClass("mb-5");
+            }
+            $("#table-atribuicoes").html(resultado);
+        });
+    }
+
+    const retirarMain = async function(id, _supervisor) {
+        if (_supervisor === undefined) _supervisor = 0;
+        await $.post(URL + "/retiradas/salvar", {
+            _token : $("meta[name='csrf-token']").attr("content"),
+            supervisor : _supervisor,
+            atribuicao : id,
+            pessoa : _psm_valor,
+            produto : $("#variacao").val().replace("prod-", ""),
+            data : $("#data-ret").val(),
+            quantidade : $("#quantidade2").val()
+        });
+        $("#supervisorModal").modal("hide");
+        $("#retiradasModal").modal("hide");
+        await s_alert({icon : "success"});
+        listar();
+    }
+
+    this.salvar = function() {
+        if (hab) {
+            hab = false;
+            $.post(URL + "/atribuicoes/salvar", {
+                _token : $("meta[name='csrf-token']").attr("content"),
+                id : idatb,
+                psm_chave : that.obter_psm(),
+                psm_valor : _psm_valor,
+                pr_chave : grade ? "R" : "P",
+                pr_valor : $("#" + (grade ? "referencia" : "produto")).val(),
+                validade : $("#validade").val(),
+                qtd : $("#quantidade").val(),
+                obrigatorio : $("#obrigatorio").val().replace("opt-", "")
+            }, function(ret) {
+                ret = parseInt(ret);
+                switch(ret) {
+                    case 201:
+                        $("#id_produto").val("");
+                        $("#referencia").val("");
+                        $("#produto").val("");
+                        $("#quantidade").val(1);
+                        $("#validade").val(1);
+                        $("#obrigatorio").val("opt-0");
+                        mostrar();
+                        break;
+                    case 403:
+                        s_alert(grade ? "Referência inválida" : "Produto inválido");
+                        break;
+                    case 404:
+                        s_alert(grade ? "Referência não encontrada" : "Produto não encontrado");
+                        break;
+                }
+            });
+        }
+    }
+
+    this.editar = function(id) {
+        if (idatb != id) {
+            const campo = grade ? "referencia" : "produto";
+            $.get(URL + "/atribuicoes/mostrar/" + id, function(data) {
+                $("#estiloAux").html(".autocomplete-result{display:none}");
+                $("#" + campo + ", #validade, #quantidade, #obrigatorio").each(function() {
+                    $(this).attr("disabled", true);
+                });
+                if (typeof data == "string") data = $.parseJSON(data);
+                $("#" + campo).val(data.descr).trigger("keyup");
+                setTimeout(function() {
+                    $($(".autocomplete-line").first()).trigger("click");
+                }, 500);
+                setTimeout(function() {
+                    $("#validade").val(data.validade);
+                    $("#quantidade").val(parseInt(data.qtd));
+                    $("#obrigatorio").val("opt-" + data.obrigatorio);
+                    $("#estiloAux").html("");
+                    $("#" + campo + ", #validade, #quantidade, #obrigatorio").each(function() {
+                        $(this).attr("disabled", false);
+                    });
+                    mostrar(id);
+                }, 1000);
+            });
+        }
+    }
+
+    this.excluir = function(id) {
+        if (hab) {
+            hab = false;
+            let aviso = "Tem certeza que deseja excluir ess";
+            aviso += grade ? "a referência?" : "e produto?";
+            excluirMain(id, "/atribuicoes", aviso, function() {
+                mostrar();
+            });
+        }
+    }
+
+    this.tentar = function(e) {
+        if (e.keyCode == 13) that.salvar();
+    }
+
+    this.detalhar = function(id) {
+        $.get(URL + "/atribuicoes/grade/" + id, function(data) {
+            let resultado = "<thead>" +
+                "<th>Produto</th>" +
+                "<th>Tamanho</th>" +
+            "</thead>" +
+            "<tbody>";
+            if (typeof data == "string") data = $.parseJSON(data);
+            $("#detalharAtbModalLabel").html(data[0].referencia);
+            data.forEach((produto) => {
+                resultado += "<tr>" +
+                    "<td>" + produto.descr + "</td>" + 
+                    "<td>" + produto.tamanho + "</td>" +
+                "</tr>";
+            });
+            resultado += "</tbody>";
+            $("#table-detalhar-atb").html(resultado);
+            $("#detalharAtbModal").modal();
+        });
+    }
+
+    this.atualizarQtd = function() {
+        $("#quantidade2_label").html($("#quantidade2").val());
+    }
+
+    this.retirar = function(id) {
+        $("#quantidade2").val(1);
+        that.atualizarQtd();
+        $.get(URL + "/atribuicoes/produtos/" + id, function(data) {
+            let pai = $($($("#variacao").parent()).parent());
+            let resultado = "";
+            if (typeof data == "string") data = $.parseJSON(data);
+            data.forEach((variacao) => {
+                resultado += "<option value = 'prod-" + variacao.id + "'>" + variacao.descr + "</option>";
+            });
+            $("#variacao").html(resultado);
+            $(pai).removeClass("d-none");
+            if (data.length < 2) $(pai).addClass("d-none");
+            pai = $($($($("#quantidade2").parent()).parent()).parent());
+            $(pai).addClass("d-none")
+            if (parseInt($("#quantidade2").attr("max")) > 1) $(pai).removeClass("d-none");
+            $("#btn-retirada").off("click").on("click", function() {
+                let erro = "";
+                
+                if (!$("#data-ret").val()) erro = "Preencha o campo";
+                else if (eFuturo($("#data-ret").val())) erro = "A retirada não pode ser no futuro";
+                
+                if (!erro) {
+                    $.get(URL + "/retiradas/consultar", {
+                        atribuicao : id,
+                        qtd : $("#quantidade2").val(),
+                        pessoa : _psm_valor
+                    }, function(ok) {
+                        if (!parseInt(ok)) {
+                            idatb = id;
+                            modal2("supervisorModal", ["cpf2", "senha2"]);
+                        } else retirarMain(id);
+                    });
+                } else {
+                    $("#data-ret").addClass("invalido");
+                    s_alert(erro);
+                }
+            });
+            let titulo = "Retirada retroativa - " + data[0].titulo;
+            if (titulo.length > 46) titulo = titulo.substring(0, 46).trim() + "...";
+            $("#retiradasModalLabel").html(titulo);
+            $("#quantidade2").val(1);
+            that.atualizarQtd();
+            $("#data-ret").val("");
+            $("#retiradasModal").modal();
+        });
+    }
+
+    this.validarSpv = function() {
+        limpar_invalido();
+        let erro = "";
+
+        if (!$("#cpf2").val()) {
+            erro = "Preencha o campo";
+            $("#cpf2").addClass("invalido");
+        }
+
+        if (!$("#senha2").val()) {
+            if (!erro) erro = "Preencha o campo";
+            else erro = "Preencha os campos";
+            $("#senha2").addClass("invalido");
+        }
+
+        if (!erro && !validar_cpf($("#cpf2").val())) {
+            erro = "CPF inválido";
+            $("#cpf2").addClass("invalido");
+        }
+
+        if (!erro) {
+            $.post(URL + "/colaboradores/supervisor", {
+                _token : $("meta[name='csrf-token']").attr("content"),
+                cpf : $("#cpf2").val().replace(/\D/g, ""),
+                senha : $("#senha2").val()
+            }, function(ok) {
+                if (parseInt(ok)) retirarMain(idatb, ok);
+                else s_alert("Supervisor inválido");
+            });
+        } else s_alert(erro);
+    }
+    
+    $($("#table-atribuicoes").parent()).removeClass("pb-4");
+    $("#table-atribuicoes").html("");
+    modal("atribuicoesModal", 0, function() {
+        $.get(URL + "/" + (
+            location.href.indexOf("colaboradores") > -1 ? 
+                "colaboradores" :
+            location.href.indexOf("setores") > -1 ? 
+                "setores" : 
+            "maquinas"
+        ) + "/mostrar/" + _psm_valor, function(data) {
+            if (location.href.indexOf("maquinas") == -1) {
+                if (typeof data == "string") data = $.parseJSON(data);
+                var descr = data[location.href.indexOf("colaboradores") > -1 ? "nome" : "descr"].toUpperCase();
+            } else var descr = data;
+            $("#atribuicoesModalLabel").html(descr + " - Atribuindo " + (grade ? "grades" : "produtos"));
+            if (grade) {
+                $("#referencia").data().filter = _psm_valor;
+                $("#div-produto").addClass("d-none");
+                $("#div-referencia").removeClass("d-none");
+            } else {
+                $("#div-produto").removeClass("d-none");
+                $("#div-referencia").addClass("d-none");
+            }
+            $("#obrigatorio").val("opt-0");
+            mostrar();
+            $("#atribuicoesModal input[type=number]").each(function() {
+                $(this).off("change").on("change", function() {
+                    limitar($(this));
+                }).off("keyup").on("keyup", function(e) {
+                    $(this).trigger("change");
+                    atribuicao.tentar(e);
+                }).trigger("change");
+            })
+        });
+    });
+}
+
+function Excecoes(_id_atribuicao) {
+    let hab = true;
+    let idexc = 0;
+
+    const mostrar = function(_id) {
+        if (_id === undefined) _id = 0;
+        idexc = _id;
+        $.get(URL + "/atribuicoes/excecoes/listar/" + _id_atribuicao, function(data) {
+            let resultado = "";
+            if (typeof data == "string") data = $.parseJSON(data);
+            let pessoa = false;
+            let setor = false;
+            if (data.length) {
+                resultado += "<thead>" +
+                    "<tr>" +
+                        "<th class = 'exc-tipo'>Tipo</th>" +
+                        "<th id = 'exc-titulo'></th>" +
+                        "<th>&nbsp;</th>" +
+                    "</tr>" +
+                "</thead>" +
+                "<tbody>";
+                data.forEach((excecao) => {
+                    if (excecao.ps_chave == "P") pessoa = true;
+                    if (excecao.ps_chave == "S") setor = true;
+                    resultado += "<tr>" +
+                        "<td class = 'exc-tipo'>" + (excecao.ps_chave == "P" ? "FUNCIONÁRIO" : "CENTRO DE CUSTO") + "</td>" +
+                        "<td>" + excecao.ps_valor + "</td>" +
+                        "<td class = 'text-center manter-junto'>" + (
+                            parseInt(atribuicao.pode_editar) ? "<i class = 'my-icon far fa-edit' title = 'Editar' onclick = 'excecao.editar(" + excecao.id + ")'></i>" +
+                                "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excecao.excluir(" + excecao.id + ")'></i>" 
+                            : 
+                                "---"
+                        ) + "</td>" +
+                    "</tr>";
+                });
+                resultado += "</tbody>";
+                $($("#table-excecoes").parent()).addClass("pb-4");
+                hab = true;
+            } else $($("#table-excecoes").parent()).removeClass("pb-4");
+            $("#table-excecoes").html(resultado);
+            if (data.length) {
+                let titulo = "";
+                if (pessoa) titulo += "Nome";
+                if (setor) {
+                    if (titulo) titulo += "/";
+                    titulo += "Descrição";
+                }
+                $("#exc-titulo").html(titulo);
+                $(".exc-tipo").each(function() {
+                    if (titulo.indexOf("/") > -1) $(this).removeClass("d-none");
+                    else $(this).addClass("d-none");
+                });
+            }
+        });
+    }
+
+    this.salvar = function() {
+        if (hab) {
+            hab = false;
+            $.post(URL + "/atribuicoes/excecoes/salvar", {
+                _token : $("meta[name='csrf-token']").attr("content"),
+                ps_chave : $("#exc-ps-chave").val(),
+                ps_valor : $("#exc-ps-valor").val(),
+                ps_id : $("#exc-ps-id").val(),
+                id_atribuicao : _id_atribuicao
+            }, function(ret) {
+                ret = parseInt(ret);
+                switch(ret) {
+                    case 201:
+                        $("#exc-ps-chave").val("P");
+                        $("#exc-ps-valor").val("");
+                        $("#exc-ps-id").val("");
+                        mostrar();
+                        break;
+                    case 403:
+                        s_alert(($("#exc-ps-chave").val() == "S" ? "Centro de custo" : "Funcionário") + " inválido");
+                        break;
+                    case 404:
+                        s_alert(($("#exc-ps-chave").val() == "S" ? "Centro de custo" : "Funcionário") + " não encontrado");
+                        break;
+                }
+            });
+        }
+    }
+
+    this.editar = function(id) {
+        if (idatb != id) {
+            $.get(URL + "/atribuicoes/excecoes/mostrar/" + id, function(data) {
+                $("#estiloAux").html(".autocomplete-result{display:none}");
+                $("#exc-ps-chave, #exc-ps-valor").each(function() {
+                    $(this).attr("disabled", true);
+                });
+                if (typeof data == "string") data = $.parseJSON(data);
+                $("#exc-ps-valor").val(data.descr).trigger("keyup");
+                setTimeout(function() {
+                    $($(".autocomplete-line").first()).trigger("click");
+                }, 500);
+                setTimeout(function() {
+                    $("#exc-ps-chave").val(data.ps_chave == "P" ? "Funcionário" : "Centro de custo");
+                    $("#exc-ps-valor").val(data.ps_valor);
+                    $("#exc-ps-id").val(data.ps_id);
+                    $("#exc-ps-chave, #exc-ps-valor").each(function() {
+                        $(this).attr("disabled", false);
+                    });
+                    mostrar(idexc);
+                }, 1000);
+            });
+        }
+    }
+
+    this.excluir = function(id) {
+        if (hab) {
+            hab = false;
+            excluirMain(id, "/atribuicoes/excecoes", "Tem certeza que deseja excluir essa exceção?", function() {
+                mostrar();
+            });
+        }
+    }
+
+    this.mudarTipo = function(chave) {
+        $("#lbl-exc-ps-valor").html((chave == "P" ? "Nome" : "Descrição") + ": *");
+        $("#exc-ps-valor").data("table", chave == "P" ? "pessoas" : "setores");
+        $("#exc-ps-valor").data("column", chave == "P" ? "nome" : "descr");
+        $("#exc-atalho").attr("href", URL + (chave == "P" ? "/colaboradores/pagina/F" : "/setores"));
+        $("#exc-atalho").attr("title", "Cadastro de " + (chave == "P" ? "funcionários" : "centro de custos"));
+    }
+    
+    modal("excecoesModal", 0, function() {
+        setTimeout(function() {
+            $("#exc-ps-chave").val("P").trigger("change");
+            if (atribuicao.obter_psm() == "S") {
+                $($("#exp-ps-chave").parent()).addClass("d-none");
+                $($("#exp-ps-valor").parent()).removeClass("col-7").addClass("col-11");
+            } else {
+                $($("#exp-ps-chave").parent()).removeClass("d-none");
+                $($("#exp-ps-valor").parent()).removeClass("col-11").addClass("col-7");
+            }
+            mostrar();
+        }, 0);
+    });
+}
+
 function RelatorioBilateral(_grupo) {
     let that = this;
     let grupo = _grupo;
@@ -541,7 +1196,7 @@ function RelatorioBilateral(_grupo) {
         });
         wrapper[0].innerHTML = null;
         wrapper[0].appendChild(elements);
-        Array.from(document.querySelectorAll(".modal-body .row")).forEach((el) => {
+        Array.from(document.querySelectorAll(".modal-body .row:not(.sem-margem)")).forEach((el) => {
             el.style.removeProperty("margin-top");
             if ($(el).prev().hasClass("row")) $(el).css("margin-top", $(el).prev().find(".tam-max").length ? "-14px" : "11px");
         });
@@ -659,12 +1314,12 @@ function RelatorioControle() {
                 erro = "Colaborador não encontrado";
             }
             if (!erro) {
-                if (!$(elementos.id_pessoa).val().trim()) {
+                /*if (!$(elementos.id_pessoa).val().trim()) {
                     $.get(URL + "/relatorios/controle/pessoas", function(data2) {
                         if (typeof data2 == "string") data2 = $.parseJSON(data2);
                         controleTodos(data2);
                     });
-                } else $("#relatorioControleModal form").submit();
+                } else*/ $("#relatorioControleModal form").submit();
             } else s_alert(erro);
         });
     }
@@ -748,256 +1403,6 @@ function RelatorioRetiradas(quebra) {
     }, 0);
 }
 
-function limitar(el) {
-    let texto = $(el).val().toString();
-    if (!texto.length || parseInt(texto) < 1) $(el).val(1);
-    if (texto.length > 11) $(el).val("".padStart(11, "9"));
-}
-
-function numerico(el) {
-    $(el).val($(el).val().replace(/\D/g, "").substring(0, 4));
-}
-
-function mostrar_atribuicoes(_id) {
-    if (_id === undefined) _id = 0;
-    idatbglobal = _id;
-    $.get(URL + "/atribuicoes/listar", {
-        id : pessoa_atribuindo,
-        tipo : gradeGlobal ? "R" : "P",
-        tipo2 : location.href.indexOf("colaboradores") > -1 ? "P" : "S"
-    }, function(data) {
-        let resultado = "";
-        if (typeof data == "string") data = $.parseJSON(data);
-        if (data.length) {
-            resultado += "<thead>" +
-                "<tr>" +
-                    "<th>" + (gradeGlobal ? "Referência" : "Produto") + "</th>" +
-                    "<th>Obrigatório?</th>" +
-                    "<th class = 'text-right'>Qtde.</th>" +
-                    "<th class = 'text-right'>Validade</th>" +
-                    "<th>&nbsp;</th>" +
-                "</tr>" +
-            "</thead>" +
-            "<tbody>";
-            data.forEach((atribuicao) => {
-                let acoes = "";
-                if (gradeGlobal) acoes += "<i class = 'my-icon far fa-eye' title = 'Detalhar' onclick = 'detalhar_atribuicao(" + atribuicao.id + ")'></i>";
-                if (location.href.indexOf("colaboradores") > -1) acoes += "<i class = 'my-icon far fa-hand-holding-box' title = 'Retirar' onclick = 'retirar(" + atribuicao.id + ")'></i>";
-                if (parseInt(atribuicao.pode_editar)) {
-                    acoes += "<i class = 'my-icon far fa-edit' title = 'Editar' onclick = 'editar_atribuicao(" + atribuicao.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir_atribuicao(" + atribuicao.id + ")'></i>";
-                }
-                if (!acoes) acoes = "---";
-                resultado += "<tr>" +
-                    "<td>" + atribuicao.produto_ou_referencia_valor + "</td>" +
-                    "<td>" + atribuicao.obrigatorio + "</td>" +
-                    "<td class = 'text-right'>" + atribuicao.qtd + "</td>" +
-                    "<td class = 'text-right'>" + atribuicao.validade + "</td>" +
-                    "<td class = 'text-center manter-junto'>" + acoes + "</td>" +
-                "</tr>";
-            });
-            resultado += "</tbody>";
-            $($("#table-atribuicoes").parent()).addClass("pb-4");
-        } else $($("#table-atribuicoes").parent()).removeClass("pb-4");
-        $("#table-atribuicoes").html(resultado);
-    });
-}
-
-function atribuicao(grade, id) {
-    modal("atribuicoesModal", 0, function() {
-        pessoa_atribuindo = id;
-        $.get(URL + "/" + (location.href.indexOf("colaboradores") > -1 ? "colaboradores" : "setores") + "/mostrar/" + id, function(data) {
-            if (typeof data == "string") data = $.parseJSON(data);
-            $("#atribuicoesModalLabel").html(
-                data[location.href.indexOf("colaboradores") > -1 ? "nome" : "descr"].toUpperCase() + " - Atribuindo " + (grade ? "grades" : "produtos")
-            );
-            if (grade) {
-                $("#referencia").data().filter = id;
-                $("#div-produto").addClass("d-none");
-                $("#div-referencia").removeClass("d-none");
-            } else {
-                $("#div-produto").removeClass("d-none");
-                $("#div-referencia").addClass("d-none");
-            }
-            $("#obrigatorio").val("opt-0");
-            gradeGlobal = grade;
-            mostrar_atribuicoes();
-        });
-    });
-}
-
-function atribuir() {
-    const campo = gradeGlobal ? "R" : "P";
-    $.post(URL + "/atribuicoes/salvar", {
-        _token : $("meta[name='csrf-token']").attr("content"),
-        id : idatbglobal,
-        pessoa_ou_setor_chave : location.href.indexOf("colaboradores") > -1 ? "P" : "S",
-        pessoa_ou_setor_valor : pessoa_atribuindo,
-        produto_ou_referencia_chave : campo,
-        produto_ou_referencia_valor : $("#" + (gradeGlobal ? "referencia" : "produto")).val(),
-        validade : $("#validade").val(),
-        qtd : $("#quantidade").val(),
-        obrigatorio : $("#obrigatorio").val().replace("opt-", "")
-    }, function(ret) {
-        ret = parseInt(ret);
-        switch(ret) {
-            case 201:
-                $("#id_produto").val("");
-                $("#referencia").val("");
-                $("#produto").val("");
-                $("#quantidade").val(1);
-                $("#validade").val(1);
-                $("#obrigatorio").val("opt-0");
-                mostrar_atribuicoes();
-                break;
-            case 403:
-                s_alert(gradeGlobal ? "Referência inválida" : "Produto inválido");
-                break;
-            case 404:
-                s_alert(gradeGlobal ? "Referência não encontrada" : "Produto não encontrado");
-                break;
-        }
-    });
-}
-
-function editar_atribuicao(id) {
-    if (idatbglobal != id) {
-        const campo = gradeGlobal ? "referencia" : "produto";
-        $.get(URL + "/atribuicoes/mostrar/" + id, function(data) {
-            $("#estiloAux").html(".autocomplete-result{display:none}");
-            $("#" + campo + ", #validade, #quantidade, #obrigatorio").each(function() {
-                $(this).attr("disabled", true);
-            });
-            if (typeof data == "string") data = $.parseJSON(data);
-            $("#" + campo).val(data.descr);
-            $("#" + campo).trigger("keyup");
-            setTimeout(function() {
-                $($(".autocomplete-line").first()).trigger("click");
-            }, 500);
-            setTimeout(function() {
-                $("#validade").val(data.validade);
-                $("#quantidade").val(parseInt(data.qtd));
-                $("#obrigatorio").val("opt-" + data.obrigatorio);
-                $("#estiloAux").html("");
-                $("#" + campo + ", #validade, #quantidade, #obrigatorio").each(function() {
-                    $(this).attr("disabled", true);
-                });
-                mostrar_atribuicoes(id);
-            }, 1000);
-        });
-    }
-}
-
-function excluir_atribuicao(_id) {
-    let aviso = "Tem certeza que deseja excluir ess";
-    aviso += gradeGlobal ? "a referência?" : "e produto?";
-    excluirMain(_id, "/atribuicoes", aviso, function() {
-        mostrar_atribuicoes();
-    });
-}
-
-function tentarAtribuir(e) {
-    if (e.keyCode == 13) atribuir();
-}
-
-function detalhar_atribuicao(id) {
-    $.get(URL + "/atribuicoes/grade/" + id, function(data) {
-        let resultado = "<thead>" +
-            "<th>Produto</th>" +
-            "<th>Tamanho</th>" +
-        "</thead>" +
-        "<tbody>";
-        if (typeof data == "string") data = $.parseJSON(data);
-        $("#detalharAtbModalLabel").html(data[0].referencia);
-        data.forEach((produto) => {
-            resultado += "<tr>" +
-                "<td>" + produto.descr + "</td>" + 
-                "<td>" + produto.tamanho + "</td>" +
-            "</tr>";
-        });
-        resultado += "</tbody>";
-        $("#table-detalhar-atb").html(resultado);
-        $("#detalharAtbModal").modal();
-    });
-}
-
-function foto_pessoa(seletor, caminho) {
-    if (caminho) caminho = URL + "/storage/" + caminho;
-    $(seletor).css("background-image", caminho ? "url('" + caminho + "')" : "");
-    $($($(seletor).children()[0])).removeClass("d-none");
-    if (caminho) {
-        $(seletor).css("background-size", "100% 100%");
-        $($($(seletor).children()[0])).addClass("d-none");
-   }
-}
-
-function formatar_cpf(el) {
-    $(el).removeClass("invalido");
-    let cpf = $(el).val();
-    let num = cpf.replace(/[^\d]/g, '');
-    let len = num.length;
-    if (len <= 6) cpf = num.replace(/(\d{3})(\d{1,3})/g, '$1.$2');
-    else if (len <= 9) cpf = num.replace(/(\d{3})(\d{3})(\d{1,3})/g, '$1.$2.$3');
-    else {
-        cpf = num.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/g, "$1.$2.$3-$4");
-        cpf = cpf.substring(0, 14);
-    }
-    $(el).val(cpf);
-}
-
-function validar_cpf(__cpf) {
-    __cpf = __cpf.replace(/\D/g, "");
-    if (__cpf == "00000000000") return false;
-    if (__cpf.length != 11) return false;
-    let soma = 0;
-    for (let i = 1; i <= 9; i++) soma = soma + (parseInt(__cpf.substring(i - 1, i)) * (11 - i));
-    let resto = (soma * 10) % 11;
-    if ((resto == 10) || (resto == 11)) resto = 0;
-    if (resto != parseInt(__cpf.substring(9, 10))) return false;
-    soma = 0;
-    for (i = 1; i <= 10; i++) soma = soma + (parseInt(__cpf.substring(i - 1, i)) * (12 - i));
-    resto = (soma * 10) % 11;
-    if ((resto == 10) || (resto == 11)) resto = 0;
-    if (resto != parseInt(__cpf.substring(10, 11))) return false;
-    return true;
-}
-
-async function controleTodos(ids) {
-    let lista = Array.from(document.getElementsByClassName("btn-primary"));
-    let loader = document.getElementById("loader").style;
-    let modal = document.getElementById("relatorioControleModal").style;
-    let algum_existe = false;
-    let elementos = relObterElementos(["pessoa1", "consumo1", "inicio2", "fim2"]);
-    lista.forEach((el) => {
-        el.style.zIndex = "0";
-    });
-    loader.display = "flex";
-    modal.zIndex = "0";
-    for (let i = 0; i < ids.length; i++) {
-        $(elementos.id_pessoa).val(ids[i]);
-        let existe = await $.get(URL + "/relatorios/controle/existe", {
-            id_pessoa : ids[i],
-            consumo : $(elementos.consumo).val(),
-            inicio : $(elementos.inicio).val(),
-            fim : $(elementos.fim).val()
-        });
-        if (parseInt(existe)) {
-            algum_existe = true;
-            $("#relatorioControleModal form").submit();
-        }
-    }
-    lista.forEach((el) => {
-        el.style.removeProperty("z-index");
-    });
-    modal.removeProperty("z-index");
-    loader.removeProperty("display");
-    $(elementos.id_pessoa).val("");
-    if (!algum_existe) {
-        $(elementos.pessoa).addClass("invalido");
-        s_alert("Colaborador não encontrado");
-    }
-}
-
 function RelatorioRanking() {
     let elementos = relObterElementos(["inicio4", "fim4"]);
 
@@ -1017,95 +1422,4 @@ function RelatorioRanking() {
             $("#rel-tipo3").val("todos");
         });
     }, 0);
-}
-
-function trocarEmpresa() {
-    $.post(URL + "/colaboradores/alterar-empresa", {
-        _token : $("meta[name='csrf-token']").attr("content"),
-        idEmpresa : $("#empresa-select").val()
-    }, function() {
-        location.reload();
-    });
-}
-
-function trocarEmpresaModal() {
-    $.get(URL + "/empresas/todas", function(data) {
-        data = $.parseJSON(data);
-        let resultado = "<option value = '0'>Todas</option>";
-        data.forEach((empresa) => {
-            resultado += "<option value = '" + empresa.id + "'>" + empresa.nome_fantasia + "</option>";
-            empresa.filiais.forEach((filial) => {
-                resultado += "<option value = '" + filial.id + "'>- " + filial.nome_fantasia + "</option>";
-            });
-        })
-        $("#empresa-select").html(resultado);
-        $("#empresa-select option[value='" + EMPRESA + "']").attr("selected", true);
-        $("#trocarEmpresaModal").modal();
-    });
-}
-
-async function avisarSolicitacao() {
-    let comodatos = await $.get(URL + "/solicitacoes/meus-comodatos");
-    if (typeof comodatos == "string") comodatos = $.parseJSON(comodatos);
-
-    for (let i = 0; i < comodatos.length; i++) {
-        let retorno;
-        retorno = await $.get(URL + "/solicitacoes/aviso/" + comodatos[i]);
-        retorno = $.parseJSON(retorno);
-        if (retorno !== 200) {
-            let texto = "";
-            if (retorno.status != "A") {
-                texto = "Sua solicitação feita no dia " + retorno.criacao + " foi ";
-                switch (retorno.status) {
-                    case "E":
-                        texto += "aceita";
-                        break;
-                    case "F":
-                        texto += "finalizada";
-                        break;
-                    case "R":
-                        texto += "recusada";
-                        break;
-                }
-                if (retorno.status != "E") texto += " no dia " + retorno.data;
-                texto += " por " + retorno.usuario_erp;
-                if (retorno.status == "E") texto += " e tem prazo para o dia " + retorno.data;
-            } else if (retorno.possui_inconsistencias) texto = "Sua solicitação feita no dia " + retorno.criacao + " teve alguns produtos marcados como inexistentes";
-            if (texto != "") {
-                if (retorno.possui_inconsistencias) {
-                    texto += ".<br>Deseja verificar";
-                    if (retorno.status != "A") texto += " as diferenças";
-                    texto += "?";
-                    let viz = await s_alert({
-                        icon : "success",
-                        html : texto,
-                        yn : true
-                    });
-                    if (viz) {
-                        let link = document.createElement("a");
-                        link.href = URL + "/relatorios/solicitacao/" + retorno.id;
-                        link.target = "_blank";
-                        link.click();
-                    }
-                } else {
-                    await s_alert({
-                        icon : "EF".indexOf(retorno.status) > -1 ? "success" : "warning",
-                        html : texto
-                    });
-                }
-            }
-        }
-    }
-}
-
-function mostrarImagemErro() {
-    $("#nao-encontrado").removeClass("d-none");
-    $($("#nao-encontrado").prev()).find(".card").addClass("d-none");
-    $($("#nao-encontrado").prev()).removeClass("h-100");
-}
-
-function esconderImagemErro() {
-    $("#nao-encontrado").addClass("d-none");
-    $($("#nao-encontrado").prev()).find(".card").removeClass("d-none");
-    $($("#nao-encontrado").prev()).addClass("h-100");
 }

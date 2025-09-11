@@ -14,8 +14,8 @@ function listar(coluna) {
                     "<td width = '35%'>" + linha.descr + "</td>" +
                     "<td width = '40%'>" + linha.empresa + "</td>" +
                     "<td class = 'text-center btn-table-action' width = '15%'>" +
-                        "<i class = 'my-icon far fa-box'    title = 'Atribuir produto' onclick = 'atribuicao(false, " + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-tshirt' title = 'Atribuir grade'   onclick = 'atribuicao(true, " + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-box'    title = 'Atribuir produto' onclick = 'atribuicao = new Atribuicoes(false, " + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-tshirt' title = 'Atribuir grade'   onclick = 'atribuicao = new Atribuicoes(true, " + linha.id + ")'></i>" +
                         (
                             !EMPRESA ?
                                 "<i class = 'my-icon far fa-edit'      title = 'Editar'  onclick = 'chamar_modal(" + linha.id + ")'></i>" +

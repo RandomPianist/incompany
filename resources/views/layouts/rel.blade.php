@@ -5,8 +5,8 @@
         <meta name = "viewport" content = "width=device-width, initial-scale=1" />
         <meta name = "csrf-token" content = "{{ csrf_token() }}" />
         <title>Loja Incompany</title>
-        <link rel = "icon shortcut" href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
-        <link rel = "icon"          href = "{{ asset('img/favicon.ico') }}" type = "image/x-icon" />
+        <link rel = "icon shortcut" href = "{{ asset('storage/favicon.ico') }}" type = "image/x-icon" />
+        <link rel = "icon"          href = "{{ asset('storage/favicon.ico') }}" type = "image/x-icon" />
         <link href = "{{ asset('css/geral/rel.css') }}" rel = "stylesheet" />
         <link href = "{{ asset('css/lib/fa.css')    }}" rel = "stylesheet" />
     </head>

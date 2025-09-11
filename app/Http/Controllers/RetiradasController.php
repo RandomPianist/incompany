@@ -26,36 +26,38 @@ class RetiradasController extends Controller {
     }
 
     public function desfazer(Request $request) {
+        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
         $where = "id_pessoa = ".$request->id_pessoa;
         $this->log_inserir_lote("D", "retiradas", $where); // App\Http\Controllers\Controller.php
         DB::statement("DELETE FROM retiradas WHERE ".$where);
+        return 200;
     }
 
     public function proximas($id_pessoa) {
         $hoje = Carbon::createFromFormat('Y-m-d', date("Y-m-d"));
-        $consulta = DB::table("vpendentes")
+        $consulta = DB::table("vpendentesgeral")
                         ->select(
                             DB::raw("IFNULL(produtos.cod_externo, produtos.id) AS id_produto"),
-                            "vpendentes.descr",
-                            DB::raw("IFNULL(vpendentes.referencia, '') AS referencia"),
-                            "vpendentes.tamanho",
-                            "vpendentes.qtd",
-                            "vpendentes.proxima_retirada_real",
-                            "vpendentes.obrigatorio",
-                            "vpendentes.esta_pendente"
+                            "vpendentesgeral.descr",
+                            DB::raw("IFNULL(vpendentesgeral.referencia, '') AS referencia"),
+                            "vpendentesgeral.tamanho",
+                            "vpendentesgeral.qtd",
+                            "vpendentesgeral.proxima_retirada_real",
+                            "vpendentesgeral.obrigatorio",
+                            "vpendentesgeral.esta_pendente"
                         )
-                        ->join("produtos", "produtos.id", "vpendentes.id_produto")
-                        ->where("vpendentes.id_pessoa", $id_pessoa)
+                        ->join("produtos", "produtos.id", "vpendentesgeral.id_produto")
+                        ->where("vpendentesgeral.id_pessoa", $id_pessoa)
                         ->groupby(
                             "produtos.id",
                             "produtos.cod_externo",
-                            "vpendentes.descr",
-                            "vpendentes.referencia",
-                            "vpendentes.tamanho",
-                            "vpendentes.qtd",
-                            "vpendentes.proxima_retirada_real",
-                            "vpendentes.obrigatorio",
-                            "vpendentes.esta_pendente"
+                            "vpendentesgeral.descr",
+                            "vpendentesgeral.referencia",
+                            "vpendentesgeral.tamanho",
+                            "vpendentesgeral.qtd",
+                            "vpendentesgeral.proxima_retirada_real",
+                            "vpendentesgeral.obrigatorio",
+                            "vpendentesgeral.esta_pendente"
                         )
                         ->orderby(DB::raw("obrigatorio DESC, DATE(proxima_retirada_real)"))
                         ->get();

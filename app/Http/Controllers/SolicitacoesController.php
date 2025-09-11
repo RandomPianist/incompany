@@ -80,19 +80,20 @@ class SolicitacoesController extends Controller {
                 ->join("pessoas AS funcionario", "funcionario.id", "retiradas.id_pessoa")
                 ->leftjoin("pessoas AS supervisor", "supervisor.id", "retiradas.id_supervisor")
                 ->leftjoin("pessoas AS autor", "autor.id", "log.id_pessoa")
-                ->whereRaw("((CURDATE() BETWEEN comodatos.inicio AND comodatos.fim) OR (CURDATE() BETWEEN comodatos.inicio AND comodatos.fim))")
+                ->whereRaw("CURDATE() >= comodatos.inicio")
+                ->whereRaw("CURDATE() < comodatos.fim")
                 ->whereRaw("retiradas.data >= '".$inicio."'")
-                ->whereRaw("retiradas.data <= '".$fim."'")
+                ->whereRaw("retiradas.data < '".$fim."'")
                 ->where("comodatos.id_maquina", $request->id_maquina)
                 ->where("retiradas.id_produto", $request->id_produto)
         :
-            DB::table("maquinas_produtos AS mp")
+            DB::table("comodatos_produtos AS cp")
                 ->select(
                     DB::raw("CONCAT(IFNULL(CONCAT(log.nome, ' ('), ''), log.origem, CASE WHEN log.nome IS NOT NULL THEN ')' ELSE '' END) AS origem"),
                     DB::raw("DATE_FORMAT(log.data, '%d/%m/%Y') AS data"),
                     DB::raw("ROUND(estoque.qtd) AS qtd")
                 )
-                ->join("estoque", "estoque.id_mp", "mp.id")
+                ->join("estoque", "estoque.id_cp", "cp.id")
                 ->join("log", function($join) {
                     $join->on("log.fk", "estoque.id")
                         ->where("log.tabela", "estoque");
@@ -101,22 +102,23 @@ class SolicitacoesController extends Controller {
                     $sql->where("estoque.es", $request->tipo);
                 })
                 ->whereRaw("log.data >= '".$inicio."'")
-                ->whereRaw("log.data <= '".$fim."'")
-                ->where("mp.id_maquina", $request->id_maquina)
-                ->where("mp.id_produto", $request->id_produto);
+                ->whereRaw("log.data < '".$fim."'")
+                ->where("cp.id_comodato", $this->obter_comodato($request->id_maquina)->id)
+                ->where("cp.id_produto", $request->id_produto);
         return json_encode($consulta->get());
     }
 
     public function meus_comodatos(Request $request) {
         return json_encode(
             DB::table("comodatos")
-                    ->whereRaw("((CURDATE() BETWEEN inicio AND fim) OR (CURDATE() BETWEEN inicio AND fim))")
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "comodatos")) // App\Http\Controllers\Controller.php
-                    ->where(function($sql) use($request) {
-                        if (isset($request->id_maquina)) $sql->where("id_maquina", $request->id_maquina);
-                    })
-                    ->pluck("id")
-                    ->toArray()
+                ->whereRaw("CURDATE() >= comodatos.inicio")
+                ->whereRaw("CURDATE() < comodatos.fim")
+                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "comodatos")) // App\Http\Controllers\Controller.php
+                ->where(function($sql) use($request) {
+                    if (isset($request->id_maquina)) $sql->where("id_maquina", $request->id_maquina);
+                })
+                ->pluck("id")
+                ->toArray()
         );
     }
 
@@ -179,8 +181,8 @@ class SolicitacoesController extends Controller {
                 $sp->id_produto_orig = $request->id_produto[$i];
                 $sp->qtd_orig = $request->qtd[$i];
                 $sp->origem = "WEB";
-                $sp->preco_orig = DB::table("maquinas_produtos")
-                                    ->where("id_maquina", Comodatos::find($solicitacao->id_comodato)->id_maquina)
+                $sp->preco_orig = DB::table("comodatos_produtos AS cp")
+                                    ->where("id_comodato", $solicitacao->id_comodato)
                                     ->where("id_produto", $sp->id_produto_orig)
                                     ->value("preco");
                 $sp->id_solicitacao = $solicitacao->id;

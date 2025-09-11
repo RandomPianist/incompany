@@ -66,17 +66,17 @@
                                     name = "categoria"
                                     class = "form-control autocomplete w-108"
                                     data-input = "#id_categoria"
-                                    data-table = "valores"
+                                    data-table = "categorias"
                                     data-column = "descr"
-                                    data-filter_col = "alias"
-                                    data-filter = "categorias"
+                                    data-filter_col = ""
+                                    data-filter = ""
                                     type = "text"
                                     autocomplete = "off"
                                 />
                                 <input id = "id_categoria" name = "id_categoria" type = "hidden"/>
                             </div>
                             <div class = "col-1 d-flex align-items-center pl-0 pt-3 j-end">
-                                <a href = "{{ $root_url }}/valores/categorias" title = "Cadastro de categorias" target = "_blank">
+                                <a href = "{{ $root_url }}/categorias" title = "Cadastro de categorias" target = "_blank">
                                     <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square"></i>
                                 </a>
                             </div>

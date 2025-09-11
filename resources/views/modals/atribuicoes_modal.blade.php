@@ -49,11 +49,11 @@
                         </div>
                         <div class = "col-2">
                             <label for = "quantidade" class = "custom-label-form">Quantidade: *</label>
-                            <input id = "quantidade" class = "form-control text-right" autocomplete = "off" type = "number" onchange = "limitar(this)" onkeyup = "limitar(this);tentarAtribuir(event)" />
+                            <input id = "quantidade" class = "form-control text-right" autocomplete = "off" type = "number" />
                         </div>
                         <div class = "col-2">
                             <label for = "validade" class = "custom-label-form">Validade em dias: *</label>
-                            <input id = "validade" class = "form-control text-right" autocomplete = "off" type = "number" onchange = "limitar(this)" onkeyup = "limitar(this);tentarAtribuir(event)" />
+                            <input id = "validade" class = "form-control text-right" autocomplete = "off" type = "number" />
                         </div>
                         <div class = "col-2">
                             <label for = "obrigatorio" class = "custom-label-form">Obrigatório: *</label>
@@ -64,10 +64,10 @@
                         </div>
                     </div>
                     <div class = "d-flex">
-                        <button type = "button" class = "btn btn-target mx-auto mb-4 px-5" onclick = "atribuir()">Atribuir</button>
+                        <button type = "button" class = "btn btn-target mx-auto mb-4 px-5" onclick = "atribuicao.salvar()">Atribuir</button>
                     </div>
-                    <div class = "row">
-                        <div class = "col-12">
+                    <div class = "row mb-5">
+                        <div class = "col-12 atribuicoes">
                             <table id = "table-atribuicoes" class = "w-100 atribuicoes" border = 1></table>
                         </div>
                     </div>
@@ -77,4 +77,5 @@
     </div>
 </div>
 
+@include("modals.excecoes_modal")
 @include("modals.detalhar_atb_modal")

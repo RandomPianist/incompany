@@ -6,22 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int    $id
- * @property int    $created_at
+ * @property int    $numero_ped
  * @property int    $id_atribuicao
  * @property int    $id_comodato
- * @property int    $id_empresa
  * @property int    $id_pessoa
- * @property int    $id_setor
- * @property int    $id_produto
  * @property int    $id_supervisor
- * @property int    $numero_ped
+ * @property int    $id_produto
+ * @property int    $id_empresa
+ * @property int    $id_setor
+ * @property int    $created_at
  * @property int    $updated_at
- * @property string $biometria_ou_senha
- * @property string $ca
- * @property string $gerou_pedido
- * @property string $hora
- * @property string $observacao
  * @property Date   $data
+ * @property string $hms
+ * @property string $observacao
+ * @property string $ca
  */
 class Retiradas extends Model
 {
@@ -45,7 +43,7 @@ class Retiradas extends Model
      * @var array
      */
     protected $fillable = [
-        'biometria_ou_senha', 'ca', 'created_at', 'data', 'gerou_pedido', 'hora', 'id_atribuicao', 'id_comodato', 'id_empresa', 'id_pessoa', 'id_setor', 'id_produto', 'id_supervisor', 'numero_ped', 'observacao', 'preco', 'qtd', 'updated_at'
+        'qtd', 'data', 'hms', 'observacao', 'ca', 'preco', 'biometria_ou_senha', 'numero_ped', 'id_atribuicao', 'id_comodato', 'id_pessoa', 'id_supervisor', 'id_produto', 'id_empresa', 'id_setor', 'created_at', 'updated_at'
     ];
 
     /**
@@ -63,7 +61,7 @@ class Retiradas extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'biometria_ou_senha' => 'string', 'ca' => 'string', 'created_at' => 'timestamp', 'data' => 'date', 'gerou_pedido' => 'string', 'hora' => 'string', 'id_atribuicao' => 'int', 'id_comodato' => 'int', 'id_empresa' => 'int', 'id_pessoa' => 'int', 'id_produto' => 'int', 'id_supervisor' => 'int', 'id_setor' => 'int', 'numero_ped' => 'int', 'observacao' => 'string', 'updated_at' => 'timestamp'
+        'id' => 'int', 'data' => 'date', 'hms' => 'string', 'observacao' => 'string', 'ca' => 'string', 'numero_ped' => 'int', 'id_atribuicao' => 'int', 'id_comodato' => 'int', 'id_pessoa' => 'int', 'id_supervisor' => 'int', 'id_produto' => 'int', 'id_empresa' => 'int', 'id_setor' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
     ];
 
     /**
@@ -72,7 +70,7 @@ class Retiradas extends Model
      * @var array
      */
     protected $dates = [
-        'created_at', 'data', 'updated_at'
+        'data', 'created_at', 'updated_at'
     ];
 
     /**

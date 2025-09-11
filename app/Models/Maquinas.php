@@ -6,22 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int    $id
- * @property int    $created_at
- * @property int    $id_externo
+ * @property int    $id_ant
  * @property int    $lixeira
- * @property int    $seq
+ * @property int    $created_at
  * @property int    $updated_at
- * @property string $alias
  * @property string $descr
  */
-class Valores extends Model
+class Maquinas extends Model
 {
     /**
      * The database table used by the model.
      *
      * @var string
      */
-    protected $table = 'valores';
+    protected $table = 'maquinas';
 
     /**
      * The primary key for the model.
@@ -36,7 +34,7 @@ class Valores extends Model
      * @var array
      */
     protected $fillable = [
-        'alias', 'created_at', 'descr', 'id_externo', 'lixeira', 'seq', 'updated_at'
+        'descr', 'id_ant', 'lixeira', 'created_at', 'updated_at'
     ];
 
     /**
@@ -54,7 +52,7 @@ class Valores extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'alias' => 'string', 'created_at' => 'timestamp', 'descr' => 'string', 'id_externo' => 'int', 'lixeira' => 'int', 'seq' => 'int', 'updated_at' => 'timestamp'
+        'id' => 'int', 'descr' => 'string', 'id_ant' => 'int', 'lixeira' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
     ];
 
     /**

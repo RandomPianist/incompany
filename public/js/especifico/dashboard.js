@@ -156,6 +156,12 @@ async function getDadosCards() {
                 <table class = "table table-body-dashboard clickable">`;
 
         atrasos.forEach(item => {
+            let resumo = parseInt(item.total);
+            let _title = "";
+            if (resumo > 9) {
+                resumo = "9+";
+                _title = " title = '" + item.total + "'";
+            }
             retiradaAtrasoHTML +=
             `<tr onclick = "produtosEmAtraso(${item.id}, '${item.nome}')">
                     <td width = "20%" class = "td-foto text-center">
@@ -165,8 +171,8 @@ async function getDadosCards() {
                     </td>
                     <td width="75%" class = "td-nome">${item.nome}</td>
                     <td class="text-right" width = "5%">
-                        <div class = "numerico">
-                        <span>${item.total}</span>
+                        <div class = "numerico"${_title}>
+                        <span>${resumo}</span>
                         </div>
                     </td>
                 </tr>`;

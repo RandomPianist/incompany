@@ -33,17 +33,16 @@ class GlobaisService {
 
                 LEFT JOIN setores AS setores1
                     ON setores1.id = aux1.id_setor
-
+                
                 LEFT JOIN (
                     SELECT
                         id,
-                        pessoa_ou_setor_valor
+                        id_pessoa
                     FROM atribuicoes
-                    WHERE pessoa_ou_setor_chave = 'P'
                 ) AS atb ON atb.id = log.fk
 
                 LEFT JOIN pessoas AS aux2
-                    ON aux2.id = atb.pessoa_ou_setor_valor
+                    ON aux2.id = atb.id_pessoa
 
                 LEFT JOIN setores AS setores2
                     ON setores2.id = aux2.id_setor
@@ -54,22 +53,23 @@ class GlobaisService {
                 WHERE ((log.tabela = 'pessoas' AND ".$param.")
                     OR (".$param2." AND (log.tabela = 'atribuicoes' OR (log.tabela = 'retiradas' AND retiradas.id IS NOT NULL))))
             ";
-        } else if ($tabela == "valores") {
+        } else if ($tabela == "maquinas") {
             $query .= "
-                LEFT JOIN (
-                    SELECT id
-                    FROM valores
-                    WHERE alias = '".$param."'
-                ) AS main ON main.id = log.fk
+                LEFT JOIN maquinas AS main
+                    ON main.id = log.fk
 
-                LEFT JOIN maquinas_produtos AS mp
-                    ON mp.id = log.fk
+                LEFT JOIN comodatos_produtos AS cp
+                    ON cp.id = log.fk
 
                 LEFT JOIN estoque
                     ON estoque.id = log.fk
 
-                WHERE ((log.tabela = 'valores' AND main.id IS NOT NULL)
-                   OR (log.tabela = 'maquinas_produtos' AND mp.id IS NOT NULL)
+                LEFT JOIN comodatos
+                    ON comodatos.id = log.fk
+
+                WHERE ((log.tabela = 'maquinas' AND main.id IS NOT NULL)
+                   OR (log.tabela = 'comodatos_produtos' AND cp.id IS NOT NULL)
+                   OR (log.tabela = 'comodatos' AND comodatos.id IS NOT NULL)
                    OR (log.tabela = 'estoque' AND estoque.id IS NOT NULL))
             ";
         } else if ($tabela == "setores") {
@@ -77,7 +77,7 @@ class GlobaisService {
                 LEFT JOIN (
                     SELECT id
                     FROM atribuicoes
-                    WHERE pessoa_ou_setor_chave = 'S'
+                    WHERE id_setor IS NOT NULL
                 ) AS atb ON atb.id = log.fk
 
                 WHERE (log.tabela = 'setores'

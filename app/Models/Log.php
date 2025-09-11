@@ -6,15 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int    $id
- * @property int    $created_at
- * @property int    $fk
  * @property int    $id_pessoa
+ * @property int    $fk
+ * @property int    $created_at
  * @property int    $updated_at
- * @property Date   $data
- * @property string $hms
  * @property string $nome
  * @property string $origem
+ * @property string $hms
  * @property string $tabela
+ * @property Date   $data
  */
 class Log extends Model
 {
@@ -38,7 +38,7 @@ class Log extends Model
      * @var array
      */
     protected $fillable = [
-        'acao', 'created_at', 'data', 'fk', 'hms', 'id_pessoa', 'nome', 'origem', 'tabela', 'updated_at'
+        'id_pessoa', 'nome', 'origem', 'data', 'hms', 'acao', 'tabela', 'fk', 'created_at', 'updated_at'
     ];
 
     /**
@@ -56,7 +56,7 @@ class Log extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'created_at' => 'timestamp', 'data' => 'date', 'fk' => 'int', 'hms' => 'string', 'id_pessoa' => 'int', 'nome' => 'string', 'origem' => 'string', 'tabela' => 'string', 'updated_at' => 'timestamp'
+        'id' => 'int', 'id_pessoa' => 'int', 'nome' => 'string', 'origem' => 'string', 'data' => 'date', 'hms' => 'string', 'tabela' => 'string', 'fk' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
     ];
 
     /**
@@ -65,7 +65,7 @@ class Log extends Model
      * @var array
      */
     protected $dates = [
-        'created_at', 'data', 'updated_at'
+        'data', 'created_at', 'updated_at'
     ];
 
     /**

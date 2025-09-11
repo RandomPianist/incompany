@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use DB;
+use PDF;
 use Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
 use App\Models\Empresas;
-use App\Models\Valores;
+use App\Models\Maquinas;
 use App\Models\Solicitacoes;
 use App\Models\Produtos;
 
@@ -31,11 +32,11 @@ class RelatoriosController extends Controller {
 
     private function comum($select) {
         return DB::table("comodatos")
-                    ->join("valores", "valores.id", "comodatos.id_maquina")
+                    ->join("maquinas", "maquinas.id", "comodatos.id_maquina")
                     ->join("empresas", "empresas.id", "comodatos.id_empresa")
                     ->select(DB::raw($select))
                     ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "empresas")) // App\Http\Controllers\Controller.php
-                    ->where("valores.lixeira", 0);
+                    ->where("maquinas.lixeira", 0);
     }
 
     private function bilateral_construtor(Request $request, $grupo) {
@@ -47,11 +48,11 @@ class RelatoriosController extends Controller {
         return collect(
             $this->comum("
                 empresas.nome_fantasia AS col1,
-                valores.descr AS col2
+                maquinas.descr AS col2
             ")->whereRaw($filtro."
                 AND CURDATE() >= inicio
                 AND CURDATE() < fim
-            ")->orderby("valores.descr")->get()
+            ")->orderby("maquinas.descr")->get()
         )->groupBy($grupo);
     }
 
@@ -113,7 +114,7 @@ class RelatoriosController extends Controller {
                 ->join("produtos", "produtos.id", "retiradas.id_produto")
                 ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
                 ->leftjoin("comodatos", "comodatos.id", "retiradas.id_comodato")
-                ->leftjoin("valores", "valores.id", "comodatos.id_maquina")
+                ->leftjoin("maquinas", "maquinas.id", "comodatos.id_maquina")
                 ->leftjoin("pessoas AS supervisor", "supervisor.id", "retiradas.id_supervisor")
                 ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
                 ->leftjoin("setores", "setores.id", "pessoas.id_setor")
@@ -127,7 +128,7 @@ class RelatoriosController extends Controller {
                         }
                         if ($request->fim) {
                             $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-                            $sql->whereRaw("retiradas.data <= '".$fim."'");
+                            $sql->whereRaw("retiradas.data < '".$fim."'");
                             $periodo .= " até ".$request->fim;
                         }
                         array_push($criterios, $periodo);
@@ -166,7 +167,7 @@ class RelatoriosController extends Controller {
                         "obs" => $retirada->obs,
                         "ca" => $retirada->ca,
                         "validade_ca" => $retirada->validade_ca,
-                        "qtd" => $retirada->qtd,
+                        "qtd" => $retirada->qtd
                     ];
                 })->values()->all()
             ];
@@ -198,7 +199,7 @@ class RelatoriosController extends Controller {
     public function comodatos() {
         if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
         $resultado = $this->comum("
-            valores.descr AS maquina,
+            maquinas.descr AS maquina,
             empresas.nome_fantasia AS empresa,
             DATE_FORMAT(comodatos.inicio, '%d/%m/%Y') AS inicio,
             DATE_FORMAT(comodatos.fim, '%d/%m/%Y') AS fim
@@ -240,20 +241,20 @@ class RelatoriosController extends Controller {
 
         $criterios = ["Período de ".$r_inicio." até ".$r_fim];
         $resultado = collect(
-            DB::table("log")
+            DB::table("comodatos_produtos AS cp")
                 ->select(
                     // GRUPO 1
-                    "valores.id AS id_maquina",
-                    "valores.descr AS maquina",
+                    "maquinas.id AS id_maquina",
+                    "maquinas.descr AS maquina",
 
                     // GRUPO 2
                     "vprodaux.id AS id_produto",
                     "vprodaux.descr AS produto",
                     DB::raw("IFNULL(tot.qtd, 0) AS saldo"),
-                    "mp.preco",
+                    "cp.preco",
 
                     // DETALHES
-                    DB::raw("CONCAT(DATE_FORMAT(log.data, '%d/%m/%Y'), CASE WHEN log.hms IS NOT NULL THEN CONCAT(' ', log.hms) ELSE '' END) AS data"),
+                    DB::raw("CONCAT(DATE_FORMAT(estoque.data, '%d/%m/%Y'), CASE WHEN estoque.hms IS NOT NULL THEN CONCAT(' ', estoque.hms) ELSE '' END) AS data"),
                     "estoque.es",
                     "estoque.descr AS estoque_descr",
                     DB::raw("
@@ -276,15 +277,18 @@ class RelatoriosController extends Controller {
                     "),
                     DB::raw("IFNULL(log.nome, IFNULL(log.origem, 'DESCONHECIDO')) AS autor")
                 )
-                ->join("estoque", "estoque.id", "log.fk")
-                ->join("maquinas_produtos AS mp", "mp.id", "estoque.id_mp")
-                ->join("vprodaux", "vprodaux.id", "mp.id_produto")
-                ->join("valores", "valores.id", "mp.id_maquina")
-                ->leftjoin("pessoas", "pessoas.id", "log.id_pessoa")
+                ->join("comodatos", "comodatos.id", "cp.id_comodato")
+                ->join("maquinas", "maquinas.id", "comodatos.id_maquina")
+                ->join("vprodaux", "vprodaux.id", "cp.id_produto")
+                ->leftjoin("estoque", "estoque.id_cp", "cp.id")
+                ->leftjoin("log", function($join) {
+                    $join->on("log.fk", "estoque.id")
+                        ->where("log.tabela", "estoque");
+                })
                 ->leftjoinsub(
                     DB::table("estoque")
                         ->select(
-                            "id_mp",
+                            "id_cp",
                             DB::raw("
                                 SUM(CASE
                                     WHEN (es = 'E') THEN qtd
@@ -293,28 +297,32 @@ class RelatoriosController extends Controller {
                             ")
                         )
                         ->whereRaw("DATE(created_at) < '".$inicio."'")
-                        ->groupby("id_mp"),
-                    "tot", "tot.id_mp", "mp.id"
+                        ->groupby("id_cp"),
+                    "tot", "tot.id_cp", "cp.id"
                 )
                 ->where(function($sql) use($request, $inicio, $fim, &$criterios) {
                     if ($request->id_maquina) {
-                        $maquina = Valores::find($request->id_maquina);
+                        $maquina = Maquinas::find($request->id_maquina);
                         array_push($criterios, "Máquina: ".$maquina->descr);
-                        $sql->where("mp.id_maquina", $maquina->id);
+                        $sql->where("maquinas.id", $maquina->id);
                     }
                     if ($request->id_produto) {
                         $produto = Produtos::find($request->id_produto);
                         array_push($criterios, "Produto: ".$produto->descr);
-                        $sql->where("mp.id_produto", $produto->id);
+                        $sql->where("cp.id_produto", $produto->id);
                     }
-                    if ($this->obter_empresa()) $sql->whereIn("mp.id_maquina", $this->maquinas_periodo($inicio, $fim)); // App\Http\Controllers\Controller.php
+                    if ($request->lm == "S") {
+                        $sql->whereNotNull("estoque.id")
+                            ->whereRaw("estoque.data >= '".$inicio."'")
+                            ->whereRaw("estoque.data < '".$fim."'");
+                    }
+                    if ($this->obter_empresa()) $sql->whereIn("maquinas.id", $this->maquinas_periodo($inicio, $fim)); // App\Http\Controllers\Controller.php
                 })
-                ->whereRaw("log.data >= '".$inicio."'")
-                ->whereRaw("log.data <= '".$fim."'")
-                ->where("log.tabela", "estoque")
+                ->whereRaw("CURDATE() >= comodatos.inicio")
+                ->whereRaw("CURDATE() < comodatos.fim")
                 ->where("vprodaux.lixeira", 0)
-                ->where("valores.lixeira", 0)
-                ->orderby("log.data")
+                ->where("maquinas.lixeira", 0)
+                ->orderby("estoque.data")
                 ->get()
         )->groupBy("id_maquina")->map(function($itens1) {
             return [
@@ -349,12 +357,25 @@ class RelatoriosController extends Controller {
     }
 
     public function controle(Request $request) {
-        if ($this->consultar_pessoa($request, true)) return 401;
         $principal = $this->controleMain($request);
+
         $resultado = $principal->resultado;
         $criterios = $principal->criterios;
         $cidade = $principal->cidade;
         $data_extenso = $principal->data_extenso;
+
+        $pdf = \PDF::loadView('reports/controle', [
+            "resultado" =>    $principal->resultado, 
+            "criterios" =>    $principal->criterios,
+            "cidade" =>       $principal->cidade,
+            "data_extenso" => $principal->data_extenso
+        ])
+            ->setOption('page-size', 'A4')
+            ->setOption('margin-top', '20mm')
+            ->setOption('margin-bottom', '20mm')
+            ->setOption('print-media-type', true);
+        return sizeof($principal->resultado) ? $pdf->download('termos-de-retirada-'.(date("YmdHis")).'.pdf') : $this->view_mensagem("warning", "Não há nada para exibir");
+
         return sizeof($resultado) ? view("reports/controle", compact("resultado", "criterios", "cidade", "data_extenso")) : $this->view_mensagem("warning", "Não há nada para exibir");
     }
 

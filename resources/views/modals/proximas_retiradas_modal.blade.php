@@ -1,7 +1,7 @@
 
 <!-- Modal -->
 <div class = "modal fade" id = "proximasRetiradasModal" aria-labelledby = "proximasRetiradasModalLabel" aria-hidden = "true">
-    <div class = "modal-dialog modal-xl" role = "document">
+    <div class = "modal-dialog modal-xl modal-dialog-scrollable" role = "document">
         <div class = "modal-content">
             <div class = "modal-header">
                 <h6 class = "modal-title header-color" id = "proximasRetiradasModalLabel"></h6>
