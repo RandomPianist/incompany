@@ -41,6 +41,7 @@ class HomeController extends Controller {
         $tabela = str_replace("_todos", "", $request->table);
         $tabela = str_replace("_lixeira", "", $tabela);
         $where = " AND ".$request->column." LIKE '%".$request->search."%' AND ";
+        $filter_col = $request->filter_col != "v_maquina" ? $request->filter_col : "";
         
         if ($tabela == "produtos") {
             $tabela = "vprodaux";
@@ -49,11 +50,25 @@ class HomeController extends Controller {
                 FROM vprodutosgeral
                 WHERE id_pessoa = ".Auth::user()->id_pessoa.
             ")";
-        } else if (in_array($tabela, ["empresas", "pessoas", "setores"])) $where .= $this->obter_where(Auth::user()->id_pessoa, $tabela, true); // App\Http\Controllers\Controller.php
-        else $where .= "1";
+        } else if (in_array($tabela, ["empresas", "pessoas", "setores"])) {
+            $where .= $this->obter_where(Auth::user()->id_pessoa, $tabela, true); // App\Http\Controllers\Controller.php
+            if ($request->filter_col == "v_maquina") {
+                $where .= " AND id IN ".($tabela == "setores" ? "(
+                    SELECT pessoas.id_setor
+                    FROM mat_vcomodatos
+                    JOIN pessoas
+                        ON pessoas.id = mat_vcomodatos.id_pessoa
+                    WHERE mat_vcomodatos.id_maquina = ".$request->filter."
+                )" : "(
+                    SELECT id_pessoa
+                    FROM mat_vcomodatos
+                    WHERE id_maquina = ".$request->filter."
+                )");
+            }
+        } else $where .= "1";
 
-        if ($request->filter_col) {
-            $where .= $request->column != "referencia" ? " AND ".$request->filter_col." = '".$request->filter."'" : " AND referencia NOT IN (
+        if ($filter_col) {
+            $where .= $request->column != "referencia" ? " AND ".$filter_col." = '".$request->filter."'" : " AND referencia NOT IN (
                 SELECT pr_valor
                 FROM vatbold
                 WHERE psm_valor = ".$request->filter."

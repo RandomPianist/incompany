@@ -733,6 +733,8 @@ function Atribuicoes(grade, _psm_valor) {
         return "S";
     }
 
+    this.psm_val = _psm_valor;
+
     const mostrar = function(_id) {
         if (_id === undefined) _id = 0;
         idatb = _id;
@@ -1148,6 +1150,13 @@ function Excecoes(_id_atribuicao) {
         $("#lbl-exc-ps-valor").html((chave == "P" ? "Nome" : "Descrição") + ": *");
         $("#exc-ps-valor").data("table", chave == "P" ? "pessoas" : "setores");
         $("#exc-ps-valor").data("column", chave == "P" ? "nome" : "descr");
+        if (atribuicao.obter_psm() == "M") {
+            $("#exc-ps-valor").data("filter", atribuicao.psm_val);
+            $("#exc-ps-valor").data("filter_col", "v_maquina");
+        } else {
+            $("#exc-ps-valor").data("filter", atribuicao.psm_val);
+            $("#exc-ps-valor").data("filter_col", "id_setor");
+        }
         $("#exc-atalho").attr("href", URL + (chave == "P" ? "/colaboradores/pagina/F" : "/setores"));
         $("#exc-atalho").attr("title", "Cadastro de " + (chave == "P" ? "funcionários" : "centro de custos"));
     }
