@@ -43,7 +43,7 @@
                                 </a>
                             </div>
                         </div>
-                        <div class = "row mb-3 pt-3">
+                        <div class = "row mb-3 pt-3 @if (!$admin) d-none @endif">
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">
                                     <input id = "cria_usuario" name = "cria_usuario" type = "hidden" />
