@@ -657,7 +657,7 @@ class MaquinasController extends Controller {
                     "comodatos.travar_estq",
                     "comodatos.obrigatorio",
                     "comodatos.validade",
-                    "comodatos.qtd",
+                    DB::raw("ROUND(comodatos.qtd) AS qtd"),
                     "empresas.nome_fantasia AS empresa",
                     "maquinas.descr AS maquina"
                 )
