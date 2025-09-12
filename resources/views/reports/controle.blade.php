@@ -59,7 +59,7 @@
                             <td width = "20%">{{ $retirada["produto"] }}</td>
                             <td width = "9%">{{ $retirada["ca"] }}</td>
                             <td width = "8%">{{ $retirada["validade_ca"] != null ? date_format(date_create($retirada["validade_ca"]), "d/m/Y") : "" }}</td>
-                            <td width = "8%">{{ $retirada["qtd"] }}</td>
+                            <td width = "8%" class = "text-right">{{ $retirada["qtd"] }}</td>
                             <td width = "14%">&nbsp;</td>
                             <td width = "10%">&nbsp;</td>
                             <td width = "10%">&nbsp;</td>
