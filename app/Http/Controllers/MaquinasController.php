@@ -97,6 +97,7 @@ class MaquinasController extends Controller {
                 ->where("cp.id_comodato", $this->obter_comodato($id_maquina)->id) // App\Http\Controllers\Controller.php
                 ->whereRaw($where)
                 ->where("vprodaux.lixeira", 0)
+                ->orderby("cp.lixeira")
                 ->take(9)
                 ->get();
     }
