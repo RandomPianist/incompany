@@ -991,6 +991,15 @@ function Atribuicoes(grade, _psm_valor) {
         });
     }
 
+    this.preencherValidade = function(id_produto) {
+        $.get(URL + "/produtos/validade", {
+            id : id_produto,
+            tipo : grade ? "R" : "P"
+        }, function(validade) {
+            $("#validade").val(parseInt(validade)).trigger("change");
+        })
+    }
+
     this.atualizarQtd = function() {
         $("#quantidade2_label").html($("#quantidade2").val());
     }

@@ -26,7 +26,7 @@
                                 type = "text"
                                 autocomplete = "off"
                             />
-                            <input id = "id_produto" type = "hidden" onchange = "/*idatbglobal=0*/" />
+                            <input id = "id_produto" type = "hidden" onchange = "atribuicao.preencherValidade(this.value)" />
                         </div>
                         <div class = "col-5" id = "div-produto">
                             <label for = "produto" class = "custom-label-form">Produto: *</label>

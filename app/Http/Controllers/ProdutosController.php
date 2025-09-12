@@ -100,12 +100,13 @@ class ProdutosController extends Controller {
 
     public function validade(Request $request) {
         return DB::table("produtos")
-                ->selectRaw($request->tipo == "produto" ? "validade" : "MAX(validade) AS validade")
+                ->selectRaw($request->tipo == "P" ? "validade" : "MAX(validade) AS validade")
                 ->whereRaw(
-                    $request->tipo == "produto" ? "id = ".$request->id : "referencia IN (
+                    $request->tipo == "P" ? "id = ".$request->id : "referencia IN (
                         SELECT referencia
                         FROM produtos
                         WHERE id = ".$request->id."
+                          AND lixeira = 0
                     )"
                 )
                 ->value("validade");
