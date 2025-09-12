@@ -195,15 +195,13 @@ class Controller extends BaseController {
         $linha->preco = $consulta_produto->preco;
         $linha->ca = $consulta_produto->ca;
         $linha->save();
-        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$pessoa->id.", 'R', 'N')");
-        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$pessoa->id.", 'U', 'N')");
+        
         $reg_log = $this->log_inserir("C", "retiradas", $linha->id, $api ? "APP" : "WEB");
         if ($api) {
             $reg_log->id_pessoa = $pessoa->id;
             $reg_log->nome = $pessoa->nome;
             $reg_log->save();
         }
-        return $linha;
     }
 
     protected function atualizar_tudo($valor, $chave = "M", $completo = false) {

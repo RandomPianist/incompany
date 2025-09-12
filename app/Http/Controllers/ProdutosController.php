@@ -113,7 +113,7 @@ class ProdutosController extends Controller {
     }
 
     public function salvar(Request $request) {
-        if ($this->verifica_vazios($request, ["cod_externo", "descr", "ca", "validade", "categoria", "tamanho", "validade_ca"])) return 400; // App\Http\Controllers\Controller.php
+        if ($this->verifica_vazios($request, ["cod_externo", "descr", "validade", "categoria"])) return 400; // App\Http\Controllers\Controller.php
         $validade_ca = Carbon::createFromFormat('d/m/Y', $request->validade_ca)->format('Y-m-d');
         if ($this->consultar($request)) return 401;
         $linha = Produtos::firstOrNew(["id" => $request->id]);

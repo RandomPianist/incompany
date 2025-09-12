@@ -689,7 +689,7 @@ class MaquinasController extends Controller {
         $comodato->obrigatorio = $obrigatorio;
         $comodato->validade = $request->validade;
         $comodato->save();
-        $this->log_inserir("C", "comodatos", $comodato->id);
+        $this->log_inserir("C", "comodatos", $comodato->id); // App\Http\Controllers\Controller.php
         if ($this->comparar_num($atb_todos_ant, $request->atb_todos)) { // App\Http\Controllers\Controller.php
             $this->gerar_atribuicoes($comodato);
             $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
@@ -735,6 +735,7 @@ class MaquinasController extends Controller {
                 $modelo->minimo = $request->minimo[$i];
                 $modelo->lixeira = $lixeira;
                 $modelo->save();
+                $this->log_inserir($letra_log, "comodatos_produtos", $modelo->id);
             }
         }
         if ($this->gerar_atribuicoes($comodato)) $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
