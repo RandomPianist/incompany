@@ -36,12 +36,12 @@
                         </div>
                         <div class = "row">
                             <div class = "col-3">
-                                <label for = "ca" class = "custom-label-form">CA: *</label>
+                                <label for = "ca" class = "custom-label-form">CA:</label>
                                 <input id = "ca" name = "ca" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 16)" />
                                 <span class = "custom-label-form tam-max"></span>
                             </div>
                             <div class = "col-4">
-                                <label for = "validade_ca" class = "custom-label-form">Validade do CA: *</label>
+                                <label for = "validade_ca" class = "custom-label-form">Validade do CA:</label>
                                 <input id = "validade_ca" name = "validade_ca" class = "form-control data" autocomplete = "off" type = "text" data-prox = "referencia" />
                             </div>
                             <div class = "col-2">
@@ -50,7 +50,7 @@
                                 <span class = "custom-label-form tam-max"></span>
                             </div>
                             <div class = "col-3">
-                                <label for = "tamanho" class = "custom-label-form">Tamanho: *</label>
+                                <label for = "tamanho" class = "custom-label-form">Tamanho:</label>
                                 <input id = "tamanho" name = "tamanho" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 32)" />
                                 <span class = "custom-label-form tam-max"></span>
                             </div>

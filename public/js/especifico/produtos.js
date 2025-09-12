@@ -39,7 +39,7 @@ function listar(coluna) {
 
 async function validar() {
     limpar_invalido();
-    const aux = verifica_vazios(["cod_externo", "descr", "ca", "validade", "categoria", "tamanho", "validade_ca"]);
+    const aux = verifica_vazios(["cod_externo", "descr", "validade", "categoria"]);
     let erro = aux.erro;
     let alterou = aux.alterou;
     if (!erro && parseInt(apenasNumeros($("#preco").val())) <= 0) {
@@ -47,6 +47,9 @@ async function validar() {
         $("#preco").addClass("invalido");
     }
     if ($("#preco").val().trim() != dinheiro(anteriores.preco.toString()) || $("#consumo-chk").prop("checked") != ant_consumo) alterou = true;
+    ["ca", "validade_ca", "tamanho", "referencia", "detalhes"].forEach((id) => {
+        if ($("#" + id).val().toString().toUpperCase().trim() != anteriores[id].toString().toUpperCase().trim()) alterou = true;
+    });
     let data = await $.get(URL + "/produtos/consultar/", {
         id : $("#id").val(),
         cod_externo : $("#cod_externo").val(),
