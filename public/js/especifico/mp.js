@@ -1,75 +1,65 @@
-function cp(id) {
-    $.get(URL + "/maquinas/mostrar/" + id, function(maq) {
-        if (typeof maq == "string") maq = $.parseJSON(maq);
+function mp(id) {
+    $.get(URL + "/produtos/mostrar/" + id, function(prod) {
+        if (typeof prod == "string") prod = $.parseJSON(prod);
         limpar_invalido();
-        $("#cpModalLabel").html(maq.descr + " - produtos do contrato");
-        $(".id_maquina").each(function() {
-            $(this).val(id);
-        });
-        $("#cpModal .form-control-lg").each(function() {
-            $(this).off("change").on("change", function() {
-                const prod = $("#busca-prod").val();
-                const refer = $("#busca-refer").val();
-                if (prod.trim()) $("#busca-refer").val("");
-                if (prod.trim() || refer.trim()) $("#busca-cat").val("");
-            });
-        });
-        cp_mp_listeners("cp");
-        listar_cp(function() {
-            $("#cpModal").modal();
-            $("#cpModal .id-produto").each(function() {
+        $("#mpModalLabel").html(prod.descr + " - contratos do produto");
+        $("#id_produto").val(id);
+        cp_mp_listeners("mp");
+        listar_mp(function() {
+            $("#mpModal").modal();
+            $("#mpModal #id-maquina").each(function() {
                 $(this).trigger("change");
             });
-            $("#cpModal .minimo, #cpModal .maximo").each(function() {
+            $("#mpModal .minimo, #mpModal .maximo").each(function() {
                 limitar($(this), true);
             });
         });
    });
 }
 
-function listar_cp(callback) {
-    cp_mp_limpar("cp");
-    $.get(URL + "/maquinas/listar", {
-        id_maquina : $($(".id_maquina")[0]).val(),
-        filtro : $("#busca-prod").val(),
-        filtro_ref : $("#busca-ref").val(),
-        filtro_cat : $("#busca-cat").val()
+function listar_mp(callback) {
+    cp_mp_limpar("mp");
+    $.get(URL + "/produtos/maquina/listar", {
+        id_produto : $("#id_produto").val(),
+        filtro : $("#busca-maq").val()
     }, function(data) {
-        cp_mp_limpar("cp");
+        cp_mp_limpar("mp");
         if (typeof data == "string") data = $.parseJSON(data);
         const total = data.total;
-        let titulo = $("#cpModalLabel").html();
+        let titulo = $("#mpModalLabel").html();
         if (titulo.indexOf("|") > -1) titulo = titulo.split("|")[0].trim();
         titulo += " | Listando " + data.lista.length + " de " + total;
-        $("#cpModalLabel").html(titulo);
+        $("#mpModalLabel").html(titulo);
         data = data.lista;
         for (let i = 0; i < data.length; i++) {
-            if (i > 0) adicionar_campo_cp();
-            $("#cpModal #produto-" + (i + 1)).val(data[i].produto);
-            $("#cpModal #id_produto-" + (i + 1)).val(data[i].id_produto).trigger("change");
-            $("#cpModal #lixeira-" + (i + 1)).val("opt-" + data[i].lixeira);
-            $("#cpModal #preco-" + (i + 1)).val(data[i].preco).trigger("keyup");
-            $("#cpModal #minimo-" + (i + 1)).val(parseInt(data[i].minimo)).trigger("keyup");
-            $("#cpModal #maximo-" + (i + 1)).val(parseInt(data[i].maximo)).trigger("keyup");
+            if (i > 0) adicionar_campo_mp();
+            $("#mpModal #maquina-" + (i + 1)).val(data[i].maquina);
+            $("#mpModal #id_maquina-" + (i + 1)).val(data[i].id_maquina).trigger("change");
+            $("#mpModal #lixeira-" + (i + 1)).val("opt-" + data[i].lixeira);
+            $("#mpModal #preco-" + (i + 1)).val(data[i].preco).trigger("keyup");
+            $("#mpModal #minimo-" + (i + 1)).val(parseInt(data[i].minimo)).trigger("keyup");
+            $("#mpModal #maximo-" + (i + 1)).val(parseInt(data[i].maximo)).trigger("keyup");
         }
         if (callback !== undefined) callback();
     });
 }
 
-async function validar_cp_main() {
+// parei aqui
+
+async function mp_validar_main() {
     limpar_invalido();
     let erro = "";
-    let data = await $.get(URL + "/maquinas/produto/consultar", {
-        produtos_descr : obter_vetor("produto", "cp"),
-        produtos_id : obter_vetor("id-produto", "cp"),
-        maximos : obter_vetor("maximo", "cp"),
-        precos : obter_vetor("preco", "cp"),
-        id_maquina : $($(".id_maquina")[0]).val()
+    let data = await $.get(URL + "/produtos/maquina/consultar", {
+        maquinas_descr : obter_vetor("maquina", "mp"),
+        maquinas_id : obter_vetor("id-maquina", "mp"),
+        maximos : obter_vetor("maximo", "mp"),
+        precos : obter_vetor("preco", "mp"),
+        id_produto : $("#id_produto").val()
     });
     if (typeof data == "string") data = $.parseJSON(data);
     if (!erro && data.texto) {
         for (let i = 0; i < data.campos.length; i++) {
-            let el = $("#cpModal #" + data.campos[i]);
+            let el = $("#mpModal #" + data.campos[i]);
             $(el).val(data.valores[i]);
             $(el).trigger("keyup");
             $(el).addClass("invalido");
@@ -77,10 +67,10 @@ async function validar_cp_main() {
         erro = data.texto;
     }
     if (erro) return erro;
-    $("#cpModal .preco").each(function() {
+    $("#mpModal .preco").each(function() {
         $(this).val(parseInt(apenasNumeros($(this).val())) / 100);
     });
-    $("#cpModal form").submit();
+    $("#mpModal form").submit();
     return "";
 }
 
@@ -112,7 +102,7 @@ function adicionar_campo_cp() {
 
     $("#cpModal .modal-tudo").append($(linha));
 
-    cp_mp_listeners("cp");
+    cp_mp_listeners("mp");
     carrega_autocomplete();
     carrega_dinheiro();
 
@@ -133,7 +123,7 @@ async function cp_pergunta_salvar() {
     if (resp.isConfirmed) {
         let erro = await validar_cp();
         if (erro) {
-            cp_mp_limpar("cp");
+            cp_mp_limpar("mp");
             $("#cpModal #busca-prod").val("");
             s_alert({
                 icon : "error",
@@ -141,7 +131,7 @@ async function cp_pergunta_salvar() {
             });
         }
     } else if (resp.isDenied) {
-        cp_mp_limpar("cp");
+        cp_mp_limpar("mp");
         $("#cpModal #busca-prod").val("");
     } else $("#cpModal").modal();
 }

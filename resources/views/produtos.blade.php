@@ -52,6 +52,7 @@
     </script>
     
     <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/especifico/produtos.js') }}"></script>
+    <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/especifico/mp.js')       }}"></script>
 
     @include("modals.produtos_modal")
 @endsection

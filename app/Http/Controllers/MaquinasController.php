@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Comodatos;
 use App\Models\ComodatosProdutos;
 use App\Models\Estoque;
+use App\Models\Produtos;
 use App\Models\Maquinas;
 
 class MaquinasController extends Controller {
@@ -611,10 +612,12 @@ class MaquinasController extends Controller {
     }
 
     public function preco(Request $request) {
-        return DB::table("comodatos_produtos")
+        $preco = DB::table("comodatos_produtos")
                     ->where("id_comodato", $this->obter_comodato($request->id_maquina)->id) // App\Http\Controllers\Controller.php
                     ->where("id_produto", $request->id_produto)
                     ->value("preco");
+        if ($preco !== null) return $preco;
+        return Produtos::find($request->id_produto)->preco;
     }
 
     public function consultar_comodato(Request $request) {

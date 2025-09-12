@@ -119,3 +119,12 @@ function atualiza_cod_externo(el) {
     contar_char(el, 8);
     $("#cod_externo_real").val($("#cod_externo").val());
 }
+
+function atualizaPreco(seq) {
+    $.get(URL + "/maquinas/preco", {
+        id_maquina : $("#mpModal #id_maquina-" + seq).val(),
+        id_produto : $("#id_produto").val()
+    }, function(preco) {
+        $($($($("#mpModal #id_maquina-" + seq).parent()).parent()).find(".preco")).val(preco).trigger("keyup");
+    })
+}

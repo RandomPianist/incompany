@@ -96,7 +96,7 @@
                                     </div>
                                     <div class = "col-2 text-right max-13 p-0 pr-3 pt-1">
                                         <button type = "button" class = "btn btn-target mr-1 px-20" onclick = "adicionar_campo_estoque()">+</button>
-                                        <button type = "button" class = "btn btn-target-black mx-auto remove-produto px-15">
+                                        <button type = "button" class = "btn btn-target-black mx-auto remove-linha px-15">
                                             <i class = "fal fa-eye-slash"></i>
                                         </button>
                                     </div>

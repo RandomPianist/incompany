@@ -175,7 +175,7 @@ $(document).ready(function() {
     });
 
     $("#estoqueModal").on("hide.bs.modal", function() {
-        $("#estoqueModal .remove-produto").each(function() {
+        $("#estoqueModal .remove-linha").each(function() {
             $(this).trigger("click");
         });
         $("#estoqueModal #produto-1").val("");
@@ -188,9 +188,16 @@ $(document).ready(function() {
 
     $("#cpModal").on("hide.bs.modal", function() {
         if (document.querySelector("#cpModal .form-search.new") === null) {
-            limpar_cp();
+            cp_mp_limpar("cp");
             $("#cpModal #busca-prod").val("");
         } else cp_pergunta_salvar();
+    });
+
+    $("#mpModal").on("hide.bs.modal", function() {
+        if (document.querySelector("#mpModal .form-search.new") === null) {
+            cp_mp_limpar("mp");
+            $("#mpModal #busca-maq").val("");
+        } else mp_pergunta_salvar();
     });
 
     $("#setoresModal").on("hide.bs.modal", function() {
@@ -805,6 +812,51 @@ function trocarEmpresaModal() {
         $("#empresa-select option[value='" + EMPRESA + "']").attr("selected", true);
         $("#trocarEmpresaModal").modal();
     });
+}
+
+function cp_mp_listeners(tipo) {
+    $((tipo == "mp" ? "#mpModal .id-maquina" : "#cpModal .id-produto") + ", #" + tipo + "Modal .minimo, #" + tipo + "Modal .maximo, #" + tipo + "Modal .preco, #" + tipo + "Modal .lixeira").each(function() {
+        $(this).off("change").on("change", function() {
+            const linha = $($($(this).parent()).parent())[0];
+            if ($(this).val().trim()) {
+                $.get(URL + "/maquinas/produto/verificar-novo", {
+                    preco : parseInt(apenasNumeros($($(linha).find(".preco")[0]).val())) / 100,
+                    minimo : $($(linha).find(".minimo")[0]).val(),
+                    maximo : $($(linha).find(".maximo")[0]).val(),
+                    lixeira : $($(linha).find(".lixeira")[0]).val().replace("opt-", ""),
+                    id_produto : tipo == "mp" ? $("#id_produto").val() : $($(linha).find(".id-produto")[0]).val(),
+                    id_maquina : tipo == "mp" ? $($(linha).find(".id-maquina")[0]).val() : $($(".id_maquina")[0]).val()
+                }, function(novo) {
+                    const el = $($(linha).find(".form-search")[0]);
+                    if (parseInt(novo)) $(el).addClass("new").removeClass("old");
+                    else $(el).addClass("old").removeClass("new");
+                });
+            } else $($(linha).find(".form-search")[0]).addClass("new").removeClass("old");
+            switch (tipo) {
+                case "mp":
+                    if ($(this).hasClass("id-maquina")) atualizaPreco(apenasNumeros($(this).attr("id")));
+                    break;
+                case "cp":
+                    if ($(this).hasClass("id-produto")) atualizaPreco(apenasNumeros($(this).attr("id")), "cp");
+                    break;
+            }
+            if ($(this).hasClass("maximo") || $(this).hasClass("minimo")) limitar($(this), true);
+        });
+    }).off("keyup").on("keyup", function() {
+        if ($(this).hasClass("maximo") || $(this).hasClass("minimo")) limitar($(this), true);
+    });
+}
+
+function cp_mp_limpar(tipo) {
+    $("#" + tipo + "Modal .remove-linha").each(function() {
+        $(this).trigger("click");
+    });
+    $(tipo == "cp" ? "#cpModal #produto-1" : "#mpModal #maquina-1").val("");
+    $(tipo == "cp" ? "#cpModal #id_produto-1" : "#mpModal #id_maquina-1").val("");
+    $("#" + tipo + "Modal #lixeira-1").val("opt-0");
+    $("#" + tipo + "Modal #preco-1").val(0).trigger("keyup");
+    $("#" + tipo + "Modal #minimo-1").val(0).trigger("keyup");
+    $("#" + tipo + "Modal #maximo-1").val(0).trigger("keyup");
 }
 
 function Atribuicoes(grade, _psm_valor) {

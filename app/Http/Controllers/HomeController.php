@@ -43,14 +43,7 @@ class HomeController extends Controller {
         $where = " AND ".$request->column." LIKE '%".$request->search."%' AND ";
         $filter_col = $request->filter_col != "v_maquina" ? $request->filter_col : "";
         
-        if ($tabela == "produtos") {
-            $tabela = "vprodaux";
-            $where .= "id IN (
-                SELECT id_produto
-                FROM vprodutosgeral
-                WHERE id_pessoa = ".Auth::user()->id_pessoa.
-            ")";
-        } else if (in_array($tabela, ["empresas", "pessoas", "setores"])) {
+        if (in_array($tabela, ["empresas", "pessoas", "setores"])) {
             $where .= $this->obter_where(Auth::user()->id_pessoa, $tabela, true); // App\Http\Controllers\Controller.php
             if ($request->filter_col == "v_maquina") {
                 $where .= " AND id IN ".($tabela == "setores" ? "(
@@ -65,6 +58,18 @@ class HomeController extends Controller {
                     WHERE id_maquina = ".$request->filter."
                 )");
             }
+        } else if ($tabela == "produtos") {
+            $tabela = "vprodaux";
+            $where .= "id IN (
+                SELECT id_produto
+                FROM vprodutosgeral
+                WHERE id_pessoa = ".Auth::user()->id_pessoa.
+            ")";
+        } else if ($tabela == "maquinas") {
+            $where .= "id IN (
+                SELECT id_maquina
+                FROM mat_vcomodatos
+            )";
         } else $where .= "1";
 
         if ($filter_col) {

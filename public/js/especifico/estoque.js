@@ -77,7 +77,7 @@ function adicionar_campo_estoque() {
     $($(linha).find(".atalho")[0]).attr("data-campo_descr", "#estoqueModal #produto-" + cont);
     carrega_atalhos();
 
-    $($(linha).find(".remove-produto")[0]).on("click", function() {
+    $($(linha).find(".remove-linha")[0]).on("click", function() {
         $(linha).remove();
         ["produto", "id_produto", "es", "qtd", "preco", "obs", "atalho"].forEach((classe) => {
             $("#estoqueModal ." + classe).each(function(i) {

@@ -104,9 +104,7 @@ function atualizaPreco(seq, nome) {
         id_maquina : $($(".id_maquina")[0]).val(),
         id_produto : $("#" + nome + "Modal #id_produto-" + seq).val()
     }, function(preco) {
-        let el_preco = $($($($("#" + nome + "Modal #id_produto-" + seq).parent()).parent()).find(".preco"));
-        $(el_preco).val(preco);
-        $(el_preco).trigger("keyup");
+        $($($($("#" + nome + "Modal #id_produto-" + seq).parent()).parent()).find(".preco")).val(preco).trigger("keyup");
     })
 }
 
