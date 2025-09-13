@@ -109,6 +109,15 @@ class RelatoriosController extends Controller {
                     "produtos.validade_ca",
                     "retiradas.qtd",
                     DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data"),
+                    DB::raw("
+                        DATE_FORMAT(
+                            CASE 
+                                WHEN (retiradas.hms IS NULL) THEN DATE_SUB(retiradas.created_at, INTERVAL 3 HOUR)
+                                ELSE CONCAT(retiradas.data, ' ', retiradas.hms)
+                            END,
+                            '%d/%m/%Y %H:%i:%s'
+                        ) AS data_hora
+                    "),
                     DB::raw("IFNULL(CONCAT('Liberado por ', supervisor.nome, IFNULL(CONCAT(' - ', retiradas.observacao), '')), '') AS obs")
                 )
                 ->join("produtos", "produtos.id", "retiradas.id_produto")
@@ -128,7 +137,7 @@ class RelatoriosController extends Controller {
                         }
                         if ($request->fim) {
                             $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-                            $sql->whereRaw("retiradas.data < '".$fim."'");
+                            $sql->whereRaw("retiradas.data <= '".$fim."'");
                             $periodo .= " até ".$request->fim;
                         }
                         array_push($criterios, $periodo);
@@ -163,7 +172,7 @@ class RelatoriosController extends Controller {
                 "retiradas" => $itens->map(function($retirada) {
                     return [
                         "produto" => $retirada->produto,
-                        "data" => $retirada->data,
+                        "data" => $retirada->data_hora, 
                         "obs" => $retirada->obs,
                         "ca" => $retirada->ca,
                         "validade_ca" => $retirada->validade_ca,
