@@ -186,18 +186,11 @@ $(document).ready(function() {
         $("#estoqueModal #obs-1").val("ENTRADA");
     });
 
-    $("#cpModal").on("hide.bs.modal", function() {
-        if (document.querySelector("#cpModal .form-search.new") === null) {
-            cp_mp_limpar("cp");
-            $("#cpModal #busca-prod").val("");
-        } else cp_pergunta_salvar();
-    });
-
-    $("#mpModal").on("hide.bs.modal", function() {
-        if (document.querySelector("#mpModal .form-search.new") === null) {
-            cp_mp_limpar("mp");
-            $("#mpModal #busca-maq").val("");
-        } else mp_pergunta_salvar();
+    ["cp", "mp"].forEach((tipo) => {
+        $("#" + tipo + "Modal").on("hide.bs.modal", function() {
+            if (document.querySelector("#" + tipo + "Modal .form-search.new") === null) cp_mp_limpar_tudo(tipo);
+            else cp_mp_pergunta_salvar(tipo);
+        });
     });
 
     $("#setoresModal").on("hide.bs.modal", function() {
@@ -386,6 +379,62 @@ async function controleTodos(ids) {
     }
 }
 
+async function cp_mp_validar_main(tipo) {
+    limpar_invalido();
+    let erro = "";
+    let req = tipo == "cp" ? {
+        produtos_descr : obter_vetor("produto", "cp"),
+        produtos_id : obter_vetor("id-produto", "cp"),
+        id_maquina : $($(".id_maquina")[0]).val()
+    } : {
+        maquinas_descr : obter_vetor("maquina", "mp"),
+        maquinas_id : obter_vetor("id-maquina", "mp"),
+        id_produto : $("#id_produto").val()
+    };
+    req.precos = obter_vetor("preco", tipo);
+    req.maximos = obter_vetor("maximo", tipo);
+    let data = await $.get(URL + "/" + (tipo == "cp" ? "maquinas/produto" : "produtos/maquina") + "/consultar", req);
+    if (typeof data == "string") data = $.parseJSON(data);
+    if (!erro && data.texto) {
+        for (let i = 0; i < data.campos.length; i++) {
+            let el = $("#cpModal #" + data.campos[i]);
+            $(el).val(data.valores[i]);
+            $(el).trigger("keyup");
+            $(el).addClass("invalido");
+        }
+        erro = data.texto;
+    }
+    if (erro) return erro;
+    $("#" + tipo + "Modal .preco").each(function() {
+        $(this).val(parseInt(apenasNumeros($(this).val())) / 100);
+    });
+    $("#" + tipo + "Modal form").submit();
+    return "";
+}
+
+async function cp_mp_validar(tipo) {
+    const erro = await cp_mp_validar_main(tipo);
+    if (erro) s_alert(erro);
+}
+
+async function cp_mp_pergunta_salvar() {
+    const resp = await s_alert({
+        html : "Deseja salvar os produtos novos?",
+        ync : true
+    });
+    if (resp.isConfirmed) {
+        let erro = await cp_mp_validar(tipo);
+        if (erro) {
+            cp_mp_limpar_tudo(tipo);
+            s_alert({
+                icon : "error",
+                title : "Não foi possível salvar"
+            });
+        }
+    } else if (resp.isDenied) cp_mp_limpar_tudo(tipo);    
+    else $("#" + tipo + "Modal").modal();
+}
+
 function ordenar(coluna) {
     if (coluna === undefined) {
         coluna = colGlobal;
@@ -487,7 +536,6 @@ function carrega_atalhos() {
         el.onclick = function() {
             const concluir = function(_link, _req, _achou) {
                 let caminho = URL + "/" + _link;
-                console.log(_req);
                 if (_achou) caminho += "?" + $.param(_req);
                 let clique = document.createElement("a");
                 clique.href = caminho;
@@ -847,6 +895,14 @@ function cp_mp_listeners(tipo) {
     });
 }
 
+function cp_mp_limpar_tudo(tipo) {
+    cp_mp_limpar(tipo);
+    const lista = tipo == "cp" ? ["busca-prod", "busca-refer", "busca-cat"] : ["busca-maq"];
+    lista.forEach((id) => {
+        $("#" + id).val("");
+    });
+}
+
 function cp_mp_limpar(tipo) {
     $("#" + tipo + "Modal .remove-linha").each(function() {
         $(this).trigger("click");
@@ -857,6 +913,91 @@ function cp_mp_limpar(tipo) {
     $("#" + tipo + "Modal #preco-1").val(0).trigger("keyup");
     $("#" + tipo + "Modal #minimo-1").val(0).trigger("keyup");
     $("#" + tipo + "Modal #maximo-1").val(0).trigger("keyup");
+}
+
+function cp_mp_adicionar_campo(tipo) {
+    const cont = ($("#" + tipo + "Modal input[type=number]").length / 2) + 1;
+
+    let linha = $($("#" + tipo + "Modal #template-linha").html());
+
+    if (tipo == "cp") {
+        $($(linha).find(".produto")[0]).attr("id", "produto-" + cont).attr("data-input", "#id_produto-" + cont);
+        $($(linha).find(".id-produto")[0]).attr("id", "id_produto-" + cont);
+    } else {
+        $($(linha).find(".maquina")[0]).attr("id", "maquina-" + cont).attr("data-input", "#id_maquina-" + cont);
+        $($(linha).find(".id-maquina")[0]).attr("id", "id_maquina-" + cont);
+    }
+
+    $($(linha).find(".lixeira")[0]).attr("id", "lixeira-" + cont).html($("#lixeira-1").html());
+    $($(linha).find(".preco")[0]).attr("id", "preco-" + cont);
+    $($(linha).find(".minimo")[0]).attr("id", "minimo-" + cont);
+    $($(linha).find(".maximo")[0]).attr("id", "maximo-" + cont);
+
+    $($(linha).find(".remove-linha")[0]).on("click", function() {
+        $(linha).remove();
+        let classes = ["lixeira", "minimo", "maximo", "preco"];
+        if (tipo == "cp") classes.push("produto", "id_produto");
+        else classes.push("maquina", "id_maquina");
+        classes.forEach((classe) => {
+            $("#cpModal ." + classe).each(function(i) {
+                $(this).attr("id", classe + "-" + (i + 1));
+            });
+        });
+    });
+
+    $("#" + tipo + "Modal .modal-tudo").append($(linha));
+
+    cp_mp_listeners(tipo);
+    carrega_autocomplete();
+    carrega_dinheiro();
+
+    $(".form-control").keydown(function() {
+        $(this).removeClass("invalido");
+    });
+
+    $($(linha).find(tipo == "cp" ? ".id-produto" : ".id-maquina")[0]).trigger("change");
+    $($(linha).find(".minimo")[0]).trigger("change");
+    $($(linha).find(".maximo")[0]).trigger("change");
+}
+
+function cp_mp_listar(tipo, abrir) {
+    cp_mp_limpar(tipo);
+    $.get(URL + "/" + (tipo == "mp" ? "produtos/maquina" : "maquinas") + "/listar", tipo == "cp" ? {
+        id_maquina : $($(".id_maquina")[0]).val(),
+        filtro : $("#busca-prod").val(),
+        filtro_ref : $("#busca-ref").val(),
+        filtro_cat : $("#busca-cat").val()
+    } : {
+        id_produto : $("#id_produto").val(),
+        filtro : $("#busca-maq").val()
+    }, function(data) {
+        cp_mp_limpar(tipo);
+        if (typeof data == "string") data = $.parseJSON(data);
+        const total = data.total;
+        let titulo = $("#" + tipo + "ModalLabel").html();
+        if (titulo.indexOf("|") > -1) titulo = titulo.split("|")[0].trim();
+        titulo += " | Listando " + data.lista.length + " de " + total;
+        $("#" + tipo + "ModalLabel").html(titulo);
+        data = data.lista;
+        for (let i = 0; i < data.length; i++) {
+            if (i > 0) cp_mp_adicionar_campo(tipo);
+            $((tipo == "cp" ? "#cpModal #produto-" : "#mpModal #maquina-") + (i + 1)).val(data[i].produto);
+            $((tipo == "cp" ? "#cpModal #id_produto-" : "#mpModal #id_maquina-") + (i + 1)).val(data[i].id_produto).trigger("change");
+            $("#" + tipo + "Modal #lixeira-" + (i + 1)).val("opt-" + data[i].lixeira);
+            $("#" + tipo + "Modal #preco-" + (i + 1)).val(data[i].preco).trigger("keyup");
+            $("#" + tipo + "Modal #minimo-" + (i + 1)).val(parseInt(data[i].minimo)).trigger("keyup");
+            $("#" + tipo + "Modal #maximo-" + (i + 1)).val(parseInt(data[i].maximo)).trigger("keyup");
+        }
+        if (abrir) {
+            $("#" + tipo + "Modal").modal();
+            $(tipo == "cp" ? "#cpModal .id-produto" : "#mpModal .id-maquina").each(function() {
+                $(this).trigger("change");
+            });
+            $("#" + tipo + "Modal .minimo, #" + tipo + "Modal .maximo").each(function() {
+                limitar($(this), true);
+            });
+        }
+    })
 }
 
 function Atribuicoes(grade, _psm_valor) {

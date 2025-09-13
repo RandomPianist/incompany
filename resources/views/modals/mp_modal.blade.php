@@ -27,7 +27,7 @@
                                 ></i>
                             </div>
                             <div class = "col-1">
-                                <button id = "btn-filtro2" type = "button" class = "btn btn-target mr-2 px-20" onclick = "listar_mp()">
+                                <button id = "btn-filtro2" type = "button" class = "btn btn-target mr-2 px-20" onclick = "cp_mp_listar('mp', false)">
                                     <i class = "my-icon far fa-search"></i>
                                 </button>
                             </div>
@@ -69,7 +69,7 @@
                                     <input id = "maximo-1" name = "maximo[]" class = "form-control text-right maximo" autocomplete = "off" type = "number" />
                                 </div>
                                 <div class = "col-2 text-right max-13">
-                                    <button type = "button" class = "btn btn-target mx-auto px-3 mt-4 w-100" onclick = "adicionar_campo_mp()">+</button>
+                                    <button type = "button" class = "btn btn-target mx-auto px-3 mt-4 w-100" onclick = "cp_mp_adicionar_campo('mp')">+</button>
                                 </div>
                             </div>
                             <template id = "template-linha">
@@ -99,7 +99,7 @@
                                         <input name = "maximo[]" class = "form-control text-right maximo" autocomplete = "off" type = "number" />
                                     </div>
                                     <div class = "col-2 text-right max-13 p-0 pr-3">
-                                        <button type = "button" class = "btn btn-target mr-1 px-20" onclick = "adicionar_campo_mp()">+</button>
+                                        <button type = "button" class = "btn btn-target mr-1 px-20" onclick = "cp_mp_adicionar_campo('mp')">+</button>
                                         <button type = "button" class = "btn btn-target-black mx-auto remove-linha px-15">
                                             <i class = "fal fa-eye-slash"></i>
                                         </button>
@@ -110,7 +110,7 @@
                     </div>
                 </div>
                 <div class = "d-flex mb-2">
-                    <button type = "button" class = "btn btn-target mx-auto my-4 px-5" onclick = "validar_mp()">Salvar</button>
+                    <button type = "button" class = "btn btn-target mx-auto my-4 px-5" onclick = "cp_mp_validar('mp')">Salvar</button>
                 </div>
             </form>
         </div>

@@ -128,3 +128,14 @@ function atualizaPreco(seq) {
         $($($($("#mpModal #id_maquina-" + seq).parent()).parent()).find(".preco")).val(preco).trigger("keyup");
     })
 }
+
+function mp(id) {
+    $.get(URL + "/produtos/mostrar/" + id, function(prod) {
+        if (typeof prod == "string") prod = $.parseJSON(prod);
+        limpar_invalido();
+        $("#mpModalLabel").html(prod.descr + " - contratos do produto");
+        $("#id_produto").val(id);
+        cp_mp_listeners("mp");
+        cp_mp_listar("mp", true);
+   });
+}

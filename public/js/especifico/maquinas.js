@@ -131,3 +131,24 @@ function contrato(id_maquina, mostrarExtrato, mostrarProdutos) {
         $("#contratoModal").modal();
     });
 }
+
+function cp(id) {
+    $.get(URL + "/maquinas/mostrar/" + id, function(maq) {
+        if (typeof maq == "string") maq = $.parseJSON(maq);
+        limpar_invalido();
+        $("#cpModalLabel").html(maq.descr + " - produtos do contrato");
+        $(".id_maquina").each(function() {
+            $(this).val(id);
+        });
+        $("#cpModal .form-control-lg").each(function() {
+            $(this).off("change").on("change", function() {
+                const prod = $("#busca-prod").val();
+                const refer = $("#busca-refer").val();
+                if (prod.trim()) $("#busca-refer").val("");
+                if (prod.trim() || refer.trim()) $("#busca-cat").val("");
+            });
+        });
+        cp_mp_listeners("cp");
+        cp_mp_listar("cp", true);
+   });
+}
