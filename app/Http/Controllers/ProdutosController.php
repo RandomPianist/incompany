@@ -280,8 +280,9 @@ class ProdutosController extends Controller {
         } else $busca = $this->busca_maq("1", $request->id_produto);
         $resultado = new \stdClass;
         $resultado->lista = $busca;
-        $resultado->total = DB::table("comodatos_produtos")
-                                ->selectRaw("COUNT(id) AS total")
+        $resultado->total = DB::table("comodatos_produtos AS cp")
+                                ->selectRaw("COUNT(cp.id) AS total")
+                                ->join("comodatos", "comodatos.id", "cp.id_comodato")
                                 ->whereRaw("CURDATE() >= comodatos.inicio AND CURDATE() < comodatos.fim")
                                 ->where("id_produto", $request->id_produto)
                                 ->value("total");
