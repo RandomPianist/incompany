@@ -256,7 +256,7 @@ CREATE TABLE previas (
     confirmado TINYINT DEFAULT 0,
     id_comodato INT,
     id_produto INT,
-    id_pessoa INT,    
+    id_usuario INT,    
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
