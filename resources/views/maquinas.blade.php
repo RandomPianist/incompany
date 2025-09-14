@@ -58,7 +58,6 @@
 
     <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/especifico/maquinas.js')  }}"></script>
     <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/especifico/estoque.js')   }}"></script>
-    <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/especifico/cp.js')        }}"></script>
     <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/especifico/comodatos.js') }}"></script>
 
     @include("modals.contrato_modal")

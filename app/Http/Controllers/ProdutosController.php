@@ -28,6 +28,104 @@ class ProdutosController extends Controller {
                     ->get();
     }
 
+    private function busca_maq($where, $id_produto) {
+        return DB::table("comodatos_produtos AS cp")
+                    ->select(
+                        "cp.id_maquina",
+                        "maquinas.descr AS maquina",
+                        "cp.lixeira",
+                        "cp.preco",
+                        DB::raw("IFNULL(cp.minimo, 0) AS minimo"),
+                        DB::raw("IFNULL(cp.maximo, 0) AS maximo")
+                    )
+                    ->join("comodatos", "comodatos.id", "cp.id_comodato")
+                    ->join("maquinas", "maquinas.id", "comodatos.id_maquina")
+                    ->where("cp.id_produto", $id_produto)
+                    ->whereRaw("CURDATE() >= comodatos.inicio AND CURDATE() < comodatos.fim")
+                    ->whereRaw($where)
+                    ->where("maquinas.lixeira", 0)
+                    ->orderby("cp.lixeira")
+                    ->take(20)
+                    ->get();
+    }
+
+    private function consultar_maquina_main($id_produto, $maquinas_id, $maquinas_descr, $precos, $maximos) {
+        $texto = "";
+        $campos = array();
+        $valores = array();
+
+        $prmin = floatval(
+            DB::table("produtos")
+                ->selectRaw("IFNULL(prmin, 0) AS prmin")
+                ->where("id", $id_produto)
+                ->value("prmin")
+        );
+
+        for ($i = 0; $i < sizeof($maquinas_id); $i++) {
+            $comodato = $this->obter_comodato($maquinas_id[$i]); // App\Http\Controllers\Controller.php
+
+            if (!sizeof(
+                DB::table("maquinas")
+                    ->where("id", $maquinas_id[$i])
+                    ->where("descr", $maquinas_descr[$i])
+                    ->where("lixeira", 0)
+                    ->get()
+            )) {
+                array_push($campos, "maquina-".($i + 1));
+                array_push($valores, $maquinas_descr[$i]);
+                $texto = !$texto ? "Máquinas não encontradas" : "Máquina não encontrada";
+            }
+        }
+
+        if (!$texto) {
+            for ($i = 0; $i < sizeof($maquinas_id); $i++) {
+                $saldo = $this->retorna_saldo_cp($this->obter_comodato($maquinas_id[$i])->id, $id_produto);
+                if (
+                    floatval($maximos[$i]) &&
+                    floatval($maximos[$i]) < $saldo
+                ) {
+                    array_push($campos, "max-".($i + 1));
+                    array_push($valores, $saldo);
+                    $texto .= 
+                        $texto ?
+                            "Esse valor de estoque máximo é superior ao saldo atual do produto.<br>O campo foi corrigido."
+                        :
+                            "Esses valores de estoque máximo são superiores ao saldo atual dos produtos.<br>Os campos foram corrigidos."
+                    ;
+                }
+            }
+        }
+
+        if (!$texto) {
+            for ($i = 0; $i < sizeof($maquinas_id); $i++) {
+                if (!intval($precos[$i])) {
+                    $texto = $texto ? "Há preços zerados" : "Há um preço zerado";
+                    array_push($campos, "preco-".($i + 1));
+                    array_push($valores, "0");
+                }
+            }
+        }
+
+        if (!$texto) {
+            for ($i = 0; $i < sizeof($maquinas_id); $i++) {
+                $preco = floatval($precos[$i]);
+                if ($prmin > 0 && $preco < $prmin) {
+                    $texto = $texto ? "Há itens com preço abaixo do mínimo.<br>Os campos foram corrigidos" : "Há um item com um preço abaixo do mínimo.<br>O campo foi corrigido";
+                    $texto .= " para o preço mínimo.<br>Por favor, verifique e tente novamente.";
+                    array_push($campos, "preco-".($i + 1));
+                    array_push($valores, $prmin);
+                }
+            }
+        }
+
+        $resultado = new \stdClass;
+        $resultado->texto = $texto;
+        $resultado->campos = $campos;
+        $resultado->valores = $valores;
+
+        return $resultado;
+    }
+
     public function ver() {
         return view("produtos");
     }
@@ -170,5 +268,73 @@ class ProdutosController extends Controller {
         $linha->save();
         $this->log_inserir("D", "produtos", $linha->id); // App\Http\Controllers\Controller.php
         $this->atualizar_atribuicoes($ant); // App\Http\Controllers\Controller.php
+    }
+
+    public function listar_maquina(Request $request) {
+        $filtro = trim($request->filtro);
+        if ($filtro) {
+            $busca = $this->busca("maquinas.descr LIKE '".$filtro."%'", $request->id_produto);
+            if (sizeof($busca) < 3) $busca = $this->busca("maquinas.descr LIKE '%".$filtro."%'", $request->id_produto);
+            if (sizeof($busca) < 3) $busca = $this->busca("(maquinas.descr LIKE '%".implode("%' AND maquinas.descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')", $request->id_produto);
+        } else $busca = $this->busca("1", $request->id_produto);
+        return json_encode($busca);
+    }
+
+    public function consultar_maquina(Request $request) {
+        return json_encode($this->consultar_maquina_main(
+            $request->id_produto,
+            explode("|!|", $request->maquinas_id),
+            explode("|!|", $request->maquinas_descr),
+            explode("|!|", $request->precos),
+            explode("|!|", $request->maximos)
+        ));
+    }
+
+    public function maquina(Request $request) {
+        if ($this->consultar_maquina_main(
+            $request->id_produto,
+            $request->id_maquina,
+            $request->maquina,
+            $request->preco,
+            $request->maximo
+        )->texto) return 401;
+        
+        $maquinas_atualizar = array();
+        for ($i = 0; $i < sizeof($request->id_maquina); $i++) {
+            $comodato = $this->obter_comodato($request->id_maquina[$i]); // App\Http\Controllers\Controller.php
+
+            $modelo = null;
+            $letra_log = "";
+            $id_cp = DB::table("comodatos_produtos")
+                        ->where("id_comodato", $comodato->id)
+                        ->where("id_produto", $request->id_produto)
+                        ->value("id");
+            if ($id_cp !== null) {
+                $modelo = ComodatosProdutos::find($id_cp);
+                $lixeira = str_replace("opt-", "", $request->lixeira[$i]);
+                if (
+                    $this->comparar_num($modelo->lixeira, $lixeira) ||
+                    $this->comparar_num($modelo->preco, $request->preco[$i]) ||
+                    $this->comparar_num($modelo->maximo, $request->maximo[$i]) ||
+                    $this->comparar_num($modelo->minimo, $request->minimo[$i])
+                ) $letra_log = "E";
+            } else {
+                $modelo = new ComodatosProdutos;
+                $letra_log = "C";
+            }
+            if ($letra_log) {
+                $modelo->id_comodato = $comodato->id;
+                $modelo->id_produto = $request->id_produto;
+                $modelo->preco = $request->preco[$i];
+                $modelo->maximo = $request->maximo[$i];
+                $modelo->minimo = $request->minimo[$i];
+                $modelo->lixeira = $lixeira;
+                $modelo->save();
+                $this->log_inserir($letra_log, "comodatos_produtos", $modelo->id);
+            }
+            if ($this->gerar_atribuicoes($comodato)) array_push($maquinas_atualizar, $request->id_maquina[$i]);
+        }
+        if (sizeof($maquinas_atualizar)) $this->atualizar_tudo($maquinas_atualizar, "M", true); // App\Http\Controllers\Controller.php
+        return redirect("/maquinas");
     }
 }

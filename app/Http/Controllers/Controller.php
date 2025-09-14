@@ -311,6 +311,93 @@ class Controller extends BaseController {
         return $resultado;
     }
 
+    protected function gerar_atribuicoes(Comodatos $comodato) {
+        $ret = false;
+        $where = "lixeira = 0 AND id_maquina = ".$comodato->id_maquina." AND id_empresa = ".$comodato->id_empresa;
+        $where_g = $where." AND gerado = 1";
+        if (!intval($comodato->atb_todos)) {
+            $ret = sizeof(
+                DB::table("atribuicoes")
+                    ->whereRaw($where_g)
+                    ->get()
+            ) > 0;
+            if ($ret) {
+                $this->log_inserir_lote("D", "atribuicoes", $where_g);
+                DB::statement("
+                    UPDATE atribuicoes
+                    SET lixeira = 1
+                    WHERE ".$where_g
+                );
+            }
+            return $ret;
+        }
+        $lista_itens = DB::table("produtos")
+                            ->select(
+                                DB::raw("IFNULL(produtos.cod_externo, '') AS cod_externo"),
+                                DB::raw("IFNULL(produtos.referencia, '') AS referencia")
+                            )
+                            ->join("comodatos_produtos AS cp", "cp.id_produto", "produtos.id")
+                            ->where("cp.id_comodato", $comodato->id)
+                            ->where("cp.lixeira", 0)
+                            ->where("produtos.lixeira", 0)
+                            ->get();
+        foreach ($lista_itens as $item) {
+            $modelo = null;
+            $letra_log = "E";
+            $continua = true;
+            $atb = DB::table("atribuicoes")
+                        ->select(
+                            "id",
+                            "gerado"
+                        )
+                        ->whereRaw($where)
+                        ->where("referencia", $item->referencia)
+                        ->first();
+            if ($atb !== null) {
+                if (intval($atb->gerado)) $modelo = Atribuicoes::find($atb->id);
+                else $continua = false;
+            }
+            if ($continua) {
+                $atb = DB::table("atribuicoes")
+                            ->select(
+                                "id",
+                                "gerado"
+                            )
+                            ->whereRaw($where)
+                            ->where("cod_produto", $item->cod_externo)
+                            ->first();
+                if ($atb !== null) {
+                    if (intval($atb->gerado)) $modelo = Atribuicoes::find($atb->id);
+                    else $continua = false;
+                }
+            }
+            if ($continua && $modelo === null) {
+                $modelo = new Atribuicoes;
+                $letra_log = "C";
+            }
+            if ($modelo !== null && (
+                $this->comparar_num($comodato->qtd, $modelo->qtd) ||
+                $this->comparar_num($comodato->validade, $modelo->validade) ||
+                $this->comparar_num($comodato->obrigatorio, $modelo->obrigatorio)
+            )) {
+                $modelo->gerado = 1;
+                $modelo->qtd = $comodato->qtd;
+                $modelo->validade = $comodato->validade;
+                $modelo->obrigatorio = $comodato->obrigatorio;
+                $modelo->id_maquina = $comodato->id_maquina;
+                $modelo->id_empresa = $comodato->id_empresa;
+                $modelo->referencia = $item->referencia ? $item->referencia : null;
+                $modelo->cod_produto = $item->referencia ? null : $item->cod_externo;
+                $linha->id_empresa_autor = $this->obter_empresa();
+                $linha->data = date("Y-m-d");
+                $modelo->save();
+                $this->log_inserir($letra_log, "atribuicoes", $modelo->id);
+                if ($letra_log == "C") $ret = true;
+            }
+        }
+        return $ret;
+    }
+
     protected function obter_where($id_pessoa, $tabela = "pessoas", $inclusive_excluidos = false) {
         $id_emp = Pessoas::find($id_pessoa)->id_empresa;
         $where = !in_array($tabela, ["comodatos", "retiradas"]) && !$inclusive_excluidos ? $tabela.".lixeira = 0" : "1";

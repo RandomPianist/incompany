@@ -91,14 +91,6 @@ function chamar_modal(id) {
     } else modal("maquinasModal", id); 
 }
 
-function obter_vetor(classe, nome) {
-    let resultado = new Array();
-    $("#" + nome + "Modal ." + classe).each(function() {
-        resultado.push(classe == "preco" ? apenasNumeros($(this).val()) : $(this).val());
-    });
-    return resultado.join("|!|");
-}
-
 function atualizaPreco(seq, nome) {
     $.get(URL + "/maquinas/preco", {
         id_maquina : $($(".id_maquina")[0]).val(),

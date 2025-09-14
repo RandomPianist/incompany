@@ -24,14 +24,11 @@
                             <th width = "20%" class = "text-center">
                                 <span>Código Kx-safe</span>
                             </th>
-                            <th width = "27.5%">
+                            <th width = "32.5%">
                                 <span>Descrição</span>
                             </th>
-                            <th width = "27.5%">
+                            <th width = "32.5%">
                                 <span>Categoria</span>
-                            </th>
-                            <th width = "10%" class = "text-right">
-                                <span>Preço</span>
                             </th>
                             <th width = "10%" class = "text-center nao-ordena">
                                 <span>Ações</span>
@@ -52,7 +49,7 @@
     </script>
     
     <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/especifico/produtos.js') }}"></script>
-    <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/especifico/mp.js')       }}"></script>
 
     @include("modals.produtos_modal")
+    @include("modals.mp_modal")
 @endsection

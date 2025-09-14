@@ -99,7 +99,7 @@ class MaquinasController extends Controller {
                 ->whereRaw($where)
                 ->where("vprodaux.lixeira", 0)
                 ->orderby("cp.lixeira")
-                ->take(9)
+                ->take(20)
                 ->get();
     }
 
@@ -367,84 +367,6 @@ class MaquinasController extends Controller {
         return $resultado;
     }
 
-    private function gerar_atribuicoes(Comodatos $comodato) {
-        $ret = false;
-        $where = "lixeira = 0 AND id_maquina = ".$comodato->id_maquina." AND id_empresa = ".$comodato->id_empresa;
-        if (!intval($comodato->atb_todos)) {
-            DB::statement("
-                UPDATE atribuicoes
-                SET lixeira = 1
-                WHERE ".$where." AND gerado = 1
-            ");
-            return $ret;
-        }
-        $lista_itens = DB::table("produtos")
-                            ->select(
-                                DB::raw("IFNULL(produtos.cod_externo, '') AS cod_externo"),
-                                DB::raw("IFNULL(produtos.referencia, '') AS referencia")
-                            )
-                            ->join("comodatos_produtos AS cp", "cp.id_produto", "produtos.id")
-                            ->where("cp.id_comodato", $comodato->id)
-                            ->where("cp.lixeira", 0)
-                            ->where("produtos.lixeira", 0)
-                            ->get();
-        foreach ($lista_itens as $item) {
-            $modelo = null;
-            $letra_log = "E";
-            $continua = true;
-            $atb = DB::table("atribuicoes")
-                        ->select(
-                            "id",
-                            "gerado"
-                        )
-                        ->whereRaw($where)
-                        ->where("referencia", $item->referencia)
-                        ->first();
-            if ($atb !== null) {
-                if (intval($atb->gerado)) $modelo = Atribuicoes::find($atb->id);
-                else $continua = false;
-            }
-            if ($continua) {
-                $atb = DB::table("atribuicoes")
-                            ->select(
-                                "id",
-                                "gerado"
-                            )
-                            ->whereRaw($where)
-                            ->where("cod_produto", $item->cod_externo)
-                            ->first();
-                if ($atb !== null) {
-                    if (intval($atb->gerado)) $modelo = Atribuicoes::find($atb->id);
-                    else $continua = false;
-                }
-            }
-            if ($continua && $modelo === null) {
-                $modelo = new Atribuicoes;
-                $letra_log = "C";
-            }
-            if ($modelo !== null && (
-                $this->comparar_num($comodato->qtd, $modelo->qtd) ||
-                $this->comparar_num($comodato->validade, $modelo->validade) ||
-                $this->comparar_num($comodato->obrigatorio, $modelo->obrigatorio)
-            )) {
-                $modelo->gerado = 1;
-                $modelo->qtd = $comodato->qtd;
-                $modelo->validade = $comodato->validade;
-                $modelo->obrigatorio = $comodato->obrigatorio;
-                $modelo->id_maquina = $comodato->id_maquina;
-                $modelo->id_empresa = $comodato->id_empresa;
-                $modelo->referencia = $item->referencia ? $item->referencia : null;
-                $modelo->cod_produto = $item->referencia ? null : $item->cod_externo;
-                $linha->id_empresa_autor = $this->obter_empresa(); // App\Http\Controllers\Controller.php
-                $linha->data = date("Y-m-d");
-                $modelo->save();
-                $this->log_inserir($letra_log, "atribuicoes", $modelo->id);
-                if ($letra_log == "C") $ret = true;
-            }
-        }
-        return $ret;
-    }
-
     public function ver() {
         $comodato = false;
         $busca = $this->busca("1", 0);
@@ -654,6 +576,7 @@ class MaquinasController extends Controller {
         $modelo->fim = date('Y-m-d');
         $modelo->save();
         $this->log_inserir("E", "comodatos", $modelo->id); // App\Http\Controllers\Controller.php
+        if ($this->gerar_atribuicoes($modelo)) $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
         return redirect("/maquinas");
     }
 
@@ -694,7 +617,7 @@ class MaquinasController extends Controller {
         $comodato->save();
         $this->log_inserir("C", "comodatos", $comodato->id); // App\Http\Controllers\Controller.php
         if ($this->comparar_num($atb_todos_ant, $request->atb_todos)) { // App\Http\Controllers\Controller.php
-            $this->gerar_atribuicoes($comodato);
+            $this->gerar_atribuicoes($comodato); // App\Http\Controllers\Controller.php
             $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
         }
         return redirect("/maquinas");

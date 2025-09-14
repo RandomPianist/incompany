@@ -417,9 +417,9 @@ async function cp_mp_validar(tipo) {
     if (erro) s_alert(erro);
 }
 
-async function cp_mp_pergunta_salvar() {
+async function cp_mp_pergunta_salvar(tipo) {
     const resp = await s_alert({
-        html : "Deseja salvar os produtos novos?",
+        html : "Deseja salvar as alterações?",
         ync : true
     });
     if (resp.isConfirmed) {
@@ -442,6 +442,14 @@ function ordenar(coluna) {
     }
     $($(".sortable-columns").children()[coluna]).trigger("click");
     if (ID && !EMPRESA) chamar_modal(ID);
+}
+
+function obter_vetor(classe, nome) {
+    let resultado = new Array();
+    $("#" + nome + "Modal ." + classe).each(function() {
+        resultado.push(classe == "preco" ? apenasNumeros($(this).val()) : $(this).val());
+    });
+    return resultado.join("|!|");
 }
 
 function contar_char(el, max) {
@@ -880,14 +888,7 @@ function cp_mp_listeners(tipo) {
                     else $(el).addClass("old").removeClass("new");
                 });
             } else $($(linha).find(".form-search")[0]).addClass("new").removeClass("old");
-            switch (tipo) {
-                case "mp":
-                    if ($(this).hasClass("id-maquina")) atualizaPreco(apenasNumeros($(this).attr("id")));
-                    break;
-                case "cp":
-                    if ($(this).hasClass("id-produto")) atualizaPreco(apenasNumeros($(this).attr("id")), "cp");
-                    break;
-            }
+            if ($(this).hasClass(tipo == "cp" ? "id-produto" : "id-maquina")) atualizaPreco(apenasNumeros($(this).attr("id")), tipo);
             if ($(this).hasClass("maximo") || $(this).hasClass("minimo")) limitar($(this), true);
         });
     }).off("keyup").on("keyup", function() {

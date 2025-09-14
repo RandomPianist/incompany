@@ -117,6 +117,11 @@ Route::middleware("auth")->group(function () {
         Route::get ("/validade",     [ProdutosController::class, "validade"]);
         Route::post("/salvar",       [ProdutosController::class, "salvar"]);
         Route::post("/excluir",      [ProdutosController::class, "excluir"]);
+        Route::group(["prefix" => "maquina"], function() {
+            Route::post("/",          [ProdutosController::class, "maquina"]);
+            Route::get ("/consultar", [ProdutosController::class, "consultar_maquina"]);
+            Route::get ("/listar",    [ProdutosController::class, "listar_maquina"]);
+        });
     });
 
     Route::group(["prefix" => "atribuicoes"], function() {

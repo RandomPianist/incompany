@@ -15,23 +15,16 @@ function listar(coluna) {
                         "<i class = 'fa-light fa-image d-none' style = 'font-size:20px'></i>" +
                     "</td>" +
                     "<td width = '20%' class = 'text-center'>" + linha.cod_externo + "</td>" +
-                    "<td width = '27.5%'>" + linha.descr + "</td>" +
-                    "<td width = '27.5%'>" + linha.categoria + "</td>" +
-                    "<td width = '10%' class = 'dinheiro'>" + linha.preco + "</td>" +
+                    "<td width = '32.5%'>" + linha.descr + "</td>" +
+                    "<td width = '32.5%'>" + linha.categoria + "</td>" +
                     "<td class = 'text-center btn-table-action' width = '10%'>" +
-                        "<i class = 'my-icon far fa-edit'      title = 'Editar'  onclick = 'chamar_modal(" + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/produtos"' + ")'></i>"
+                        "<i class = 'my-icon far fa-edit'      title = 'Editar'               onclick = 'chamar_modal(" + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-handshake' title = 'Adicionar a contrato' onclick = 'mp(" + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-trash-alt' title = 'Excluir'              onclick = 'excluir(" + linha.id + ", " + '"/produtos"' + ")'></i>"
                     "</td>" +
                 "</tr>";
             });
             $("#table-dados").html(resultado);
-            $(".dinheiro").each(function() {
-                let texto_final = (parseFloat($(this).html()) * 100).toString();
-                if (texto_final.indexOf(".") > -1) texto_final = texto_final.substring(0, texto_final.indexOf("."));
-                if (texto_final == "") $(this).html("R$ 0,00");
-                $(this).html(dinheiro(texto_final));
-                $(this).addClass("text-right");
-            });
             ordenar(coluna);
         } else mostrarImagemErro();
     });

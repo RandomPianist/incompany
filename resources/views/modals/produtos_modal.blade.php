@@ -30,7 +30,7 @@
                                 <span class = "custom-label-form tam-max"></span>
                             </div>
                             <div class = "col-3">
-                                <label for = "preco" class = "custom-label-form">Preço: *</label>
+                                <label for = "preco" class = "custom-label-form">Preço padrão: *</label>
                                 <input id = "preco" name = "preco" class = "form-control dinheiro-editavel" autocomplete = "off" type = "text"/>
                             </div>
                         </div>
