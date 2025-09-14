@@ -90,6 +90,7 @@ class AtribuicoesController extends Controller {
         $linha->save();
         $this->atualizar_atribuicoes($ant); // App\Http\Controllers\Controller.php
         $this->log_inserir("D", "atribuicoes", $linha->id); // App\Http\Controllers\Controller.php
+        $this->excluir_atribuicao_sem_retirada(); // App\Http\Controllers\Controller.php
     }
 
     public function listar(Request $request) {

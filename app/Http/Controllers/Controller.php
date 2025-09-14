@@ -243,6 +243,17 @@ class Controller extends BaseController {
         return sizeof($consulta) ? $consulta[0]->id : 0;
     }
 
+    protected function excluir_atribuicao_sem_retirada() {
+        DB::statement("
+            DELETE atribuicoes
+            FROM atribuicoes
+            LEFT JOIN retiradas
+                ON retiradas.id_atribuicao = atribuicoes.id
+            WHERE retiradas.id IS NULL
+              AND atribuicoes.lixeira = 1
+        ");
+    }
+
     protected function setor_mostrar($id) {
         if (intval($id)) {
             return DB::table("setores")
@@ -283,6 +294,7 @@ class Controller extends BaseController {
             );
             $this->log_inserir_lote($novo ? "E" : "D", "atribuicoes", $where, $api ? "ERP" : "WEB", $nome);
             $this->atualizar_atribuicoes($lista);
+            $this->excluir_atribuicao_sem_retirada(); // App\Http\Controllers\Controller.php
         }
     }
 
@@ -328,6 +340,7 @@ class Controller extends BaseController {
                     SET lixeira = 1
                     WHERE ".$where_g
                 );
+                $this->excluir_atribuicao_sem_retirada(); // App\Http\Controllers\Controller.php
             }
             return $ret;
         }
