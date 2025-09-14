@@ -130,10 +130,8 @@ class AtribuicoesController extends Controller {
                     "vatbold.psm_chave",
                     "vatbold.rascunho"
                 )
-                ->orderby(
-                    "vatbold.rascuho",
-                    "vatbold.id"
-                )
+                ->orderby("vatbold.rascunho")
+                ->orderby("vatbold.id")
                 ->get()
         ));
     }

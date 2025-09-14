@@ -52,12 +52,18 @@
                 top: 31px
             }
 
+            .linha-atb {
+                position: relative;
+                display: inline-block;
+                padding-left: 25px
+            }
+
             .linha-atb.new::before,
             .linha-atb.old::before {
-                bottom: 10px;
                 content: " ";
                 position: absolute;
-                left: 24px;
+                left: -1px;
+                top: 1px;
                 height: 22px;
                 width: 22px
             }

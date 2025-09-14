@@ -31,7 +31,7 @@ class ProdutosController extends Controller {
     private function busca_maq($where, $id_produto) {
         return DB::table("comodatos_produtos AS cp")
                     ->select(
-                        "cp.id_maquina",
+                        "comodatos.id_maquina",
                         "maquinas.descr AS maquina",
                         "cp.lixeira",
                         "cp.preco",
@@ -274,11 +274,17 @@ class ProdutosController extends Controller {
     public function listar_maquina(Request $request) {
         $filtro = trim($request->filtro);
         if ($filtro) {
-            $busca = $this->busca("maquinas.descr LIKE '".$filtro."%'", $request->id_produto);
-            if (sizeof($busca) < 3) $busca = $this->busca("maquinas.descr LIKE '%".$filtro."%'", $request->id_produto);
-            if (sizeof($busca) < 3) $busca = $this->busca("(maquinas.descr LIKE '%".implode("%' AND maquinas.descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')", $request->id_produto);
-        } else $busca = $this->busca("1", $request->id_produto);
-        return json_encode($busca);
+            $busca = $this->busca_maq("maquinas.descr LIKE '".$filtro."%'", $request->id_produto);
+            if (sizeof($busca) < 3) $busca = $this->busca_maq("maquinas.descr LIKE '%".$filtro."%'", $request->id_produto);
+            if (sizeof($busca) < 3) $busca = $this->busca_maq("(maquinas.descr LIKE '%".implode("%' AND maquinas.descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')", $request->id_produto);
+        } else $busca = $this->busca_maq("1", $request->id_produto);
+        $resultado = new \stdClass;
+        $resultado->lista = $busca;
+        $resultado->total = DB::table("comodatos_produtos")
+                                ->selectRaw("COUNT(id) AS total")
+                                ->where("id_produto", $request->id_produto)
+                                ->value("total");
+        return json_encode($resultado);
     }
 
     public function consultar_maquina(Request $request) {

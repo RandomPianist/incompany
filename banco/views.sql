@@ -97,6 +97,8 @@ CREATE VIEW vatbreal AS (
         id_setor,
         id_maquina,
         gerado,
+        data,
+        validade,
         lixeira
 
     FROM atribuicoes

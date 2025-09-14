@@ -787,3 +787,52 @@ div.atribuicoes {
 .col-atalho2 {
     margin-top: -26px
 }
+
+.j-center {
+    justify-content: center
+}
+
+#contratoModal .d-flex>button {
+    min-width: 302px
+}
+
+.cpModal .autocomplete {
+    padding-left: 37px
+}
+
+.remove-linha i {
+    scale: 0.8
+}
+
+.max-13 {
+    max-width: 13.5%
+}
+
+.col-preco {
+    max-width: 11.5%;
+    flex: 0 0 11.5%
+}
+
+.col-atalho {
+    max-width: 5%
+}
+
+.col-prod {
+    max-width: 28.3333%;
+    flex: 0 0 28.3333%
+}
+
+/*#cpModal .col-prod {
+    max-width: 36.6666%;
+    flex: 0 0 36.6666%
+}*/
+
+.cpModal .lixeira {
+    font-size: 9pt;
+    height: calc(1.5em + 0.75rem + 11px)
+}
+
+.modal-linha-dinamica .produto {
+    font-size: 10pt;
+    height: calc(1.5em + 0.75rem + 11px)
+}

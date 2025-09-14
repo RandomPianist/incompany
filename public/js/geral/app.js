@@ -194,7 +194,7 @@ $(document).ready(function() {
     });
 
     $("#atribuicoesModal").on("hide.bs.modal", function() {
-        if (document.querySelector("#" + tipo + "Modal .linha-atb.new") !== null) atribuicao.pergunta_salvar();
+        if (document.querySelector("#atribuicoesModal .linha-atb.new") !== null) atribuicao.pergunta_salvar();
     });
 
     $("#setoresModal").on("hide.bs.modal", function() {
@@ -986,8 +986,8 @@ function cp_mp_listar(tipo, abrir) {
         data = data.lista;
         for (let i = 0; i < data.length; i++) {
             if (i > 0) cp_mp_adicionar_campo(tipo);
-            $((tipo == "cp" ? "#cpModal #produto-" : "#mpModal #maquina-") + (i + 1)).val(data[i].produto);
-            $((tipo == "cp" ? "#cpModal #id_produto-" : "#mpModal #id_maquina-") + (i + 1)).val(data[i].id_produto).trigger("change");
+            $((tipo == "cp" ? "#cpModal #produto-" : "#mpModal #maquina-") + (i + 1)).val(data[i][tipo == "cp" ? "produto" : "maquina"]);
+            $((tipo == "cp" ? "#cpModal #id_produto-" : "#mpModal #id_maquina-") + (i + 1)).val(data[i][tipo == "cp" ? "id_produto" : "id_maquina"]).trigger("change");
             $("#" + tipo + "Modal #lixeira-" + (i + 1)).val("opt-" + data[i].lixeira);
             $("#" + tipo + "Modal #preco-" + (i + 1)).val(data[i].preco).trigger("keyup");
             $("#" + tipo + "Modal #minimo-" + (i + 1)).val(parseInt(data[i].minimo)).trigger("keyup");
@@ -1053,7 +1053,9 @@ function Atribuicoes(grade, _psm_valor) {
                     }
                     if (!acoes) acoes = "---";
                     resultado += "<tr>" +
-                        "<td class = 'linha-atb " + (atribuicao.rascunho == "S" ? "old" : "new") + "'>" + atribuicao.pr_valor + "</td>" +
+                        "<td>" +
+                            "<span class = 'linha-atb " + (atribuicao.rascunho == "S" ? "old" : "new") + "'>" + atribuicao.pr_valor + "</span>" +
+                        "</td>" +
                         "<td>" + atribuicao.obrigatorio + "</td>" +
                         "<td class = 'text-right'>" + atribuicao.qtd + "</td>" +
                         "<td class = 'text-right'>" + atribuicao.validade + "</td>" +
@@ -1070,6 +1072,8 @@ function Atribuicoes(grade, _psm_valor) {
                 $($("#atribuicoesModal div.atribuicoes").parent()).removeClass("mb-5");
             }
             $("#table-atribuicoes").html(resultado);
+            if (document.querySelector("#atribuicoesModal .linha-atb.new") !== null) $("#col-btn-salvar").removeClass("d-none").addClass("d-flex");
+            else $("#col-btn-salvar").addClass("d-none").removeClass("d-flex");
         });
     }
 
@@ -1105,6 +1109,7 @@ function Atribuicoes(grade, _psm_valor) {
                 obrigatorio : $("#obrigatorio").val().replace("opt-", "")
             }, function(ret) {
                 ret = parseInt(ret);
+                if (ret != 201) hab = true;
                 switch(ret) {
                     case 201:
                         $("#id_produto").val("");
@@ -1303,6 +1308,7 @@ function Atribuicoes(grade, _psm_valor) {
             modal1.removeProperty("z-index");
             modal2.removeProperty("z-index");
             loader.removeProperty("display");
+            mostrar();
         });
     }
 
@@ -1382,9 +1388,11 @@ function Excecoes(_id_atribuicao) {
                     if (excecao.ps_chave == "S") setor = true;
                     resultado += "<tr>" +
                         "<td class = 'exc-tipo'>" + (excecao.ps_chave == "P" ? "FUNCIONÁRIO" : "CENTRO DE CUSTO") + "</td>" +
-                        "<td>" + excecao.ps_valor + "</td>" +
+                        "<td>" +
+                            "<span class = 'linha-atb " + (excecao.rascunho == "S" ? "old" : "new") + "'>" + excecao.pr_valor + "</span>" +
+                        "</td>" +
                         "<td class = 'text-center manter-junto'>" + (
-                            parseInt(atribuicao.pode_editar) ? "<i class = 'my-icon far fa-edit' title = 'Editar' onclick = 'excecao.editar(" + excecao.id + ")'></i>" +
+                            parseInt(excecao.pode_editar) ? "<i class = 'my-icon far fa-edit' title = 'Editar' onclick = 'excecao.editar(" + excecao.id + ")'></i>" +
                                 "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excecao.excluir(" + excecao.id + ")'></i>" 
                             : 
                                 "---"
@@ -1423,6 +1431,7 @@ function Excecoes(_id_atribuicao) {
                 id_atribuicao : _id_atribuicao
             }, function(ret) {
                 ret = parseInt(ret);
+                if (ret != 201) hab = true;
                 switch(ret) {
                     case 201:
                         $("#exc-ps-chave").val("P");
