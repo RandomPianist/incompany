@@ -47,8 +47,6 @@
     @if ($admin)
         @include("components.add")
     @endif
-
-    <link rel = "stylesheet" href = "{{ asset('css/especifico/maquinas.css') }}" />
     
     <script type = "text/javascript" language = "JavaScript">
         const ID = "{{ request('id') ?? '' }}";

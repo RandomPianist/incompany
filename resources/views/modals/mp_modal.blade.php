@@ -32,7 +32,7 @@
                                 </button>
                             </div>
                         </div>
-                        <div class = "modal-tudo mt-4 pr-3 pl-1 pb-1">
+                        <div class = "modal-tudo mt-4 pl-1 pb-1">
                             <div class = "row">
                                 <div class = "col-5 form-search pr-1">
                                     <label for = "maquina-1" class = "custom-label-form">Máquinas: *</label>
@@ -47,7 +47,7 @@
                                         type = "text"
                                         autocomplete = "off"
                                     />
-                                    <input id = "maquina-1" class = "id-maquina" name = "id_maquina[]" type = "hidden" />
+                                    <input id = "id_maquina-1" class = "id-maquina" name = "id_maquina[]" type = "hidden" />
                                 </div>
                                 <div class = "col-2 p-0 px-1">
                                     <label for = "lixeira-1" class = "custom-label-form">Situação: *</label>
