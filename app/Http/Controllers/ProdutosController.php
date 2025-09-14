@@ -282,6 +282,7 @@ class ProdutosController extends Controller {
         $resultado->lista = $busca;
         $resultado->total = DB::table("comodatos_produtos")
                                 ->selectRaw("COUNT(id) AS total")
+                                ->whereRaw("CURDATE() >= comodatos.inicio AND CURDATE() < comodatos.fim")
                                 ->where("id_produto", $request->id_produto)
                                 ->value("total");
         return json_encode($resultado);
