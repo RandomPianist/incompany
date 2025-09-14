@@ -114,12 +114,15 @@ function atualiza_cod_externo(el) {
 }
 
 function atualizaPreco(seq) {
-    $.get(URL + "/maquinas/preco", {
-        id_maquina : $("#mpModal #id_maquina-" + seq).val(),
-        id_produto : $("#id_produto").val()
-    }, function(preco) {
-        $($($($("#mpModal #id_maquina-" + seq).parent()).parent()).find(".preco")).val(preco).trigger("keyup");
-    })
+    const _id_maquina = $("#mpModal #id_maquina-" + seq).val().trim();
+    if (_id_maquina) {
+        $.get(URL + "/maquinas/preco", {
+            id_maquina : _id_maquina,
+            id_produto : $("#id_produto").val()
+        }, function(preco) {
+            $($($($("#mpModal #id_maquina-" + seq).parent()).parent()).find(".preco")).val(preco).trigger("keyup");
+        })
+    }
 }
 
 function mp(id) {

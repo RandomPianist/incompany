@@ -92,12 +92,15 @@ function chamar_modal(id) {
 }
 
 function atualizaPreco(seq, nome) {
-    $.get(URL + "/maquinas/preco", {
-        id_maquina : $($(".id_maquina")[0]).val(),
-        id_produto : $("#" + nome + "Modal #id_produto-" + seq).val()
-    }, function(preco) {
-        $($($($("#" + nome + "Modal #id_produto-" + seq).parent()).parent()).find(".preco")).val(preco).trigger("keyup");
-    })
+    const _id_produto = $("#" + nome + "Modal #id_produto-" + seq).val().trim();
+    if (_id_produto) {
+        $.get(URL + "/maquinas/preco", {
+            id_maquina : $($(".id_maquina")[0]).val(),
+            id_produto : _id_produto
+        }, function(preco) {
+            $($($($("#" + nome + "Modal #id_produto-" + seq).parent()).parent()).find(".preco")).val(preco).trigger("keyup");
+        })
+    }
 }
 
 function contrato(id_maquina, mostrarExtrato, mostrarProdutos) {
