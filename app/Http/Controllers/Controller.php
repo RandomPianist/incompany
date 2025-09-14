@@ -129,7 +129,7 @@ class Controller extends BaseController {
                     id,
                     ".$id_pessoa.",
                     ".($nome ? "'".$nome."'" : "NULL").",
-                    CURDATE(),
+                    '".date("Y-m-d")."',
                     '".date("H:i:s")."'
                 
                 FROM ".$query."
@@ -221,16 +221,6 @@ class Controller extends BaseController {
 
     protected function atualizar_atribuicoes($consulta) {
         foreach ($consulta as $linha) $this->atualizar_tudo($linha->psm_valor, $linha->psm_chave);
-    }
-
-    protected function obter_atb_ant($id_atribuicao) {
-        return DB::table("vatbold")
-                    ->select(
-                        "psm_chave",
-                        "psm_valor"
-                    )
-                    ->where("id", $id_atribuicao)
-                    ->get();
     }
 
     protected function supervisor_consultar(Request $request) {

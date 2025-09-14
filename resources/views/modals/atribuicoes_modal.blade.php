@@ -76,6 +76,9 @@
                     </div>
                 </div>
             </div>
+            <div class = "d-flex">
+                <button type = "button" class = "btn btn-target mx-auto mb-4 px-5" onclick = "atribuicao.recalcular()">Salvar</button>
+            </div>
         </div>
     </div>
 </div>

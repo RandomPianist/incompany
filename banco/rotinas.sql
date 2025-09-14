@@ -84,20 +84,20 @@ BEGIN
     SET @query = CONCAT(
     'SELECT
         tab.*,
-        atribuicoes.id_setor,
-        atribuicoes.lixeira
+        vatbreal.id_setor,
+        vatbreal.lixeira
     FROM (
         SELECT 
             p.id AS id_pessoa, 
-            atribuicoes.id AS id_atribuicao, 
-            atribuicoes.cod_produto AS cod, 
+            vatbreal.id AS id_atribuicao, 
+            vatbreal.cod_produto AS cod, 
             IFNULL(produtos.referencia, '''') AS ref,
             ''PP'' AS src 
-        FROM atribuicoes 
+        FROM vatbreal 
         JOIN ', v_tab_p, ' AS p
-            ON p.id = atribuicoes.id_pessoa 
+            ON p.id = vatbreal.id_pessoa 
         JOIN produtos
-            ON produtos.cod_externo = atribuicoes.cod_produto 
+            ON produtos.cod_externo = vatbreal.cod_produto 
         JOIN mat_vcomodatos
             ON mat_vcomodatos.id_pessoa = p.id
         JOIN comodatos_produtos AS cp
@@ -107,15 +107,15 @@ BEGIN
         UNION ALL 
         SELECT 
             p.id AS id_pessoa, 
-            atribuicoes.id AS id_atribuicao, 
+            vatbreal.id AS id_atribuicao, 
             IFNULL(produtos.cod_externo, '''') AS cod, 
-            atribuicoes.referencia AS ref,
+            vatbreal.referencia AS ref,
             ''PR'' AS src 
-        FROM atribuicoes 
+        FROM vatbreal 
         JOIN ', v_tab_p, ' AS p
-            ON p.id = atribuicoes.id_pessoa 
+            ON p.id = vatbreal.id_pessoa 
         JOIN produtos
-            ON produtos.referencia = atribuicoes.referencia
+            ON produtos.referencia = vatbreal.referencia
         JOIN mat_vcomodatos
             ON mat_vcomodatos.id_pessoa = p.id
         JOIN comodatos_produtos AS cp
@@ -125,15 +125,15 @@ BEGIN
         UNION ALL 
         SELECT 
             p.id AS id_pessoa, 
-            atribuicoes.id AS id_atribuicao, 
-            atribuicoes.cod_produto AS cod, 
+            vatbreal.id AS id_atribuicao, 
+            vatbreal.cod_produto AS cod, 
             IFNULL(produtos.referencia, '''') AS ref,
             ''SP'' AS src 
-        FROM atribuicoes 
+        FROM vatbreal 
         JOIN ', v_tab_p, ' AS p
-            ON p.id_setor = atribuicoes.id_setor
+            ON p.id_setor = vatbreal.id_setor
         JOIN produtos
-            ON produtos.cod_externo = atribuicoes.cod_produto
+            ON produtos.cod_externo = vatbreal.cod_produto
         JOIN mat_vcomodatos
             ON mat_vcomodatos.id_pessoa = p.id
         JOIN comodatos_produtos AS cp
@@ -143,15 +143,15 @@ BEGIN
         UNION ALL 
         SELECT 
             p.id AS id_pessoa, 
-            atribuicoes.id AS id_atribuicao, 
+            vatbreal.id AS id_atribuicao, 
             IFNULL(produtos.cod_externo, '''') AS cod, 
-            atribuicoes.referencia AS ref,
+            vatbreal.referencia AS ref,
             ''SR'' AS src 
-        FROM atribuicoes 
+        FROM vatbreal 
         JOIN ', v_tab_p, ' AS p
-            ON p.id_setor = atribuicoes.id_setor 
+            ON p.id_setor = vatbreal.id_setor 
         JOIN produtos
-            ON produtos.referencia = atribuicoes.referencia
+            ON produtos.referencia = vatbreal.referencia
         JOIN mat_vcomodatos
             ON mat_vcomodatos.id_pessoa = p.id
         JOIN comodatos_produtos AS cp
@@ -161,17 +161,17 @@ BEGIN
         UNION ALL 
         SELECT 
             p.id AS id_pessoa, 
-            atribuicoes.id AS id_atribuicao, 
-            atribuicoes.cod_produto AS cod, 
+            vatbreal.id AS id_atribuicao, 
+            vatbreal.cod_produto AS cod, 
             IFNULL(produtos.referencia, '''') AS ref,
             ''MP'' AS src
-        FROM atribuicoes 
+        FROM vatbreal 
         JOIN mat_vcomodatos
-            ON mat_vcomodatos.id_maquina = atribuicoes.id_maquina
+            ON mat_vcomodatos.id_maquina = vatbreal.id_maquina
         JOIN ', v_tab_p, ' AS p
             ON p.id = mat_vcomodatos.id_pessoa 
         JOIN produtos
-            ON produtos.cod_externo = atribuicoes.cod_produto
+            ON produtos.cod_externo = vatbreal.cod_produto
         JOIN comodatos_produtos AS cp
             ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
         WHERE cp.lixeira = 0
@@ -179,17 +179,17 @@ BEGIN
         UNION ALL 
         SELECT 
             p.id AS id_pessoa, 
-            atribuicoes.id AS id_atribuicao, 
+            vatbreal.id AS id_atribuicao, 
             IFNULL(produtos.cod_externo, '''') AS cod, 
-            atribuicoes.referencia AS ref,
+            vatbreal.referencia AS ref,
             ''MR'' AS src 
-        FROM atribuicoes 
+        FROM vatbreal 
         JOIN mat_vcomodatos
-            ON mat_vcomodatos.id_maquina = atribuicoes.id_maquina 
+            ON mat_vcomodatos.id_maquina = vatbreal.id_maquina 
         JOIN ', v_tab_p, ' AS p
             ON p.id = mat_vcomodatos.id_pessoa 
         JOIN produtos
-            ON produtos.referencia = atribuicoes.referencia
+            ON produtos.referencia = vatbreal.referencia
         JOIN comodatos_produtos AS cp
             ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
         WHERE cp.lixeira = 0
@@ -197,8 +197,8 @@ BEGIN
     JOIN produtos
         ON (produtos.cod_externo = tab.cod AND tab.src LIKE ''%P'')
             OR (produtos.referencia = tab.ref AND tab.src LIKE ''%R'') 
-    JOIN atribuicoes
-        ON atribuicoes.id = tab.id_atribuicao');
+    JOIN vatbreal
+        ON vatbreal.id = tab.id_atribuicao');
 
     IF p_chave <> 'M' AND p_chave <> 'P' THEN
         SET @query = CONCAT(@query, ' JOIN ', v_tab_p, ' AS p ON p.id = tab.id_pessoa WHERE ');
@@ -249,6 +249,7 @@ BEGIN
             ON (excecoes.id_setor = mat_vatbaux.id_setor OR excecoes.id_pessoa = mat_vatbaux.id_pessoa)
                 AND mat_vatbaux.id_atribuicao = excecoes.id_atribuicao
         WHERE excecoes.lixeira = 0
+          AND excecoes.rascunho = ''S''
     ';
 
     PREPARE st_del3 FROM @delete_sql2;
@@ -260,9 +261,9 @@ BEGIN
         FROM mat_vatbaux
         JOIN users
             ON users.id_pessoa = mat_vatbaux.id_pessoa
-        JOIN atribuicoes
-            ON atribuicoes.id = mat_vatbaux.id_atribuicao
-        WHERE atribuicoes.gerado = 1 AND users.admin = 1
+        JOIN vatbreal
+            ON vatbreal.id = mat_vatbaux.id_atribuicao
+        WHERE vatbreal.gerado = 1 AND users.admin = 1
     ';
 
     PREPARE st_del4 FROM @delete_sql3;
@@ -358,7 +359,7 @@ BEGIN
                           ' UNION ALL ',
                           v_base_select, v_prev_notexists, ' AND x.src = ''SR'' AND ', v_where);
 
-    -- MR: acrescenta NOT EXISTS(sr) e o NOT EXISTS com atribuicoes / mat_vcomodatos / produtos
+    -- MR: acrescenta NOT EXISTS(sr) e o NOT EXISTS com vatbreal / mat_vcomodatos / produtos
     SET v_prev_notexists = CONCAT(
         v_prev_notexists,
         ' AND NOT EXISTS (SELECT 1 FROM mat_vatbaux mv FORCE INDEX (idx_mat_vatbaux_sr)
@@ -372,7 +373,7 @@ BEGIN
         v_prev_notexists,
         ' AND NOT EXISTS (
              SELECT 1
-             FROM atribuicoes a2
+             FROM vatbreal a2
              JOIN mat_vcomodatos v ON v.id_maquina = a2.id_maquina
              JOIN produtos p2 ON p2.cod_externo = a2.cod_produto
              WHERE v.id_pessoa = x.id_pessoa
@@ -476,19 +477,19 @@ BEGIN
                 IFNULL(SUM(retiradas.qtd), 0) AS valor
         ';
         SET v_from_part = CONCAT('
-            FROM atribuicoes
+            FROM vatbreal
             JOIN mat_vatribuicoes
-                ON mat_vatribuicoes.id_atribuicao = atribuicoes.id
+                ON mat_vatribuicoes.id_atribuicao = vatbreal.id
             JOIN ', v_tab_p, ' AS p
                 ON p.id = mat_vatribuicoes.id_pessoa
         ');
         SET v_left_join_part = '
             LEFT JOIN retiradas
-                ON retiradas.id_atribuicao = atribuicoes.id
+                ON retiradas.id_atribuicao = vatbreal.id
                     AND retiradas.id_pessoa = p.id
                     AND p.id_empresa IN (0, retiradas.id_empresa)
-                    AND retiradas.data >= atribuicoes.data
-                    AND retiradas.data > DATE_SUB(CURDATE(), INTERVAL atribuicoes.validade DAY)
+                    AND retiradas.data >= vatbreal.data
+                    AND retiradas.data > DATE_SUB(CURDATE(), INTERVAL vatbreal.validade DAY)
                     AND retiradas.id_supervisor IS NULL
         ';
         SET v_group_by_part = 'GROUP BY mat_vatribuicoes.id_pessoa, mat_vatribuicoes.id_atribuicao, p.id_setor';
@@ -502,10 +503,10 @@ BEGIN
                 MAX(retiradas.data) AS data
         ';
         SET v_from_part = CONCAT('
-            FROM atribuicoes
+            FROM vatbreal
             JOIN mat_vatribuicoes
-                ON mat_vatribuicoes.id_atribuicao = atribuicoes.id
-            JOIN atribuicoes AS associadas
+                ON mat_vatribuicoes.id_atribuicao = vatbreal.id
+            JOIN vatbreal AS associadas
                 ON associadas.id = mat_vatribuicoes.id_associado
             JOIN ', v_tab_p, ' AS p
                 ON p.id = mat_vatribuicoes.id_pessoa

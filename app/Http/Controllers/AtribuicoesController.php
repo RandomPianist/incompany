@@ -75,22 +75,18 @@ class AtribuicoesController extends Controller {
         $linha->validade = $request->validade;
         $linha->obrigatorio = $request->obrigatorio;
         $linha->data = date("Y-m-d");
-        $linha->gerado = 0;
+        $linha->rascunho = $request->id ? "E" : "C";
+        $linha->id_usuario = Auth::user()->id;
         $linha->id_empresa_autor = $this->obter_empresa(); // App\Http\Controllers\Controller.php
         $linha->save();
-        $this->atualizar_atribuicoes($this->obter_atb_ant($linha->id)); // App\Http\Controllers\Controller.php
-        $this->log_inserir($request->id ? "E" : "C", "atribuicoes", $linha->id); // App\Http\Controllers\Controller.php
         return 201;
     }
 
     public function excluir(Request $request) {
         $linha = Atribuicoes::find($request->id);
-        $ant = $this->obter_atb_ant($linha->id); // App\Http\Controllers\Controller.php
-        $linha->lixeira = 1;
+        $linha->rascunho = 'R';
+        $linha->id_usuario = Auth::user()->id;
         $linha->save();
-        $this->atualizar_atribuicoes($ant); // App\Http\Controllers\Controller.php
-        $this->log_inserir("D", "atribuicoes", $linha->id); // App\Http\Controllers\Controller.php
-        $this->excluir_atribuicao_sem_retirada(); // App\Http\Controllers\Controller.php
     }
 
     public function listar(Request $request) {
@@ -104,7 +100,8 @@ class AtribuicoesController extends Controller {
                 WHEN vatbold.obrigatorio = 1 THEN 'SIM'
                 ELSE 'NÃO'
             END AS obrigatorio,
-            vatbold.psm_chave
+            vatbold.psm_chave,
+            vatbold.rascunho
         ";
         return json_encode($this->atribuicao_listar( // App\Http\Controllers\Controller.php
             $this->consulta_main($select)
@@ -130,9 +127,13 @@ class AtribuicoesController extends Controller {
                     "vatbold.validade",
                     "vatbold.id_empresa",
                     "vatbold.obrigatorio",
-                    "vatbold.psm_chave"
+                    "vatbold.psm_chave",
+                    "vatbold.rascunho"
                 )
-                ->orderby("vatbold.id")
+                ->orderby(
+                    "vatbold.rascuho",
+                    "vatbold.id"
+                )
                 ->get()
         ));
     }
@@ -176,5 +177,92 @@ class AtribuicoesController extends Controller {
                 ->where("vprodaux.lixeira", 0)
                 ->get()
         );
+    }
+
+    public function recalcular() {
+        $tabelas = ["atribuicoes", "excecoes"];
+        $where = "id_usuario = ".Auth::user()->id;
+        foreach ($tabelas as $tabela) {
+            DB::statement("
+                UPDATE ".$tabela."
+                SET rascunho = 'T'
+                WHERE ".$where." AND rascunho = 'R'
+            ");
+        }
+        $lista = DB::table("vatbold")
+                    ->select(
+                        "psm_chave",
+                        "psm_valor"
+                    )
+                    ->joinSub(
+                        DB::table("atribuicoes")
+                            ->select("id")
+                            ->whereRaw($where)
+                            ->where("rascunho", "<>", "S")
+                            ->unionAll(
+                                DB::table("excecoes")
+                                    ->select("id_atribuicao")
+                                    ->whereRaw($where)
+                                    ->where("rascunho", "<>", "S")
+                            ),
+                        "lim",
+                        "lim.id",
+                        "vatbold.id"
+                    )
+                    ->groupby(
+                        "psm_chave",
+                        "psm_valor"
+                    )
+                    ->get();
+        foreach ($tabelas as $tabela) {
+            $this->log_inserir_lote("C", $tabela, $where." AND rascunho = 'C'"); // App\Http\Controllers\Controller.php
+            DB::statement("
+                UPDATE ".$tabela."
+                SET rascunho = 'S'
+                WHERE ".$where." AND rascunho = 'C'
+            ");
+            $this->log_inserir_lote("E", $tabela, $where." AND rascunho = 'E'"); // App\Http\Controllers\Controller.php
+            DB::statement("
+                UPDATE ".$tabela."
+                SET rascunho = 'S'".($tabela == "atribuicoes" ? ", gerado = 0, data = '".date('Y-m-d')."'" : "")."
+                WHERE ".$where." AND rascunho = 'E'
+            ");
+            $this->log_inserir_lote("D", $tabela, $where." AND rascunho = 'T'"); // App\Http\Controllers\Controller.php
+            DB::statement("
+                UPDATE ".$tabela."
+                SET rascunho = 'S', lixeira = 1
+                WHERE ".$where." AND rascunho = 'T'
+            ");
+        }
+        $this->atualizar_atribuicoes($lista);
+        $this->excluir_atribuicao_sem_retirada();
+    }
+
+    public function descartar() {
+        $tabelas = ["atribuicoes", "excecoes"];
+        $lista = DB::table("retiradas")
+                    ->select("retiradas.id")
+                    ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
+                    ->where("atribuicoes.rascunho", "C")
+                    ->where("atribuicoes.id_usuario", Auth::user()->id)
+                    ->pluck("id")
+                    ->toArray();
+        if (sizeof($lista)) {
+            DB::statement("DELETE FROM retiradas WHERE id IN (".join(",", $lista).")");
+            DB::statement("DELETE FROM log WHERE fk IN (".join(",", $lista).") AND tabela = 'retiradas'");
+        }
+        foreach ($tabelas as $tabela) {
+            DB::statement("
+                UPDATE ".$tabela."
+                SET rascunho = 'S'
+                WHERE id_usuario = ".Auth::user()->id."
+                  AND rascunho IN ('E', 'R')
+            ");
+            DB::statement("
+                DELETE FROM ".$tabela."
+                WHERE id_usuario = ".Auth::user()->id."
+                  AND rascunho = 'C'
+            ");
+        }
     }
 }

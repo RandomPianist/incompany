@@ -51,6 +51,26 @@
                 right: -14px;
                 top: 31px
             }
+
+            .linha-atb.new::before,
+            .linha-atb.old::before {
+                bottom: 10px;
+                content: " ";
+                position: absolute;
+                left: 24px;
+                height: 22px;
+                width: 22px
+            }
+
+            .linha-atb.new::before {
+                background: url("{{ $root_url }}/img/new.png") no-repeat;
+                background-size: contain
+            }
+
+            .linha-atb.old::before {
+                background: url("{{ $root_url }}/img/old.png") no-repeat;
+                background-size: contain
+            }
         </style>
     </head>
     <body>

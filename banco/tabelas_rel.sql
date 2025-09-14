@@ -177,6 +177,7 @@ CREATE TABLE atribuicoes (
 	validade INT,
 	obrigatorio TINYINT DEFAULT 0,
     gerado TINYINT DEFAULT 0,
+    rascunho ENUM('C', 'E', 'R', 'S') DEFAULT 'S',
     lixeira TINYINT DEFAULT 0,
 
     id_pessoa INT,
@@ -188,6 +189,7 @@ CREATE TABLE atribuicoes (
 
     id_empresa INT DEFAULT 0,
     id_empresa_autor INT DEFAULT 0,
+    id_usuario INT,
 
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -215,12 +217,15 @@ CREATE TABLE excecoes (
     id_atribuicao INT,
     id_pessoa INT,
     id_setor INT,
+    id_usuario INT,
+    rascunho ENUM('C', 'E', 'R', 'S') DEFAULT 'S',
     lixeira TINYINT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_atribuicao) REFERENCES atribuicoes(id),
     FOREIGN KEY (id_pessoa) REFERENCES pessoas(id),
-    FOREIGN KEY (id_setor) REFERENCES setores(id)
+    FOREIGN KEY (id_setor) REFERENCES setores(id),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id)
 );
 
 CREATE TABLE retiradas (

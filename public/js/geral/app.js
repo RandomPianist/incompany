@@ -193,6 +193,10 @@ $(document).ready(function() {
         });
     });
 
+    $("#atribuicoesModal").on("hide.bs.modal", function() {
+        if (document.querySelector("#" + tipo + "Modal .linha-atb.new") !== null) atribuicao.pergunta_salvar();
+    });
+
     $("#setoresModal").on("hide.bs.modal", function() {
         $(".linha-usuario").each(function() {
             $(this).remove();
@@ -1049,7 +1053,7 @@ function Atribuicoes(grade, _psm_valor) {
                     }
                     if (!acoes) acoes = "---";
                     resultado += "<tr>" +
-                        "<td>" + atribuicao.pr_valor + "</td>" +
+                        "<td class = 'linha-atb " + (atribuicao.rascunho == "S" ? "old" : "new") + "'>" + atribuicao.pr_valor + "</td>" +
                         "<td>" + atribuicao.obrigatorio + "</td>" +
                         "<td class = 'text-right'>" + atribuicao.qtd + "</td>" +
                         "<td class = 'text-right'>" + atribuicao.validade + "</td>" +
@@ -1276,6 +1280,43 @@ function Atribuicoes(grade, _psm_valor) {
                 else s_alert("Supervisor inválido");
             });
         } else s_alert(erro);
+    }
+
+    this.recalcular = function() {
+        let lista = Array.from(document.getElementsByClassName("btn-primary"));
+        let loader = document.getElementById("loader").style;
+        let modal1 = document.getElementById("atribuicoesModal").style;
+        let modal2 = document.getElementById("excecoesModal").style;
+
+        lista.forEach((el) => {
+            el.style.zIndex = "0";
+        });
+        loader.display = "flex";
+        modal1.zIndex = "0";
+        modal2.zIndex = "0";
+        $.post(URL + "/atribuicoes/recalcular", {
+            _token : $("meta[name='csrf-token']").attr("content")
+        }, function(data) {
+            lista.forEach((el) => {
+                el.style.removeProperty("z-index");
+            });
+            modal1.removeProperty("z-index");
+            modal2.removeProperty("z-index");
+            loader.removeProperty("display");
+        });
+    }
+
+    this.pergunta_salvar = async function() {
+        const resp = await s_alert({
+            html : "Deseja salvar as alterações?",
+            ync : true
+        });
+        if (resp.isDenied) {
+            await $.post(URL + "/atribuicoes/descartar", {
+                _token : $("meta[name='csrf-token']").attr("content")
+            });
+        } else if (resp.isConfirmed) that.recalcular();
+        else $("#atribuicoesModal").modal();
     }
     
     $($("#table-atribuicoes").parent()).removeClass("pb-4");

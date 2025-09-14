@@ -26,7 +26,14 @@ class ExcecoesController extends Controller {
                 ELSE pessoas.nome
             END AS ps_valor"
         ];
-        if ($listando) array_push($campos, "vatbold.psm_chave", "vatbold.id_empresa_autor AS id_empresa");
+        if ($listando) {
+            array_push(
+                $campos,
+                "vatbold.psm_chave",
+                "vatbold.id_empresa_autor AS id_empresa",
+                "excecoes.rascunho"
+            );
+        }
         $query = "SELECT ".implode(", ", $campos)." FROM excecoes ";
         if ($listando) $query .= " JOIN vatbold ON vatbold.id = excecoes.id_atribuicao ";
         $query .= "
@@ -42,7 +49,8 @@ class ExcecoesController extends Controller {
             pessoas.lixeira = 0 OR pessoas.id IS NULL
         ) AND (
             setores.lixeira = 0 OR setores.id IS NULL
-        )" : " excecoes.id = ".$id;
+        ) AND excecoes.rascunho <> 'R'" : " excecoes.id = ".$id;
+        $query .= " ORDER BY excecoes.rascunho";
         return DB::select(DB::raw($query));
     }
 
@@ -70,20 +78,17 @@ class ExcecoesController extends Controller {
                 break;
         }
         $linha->id_atribuicao = $request->id_atribuicao;
+        $linha->rascunho = $request->id ? "E" : "C";
+        $linha->id_usuario = Auth::user()->id;
         $linha->save();
-        $this->atualizar_atribuicoes($this->obter_atb_ant($request->id_atribuicao)); // App\Http\Controllers\Controller.php
-        $this->log_inserir($request->id ? "E" : "C", "excecoes", $linha->id); // App\Http\Controllers\Controller.php
         return 201;
     }
 
     public function excluir(Request $request) {
         $linha = Excecoes::find($request->id);
-        $ant = $this->obter_atb_ant($linha->id_atribuicao); // App\Http\Controllers\Controller.php
-        $linha->lixeira = 1;
+        $linha->rascunho = 'R';
+        $linha->id_usuario = Auth::user()->id;
         $linha->save();
-        $this->atualizar_atribuicoes($ant); // App\Http\Controllers\Controller.php
-        $this->log_inserir("D", "excecoes", $linha->id); // App\Http\Controllers\Controller.php
-        $this->excluir_atribuicao_sem_retirada(); // App\Http\Controllers\Controller.php
     }
 
     public function listar($id_atribuicao) {

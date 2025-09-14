@@ -79,11 +79,29 @@ CREATE VIEW vatbold AS (
         qtd,
         data,
         id_empresa,
-        id_empresa_autor
+        id_empresa_autor,
+        rascunho
 
     FROM atribuicoes
 
     WHERE lixeira = 0
+      AND rascunho <> 'R'
+);
+DROP VIEW IF EXISTS vatbreal;
+CREATE VIEW vatbreal AS (
+    SELECT
+        id,
+        cod_produto,
+        referencia,
+        id_pessoa,
+        id_setor,
+        id_maquina,
+        gerado,
+        lixeira
+
+    FROM atribuicoes
+
+    WHERE rascunho = 'S'
 );
 DROP VIEW IF EXISTS vprodutosmaq;
 CREATE VIEW vprodutosmaq AS (
@@ -199,6 +217,8 @@ CREATE VIEW vpendentesgeral AS (
         ON mat_vultretirada.id_atribuicao = vatbold.id
             AND mat_vultretirada.id_pessoa = mat_vatribuicoes.id_pessoa
 
+    WHERE vatbold.rascunho = 0
+
     GROUP BY
         mat_vatribuicoes.id_pessoa,
         vatbold.id,
@@ -287,6 +307,8 @@ CREATE VIEW vpendentesmaq AS (
 
     JOIN mat_vultretirada
         ON mat_vultretirada.id_atribuicao = vatbold.id
+
+    WHERE vatbold.rascunho = 0
 
     GROUP BY
         mat_vatribuicoes.id_pessoa,

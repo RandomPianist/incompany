@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int    $id_maquina
  * @property int    $id_empresa
  * @property int    $id_empresa_autor
+ * @property int    $id_usuario
  * @property int    $created_at
  * @property int    $updated_at
  * @property Date   $data
@@ -43,7 +44,7 @@ class Atribuicoes extends Model
      * @var array
      */
     protected $fillable = [
-        'qtd', 'data', 'validade', 'obrigatorio', 'gerado', 'lixeira', 'id_pessoa', 'id_setor', 'id_maquina', 'cod_produto', 'referencia', 'id_empresa', 'id_empresa_autor', 'created_at', 'updated_at'
+        'qtd', 'data', 'validade', 'obrigatorio', 'gerado', 'rascunho', 'lixeira', 'id_pessoa', 'id_setor', 'id_maquina', 'cod_produto', 'referencia', 'id_empresa', 'id_empresa_autor', 'id_usuario', 'created_at', 'updated_at'
     ];
 
     /**
@@ -61,7 +62,7 @@ class Atribuicoes extends Model
      * @var array
      */
     protected $casts = [
-        'id' => 'int', 'data' => 'date', 'validade' => 'int', 'obrigatorio' => 'int', 'gerado' => 'int', 'lixeira' => 'int', 'id_pessoa' => 'int', 'id_setor' => 'int', 'id_maquina' => 'int', 'cod_produto' => 'string', 'referencia' => 'string', 'id_empresa' => 'int', 'id_empresa_autor' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
+        'id' => 'int', 'data' => 'date', 'validade' => 'int', 'obrigatorio' => 'int', 'gerado' => 'int', 'lixeira' => 'int', 'id_pessoa' => 'int', 'id_setor' => 'int', 'id_maquina' => 'int', 'cod_produto' => 'string', 'referencia' => 'string', 'id_empresa' => 'int', 'id_empresa_autor' => 'int', 'id_usuario' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
     ];
 
     /**
