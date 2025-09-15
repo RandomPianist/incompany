@@ -944,7 +944,7 @@ function cp_mp_adicionar_campo(tipo) {
         if (tipo == "cp") classes.push("produto", "id_produto");
         else classes.push("maquina", "id_maquina");
         classes.forEach((classe) => {
-            $("#cpModal ." + classe).each(function(i) {
+            $("#" + tipo + "Modal ." + classe).each(function(i) {
                 $(this).attr("id", classe + "-" + (i + 1));
             });
         });

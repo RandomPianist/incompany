@@ -330,7 +330,7 @@ class Controller extends BaseController {
                     SET lixeira = 1
                     WHERE ".$where_g
                 );
-                $this->excluir_atribuicao_sem_retirada(); // App\Http\Controllers\Controller.php
+                $this->excluir_atribuicao_sem_retirada();
             }
             return $ret;
         }
