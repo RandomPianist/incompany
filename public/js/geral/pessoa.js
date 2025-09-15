@@ -6,6 +6,11 @@ function Pessoa(_id) {
         return !parseInt($("#pessoa-empresa-select").val()) ? "administrador" : "usuário";
     }
 
+    let letraTipo = async function() {
+        let data = await $.get(URL + "/setores/mostrar/" + $("#pessoa-setor-select").val());
+        return parseInt(data.cria_usuario) ? !parseInt($("#pessoa-empresa-select").val()) ? "A" : "U" : parseInt($("#supervisor").val()) ? "S" : "F";
+    }
+
     this.toggle_user = function(setor) {
         $.get(URL + "/setores/mostrar/" + setor, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
@@ -31,26 +36,25 @@ function Pessoa(_id) {
         })
     }
 
-    this.setorPorEmpresa = function(callback) {
-        $.get(URL + "/setores/por-empresa/" + $("#pessoa-empresa-select").val(), function(data) {
-            if (typeof data == "string") data = $.parseJSON(data);
-            let resultado = "<option value = '0'>--</option>";
-            data.forEach((setor) => {
-                resultado += "<option value = '" + setor.id + "'>" + setor.descr + "</option>";
-            });
-            $("#pessoa-setor-select").html(resultado);
-            if (TIPO == "A" || TIPO == "U") {
-                $.get(URL + "/setores/primeiro-admin/" + $("#pessoa-empresa-select").val(), function(resp) {
-                    if (typeof resp == "string") resp = $.parseJSON(resp);
-                    $("#pessoa-setor-select").val(resp.id);
-                    that.toggle_user(resp.id);
-                    if (callback !== undefined) callback();
-                });
-            } else {
-                that.toggle_user(0);
-                if (callback !== undefined) callback();
-            }
-        })
+    this.setorPorEmpresa = async function(callback) {
+        let data = await $.get(URL + "/setores/por-empresa/" + $("#pessoa-empresa-select").val());
+        if (typeof data == "string") data = $.parseJSON(data);
+        let resultado = "<option value = '0'>--</option>";
+        data.forEach((setor) => {
+            resultado += "<option value = '" + setor.id + "'>" + setor.descr + "</option>";
+        });
+        $("#pessoa-setor-select").html(resultado);
+        const tipo = await letraTipo();
+        if (tipo == "A" || tipo == "U") {
+            let resp = await $.get(URL + "/setores/primeiro-admin/" + $("#pessoa-empresa-select").val());
+            if (typeof resp == "string") resp = $.parseJSON(resp);
+            $("#pessoa-setor-select").val(resp.id);
+            that.toggle_user(resp.id);
+            if (callback !== undefined) callback();
+        } else {
+            that.toggle_user(0);
+            if (callback !== undefined) callback();
+        }
     }
 
     this.toggle_emp = function() {
@@ -179,25 +183,27 @@ function Pessoa(_id) {
             ant_id_empresa = parseInt($("#pessoa-empresa-select").val());
             setTimeout(function() {
                 modal("pessoasModal", _id, function() {
-                    that.toggle_user(parseInt(data.id_setor));
-                    estilo_bloco_senha.display = id != USUARIO && validaUsuario ? "none" : "";
-                    $("#pessoa-setor-select").attr("disabled", _id == USUARIO);
-                    $("#supervisor-chk").prop("checked", parseInt(data.supervisor) == 1);
-                    $(".pessoa-senha").each(function() {
-                        $(this).html("Senha:");
-                    });
-                    $("#pessoa-setor-select").val(data.id_setor);
                     $("#pessoa-empresa-select").val(data.id_empresa);
-                    that.toggle_user(data.id_setor);
-                    $($("#pessoasModal .user-pic").parent()).removeClass("d-none");
-                    if (!data.foto) {
-                        let nome = data.nome.toUpperCase().replace("DE ", "").split(" ");
-                        iniciais = "";
-                        iniciais += nome[0][0];
-                        if (nome.length > 1) iniciais += nome[nome.length - 1][0];
-                        $("#pessoasModal .user-pic span").html(iniciais);
-                    }
-                    foto_pessoa("#pessoasModal .user-pic", data.foto ? data.foto : "");
+                    that.setorPorEmpresa(function() {
+                        that.toggle_user(parseInt(data.id_setor));
+                        estilo_bloco_senha.display = id != USUARIO && validaUsuario ? "none" : "";
+                        $("#pessoa-setor-select").attr("disabled", _id == USUARIO);
+                        $("#supervisor-chk").prop("checked", parseInt(data.supervisor) == 1);
+                        $(".pessoa-senha").each(function() {
+                            $(this).html("Senha:");
+                        });
+                        $("#pessoa-setor-select").val(data.id_setor);
+                        that.toggle_user(data.id_setor);
+                        $($("#pessoasModal .user-pic").parent()).removeClass("d-none");
+                        if (!data.foto) {
+                            let nome = data.nome.toUpperCase().replace("DE ", "").split(" ");
+                            iniciais = "";
+                            iniciais += nome[0][0];
+                            if (nome.length > 1) iniciais += nome[nome.length - 1][0];
+                            $("#pessoasModal .user-pic span").html(iniciais);
+                        }
+                        foto_pessoa("#pessoasModal .user-pic", data.foto ? data.foto : "");
+                    });
                 });
             }, 0);
         });

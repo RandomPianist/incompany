@@ -502,9 +502,9 @@ function modal(nome, id, callback) {
                 });
             });
             $("#pessoa-empresa-select").html(resultado);
-            if (TIPO !== undefined) {
+            try {
                 if (TIPO != "A") $("#pessoa-empresa-select").val(primeiro);
-            }
+            } catch(err) {}
             pessoa.setorPorEmpresa(function() {
                 concluir();
             });
