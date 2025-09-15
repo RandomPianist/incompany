@@ -9,27 +9,32 @@ function listar(coluna) {
             data.forEach((linha) => {
                 resultado += "<tr>" +
                     "<td class = 'text-right' width = '12%'>" + linha.id.toString().padStart(4, "0") + "</td>";
-                if (COMODATO) {
-                    resultado += "<td width = '28%'>" + linha.descr + "</td>" +
-                        "<td width = '35%'>" + linha.comodato + "</td>";
-                } else resultado += "<td width = '69%'>" + linha.descr + "</td>";
+                resultado += COMODATO ?
+                    "<td width = '28%'>" + linha.descr + "</td>" +
+                    "<td width = '35%'>" + linha.comodato + "</td>"
+                :
+                    "<td width = '69%'>" + linha.descr + "</td>"
+                ;
 
                 resultado += "<td class = 'text-center btn-table-action' width = '25%'>";
                 if (!EMPRESA) {
                     if (linha.comodato != "---") {
-                        resultado += "<i class = 'my-icon far fa-box'           title = 'Atribuir produto'    onclick = 'atribuicao = new Atribuicoes(false, " + linha.id + ")'></i>" +                            
-                            "<i class = 'my-icon far fa-tshirt'                 title = 'Atribuir grade'      onclick = 'atribuicao = new Atribuicoes(true, " + linha.id + ")'></i>" +
-                            "<i class = 'my-icon far fa-edit'                   title = 'Editar'              onclick = 'chamar_modal(" + linha.id + ")'></i>" +
-                            "<br />" +
-                            "<i class = 'my-icon far fa-bars'                   title = 'Opções do contrato'  onclick = 'contrato(" + linha.id + ", " + (linha.tem_mov == "S" ? "true" : "false") + ", " + (linha.tem_cp == "S" ? "true" : "false") + ")'></i>" +
-                            "<i class = 'my-icon far fa-tools'                  title = 'Configurar contrato' onclick = 'configurar_comodato(" + linha.id + ")'></i>" +
+                        if (linha.tem_mov == "S") resultado += "<i class = 'my-icon fa-light fa-file' title = 'Extrato' onclick = 'extrato_maquina(" + linha.id + ")'></i>";
+                        resultado += "<i class = 'my-icon far fa-box' title = 'Atribuir produto' onclick = 'cp(" + linha.id + ")'></i>";
+                        if (linha.tem_cp == "S") resultado += "<i class = 'my-icon fa-light fa-cubes' title = 'Estoque' onclick = 'estoque(" + linha.id + ")'></i>";
+                        resultado += "<i class = 'my-icon far fa-tools'         title = 'Configurar contrato' onclick = 'configurar_comodato(" + linha.id + ")'></i>" +
                             "<i class = 'my-icon fa-duotone fa-handshake-slash' title = 'Encerrar contrato'   onclick = 'encerrar(" + linha.id + ")'></i>";
                     } else {
                         resultado += "<i class = 'my-icon far fa-handshake' title = 'Locar máquina' onclick = 'comodatar(" + linha.id + ")'></i>" +
                             "<i class = 'my-icon far fa-edit'               title = 'Editar'        onclick = 'chamar_modal(" + linha.id + ")'></i>" +
                             "<i class = 'my-icon far fa-trash-alt'          title = 'Excluir'       onclick = 'excluir(" + linha.id + ", " + '"/maquinas"' + ")'></i>";
                     }
-                } else if (linha.tem_cod == "S") resultado += "<i class = 'my-icon far fa-cart-arrow-down' title = 'Solicitar compra' onclick = 'chamarRelatorioItens(" + linha.id + ")'></i>";
+                } else {
+                    resultado += "<i class = 'my-icon far fa-box' title = 'Atribuir produto'    onclick = 'atribuicao = new Atribuicoes(false, " + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-tshirt'       title = 'Atribuir grade'      onclick = 'atribuicao = new Atribuicoes(true, " + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-tools'        title = 'Configurar contrato' onclick = 'configurar_comodato(" + linha.id + ")'></i>";
+                    if (linha.tem_cod == "S") resultado += "<i class = 'my-icon far fa-cart-arrow-down' title = 'Solicitar compra' onclick = 'chamarRelatorioItens(" + linha.id + ")'></i>";
+                }
                 resultado += "</td></tr>";
             });
             $("#table-dados").html(resultado);

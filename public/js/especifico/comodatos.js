@@ -96,7 +96,7 @@ function configurar_comodato(id_maquina) {
         
         ["travar_ret", "travar_estq", "atb_todos"].forEach((id) => {
             $("#" + id).val(data[id]);
-            $("#" + id + "-chk").prop("checked", parseInt(data[id]) ? true : false);
+            $("#" + id + "-chk").prop("checked", parseInt(data[id]) ? true : false).attr("disabled", EMPRESA || id != "atb_todos");
             anteriores[id] = parseInt(data[id]);
         });
         anteriores.quantidade = parseInt(data.qtd);
