@@ -383,9 +383,7 @@ class RelatoriosController extends Controller {
             ->setOption('margin-top', '20mm')
             ->setOption('margin-bottom', '20mm')
             ->setOption('print-media-type', true);
-        return sizeof($principal->resultado) ? $pdf->download('termos-de-retirada-'.(date("YmdHis")).'.pdf') : $this->view_mensagem("warning", "Não há nada para exibir");
-
-        return sizeof($resultado) ? view("reports/controle", compact("resultado", "criterios", "cidade", "data_extenso")) : $this->view_mensagem("warning", "Não há nada para exibir");
+        return sizeof($principal->resultado) ? $pdf->inline('termos-de-retirada-'.(date("YmdHis")).'.pdf') : $this->view_mensagem("warning", "Não há nada para exibir");
     }
 
     public function controle_consultar(Request $request) {

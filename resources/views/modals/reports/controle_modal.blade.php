@@ -50,7 +50,7 @@
                     </div>
                 </div>
                 <div class = "d-flex">
-                    <button type = "button" class = "btn btn-target mx-auto mb-4 my-4 px-5" onclick = "relatorio.validar()">Baixar</button>
+                    <button type = "button" class = "btn btn-target mx-auto mb-4 my-4 px-5" onclick = "relatorio.validar()">Visualizar</button>
                 </div>
             </form>
         </div>
