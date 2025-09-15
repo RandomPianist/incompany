@@ -1328,18 +1328,16 @@ function Atribuicoes(grade, _psm_valor) {
     $($("#table-atribuicoes").parent()).removeClass("pb-4");
     $("#table-atribuicoes").html("");
     modal("atribuicoesModal", 0, function() {
+        const _psm_chave = that.obter_psm();
         $.get(URL + "/" + (
-            location.href.indexOf("colaboradores") > -1 ? 
+            _psm_chave == "P" ? 
                 "colaboradores" :
-            location.href.indexOf("setores") > -1 ? 
+            _psm_chave == "S" ? 
                 "setores" : 
             "maquinas"
         ) + "/mostrar/" + _psm_valor, function(data) {
-            if (location.href.indexOf("maquinas") == -1) {
-                if (typeof data == "string") data = $.parseJSON(data);
-                var descr = data[location.href.indexOf("colaboradores") > -1 ? "nome" : "descr"].toUpperCase();
-            } else var descr = data;
-            $("#atribuicoesModalLabel").html(descr + " - Atribuindo " + (grade ? "grades" : "produtos"));
+            if (typeof data == "string") data = $.parseJSON(data);
+            $("#atribuicoesModalLabel").html(data[_psm_chave == "P" ? "nome" : "descr"].toUpperCase() + " - Atribuindo " + (grade ? "grades" : "produtos"));
             if (grade) {
                 $("#referencia").attr("data-filter", _psm_valor);
                 $("#div-produto").addClass("d-none");
