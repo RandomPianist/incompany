@@ -1057,7 +1057,7 @@ function Atribuicoes(grade, _psm_valor) {
                             "<span class = 'linha-atb " + (atribuicao.rascunho == "S" ? "old" : "new") + "'>" + atribuicao.pr_valor + "</span>" +
                         "</td>" +
                         "<td>" + atribuicao.obrigatorio + "</td>" +
-                        "<td class = 'text-right'>" + atribuicao.qtd + "</td>" +
+                        "<td class = 'text-right'>" + parseInt(atribuicao.qtd) + "</td>" +
                         "<td class = 'text-right'>" + atribuicao.validade + "</td>" +
                         "<td class = 'text-center manter-junto'>" + acoes + "</td>" +
                     "</tr>";
