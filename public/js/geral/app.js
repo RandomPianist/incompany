@@ -586,8 +586,11 @@ function carrega_atalhos() {
                         else req.filtro = _filtro;
                         concluir(link, req, achou);
                     });
-                } else if (_id) req.id = _id;
-                else if (_filtro) req.filtro = _filtro;
+                } else {
+                    if (_id) req.id = _id;
+                    else if (_filtro) req.filtro = _filtro;
+                    concluir(link, req, achou);
+                }
             } else concluir(link, req, achou);
         }
     });
