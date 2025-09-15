@@ -50,25 +50,6 @@ $(document).ready(function() {
         if (e.keyCode == 13) listar();
     });
 
-    $("#cpModal .form-control-lg").each(function() {
-        $(this).on("keyup", function(e) {
-            if (e.keyCode == 13) {
-                listar_cp(function() {
-                    $("#cpModal .id-produto").each(function() {
-                        $(this).trigger("change");
-                    });
-                    $("#cpModal .minimo, #cpModal .maximo").each(function() {
-                        limitar($(this), true);
-                    });
-                });
-            }
-        }).on("focus", function() {
-            validacao_bloqueada = true;
-        }).on("blur", function() {
-            validacao_bloqueada = false;
-        });
-    });
-
     $(document).on("keydown", "form", function(event) { 
         const enter = event.key == "Enter";
         if (enter && !validacao_bloqueada) {
@@ -190,6 +171,15 @@ $(document).ready(function() {
         $("#" + tipo + "Modal").on("hide.bs.modal", function() {
             if (document.querySelector("#" + tipo + "Modal .form-search.new") === null) cp_mp_limpar_tudo(tipo);
             else cp_mp_pergunta_salvar(tipo);
+        });
+        $("#" + tipo + "Modal .form-control-lg").each(function() {
+            $(this).on("keyup", function(e) {
+                if (e.keyCode == 13) cp_mp_listar(tipo, true);
+            }).on("focus", function() {
+                validacao_bloqueada = true;
+            }).on("blur", function() {
+                validacao_bloqueada = false;
+            });
         });
     });
 
@@ -994,7 +984,7 @@ function cp_mp_listar(tipo, abrir) {
             $("#" + tipo + "Modal #maximo-" + (i + 1)).val(parseInt(data[i].maximo)).trigger("keyup");
         }
         if (abrir) {
-            $("#" + tipo + "Modal").modal();
+            if (!validacao_bloqueada) $("#" + tipo + "Modal").modal();
             $(tipo == "cp" ? "#cpModal .id-produto" : "#mpModal .id-maquina").each(function() {
                 $(this).trigger("change");
             });
