@@ -556,6 +556,9 @@ function carrega_atalhos() {
             if (campoId && campoId.indexOf("#") == -1) campoId = "#" + campoId;
             if (campoDescr && campoDescr.indexOf("#") == -1) campoDescr = "#" + campoDescr;            
             
+            if (!campoId) campoId = "#nao";
+            if (!campoDescr) campoDescr = "#nao";
+
             let elCampoId = document.querySelector(campoId);
             if (elCampoId !== null) {
                 if (elCampoId.value.trim()) {
