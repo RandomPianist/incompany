@@ -191,7 +191,12 @@ CREATE VIEW vpendentesgeral AS (
             ELSE 0
         END AS qtd,
         IFNULL(DATE_FORMAT(mat_vultretirada.data, '%d/%m/%Y'), '') AS ultima_retirada,
-        DATE_FORMAT(IFNULL(DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY), CURDATE()), '%d/%m/%Y') AS proxima_retirada,
+        DATE_FORMAT((
+            CASE
+                WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN CURDATE()
+                ELSE (DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY))
+            END
+        ), '%d/%m/%Y') AS proxima_retirada,
         IFNULL(DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY), vatbold.data) AS proxima_retirada_real,
         CASE
             WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN 1
@@ -282,7 +287,12 @@ CREATE VIEW vpendentesmaq AS (
             ELSE 0
         END AS qtd,
         IFNULL(DATE_FORMAT(mat_vultretirada.data, '%d/%m/%Y'), '') AS ultima_retirada,
-        DATE_FORMAT(IFNULL(DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY), CURDATE()), '%d/%m/%Y') AS proxima_retirada,
+        DATE_FORMAT((
+            CASE
+                WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN CURDATE()
+                ELSE (DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY))
+            END
+        ), '%d/%m/%Y') AS proxima_retirada,
         IFNULL(DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY), vatbold.data) AS proxima_retirada_real,
         CASE
             WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN 1
