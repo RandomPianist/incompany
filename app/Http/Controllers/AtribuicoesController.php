@@ -25,6 +25,16 @@ class AtribuicoesController extends Controller {
                     ->where("vprodaux.lixeira", 0);
     }
 
+    private function salvar_main(Atribuicoes $atribuicao, $qtd, $validade, $obrigatorio) {
+        $atribuicao->qtd = $qtd;
+        $atribuicao->validade = $validade;
+        $atribuicao->obrigatorio = $obrigatorio;
+        $atribuicao->data = date("Y-m-d");
+        $atribuicao->id_usuario = Auth::user()->id;
+        $atribuicao->id_empresa_autor = $this->obter_empresa(); // App\Http\Controllers\Controller.php
+        $atribuicao->save();
+    }
+
     public function salvar(Request $request) {
         if (!sizeof(
             DB::table("vprodaux")
@@ -71,14 +81,8 @@ class AtribuicoesController extends Controller {
                 $linha->referencia = $pr_valor;
                 break;
         }
-        $linha->qtd = $request->qtd;
-        $linha->validade = $request->validade;
-        $linha->obrigatorio = $request->obrigatorio;
-        $linha->data = date("Y-m-d");
         $linha->rascunho = $request->id ? "E" : "C";
-        $linha->id_usuario = Auth::user()->id;
-        $linha->id_empresa_autor = $this->obter_empresa(); // App\Http\Controllers\Controller.php
-        $linha->save();
+        $this->salvar_main($linha, $request->qtd, $request->validade, $request->obrigatorio);
         return 201;
     }
 
@@ -119,6 +123,10 @@ class AtribuicoesController extends Controller {
                 })
                 ->where("vatbold.psm_valor", $request->id)
                 ->where("vatbold.pr_chave", $request->tipo)
+                ->where(function($sql) {
+                    $sql->where("vatbold.rascunho", "S")
+                        ->orWhere("vatbold.id_usuario", Auth::user()->id);
+                })
                 ->where("vprodaux.lixeira", 0)
                 ->groupby(
                     "vatbold.id",
@@ -212,6 +220,51 @@ class AtribuicoesController extends Controller {
                         "psm_valor"
                     )
                     ->get();
+        $consulta = DB::table("vatbold")
+                        ->whereRaw($where)
+                        ->where("rascunho", "C")
+                        ->get();
+        foreach ($consulta as $linha) {
+            $id_excluir = $linha->id;
+            $id_restaurar = DB::table("atribuicoes")
+                                ->whereRaw("
+                                    (CASE
+                                        WHEN cod_produto IS NOT NULL THEN 'P'
+                                        ELSE 'R'
+                                    END) = '".$linha->pr_chave."'"
+                                )
+                                ->whereRaw("
+                                    (CASE
+                                        WHEN cod_produto IS NOT NULL THEN cod_produto
+                                        ELSE referencia
+                                    END) = '".$linha->pr_valor."'"
+                                )
+                                ->whereRaw("
+                                    (CASE
+                                        WHEN id_pessoa IS NOT NULL THEN 'P'
+                                        WHEN id_setor IS NOT NULL THEN 'S'
+                                        ELSE 'M'
+                                    END) = '".$linha->psm_chave."'"
+                                )
+                                ->whereRaw("
+                                    (CASE
+                                        WHEN id_pessoa IS NOT NULL THEN id_pessoa
+                                        WHEN id_setor IS NOT NULL THEN id_setor
+                                        ELSE id_maquina
+                                    END) = '".$linha->psm_valor."'"
+                                )
+                                ->value("id");
+            if ($id_restaurar !== null) {
+                $modelo = Atribuicoes::find($id_excluir);
+                $modelo->delete();
+                $modelo = Atribuicoes::find($id_restaurar);
+                $modelo->lixeira = 0;
+                $modelo->rascunho = "S";
+                $this->salvar_main($modelo, $linha->qtd, $linha->validade, $linha->obrigatorio);
+                $this->log_inserir("E", "atribuicoes", $modelo->id);
+                DB::statement("DELETE FROM log WHERE fk = ".$id_excluir." AND acao = 'D' AND tabela = 'atribuicoes'");
+            }
+        }
         foreach ($tabelas as $tabela) {
             $this->log_inserir_lote("C", $tabela, $where." AND rascunho = 'C'"); // App\Http\Controllers\Controller.php
             DB::statement("
@@ -232,8 +285,7 @@ class AtribuicoesController extends Controller {
                 WHERE ".$where." AND rascunho = 'T'
             ");
         }
-        $this->atualizar_atribuicoes($lista);
-        $this->excluir_atribuicao_sem_retirada();
+        $this->atualizar_atribuicoes($lista); // App\Http\Controllers\Controller.php
     }
 
     public function descartar() {

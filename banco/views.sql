@@ -80,6 +80,7 @@ CREATE VIEW vatbold AS (
         data,
         id_empresa,
         id_empresa_autor,
+        id_usuario,
         rascunho
 
     FROM atribuicoes

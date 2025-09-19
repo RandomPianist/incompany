@@ -566,4 +566,26 @@ BEGIN
     COMMIT;
 END$$
 
+CREATE PROCEDURE excluir_atribuicao_sem_retirada()
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+    DELETE a
+    FROM atribuicoes a
+    LEFT JOIN retiradas r ON r.id_atribuicao = a.id
+    WHERE r.id IS NULL
+        AND a.lixeira = 1;
+    DELETE l
+    FROM log l
+    LEFT JOIN atribuicoes a2 ON a2.id = l.fk
+    WHERE a2.id IS NULL
+        AND l.tabela = 'atribuicoes';
+    COMMIT;
+END $$
+
 DELIMITER ;

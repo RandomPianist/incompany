@@ -268,7 +268,6 @@ class ProdutosController extends Controller {
         $linha->save();
         $this->log_inserir("D", "produtos", $linha->id); // App\Http\Controllers\Controller.php
         $this->atualizar_atribuicoes($ant); // App\Http\Controllers\Controller.php
-        $this->excluir_atribuicao_sem_retirada(); // App\Http\Controllers\Controller.php
     }
 
     public function listar_maquina(Request $request) {

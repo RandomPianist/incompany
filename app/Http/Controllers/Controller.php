@@ -217,10 +217,12 @@ class Controller extends BaseController {
         DB::statement("CALL atualizar_mat_vatribuicoes('".$chave."', ".$valor.", 'N')");
         DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'R', 'N')");
         DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'U', 'N')");
+        if ($completo) DB::statement("CALL excluir_atribuicao_sem_retirada()");
     }
 
     protected function atualizar_atribuicoes($consulta) {
         foreach ($consulta as $linha) $this->atualizar_tudo($linha->psm_valor, $linha->psm_chave);
+        DB::statement("CALL excluir_atribuicao_sem_retirada()");
     }
 
     protected function supervisor_consultar(Request $request) {
@@ -231,17 +233,6 @@ class Controller extends BaseController {
                         ->where("lixeira", 0)
                         ->get();
         return sizeof($consulta) ? $consulta[0]->id : 0;
-    }
-
-    protected function excluir_atribuicao_sem_retirada() {
-        DB::statement("
-            DELETE atribuicoes
-            FROM atribuicoes
-            LEFT JOIN retiradas
-                ON retiradas.id_atribuicao = atribuicoes.id
-            WHERE retiradas.id IS NULL
-              AND atribuicoes.lixeira = 1
-        ");
     }
 
     protected function setor_mostrar($id) {
@@ -284,7 +275,6 @@ class Controller extends BaseController {
             );
             $this->log_inserir_lote($novo ? "E" : "D", "atribuicoes", $where, $api ? "ERP" : "WEB", $nome);
             $this->atualizar_atribuicoes($lista);
-            $this->excluir_atribuicao_sem_retirada(); // App\Http\Controllers\Controller.php
         }
     }
 
@@ -330,7 +320,7 @@ class Controller extends BaseController {
                     SET lixeira = 1
                     WHERE ".$where_g
                 );
-                $this->excluir_atribuicao_sem_retirada();
+                DB::statement("CALL excluir_atribuicao_sem_retirada()");
             }
             return $ret;
         }
