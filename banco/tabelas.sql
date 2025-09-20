@@ -188,6 +188,20 @@ CREATE INDEX idx_atr_id_maquina_cod_lixeira ON atribuicoes(id_maquina, cod_produ
 CREATE INDEX idx_atr_id_maquina_ref_lixeira ON atribuicoes(id_maquina, referencia, lixeira);
 CREATE INDEX idx_atr_cod_ref ON atribuicoes(cod_produto, referencia);
 
+CREATE TABLE atbbkp (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    qtd NUMERIC(10,5),
+    data DATE,
+	validade INT,
+	obrigatorio TINYINT DEFAULT 0,
+    gerado TINYINT DEFAULT 0,
+    id_usuario INT,
+    id_atribuicao INT,
+    id_usuario_editando INT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 CREATE TABLE excecoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_atribuicao INT,
@@ -196,6 +210,17 @@ CREATE TABLE excecoes (
     id_usuario INT,
     rascunho ENUM('C', 'E', 'R', 'S', 'T') DEFAULT 'S', -- (C)riando, (E)ditando, (R)emovendo, (S)alvo, (T)emporário
     lixeira TINYINT DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE excbkp (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_pessoa INT,
+    id_setor INT,
+    id_usuario INT,
+    id_excecao INT,
+    id_usuario_editando INT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

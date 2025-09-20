@@ -7,6 +7,7 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Excecoes;
 use App\Models\Atribuicoes;
+use App\Models\Excbkp;
 
 class ExcecoesController extends Controller {
     private function consulta($listando, $id) {
@@ -68,7 +69,21 @@ class ExcecoesController extends Controller {
                 ->where($request->ps_chave == "P" ? "id_pessoa" : "id_setor", $request->ps_id)
                 ->get()
         ) && !intval($request->id)) return 403;
+        $id_usuario = Auth::user()->id;
+        $atb = Atribuicoes::find($request->id_atribuicao);
+        $this->backup_atribuicao($atb); // App\Http\Controllers\Controller.php
+        $atb->gerado = 0;
+        $atb->save();
         $linha = Excecoes::firstOrNew(["id" => $request->id]);
+        if ($request->id) {
+            $bkp = new Excbkp;
+            $bkp->id_pessoa = $linha->id_pessoa;
+            $bkp->id_setor = $linha->id_setor;
+            $bkp->id_usuario = $linha->id_usuario;
+            $bkp->id_usuario_editando = $id_usuario;
+            $bkp->id_excecao = $linha->id;
+            $bkp->save();
+        }
         switch ($request->ps_chave) {
             case "P":
                 $linha->id_pessoa = $request->ps_id;
@@ -79,7 +94,7 @@ class ExcecoesController extends Controller {
         }
         $linha->id_atribuicao = $request->id_atribuicao;
         $linha->rascunho = $request->id ? "E" : "C";
-        $linha->id_usuario = Auth::user()->id;
+        $linha->id_usuario = $id_usuario;
         $linha->save();
         return 201;
     }

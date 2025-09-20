@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Atribuicoes;
 use App\Models\Pessoas;
 use App\Models\Setores;
+use App\Models\Maquinas;
 
 class AtribuicoesController extends Controller {
     private function consulta_main($select) {
@@ -57,6 +58,7 @@ class AtribuicoesController extends Controller {
                 ->get()
         ) && !intval($request->id)) return 403;
         $linha = Atribuicoes::firstOrNew(["id" => $request->id]);
+        if ($request->id) $this->backup_atribuicao($linha); // App\Http\Controllers\Controller.php
         switch ($request->psm_chave) {
             case "P":
                 $linha->id_pessoa = $request->psm_valor;
@@ -82,6 +84,7 @@ class AtribuicoesController extends Controller {
                 break;
         }
         $linha->rascunho = $request->id ? "E" : "C";
+        $linha->gerado = 0;
         $this->salvar_main($linha, $request->qtd, $request->validade, $request->obrigatorio);
         return 201;
     }
@@ -91,6 +94,40 @@ class AtribuicoesController extends Controller {
         $linha->rascunho = 'R';
         $linha->id_usuario = Auth::user()->id;
         $linha->save();
+    }
+
+    public function permissao(Request $request) {
+        $resultado = new \stdClass;
+        $consulta = DB::table("vatbold")
+                        ->selectRaw("UPPERCASE(IFNULL(users1.name, users2.name)) AS usuario")
+                        ->leftjoin("excecoes", "excecoes.id_atribuicao", "atribuicoes.id")
+                        ->leftjoin("users AS users1", "users1.id", "excecoes.id_usuario")
+                        ->leftjoin("users AS users2", "users2.id", "atribuicoes.id_usuario")
+                        ->where("vatbold.psm_valor", $request->id)
+                        ->where("vatbold.pr_chave", $request->tipo)
+                        ->where("vatbold.psm_chave", $request->tipo2)
+                        ->where(function($sql) {
+                            $sql->where("vatbold.rascunho", "<>", "S")
+                                ->orWhere("excecoes.rascunho", "<>", "S");
+                        })
+                        ->get();
+        if (!sizeof($consulta)) {
+            $resultado->code = 200;
+            return json_encode($resultado);
+        }
+        switch($request->tipo2) {
+            case "P":
+                $resultado->nome = Pessoas::find($request->id)->nome;
+                break;
+            case "S":
+                $resultado->nome = Setores::find($request->id)->descr;
+                break;
+            case "M":
+                $resultado->nome = Maquinas::find($request->id)->descr;
+                break;
+        }
+        $resultado->usuario = $consulta[0]->usuario;
+        return json_encode($resultado);
     }
 
     public function listar(Request $request) {
@@ -118,11 +155,9 @@ class AtribuicoesController extends Controller {
                             ->where("vatbold.psm_chave", "S");
                     });
                 })
-                ->where(function($sql) use($request) {
-                    $sql->where("vatbold.psm_chave", $request->tipo2);
-                })
                 ->where("vatbold.psm_valor", $request->id)
                 ->where("vatbold.pr_chave", $request->tipo)
+                ->where("vatbold.psm_chave", $request->tipo2)
                 ->where(function($sql) {
                     $sql->where("vatbold.rascunho", "S")
                         ->orWhere("vatbold.id_usuario", Auth::user()->id);
@@ -289,12 +324,13 @@ class AtribuicoesController extends Controller {
     }
 
     public function descartar() {
+        $id_usuario = Auth::user()->id;
         $tabelas = ["atribuicoes", "excecoes"];
         $lista = DB::table("retiradas")
                     ->select("retiradas.id")
                     ->join("atribuicoes", "atribuicoes.id", "retiradas.id_atribuicao")
                     ->where("atribuicoes.rascunho", "C")
-                    ->where("atribuicoes.id_usuario", Auth::user()->id)
+                    ->where("atribuicoes.id_usuario", $id_usuario)
                     ->pluck("id")
                     ->toArray();
         if (sizeof($lista)) {
@@ -302,15 +338,40 @@ class AtribuicoesController extends Controller {
             DB::statement("DELETE FROM log WHERE fk IN (".join(",", $lista).") AND tabela = 'retiradas'");
         }
         foreach ($tabelas as $tabela) {
+            $tab_bkp = $tabela == "atribuicoes" ? "atbbkp" : "excbkp";
             DB::statement("
                 UPDATE ".$tabela."
                 SET rascunho = 'S'
-                WHERE id_usuario = ".Auth::user()->id."
+                WHERE id_usuario = ".$id_usuario."
                   AND rascunho IN ('E', 'R')
             ");
+            DB::statement($tabela == "atribuicoes" ? "
+                UPDATE atribuicoes
+                JOIN atbbkp
+                    ON atbbkp.id_atribuicao = atribuicoes.id
+                SET
+                    atribuicoes.qtd = atbbkp.qtd,
+                    atribuicoes.data = atbbkp.data,
+                    atribuicoes.validade = atbbkp.validade,
+                    atribuicoes.obrigatorio = atbbkp.obrigatorio,
+                    atribuicoes.gerado = atbbkp.gerado,
+                    atribuicoes.id_usuario = atbbkp.id_usuario
+                WHERE atribuices.id_usuario = ".$id_usuario
+            : "
+                UPDATE excecoes
+                JOIN excbkp
+                    ON excbkp.id_excecao = excecoes.id
+                SET
+                    excecoes.id_pessoa = excbkp.id_pessoa
+                    excecoes.id_setor = excbkp.id_setor
+                    excecoes.id_usuario = excbkp.id_usuario
+                WHERE excecoes.id_usuario = ".$id_usuario
+            );
+            DB::statement("DELETE FROM ".$tab_bkp." WHERE id_usuario_editando = ".$id_usuario);
+            if (!sizeof(DB::table($tab_bkp)->get())) DB::statement("TRUNCATE TABLE ".$tab_bkp);
             DB::statement("
                 DELETE FROM ".$tabela."
-                WHERE id_usuario = ".Auth::user()->id."
+                WHERE id_usuario = ".$id_usuario."
                   AND rascunho = 'C'
             ");
         }

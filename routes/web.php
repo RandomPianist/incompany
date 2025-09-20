@@ -126,6 +126,7 @@ Route::middleware("auth")->group(function () {
 
     Route::group(["prefix" => "atribuicoes"], function() {
         Route::get ("/listar",        [AtribuicoesController::class, "listar"]);
+        Route::get ("/permissao",     [AtribuicoesController::class, "permissao"]);
         Route::get ("/mostrar/{id}",  [AtribuicoesController::class, "mostrar"]);
         Route::get ("/produtos/{id}", [AtribuicoesController::class, "produtos"]);
         Route::get ("/grade/{id}",    [AtribuicoesController::class, "grade"]);

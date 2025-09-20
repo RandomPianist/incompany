@@ -7,6 +7,7 @@ use Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Log;
+use App\Models\Atbbkp;
 use App\Models\Pessoas;
 use App\Models\Produtos;
 use App\Models\Maquinas;
@@ -389,6 +390,19 @@ class Controller extends BaseController {
             }
         }
         return $ret;
+    }
+
+    protected function backup_atribuicao(Atribuicoes $atribuicao) {
+        $bkp = new Atbbkp;
+        $bkp->qtd = $atribuicao->qtd;
+        $bkp->data = $atribuicao->data;
+        $bkp->validade = $atribuicao->validade;
+        $bkp->obrigatorio = $atribuicao->obrigatorio;
+        $bkp->gerado = $atribuicao->gerado;
+        $bkp->id_usuario = $atribuicao->id_usuario;
+        $bkp->id_atribuicao = $atribuicao->id;
+        $bkp->id_usuario_editando = Auth::user()->id;
+        $bkp->save();
     }
 
     protected function obter_where($id_pessoa, $tabela = "pessoas", $inclusive_excluidos = false) {

@@ -1323,38 +1323,47 @@ function Atribuicoes(grade, _psm_valor) {
         else $("#atribuicoesModal").modal();
     }
     
-    $($("#table-atribuicoes").parent()).removeClass("pb-4");
-    $("#table-atribuicoes").html("");
-    modal("atribuicoesModal", 0, function() {
-        const _psm_chave = that.obter_psm();
-        $.get(URL + "/" + (
-            _psm_chave == "P" ? 
-                "colaboradores" :
-            _psm_chave == "S" ? 
-                "setores" : 
-            "maquinas"
-        ) + "/mostrar/" + _psm_valor, function(data) {
-            if (typeof data == "string") data = $.parseJSON(data);
-            $("#atribuicoesModalLabel").html(data[_psm_chave == "P" ? "nome" : "descr"].toUpperCase() + " - Atribuindo " + (grade ? "grades" : "produtos"));
-            if (grade) {
-                $("#referencia").attr("data-filter", _psm_valor);
-                $("#div-produto").addClass("d-none");
-                $("#div-referencia").removeClass("d-none");
-            } else {
-                $("#div-produto").removeClass("d-none");
-                $("#div-referencia").addClass("d-none");
-            }
-            $("#obrigatorio").val("opt-0");
-            mostrar();
-            $("#atribuicoesModal input[type=number]").each(function() {
-                $(this).off("change").on("change", function() {
-                    limitar($(this));
-                }).off("keyup").on("keyup", function(e) {
-                    $(this).trigger("change");
-                    atribuicao.tentar(e);
-                }).trigger("change");
-            })
-        });
+    $.get(URL + "/atribuicoes/permissao", {
+        id : _psm_valor,
+        tipo : grade ? "R" : "P",
+        tipo2 : that.obter_psm()
+    }, function(data) {
+        if (typeof data == "string") data = $.parseJSON(data);
+        if (parseInt(data.code) == 200) {
+            $($("#table-atribuicoes").parent()).removeClass("pb-4");
+            $("#table-atribuicoes").html("");
+            modal("atribuicoesModal", 0, function() {
+                const _psm_chave = that.obter_psm();
+                $.get(URL + "/" + (
+                    _psm_chave == "P" ? 
+                        "colaboradores" :
+                    _psm_chave == "S" ? 
+                        "setores" : 
+                    "maquinas"
+                ) + "/mostrar/" + _psm_valor, function(data) {
+                    if (typeof data == "string") data = $.parseJSON(data);
+                    $("#atribuicoesModalLabel").html(data[_psm_chave == "P" ? "nome" : "descr"].toUpperCase() + " - Atribuindo " + (grade ? "grades" : "produtos"));
+                    if (grade) {
+                        $("#referencia").attr("data-filter", _psm_valor);
+                        $("#div-produto").addClass("d-none");
+                        $("#div-referencia").removeClass("d-none");
+                    } else {
+                        $("#div-produto").removeClass("d-none");
+                        $("#div-referencia").addClass("d-none");
+                    }
+                    $("#obrigatorio").val("opt-0");
+                    mostrar();
+                    $("#atribuicoesModal input[type=number]").each(function() {
+                        $(this).off("change").on("change", function() {
+                            limitar($(this));
+                        }).off("keyup").on("keyup", function(e) {
+                            $(this).trigger("change");
+                            atribuicao.tentar(e);
+                        }).trigger("change");
+                    })
+                });
+            });
+        } else s_alert("Não é possível listar as atribuições de " + data.nome + " porque elas estão sendo editadas por " + data.usuario);
     });
 }
 

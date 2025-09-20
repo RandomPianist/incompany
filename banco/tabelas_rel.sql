@@ -200,7 +200,9 @@ CREATE TABLE atribuicoes (
     FOREIGN KEY (cod_produto) REFERENCES produtos(cod_externo),
     FOREIGN KEY (referencia) REFERENCES produtos(referencia),
 
-	FOREIGN KEY (id_empresa) REFERENCES empresas(id)
+	FOREIGN KEY (id_empresa) REFERENCES empresas(id),
+    FOREIGN KEY (id_empresa_autor) REFERENCES empresas(id),
+    FOREIGN KEY (id_usuario) REFERENCES users(id)
 );
 
 CREATE INDEX idx_atr_created_date ON atribuicoes(data);
@@ -211,6 +213,23 @@ CREATE INDEX idx_atr_id_setor_ref_lixeira ON atribuicoes(id_setor, referencia, l
 CREATE INDEX idx_atr_id_maquina_cod_lixeira ON atribuicoes(id_maquina, cod_produto, lixeira);
 CREATE INDEX idx_atr_id_maquina_ref_lixeira ON atribuicoes(id_maquina, referencia, lixeira);
 CREATE INDEX idx_atr_cod_ref ON atribuicoes(cod_produto, referencia);
+
+CREATE TABLE atbbkp (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    qtd NUMERIC(10,5),
+    data DATE,
+	validade INT,
+	obrigatorio TINYINT DEFAULT 0,
+    gerado TINYINT DEFAULT 0,
+    id_usuario INT,
+    id_atribuicao INT,
+    id_usuario_editando INT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_atribuicao) REFERENCES atribuicoes(id),
+    FOREIGN KEY (id_usuario_editando) REFERENCES users(id),
+    FOREIGN KEY (id_usuario) REFERENCES users(id)
+);
 
 CREATE TABLE excecoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -225,7 +244,23 @@ CREATE TABLE excecoes (
     FOREIGN KEY (id_atribuicao) REFERENCES atribuicoes(id),
     FOREIGN KEY (id_pessoa) REFERENCES pessoas(id),
     FOREIGN KEY (id_setor) REFERENCES setores(id),
-    FOREIGN KEY (id_usuario) REFERENCES usuarios(id)
+    FOREIGN KEY (id_usuario) REFERENCES users(id)
+);
+
+CREATE TABLE excbkp (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_pessoa INT,
+    id_setor INT,
+    id_usuario INT,
+    id_excecao INT,
+    id_usuario_editando INT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_pessoa) REFERENCES pessoas(id),
+    FOREIGN KEY (id_setor) REFERENCES setores(id),
+    FOREIGN KEY (id_usuario) REFERENCES users(id),
+    FOREIGN KEY (id_usuario_editando) REFERENCES users(id),
+    FOREIGN KEY (id_excecao) REFERENCES excecoes(id)
 );
 
 CREATE TABLE retiradas (
