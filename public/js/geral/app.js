@@ -1068,6 +1068,8 @@ function Atribuicoes(grade, _psm_valor) {
                 $($("#atribuicoesModal div.atribuicoes").parent()).removeClass("mb-5");
             }
             $("#table-atribuicoes").html(resultado);
+            $("#referencia").attr("disabled", false);
+            $("#produto").attr("disabled", false);
             if (document.querySelector("#atribuicoesModal .linha-atb.new") !== null) $("#col-btn-salvar").removeClass("d-none").addClass("d-flex");
             else $("#col-btn-salvar").addClass("d-none").removeClass("d-flex");
         });
@@ -1145,7 +1147,7 @@ function Atribuicoes(grade, _psm_valor) {
                     $("#quantidade").val(parseInt(data.qtd));
                     $("#obrigatorio").val("opt-" + data.obrigatorio);
                     $("#estiloAux").html("");
-                    $("#" + campo + ", #validade, #quantidade, #obrigatorio").each(function() {
+                    $("#validade, #quantidade, #obrigatorio").each(function() {
                         $(this).attr("disabled", false);
                     });
                     mostrar(id);
