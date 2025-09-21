@@ -481,7 +481,7 @@ class Controller extends BaseController {
             $elementos = array();
             if ($request->inicio) {
                 $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->startOfDay();
-                $consulta_inicio = Carbon::createFromFormat('Y-m-d', $consulta->inicio)->startOfDay();
+                $consulta_inicio = Carbon::parse($consulta->inicio)->startOfDay();
                 if ($inicio->lessThan($consulta_inicio)) {
                     $resultado->inicio_correto = $consulta_inicio->format("d/m/Y");
                     array_push($elementos, "inicio");
@@ -489,7 +489,7 @@ class Controller extends BaseController {
             }
             if ($request->fim) {
                 $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->startOfDay();
-                $consulta_fim = Carbon::createFromFormat('Y-m-d', $consulta->fim)->startOfDay();
+                $consulta_fim = Carbon::parse($consulta->fim)->startOfDay();
                 if ($fim->greaterThan($consulta_fim)) {
                     $resultado->fim_correto = $consulta_fim->format("d/m/Y");
                     array_push($elementos, "fim");

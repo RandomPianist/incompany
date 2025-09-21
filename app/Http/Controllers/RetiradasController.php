@@ -36,7 +36,7 @@ class RetiradasController extends Controller {
     }
 
     public function proximas($id_pessoa) {
-        $hoje = Carbon::createFromFormat('Y-m-d', date("Y-m-d"));
+        $hoje = Carbon::today();
         $consulta = DB::table("vpendentesgeral")
                         ->select(
                             DB::raw("IFNULL(produtos.cod_externo, produtos.id) AS id_produto"),
