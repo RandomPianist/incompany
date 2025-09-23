@@ -4,85 +4,48 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * @property int    $id
- * @property int    $numero_ped
- * @property int    $id_atribuicao
- * @property int    $id_comodato
- * @property int    $id_pessoa
- * @property int    $id_supervisor
- * @property int    $id_produto
- * @property int    $id_empresa
- * @property int    $id_setor
- * @property int    $created_at
- * @property int    $updated_at
- * @property Date   $data
- * @property string $hms
- * @property string $observacao
- * @property string $ca
- */
 class Retiradas extends Model
 {
-    /**
-     * The database table used by the model.
-     *
-     * @var string
-     */
     protected $table = 'retiradas';
 
-    /**
-     * The primary key for the model.
-     *
-     * @var string
-     */
-    protected $primaryKey = 'id';
-
-    /**
-     * Attributes that should be mass-assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
-        'qtd', 'data', 'hms', 'observacao', 'ca', 'preco', 'biometria_ou_senha', 'numero_ped', 'id_atribuicao', 'id_comodato', 'id_pessoa', 'id_supervisor', 'id_produto', 'id_empresa', 'id_setor', 'created_at', 'updated_at'
+        'qtd',
+        'data',
+        'hms',
+        'observacao',
+        'ca',
+        'preco',
+        'biometria_ou_senha',
+        'numero_ped',
+        'id_atribuicao',
+        'id_comodato',
+        'id_pessoa',
+        'id_supervisor',
+        'id_produto',
+        'id_empresa',
+        'id_setor',
+        'created_at',
+        'updated_at'
     ];
 
-    /**
-     * The attributes excluded from the model's JSON form.
-     *
-     * @var array
-     */
-    protected $hidden = [
-        
-    ];
-
-    /**
-     * The attributes that should be casted to native types.
-     *
-     * @var array
-     */
     protected $casts = [
-        'id' => 'int', 'data' => 'date', 'hms' => 'string', 'observacao' => 'string', 'ca' => 'string', 'numero_ped' => 'int', 'id_atribuicao' => 'int', 'id_comodato' => 'int', 'id_pessoa' => 'int', 'id_supervisor' => 'int', 'id_produto' => 'int', 'id_empresa' => 'int', 'id_setor' => 'int', 'created_at' => 'timestamp', 'updated_at' => 'timestamp'
+        'id' => 'integer',
+        'qtd' => 'decimal:5',
+        'data' => 'date',
+        'hms' => 'string',
+        'observacao' => 'string',
+        'ca' => 'string',
+        'preco' => 'decimal:2',
+        'biometria_ou_senha' => 'string',
+        'numero_ped' => 'integer',
+        'id_atribuicao' => 'integer',
+        'id_comodato' => 'integer',
+        'id_pessoa' => 'integer',
+        'id_supervisor' => 'integer',
+        'id_produto' => 'integer',
+        'id_empresa' => 'integer',
+        'id_setor' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
     ];
-
-    /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = [
-        'data', 'created_at', 'updated_at'
-    ];
-
-    /**
-     * Indicates if the model should be timestamped.
-     *
-     * @var boolean
-     */
-    public $timestamps = false;
-
-    // Scopes...
-
-    // Functions ...
-
-    // Relations ...
 }

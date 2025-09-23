@@ -105,7 +105,7 @@ class Controller extends BaseController {
         $linha->origem = $origem;
         $linha->tabela = $tabela;
         $linha->fk = $fk;
-        if ($origem == "WEB") {
+        if ($origem == "WEB" || $origem == "SYS") {
             $linha->id_pessoa = Auth::user()->id_pessoa;
             $linha->nome = Pessoas::find($linha->id_pessoa)->nome;
         } else if ($nome) $linha->nome = $nome;

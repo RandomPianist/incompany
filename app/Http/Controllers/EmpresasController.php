@@ -7,6 +7,7 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Empresas;
 use App\Models\Setores;
+use App\Models\Permissoes;
 use App\Models\Maquinas;
 
 class EmpresasController extends Controller {
@@ -152,9 +153,60 @@ class EmpresasController extends Controller {
             $setor->id_empresa = $linha->id;
             $setor->cria_usuario = 1;
             $setor->save();
-            $log = $this->log_inserir("C", "setores", $setor->id, "SYS", "SISTEMA"); // App\Http\Controllers\Controller.php
-            $log->id_pessoa = Auth::user()->id_pessoa;
-            $log->save();
+            $this->log_inserir("C", "setores", $setor->id, "SYS"); // App\Http\Controllers\Controller.php
+            $permissao = new Permissoes;
+            $permissao->financeiro = 1;
+            $permissao->atribuicoes = 1;
+            $permissao->retiradas = 1;
+            $permissao->pessoas = 1;
+            $permissao->usuarios = 1;
+            $permissao->id_setor = $setor->id;
+            $permissao->save();
+            $this->log_inserir("C", "permissoes", $permissao->id, "SYS"); // App\Http\Controllers\Controller.php
+
+            $setor = new Setores;
+            $setor->descr = "RECURSOS HUMANOS";
+            $setor->id_empresa = $linha->id;
+            $setor->cria_usuario = 1;
+            $setor->save();
+            $this->log_inserir("C", "setores", $setor->id, "SYS"); // App\Http\Controllers\Controller.php
+            $permissao = new Permissoes;
+            $permissao->atribuicoes = 1;
+            $permissao->retiradas = 1;
+            $permissao->pessoas = 1;
+            $permissao->usuarios = 1;
+            $permissao->id_setor = $setor->id;
+            $permissao->save();
+            $this->log_inserir("C", "permissoes", $permissao->id, "SYS"); // App\Http\Controllers\Controller.php
+
+            $setor = new Setores;
+            $setor->descr = "FINANCEIRO";
+            $setor->id_empresa = $linha->id;
+            $setor->cria_usuario = 1;
+            $setor->save();
+            $this->log_inserir("C", "setores", $setor->id, "SYS"); // App\Http\Controllers\Controller.php
+            $permissao = new Permissoes;
+            $permissao->financeiro = 1;
+            $permissao->usuarios = 1;
+            $permissao->id_setor = $setor->id;
+            $permissao->save();
+            $this->log_inserir("C", "permissoes", $permissao->id, "SYS"); // App\Http\Controllers\Controller.php
+
+            $setor = new Setores;
+            $setor->descr = "SEGURANÇA DO TRABALHO";
+            $setor->id_empresa = $linha->id;
+            $setor->cria_usuario = 1;
+            $setor->save();
+            $this->log_inserir("C", "setores", $setor->id, "SYS"); // App\Http\Controllers\Controller.php
+            $permissao = new Permissoes;
+            $permissao->atribuicoes = 1;
+            $permissao->retiradas = 1;
+            $permissao->pessoas = 1;
+            $permissao->usuarios = 1;
+            $permissao->supervisor = 1;
+            $permissao->id_setor = $setor->id;
+            $permissao->save();
+            $this->log_inserir("C", "permissoes", $permissao->id, "SYS"); // App\Http\Controllers\Controller.php
         }
         if ($request->maq_igual == "S") {
             $maquina = new Maquinas;
