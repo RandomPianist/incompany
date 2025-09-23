@@ -225,7 +225,7 @@ CREATE VIEW vpendentesgeral AS (
         ON mat_vultretirada.id_atribuicao = vatbold.id
             AND mat_vultretirada.id_pessoa = mat_vatribuicoes.id_pessoa
 
-    WHERE vatbold.rascunho = 0
+    WHERE vatbold.rascunho = 'S'
 
     GROUP BY
         mat_vatribuicoes.id_pessoa,
@@ -321,7 +321,7 @@ CREATE VIEW vpendentesmaq AS (
     JOIN mat_vultretirada
         ON mat_vultretirada.id_atribuicao = vatbold.id
 
-    WHERE vatbold.rascunho = 0
+    WHERE vatbold.rascunho = 'S'
 
     GROUP BY
         mat_vatribuicoes.id_pessoa,
