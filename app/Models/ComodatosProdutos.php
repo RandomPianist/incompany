@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Comodatos;
+use App\Models\Produtos;
+use App\Models\Estoque;
 
 class ComodatosProdutos extends Model
 {
@@ -30,4 +33,16 @@ class ComodatosProdutos extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    public function comodato() {
+        return $this->belongsTo(Comodatos::class, "id_comodato");
+    }
+
+    public function produto() {
+        return $this->belongsTo(Produtos::class, "id_produto");
+    }
+
+    public function estoque() {
+        return $this->hasMany(Estoque::class, "id_cp");
+    }
 }

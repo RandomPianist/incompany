@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Atribuicoes;
+use App\Models\Comodatos;
 
 class Maquinas extends Model
 {
@@ -26,4 +28,12 @@ class Maquinas extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    public function atribuicoes() {
+        return $this->hasMany(Atribuicoes::class, "id_maquina");
+    }
+
+    public function comodatos() {
+        return $this->hasMany(Comodatos::class, "id_maquina");
+    }
 }

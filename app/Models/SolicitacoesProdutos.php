@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Solicitacoes;
+use App\Models\Produtos;
 
 class SolicitacoesProdutos extends Model
 {
@@ -36,4 +38,16 @@ class SolicitacoesProdutos extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    public function solicitacao() {
+        return $this->belongsTo(Solicitacoes::class, "id_solicitacao");
+    }
+
+    public function produto() {
+        return $this->belongsTo(Produtos::class, "id_produto");
+    }
+
+    public function produto_orig() {
+        return $this->belongsTo(Produtos::class, "id_produto_orig");
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\ComodatosProdutos;
 
 class Estoque extends Model
 {
@@ -22,7 +23,7 @@ class Estoque extends Model
 
     protected $casts = [
         'id' => 'integer',
-        'es' => 'string',
+        'es' => 'string', // enum 'E', 'S'
         'data' => 'date',
         'hms' => 'string',
         'descr' => 'string',
@@ -32,4 +33,8 @@ class Estoque extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    public function cp() {
+        return $this->belongsTo(ComodatosProdutos::class, "id_cp");
+    }
 }

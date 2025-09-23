@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Pessoas;
 
 class Log extends Model
 {
@@ -34,4 +35,8 @@ class Log extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    public function pessoa() {
+        return $this->belongsTo(Pessoas::class, "id_pessoa");
+    }
 }

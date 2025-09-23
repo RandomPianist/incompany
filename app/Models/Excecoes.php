@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Excbkp;
 
 class Excecoes extends Model
 {
@@ -25,9 +26,13 @@ class Excecoes extends Model
         'id_pessoa' => 'integer',
         'id_setor' => 'integer',
         'id_usuario' => 'integer',
-        'rascunho' => 'string',
+        'rascunho' => 'string', // enum 'C', 'E', 'R', 'S'
         'lixeira' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    public function bkp() {
+        return $this->hasOne(Excbkp::class, "id_excecao");
+    }
 }

@@ -86,6 +86,7 @@ CREATE TABLE permissoes (
     retiradas TINYINT DEFAULT 0,
     pessoas TINYINT DEFAULT 0,
     usuarios TINYINT DEFAULT 0,
+    solicitacoes TINYINT DEFAULT 0,
     supervisor TINYINT DEFAULT 0,
     id_usuario INT,
     id_setor INT,

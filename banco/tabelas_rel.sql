@@ -94,6 +94,7 @@ CREATE TABLE permissoes (
     retiradas TINYINT DEFAULT 0,
     pessoas TINYINT DEFAULT 0,
     usuarios TINYINT DEFAULT 0,
+    solicitacoes TINYINT DEFAULT 0,
     supervisor TINYINT DEFAULT 0,
     id_usuario INT,
     id_setor INT,
@@ -193,7 +194,7 @@ CREATE TABLE atribuicoes (
 	validade INT,
 	obrigatorio TINYINT DEFAULT 0,
     gerado TINYINT DEFAULT 0,
-    rascunho ENUM('C', 'E', 'R', 'S') DEFAULT 'S',
+    rascunho ENUM('C', 'E', 'R', 'S') DEFAULT 'S', -- (C)riando, (E)ditando, (R)emovendo, (S)alvo, (T)emporário
     lixeira TINYINT DEFAULT 0,
 
     id_pessoa INT,
@@ -253,7 +254,7 @@ CREATE TABLE excecoes (
     id_pessoa INT,
     id_setor INT,
     id_usuario INT,
-    rascunho ENUM('C', 'E', 'R', 'S') DEFAULT 'S',
+    rascunho ENUM('C', 'E', 'R', 'S') DEFAULT 'S', -- (C)riando, (E)ditando, (R)emovendo, (S)alvo, (T)emporário
     lixeira TINYINT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

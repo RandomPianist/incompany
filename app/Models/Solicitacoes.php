@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Comodatos;
+use App\Models\SolicitacoesProdutos;
 
 class Solicitacoes extends Model
 {
@@ -34,4 +36,12 @@ class Solicitacoes extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    public function comodato() {
+        return $this->belongsTo(Comodatos::class, "id_comodato");
+    }
+
+    public function cp() {
+        return $this->hasMany(SolicitacoesProdutos::class, "id_solicitacao");
+    }
 }
