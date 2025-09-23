@@ -42,7 +42,7 @@ class Retiradas extends Model
         'observacao' => 'string',
         'ca' => 'string',
         'preco' => 'decimal:2',
-        'biometria_ou_senha' => 'string',
+        'biometria_ou_senha' => 'string', // enum 'B', 'S'
         'numero_ped' => 'integer',
         'id_atribuicao' => 'integer',
         'id_comodato' => 'integer',

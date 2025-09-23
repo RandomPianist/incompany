@@ -29,7 +29,7 @@ class Log extends Model
         'origem' => 'string',
         'data' => 'date',
         'hms' => 'string',
-        'acao' => 'string',
+        'acao' => 'string', // enum 'C', 'E', 'D'
         'tabela' => 'string',
         'fk' => 'integer',
         'created_at' => 'datetime',

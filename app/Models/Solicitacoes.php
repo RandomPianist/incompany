@@ -25,7 +25,7 @@ class Solicitacoes extends Model
 
     protected $casts = [
         'id' => 'integer',
-        'situacao' => 'string',
+        'situacao' => 'string', // enum 'A', 'C', 'E', 'R', 'F'
         'avisou' => 'boolean',
         'data' => 'date',
         'usuario_erp' => 'string',
