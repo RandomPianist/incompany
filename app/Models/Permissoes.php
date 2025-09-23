@@ -38,7 +38,7 @@ class Permissoes extends Model
         'updated_at' => 'datetime'
     ];
 
-    public function pessoa() {
+    public function setor() {
         return $this->belongsTo(Setores::class, "id_setor");
     }
 }
