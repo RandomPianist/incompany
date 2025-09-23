@@ -87,6 +87,22 @@ CREATE TABLE users (
 
 ALTER TABLE pessoas ADD FOREIGN KEY (id_usuario) REFERENCES users(id);
 
+CREATE TABLE permissoes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    financeiro TINYINT DEFAULT 0,
+    atribuicoes TINYINT DEFAULT 0,
+    retiradas TINYINT DEFAULT 0,
+    pessoas TINYINT DEFAULT 0,
+    usuarios TINYINT DEFAULT 0,
+    supervisor TINYINT DEFAULT 0,
+    id_usuario INT,
+    id_setor INT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES users(id),
+    FOREIGN KEY (id_setor) REFERENCES setores(id)
+);
+
 CREATE TABLE produtos (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	descr VARCHAR(256),
