@@ -7,7 +7,6 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Empresas;
 use App\Models\Setores;
-use App\Models\Permissoes;
 use App\Models\Maquinas;
 
 class EmpresasController extends Controller {
@@ -148,65 +147,24 @@ class EmpresasController extends Controller {
         $linha->save();
         $this->log_inserir($request->id ? "E" : "C", "empresas", $linha->id); // App\Http\Controllers\Controller.php
         if (!$request->id) {
-            $setor = new Setores;
-            $setor->descr = "ADMINISTRADORES";
-            $setor->id_empresa = $linha->id;
-            $setor->cria_usuario = 1;
-            $setor->save();
-            $this->log_inserir("C", "setores", $setor->id, "SYS"); // App\Http\Controllers\Controller.php
-            $permissao = new Permissoes;
-            $permissao->financeiro = 1;
-            $permissao->atribuicoes = 1;
-            $permissao->retiradas = 1;
-            $permissao->pessoas = 1;
-            $permissao->usuarios = 1;
-            $permissao->id_setor = $setor->id;
-            $permissao->save();
-            $this->log_inserir("C", "permissoes", $permissao->id, "SYS"); // App\Http\Controllers\Controller.php
-
-            $setor = new Setores;
-            $setor->descr = "RECURSOS HUMANOS";
-            $setor->id_empresa = $linha->id;
-            $setor->cria_usuario = 1;
-            $setor->save();
-            $this->log_inserir("C", "setores", $setor->id, "SYS"); // App\Http\Controllers\Controller.php
-            $permissao = new Permissoes;
-            $permissao->atribuicoes = 1;
-            $permissao->retiradas = 1;
-            $permissao->pessoas = 1;
-            $permissao->usuarios = 1;
-            $permissao->id_setor = $setor->id;
-            $permissao->save();
-            $this->log_inserir("C", "permissoes", $permissao->id, "SYS"); // App\Http\Controllers\Controller.php
-
-            $setor = new Setores;
-            $setor->descr = "FINANCEIRO";
-            $setor->id_empresa = $linha->id;
-            $setor->cria_usuario = 1;
-            $setor->save();
-            $this->log_inserir("C", "setores", $setor->id, "SYS"); // App\Http\Controllers\Controller.php
-            $permissao = new Permissoes;
-            $permissao->financeiro = 1;
-            $permissao->usuarios = 1;
-            $permissao->id_setor = $setor->id;
-            $permissao->save();
-            $this->log_inserir("C", "permissoes", $permissao->id, "SYS"); // App\Http\Controllers\Controller.php
-
-            $setor = new Setores;
-            $setor->descr = "SEGURANÇA DO TRABALHO";
-            $setor->id_empresa = $linha->id;
-            $setor->cria_usuario = 1;
-            $setor->save();
-            $this->log_inserir("C", "setores", $setor->id, "SYS"); // App\Http\Controllers\Controller.php
-            $permissao = new Permissoes;
-            $permissao->atribuicoes = 1;
-            $permissao->retiradas = 1;
-            $permissao->pessoas = 1;
-            $permissao->usuarios = 1;
-            $permissao->supervisor = 1;
-            $permissao->id_setor = $setor->id;
-            $permissao->save();
-            $this->log_inserir("C", "permissoes", $permissao->id, "SYS"); // App\Http\Controllers\Controller.php
+            $setores = [
+                "ADMINISTRADORES" => ["financeiro", "atribuicoes", "retiradas", "pessoas", "usuarios", "solicitacoes", "supervisor"],
+                "RECURSOS HUMANOS" => ["atribuicoes", "retiradas", "pessoas", "usuarios"],
+                "FINANCEIRO" => ["financeiro", "usuarios", "solicitacoes"],
+                "SEGURANÇA DO TRABALHO" => ["atribuicoes", "retiradas", "pessoas", "usuarios", "supervisor"]
+            ];
+            foreach ($setores as $setor => $permissoes) {
+                $m_setor = new Setores;
+                $m_setor->descr = $setor;
+                $m_setor->id_empresa = $linha->id;
+                $m_setor->cria_usuario = 1;
+                $m_setor->save();
+                $lista_permissoes = array();
+                foreach ($permissoes as $permissao) $lista_permissoes += [$permissao => 1];
+                $m_setor->permissoes()->create($lista_permissoes);
+            }
+            $this->log_inserir_lote("C", "setores", "", "SYS"); // App\Http\Controllers\Controller.php
+            $this->log_inserir_lote("C", "permissoes", "", "SYS"); // App\Http\Controllers\Controller.php
         }
         if ($request->maq_igual == "S") {
             $maquina = new Maquinas;

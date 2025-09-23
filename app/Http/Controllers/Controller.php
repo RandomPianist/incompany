@@ -105,7 +105,7 @@ class Controller extends BaseController {
         $linha->origem = $origem;
         $linha->tabela = $tabela;
         $linha->fk = $fk;
-        if ($origem == "WEB" || $origem == "SYS") {
+        if (in_array($origem, ["WEB", "SYS"])) {
             $linha->id_pessoa = Auth::user()->id_pessoa;
             $linha->nome = Pessoas::find($linha->id_pessoa)->nome;
         } else if ($nome) $linha->nome = $nome;
@@ -115,25 +115,29 @@ class Controller extends BaseController {
         return $linha;
     }
 
-    protected function log_inserir_lote($acao, $query, $where, $origem = "WEB", $nome = "", $tabela = "") {
+    protected function log_inserir_lote($acao, $tabela, $where, $origem = "WEB", $nome = "") {
         $id_pessoa = "NULL";
-        if ($origem == "WEB") {
+        if (in_array($origem, ["WEB", "SYS"])) {
             $id_pessoa = Auth::user()->id_pessoa;
             $nome = Pessoas::find($id_pessoa)->nome;
+        }
+        if (!$where) {
+            $tabela .= " LEFT JOIN log ON log.fk = ".$tabela.".id AND log.tabela = '".$tabela."' ";
+            $where = " WHERE log.id IS NULL ";
         }
         DB::statement("
             INSERT INTO log (acao, origem, tabela, fk, id_pessoa, nome, data, hms) (
                 SELECT
                     '".$acao."',
                     '".$origem."',
-                    '".($tabela ? $tabela : $query)."',
-                    id,
+                    '".$tabela."',
+                    ".$tabela.".id,
                     ".$id_pessoa.",
                     ".($nome ? "'".$nome."'" : "NULL").",
                     '".date("Y-m-d")."',
                     '".date("H:i:s")."'
                 
-                FROM ".$query."
+                FROM ".$tabela."
 
                 WHERE ".$where."
             )
