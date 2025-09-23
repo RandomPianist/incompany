@@ -200,7 +200,7 @@ class MaquinasController extends Controller {
 
         if (!$texto) {
             for ($i = 0; $i < sizeof($produtos_id); $i++) {
-                if (!intval($precos[$i])) {
+                if (!ceil($precos[$i])) {
                     $texto = $texto ? "Há preços zerados" : "Há um preço zerado";
                     array_push($campos, "preco-".($i + 1));
                     array_push($valores, "0");
@@ -289,7 +289,7 @@ class MaquinasController extends Controller {
 
         if (!$texto) {
             for ($i = 0; $i < sizeof($produtos_id); $i++) {
-                if (!intval($precos[$i])) {
+                if (!ceil($precos[$i])) {
                     $texto = $texto ? "Há preços zerados" : "Há um preço zerado";
                     array_push($campos, "preco-".($i + 1));
                     array_push($valores, "0");
