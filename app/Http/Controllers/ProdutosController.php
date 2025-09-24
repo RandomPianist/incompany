@@ -10,24 +10,7 @@ use App\Models\Pessoas;
 use App\Models\Produtos;
 use App\Models\Atribuicoes;
 
-class ProdutosController extends Controller {
-    private function busca($where) {
-        return DB::table("produtos")
-                    ->select(
-                        DB::raw("produtos.*"),
-                        DB::raw("
-                            CASE
-                                WHEN (IFNULL(categorias.descr, '') = '') THEN 'A CLASSIFICAR'
-                                ELSE categorias.descr
-                            END AS categoria
-                        ")
-                    )
-                    ->leftjoin("categorias", "categorias.id", "produtos.id_categoria")
-                    ->whereRaw($where)
-                    ->where("produtos.lixeira", 0)
-                    ->get();
-    }
-
+class ProdutosController extends ControllerListavel {
     private function busca_maq($where, $id_produto) {
         return DB::table("comodatos_produtos AS cp")
                     ->select(
@@ -98,7 +81,7 @@ class ProdutosController extends Controller {
 
         if (!$texto) {
             for ($i = 0; $i < sizeof($maquinas_id); $i++) {
-                if (!intval($precos[$i])) {
+                if (!ceil($precos[$i])) {
                     $texto = $texto ? "Há preços zerados" : "Há um preço zerado";
                     array_push($campos, "preco-".($i + 1));
                     array_push($valores, "0");
@@ -126,19 +109,25 @@ class ProdutosController extends Controller {
         return $resultado;
     }
 
-    public function ver() {
-        return view("produtos");
+    protected function busca($where) {
+        return DB::table("produtos")
+                    ->select(
+                        DB::raw("produtos.*"),
+                        DB::raw("
+                            CASE
+                                WHEN (IFNULL(categorias.descr, '') = '') THEN 'A CLASSIFICAR'
+                                ELSE categorias.descr
+                            END AS categoria
+                        ")
+                    )
+                    ->leftjoin("categorias", "categorias.id", "produtos.id_categoria")
+                    ->whereRaw(str_replace("?", "produtos.descr", $param))
+                    ->where("produtos.lixeira", 0)
+                    ->get();
     }
 
-    public function listar(Request $request) {
-        $filtro = trim($request->filtro);
-        if ($filtro) {
-            $busca = $this->busca("produtos.descr LIKE '".$filtro."%'");
-            if (sizeof($busca) < 3) $busca = $this->busca("produtos.descr LIKE '%".$filtro."%'");
-            if (sizeof($busca) < 3) $busca = $this->busca("(produtos.descr LIKE '%".implode("%' AND produtos.descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')");
-        } else $busca = $this->busca("1");
-        foreach($busca as $linha) $linha->foto = asset("storage/".$linha->foto);
-        return json_encode($busca);
+    public function ver() {
+        return view("produtos");
     }
 
     public function consultar(Request $request) {
@@ -339,7 +328,7 @@ class ProdutosController extends Controller {
                 $modelo->save();
                 $this->log_inserir($letra_log, "comodatos_produtos", $modelo->id);
             }
-            if ($this->gerar_atribuicoes($comodato)) array_push($maquinas_atualizar, $request->id_maquina[$i]);
+            if ($this->gerar_atribuicoes($comodato)) array_push($maquinas_atualizar, $request->id_maquina[$i]); // App\Http\Controllers\Controller.php
         }
         if (sizeof($maquinas_atualizar)) $this->atualizar_tudo($maquinas_atualizar, "M", true); // App\Http\Controllers\Controller.php
         return redirect("/maquinas");

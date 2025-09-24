@@ -27,6 +27,6 @@ class Categorias extends Model
     ];
 
     public function produtos() {
-        return $this->hasMany(Produtos::class, "id_categoria");
+        return $this->hasMany(Produtos::class, "id_categoria")->where("lixeira", 0);
     }
 }

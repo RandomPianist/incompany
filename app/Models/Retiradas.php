@@ -23,6 +23,7 @@ class Retiradas extends Model
         'preco',
         'biometria_ou_senha',
         'numero_ped',
+        'biometria',
         'id_atribuicao',
         'id_comodato',
         'id_pessoa',
@@ -44,6 +45,7 @@ class Retiradas extends Model
         'preco' => 'decimal:2',
         'biometria_ou_senha' => 'string', // enum 'B', 'S'
         'numero_ped' => 'integer',
+        'biometria' => 'string',
         'id_atribuicao' => 'integer',
         'id_comodato' => 'integer',
         'id_pessoa' => 'integer',

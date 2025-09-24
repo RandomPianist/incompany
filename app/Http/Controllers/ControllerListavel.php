@@ -8,12 +8,15 @@ abstract class ControllerListavel extends Controller {
     public function listar(Request $request) {
         $filtro = trim($request->filtro);
         if ($filtro) {
-            $busca = $this->busca("descr LIKE '".$filtro."%'");
-            if (sizeof($busca) < 3) $busca = $this->busca("descr LIKE '%".$filtro."%'");
-            if (sizeof($busca) < 3) $busca = $this->busca("(descr LIKE '%".implode("%' AND descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')");
+            $busca = $this->busca("? LIKE '".$filtro."%'");
+            if (sizeof($busca) < 3) $busca = $this->busca("? LIKE '%".$filtro."%'");
+            if (sizeof($busca) < 3) $busca = $this->busca("(? LIKE '%".implode("%' AND ? LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')");
         } else $busca = $this->busca("1");
+        foreach($busca as $linha) {
+            if (isset($linha->foto)) $linha->foto = asset("storage/".$linha->foto);
+        }
         return json_encode($busca);
     }
 
-    abstract protected function busca($where);
+    abstract protected function busca($param);
 }

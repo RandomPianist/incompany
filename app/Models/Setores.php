@@ -40,12 +40,12 @@ class Setores extends Model
         return $this->hasMany(Excbkp::class, "id_setor");
     }
 
-    public function permissoes() {
-        return $this->hasMany(Permissoes::class, "id_setor");
+    public function permissao() {
+        return $this->hasOne(Permissoes::class, "id_setor");
     }
 
     public function pessoas() {
-        return $this->hasMany(Pessoas::class, "id_setor");
+        return $this->hasMany(Pessoas::class, "id_setor")->where("lixeira", 0);
     }
 
     public function retiradas() {

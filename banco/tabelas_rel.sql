@@ -290,6 +290,7 @@ CREATE TABLE retiradas (
     preco NUMERIC(8,2),
     biometria_ou_senha ENUM('B', 'S'),
     numero_ped INT,
+    biometria LONGTEXT,
     id_atribuicao INT,
 	id_comodato INT,
 	id_pessoa INT,

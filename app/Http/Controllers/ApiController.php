@@ -472,7 +472,8 @@ class ApiController extends Controller {
                     "obs" => $retirada["obs"]
                 ];
             }    
-            if (isset($retirada["biometria_ou_senha"])) $salvar += ["biometria_ou_senha" => $retirada["biometria_ou_senha"]];            
+            if (isset($retirada["biometria_ou_senha"])) $salvar += ["biometria_ou_senha" => $retirada["biometria_ou_senha"]];
+            if (isset($retirada["biometria"])) $salvar += ["biometria" => $retirada["biometria"]];
             
             $this->retirada_salvar($salvar); // App\Http\Controllers\Controller.php
             

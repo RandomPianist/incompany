@@ -7,13 +7,13 @@ use Illuminate\Http\Request;
 use App\Models\Categorias;
 
 class CategoriasController extends ControllerListavel {
-    protected function busca($where) {
+    protected function busca($param) {
         return DB::table("categorias")
                     ->select(
                         "id",
                         "descr"
                     )
-                    ->whereRaw($where)
+                    ->whereRaw(str_replace("?", "categorias.descr", $param))
                     ->where("lixeira", 0)
                     ->get();
     }
@@ -38,13 +38,10 @@ class CategoriasController extends ControllerListavel {
 
     public function aviso($id) {
         $resultado = new \stdClass;
-        $nome = Categorias::find($id)->descr;
+        $categoria = Categorias::find($id);
+        $nome = $categoria->descr;
         $resultado->permitir = 1;
-        $resultado->aviso = DB::table("produtos")
-                                ->where("id_categoria", $id)
-                                ->where("lixeira", 0)
-                                ->exists()
-        ? 
+        $resultado->aviso = $categoria->produtos()->exists() ? 
             "Não é recomendado excluir ".$nome." porque existem produtos vinculados a essa categoria.<br>Deseja prosseguir assim mesmo?"
         :
             "Tem certeza que deseja excluir ".$nome."?"

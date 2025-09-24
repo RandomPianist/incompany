@@ -186,6 +186,7 @@ abstract class Controller extends BaseController {
         if (isset($json["obs"])) $linha->observacao = $json["obs"];
         if (isset($json["hora"])) $linha->hms = $json["hora"];
         if (isset($json["biometria_ou_senha"])) $linha->biometria_ou_senha = $json["biometria_ou_senha"];
+        if (isset($json["biometria"])) $linha->biometria = $json["biometria"];
         if (isset($json["id_supervisor"])) {
             if (intval($json["id_supervisor"])) $linha->id_supervisor = $json["id_supervisor"];
         }
@@ -238,24 +239,6 @@ abstract class Controller extends BaseController {
                         ->where("lixeira", 0)
                         ->get();
         return sizeof($consulta) ? $consulta[0]->id : 0;
-    }
-
-    protected function setor_mostrar($id) {
-        if (intval($id)) {
-            return DB::table("setores")
-                        ->leftjoin("empresas", "empresas.id", "setores.id_empresa")
-                        ->select(
-                            "setores.descr",
-                            "setores.cria_usuario",
-                            "setores.id_empresa",
-                            "empresas.nome_fantasia AS empresa"
-                        )
-                        ->where("setores.id", $id)
-                        ->first();
-        }
-        $resultado = new \stdClass;
-        $resultado->cria_usuario = 0;
-        return $resultado;
     }
 
     protected function atribuicao_atualiza_ref($id, $antigo, $novo, $nome = "", $api = false) {
