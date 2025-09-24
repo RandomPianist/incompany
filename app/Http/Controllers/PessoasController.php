@@ -65,7 +65,7 @@ class PessoasController extends Controller {
                         }
                     )
                     ->where(function($sql) use($tipo) {
-                        $id_emp = intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
+                        $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
                         if ($id_emp) $sql->whereRaw($id_emp." IN (empresas.id, empresas.id_matriz)");
                         if (in_array($tipo, ["A", "U"])) {
                             $sql->where("setores.cria_usuario", 1);
@@ -224,8 +224,7 @@ class PessoasController extends Controller {
 
     private function obter_dados() {
         $resultado = new \stdClass;
-        $id_pessoa = Auth::user()->id_pessoa;
-        $id_emp = intval(Pessoas::find($id_pessoa)->id_empresa);
+        $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
         $matriz = $id_emp ? intval(Empresas::find($id_emp)->id_matriz) : 0;
         $filial = "N";
         if ($matriz > 0) {
