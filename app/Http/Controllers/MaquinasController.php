@@ -103,6 +103,30 @@ class MaquinasController extends Controller {
                 ->get();
     }
 
+    private function chamar_busca_main($tabela, $coluna, $filtro, $id_maquina) {
+        $busca = $this->busca($tabela.".".$coluna." LIKE '".$filtro."%'", $id_maquina);
+        if (sizeof($busca) < 3) $busca = $this->busca($tabela.".".$coluna." LIKE '%".$filtro."%'", $id_maquina);
+        if (sizeof($busca) < 3) $busca = $this->busca("(".$tabela.".".$coluna." LIKE '%".implode("%' AND ".$tabela.".".$coluna." LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')", $id_maquina);
+        return $busca;
+    }
+
+    private function chamar_busca(Request $request) {
+        $filtro = trim($request->filtro);
+        $id_maquina = 0;
+        $tabela = "maquinas";
+        if (isset($request->id_maquina)) {
+            $id_maquina = $request->id_maquina;
+            $tabela = "vprodaux";
+        }
+        if ($filtro) return $this->chamar_busca_main($tabela, "descr", $filtro, $id_maquina);
+        if (!$id_maquina) return $this->busca("1", 0);
+        $filtro = trim($request->filtro_ref);
+        if ($filtro) return $this->chamar_busca_main($tabela, "referencia", $filtro, $id_maquina);
+        $filtro = trim($request->filtro_cat);
+        if ($filtro) return $this->chamar_busca_main("categorias", "descr", $filtro, $id_maquina);
+        return $this->busca("1", $id_maquina);
+    }
+
     private function aviso_main($id) {
         $aviso = DB::table("maquinas")
                     ->selectRaw("
@@ -166,13 +190,12 @@ class MaquinasController extends Controller {
         $comodato = $this->obter_comodato($id_maquina); // App\Http\Controllers\Controller.php
 
         for ($i = 0; $i < sizeof($produtos_id); $i++) {
-            if (!sizeof(
-                DB::table("vprodaux")
+            if (!DB::table("vprodaux")
                     ->where("id", $produtos_id[$i])
                     ->where("descr", $produtos_descr[$i])
                     ->where("lixeira", 0)
-                    ->get()
-            )) {
+                    ->exists()
+            ) {
                 array_push($campos, "produto-".($i + 1));
                 array_push($valores, $produtos_descr[$i]);
                 $texto = !$texto ? "Produtos não encontrados" : "Produto não encontrado";
@@ -242,13 +265,12 @@ class MaquinasController extends Controller {
         $comodato = $this->obter_comodato($id_maquina); // App\Http\Controllers\Controller.php
 
         for ($i = 0; $i < sizeof($produtos_id); $i++) {
-            if (!sizeof(
-                DB::table("vprodaux")
+            if (!DB::table("vprodaux")
                     ->where("id", $produtos_id[$i])
                     ->where("descr", $produtos_descr[$i])
                     ->where("lixeira", 0)
-                    ->get()
-            )) {
+                    ->exists()
+            ) {
                 array_push($campos, "produto-".($i + 1));
                 array_push($valores, $produtos_descr[$i]);
                 $texto = !$texto ? "Produtos não encontrados" : "Produto não encontrado";
@@ -377,33 +399,7 @@ class MaquinasController extends Controller {
     }
 
     public function listar(Request $request) {
-        $filtro = trim($request->filtro);
-        $id_maquina = 0;
-        $tabela = "maquinas";
-        if (isset($request->id_maquina)) {
-            $id_maquina = $request->id_maquina;
-            $tabela = "vprodaux";
-        }
-        if ($filtro) {
-            $busca = $this->busca($tabela.".descr LIKE '".$filtro."%'", $id_maquina);
-            if (sizeof($busca) < 3) $busca = $this->busca($tabela.".descr LIKE '%".$filtro."%'", $id_maquina);
-            if (sizeof($busca) < 3) $busca = $this->busca("(".$tabela.".descr LIKE '%".implode("%' AND ".$tabela.".descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')", $id_maquina);
-        } else if ($id_maquina) {
-            $filtro = trim($request->filtro_ref);
-            if ($filtro) {
-                $busca = $this->busca($tabela.".referencia LIKE '".$filtro."%'", $id_maquina);
-                if (sizeof($busca) < 3) $busca = $this->busca($tabela.".referencia LIKE '%".$filtro."%'", $id_maquina);
-                if (sizeof($busca) < 3) $busca = $this->busca("(".$tabela.".referencia LIKE '%".implode("%' AND ".$tabela.".referencia LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')", $id_maquina);
-            } else {
-                $filtro = trim($request->filtro_cat);
-                if ($filtro) {
-                    $tabela = "categorias";
-                    $busca = $this->busca($tabela.".descr LIKE '".$filtro."%'", $id_maquina);
-                    if (sizeof($busca) < 3) $busca = $this->busca($tabela.".descr LIKE '%".$filtro."%'", $id_maquina);
-                    if (sizeof($busca) < 3) $busca = $this->busca("(".$tabela.".descr LIKE '%".implode("%' AND ".$tabela.".descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')", $id_maquina);
-                } else $busca = $this->busca("1", $id_maquina);
-            }
-        } else $busca = $this->busca("1", $id_maquina);
+        $busca = $this->chamar_busca($request);
         if (!$id_maquina) return json_encode($busca);
         $resultado = new \stdClass;
         $resultado->lista = $busca;
@@ -415,13 +411,12 @@ class MaquinasController extends Controller {
     }
 
     public function consultar(Request $request) {
-        if (sizeof(
+        return (!intval($request->id) &&
             DB::table("maquinas")
                 ->where("lixeira", 0)
                 ->where("descr", $request->descr)
-                ->get()
-        ) && !intval($request->id)) return "1";
-        return "0";
+                ->exists()
+        ) ? "1" : "0";
     }
 
     public function mostrar($id) {

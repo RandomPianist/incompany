@@ -112,12 +112,12 @@ class HomeController extends Controller {
         if ($request->tabela == "pessoas") $coluna .= "nome AS ";
         $coluna .= "descr";
         if ($request->tabela == "empresas") {
-            if (sizeof(
+            if (
                 DB::table("empresas")
                     ->where("id_matriz", $request->id)
                     ->where("lixeira", 0)
-                    ->get()
-            )) return $request->id;
+                    ->exists()
+            ) return $request->id;
             return DB::table("empresas")
                         ->where("id", $request->id)
                         ->value("id_matriz");
@@ -140,12 +140,10 @@ class HomeController extends Controller {
         }
         $tabela = $request->tabela;
         if ($tabela == "produtos") $tabela = "vprodaux";
-        return sizeof(
-            DB::table($tabela)
-                ->where("id", $request->id)
-                ->where($coluna, $request->filtro)
-                ->where("lixeira", 0)
-                ->get()
-        ) ? "1" : "0";
+        return DB::table($tabela)
+                    ->where("id", $request->id)
+                    ->where($coluna, $request->filtro)
+                    ->where("lixeira", 0)
+                    ->exists() ? "1" : "0";
     }
 }

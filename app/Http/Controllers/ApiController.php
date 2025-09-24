@@ -325,13 +325,12 @@ class ApiController extends Controller {
     }
 
     public function validar_app(Request $request) {
-        return sizeof(
-            DB::table("pessoas")
-                ->where("cpf", $request->cpf)
-                ->where("senha", $request->senha)
-                ->where("lixeira", 0)
-                ->get()
-        ) ? 1 : 0;
+        return DB::table("pessoas")
+                    ->where("cpf", $request->cpf)
+                    ->where("senha", $request->senha)
+                    ->where("lixeira", 0)
+                    ->exists()
+        ? 1 : 0;
     }
 
     public function ver_pessoa(Request $request) {

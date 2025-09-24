@@ -35,30 +35,30 @@ class SetoresController extends Controller {
             return $resultado;
         }
 
-        if (sizeof(
+        if ((
             DB::table("pessoas")
                 ->where("id_setor", $request->id)
                 ->where("lixeira", 0)
-                ->get()
-        ) && !sizeof(
+                ->exists()
+        ) && !(
             DB::table("pessoas")
                 ->where("id_setor", $request->id)
                 ->where("id_empresa", $request->id_empresa)
                 ->where("lixeira", 0)
-                ->get()
+                ->exists()
         )) {
             $nome = Setores::find($id)->descr;
             $resultado->msg = "Não é possível alterar a empresa de ".$nome." porque existem pessoas vinculadas a esse setor";
             $resultado->el = "setor-empresa";
         }
 
-        if (sizeof(
+        if (!$request->id &&
             DB::table("setores")
                 ->where("lixeira", 0)
                 ->where("descr", $request->descr)
                 ->where("id_empresa", $request->id_empresa)
-                ->get()
-        ) && !$request->id) {
+                ->exists()
+        ) {
             $resultado->msg = "Já existe um centro de custo de mesmo nome nessa empresa";
             $resultado->el = "descr";
             return $resultado;
@@ -70,14 +70,12 @@ class SetoresController extends Controller {
     }
 
     private function setor_do_sistema($id) {
-        return sizeof(
-            DB::table("log")
-                ->where("acao", "C")
-                ->where("origem", "SYS")
-                ->where("tabela", "setores")
-                ->where("fk", $id)
-                ->get()
-        ) > 0;
+        return DB::table("log")
+                    ->where("acao", "C")
+                    ->where("origem", "SYS")
+                    ->where("tabela", "setores")
+                    ->where("fk", $id)
+                    ->exists();
     }
 
     private function aviso_main($id) {
@@ -86,12 +84,12 @@ class SetoresController extends Controller {
         $nome = Setores::find($id)->descr;
         if ($this->setor_do_sistema($id)) {
             $resultado->aviso = "Não é possível excluir um setor do sistema";
-        } else if (sizeof(
+        } else if (
             DB::table("pessoas")
                 ->where("id_setor", $id)
                 ->where("lixeira", 0)
-                ->get()
-        )) {
+                ->exists()
+        ) {
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a esse setor";
         } else {
             $resultado->permitir = 1;

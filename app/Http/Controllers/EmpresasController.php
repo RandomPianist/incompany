@@ -50,20 +50,20 @@ class EmpresasController extends Controller {
     private function aviso_main($id) {
         $resultado = new \stdClass;
         $nome = Empresas::find($id)->nome_fantasia;
-        if (sizeof(
+        if (
             DB::table("pessoas")
                 ->where("id_empresa", $id)
                 ->where("lixeira", 0)
-                ->get()
-        )) {
+                ->exists()
+        ) {
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a essa empresa.";
             $resultado->permitir = 0;
-        } else if (sizeof(
+        } else if (
             DB::table("comodatos")
                 ->whereRaw("CURDATE() >= inicio AND CURDATE() < fim")
                 ->where("id_empresa", $id)
-                ->get()
-        )) {
+                ->exists()
+        ) {
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem máquinas comodatadas para essa empresa.";
             $resultado->permitir = 0;
         } else {
@@ -104,18 +104,18 @@ class EmpresasController extends Controller {
     }
 
     public function consultar(Request $request) {
-        if (sizeof(
+        if (!$request->id &&
             DB::table("empresas")
                 ->where("lixeira", 0)
                 ->where("cnpj", $request->cnpj)
-                ->get()
-        ) && !$request->id) return "R";
-        if (sizeof(
+                ->exists()
+        ) return "R";
+        if (
             DB::table("empresas")
                 ->where("lixeira", 0)
                 ->where("id_matriz", $request->id)
-                ->get()
-        )) return "F";
+                ->exists()
+        ) return "F";
         return "A";
     }
 

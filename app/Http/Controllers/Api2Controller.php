@@ -219,18 +219,18 @@ class Api2Controller extends Controller {
 
     public function consultar_maquina(Request $request) {
         if ($request->token != config("app.key")) return 401;
-        if (sizeof(
+        if (
             $this->maquinas($request->cft)
                 ->where("maquinas.descr", $request->maq)
                 ->where("maquinas.lixeira", 0)
-                ->get()
-        )) return "CLIENTE";
-        if (sizeof(
+                ->exists()
+        ) return "CLIENTE";
+        if (
             DB::table("maquinas")
                 ->where("descr", $request->maq)
                 ->where("lixeira", 0)
-                ->get()
-        )) return "MAQUINA";
+                ->exists()
+        ) return "MAQUINA";
         return "OK";
     }
 
@@ -315,13 +315,12 @@ class Api2Controller extends Controller {
 
     public function pode_faturar(Request $request) {
         if ($request->token != config("app.key")) return 401;
-        return sizeof(
-            $this->maquinas($request->cft)
+        return $this->maquinas($request->cft)
                     ->whereRaw("CURDATE() >= comodatos.inicio")
                     ->whereRaw("CURDATE() < comodatos.fim")
                     ->where("maquinas.id", $request->maq)
-                    ->get()
-        ) ? "OK" : "ERRO";
+                    ->exists()
+        ? "OK" : "ERRO";
     }
 
     public function enviar_solicitacoes(Request $request) {

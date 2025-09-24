@@ -152,12 +152,11 @@ class PessoasController extends Controller {
                     ->where(function($sql) use($id_emp) {
                         if ($id_emp) {
                             $where = "id = ".$id_emp;
-                            if (sizeof(
-                                DB::table("empresas")
+                            if (DB::table("empresas")
                                     ->where("id_matriz", $id_emp)
                                     ->where("lixeira", 0)
-                                    ->get()
-                            ) > 0) $where .= " OR id_matriz = ".$id_emp;
+                                    ->exists()
+                            ) $where .= " OR id_matriz = ".$id_emp;
                             $sql->whereRaw($where);
                         }
                     })
@@ -179,21 +178,21 @@ class PessoasController extends Controller {
 
     private function consultar_main(Request $request) {
         $resultado = new \stdClass;
-        if (sizeof(
+        if (trim($request->cpf) && !$request->id &&
             DB::table("pessoas")
                 ->where("lixeira", 0)
                 ->where("cpf", $request->cpf)
-                ->get()
-        ) && trim($request->cpf) && !$request->id) {
+                ->exists()
+        ) {
             $resultado->tipo = "duplicado";
             $resultado->dado = "CPF";
-        } else if (sizeof(
+        } else if (!$request->id &&
             DB::table("pessoas")
                 ->join("users", "users.id_pessoa", "pessoas.id")
                 ->where("lixeira", 0)
                 ->where("email", $request->email)
-                ->get()
-        ) && !$request->id) {
+                ->exists()
+        ) {
             $resultado->tipo = "duplicado";
             $resultado->dado = "e-mail";
         } else {
@@ -206,11 +205,7 @@ class PessoasController extends Controller {
     private function aviso_main($id) {
         $resultado = new \stdClass;
         if ($id != Auth::user()->id_pessoa) {
-            if (sizeof(
-                DB::table("users")
-                    ->where("id_pessoa", $id)
-                    ->get()
-            )) {
+            if (DB::table("users")->where("id_pessoa", $id)->exists()) {
                 if (!$this->permissao_usuario($id)) {
                     $resultado->permitir = 0;
                     $resultado->aviso = "Você não tem permissão para excluir essa pessoa";
@@ -412,14 +407,12 @@ class PessoasController extends Controller {
         $tipo = $request->tipo;
         if ($this->cria_usuario($modelo->id_setor)) $tipo = !intval($modelo->id_empresa) ? "A" : "U";
         else $tipo = intval($modelo->supervisor) ? $tipo = "S" : "F";
-        if (sizeof(
-            DB::table("vativos")
+        if ($request->id || 
+            !DB::table("vativos")
                 ->where("id", $linha->id)
                 ->where("atb_todos", ">", 0)
-                ->get()
-        ) && !$request->id) {
-            $this->atualizar_tudo(explode(",", DB::table("vativos")->where("id", $linha->id)->value("maquinas")), "M", true);
-        } else {
+                ->exists()
+        ) {
             $this->atualizar_atribuicoes(
                 DB::table("vatbold")
                     ->select(
@@ -433,8 +426,8 @@ class PessoasController extends Controller {
                         "psm_valor"
                     )
                     ->get()
-            ); // App\Http\Controllers\Controller.php
-        }
+            ); // App\Http\Controllers\Controller.php            
+        } else $this->atualizar_tudo(explode(",", DB::table("vativos")->where("id", $linha->id)->value("maquinas")), "M", true);
         return redirect("/colaboradores/pagina/".$tipo);
     }
 
@@ -467,12 +460,12 @@ class PessoasController extends Controller {
     }
 
     public function senha(Request $request) {
-        if (!sizeof(
+        if (
             DB::table("pessoas")
                 ->where("id", $request->id)
                 ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "pessoas")) // App\Http\Controllers\Controller.php
-                ->get()
-        )) return 401;
+                ->exists()
+        ) return 401;
         return Pessoas::find($request->id)->senha;
     }
 }

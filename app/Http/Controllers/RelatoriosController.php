@@ -19,14 +19,14 @@ class RelatoriosController extends Controller {
     }
 
     private function consultar_pessoa(Request $request, $considerar_lixeira) {
-        return (!sizeof(
-            DB::table("pessoas")
+        return ((
+            !DB::table("pessoas")
                 ->where("id", $request->id_pessoa)
                 ->where("nome", $request->pessoa)
                 ->where(function($sql) use($considerar_lixeira) {
                     if ($considerar_lixeira) $sql->where("lixeira", 0);
                 })
-                ->get()
+                ->exists()
         ) && trim($request->pessoa)) || (!trim($request->pessoa) && trim($request->id_pessoa));
     }
 
@@ -416,12 +416,12 @@ class RelatoriosController extends Controller {
     public function retiradas_consultar(Request $request) {
         if ($this->consultar_empresa($request)) return "empresa";
         if ($this->consultar_pessoa($request, false)) return "pessoa";
-        if ((!sizeof(
-            DB::table("setores")
+        if (((
+            !DB::table("setores")
                 ->where("id", $request->id_setor)
                 ->where("descr", $request->setor)
                 ->where("lixeira", 0)
-                ->get()
+                ->exists()
         ) && trim($request->setor)) || (!trim($request->setor) && trim($request->id_setor))) return "setor";
         return "";
     }
@@ -484,11 +484,7 @@ class RelatoriosController extends Controller {
                                 ->orWhere("empresas.id_matriz", $request->id_empresa);
                         });
                         $empresa = Empresas::find($request->id_empresa)->razao_social;
-                        if (sizeof(
-                            DB::table("empresas")
-                                ->where("id_matriz", $request->id_empresa)
-                                ->get()
-                        )) $empresa .= " e filiais";
+                        if (DB::table("empresas")->where("id_matriz", $request->id_empresa)->exists()) $empresa .= " e filiais";
                         array_push($criterios, "Empresa: ".$empresa);
                     }
                     if ($request->consumo != "todos") {

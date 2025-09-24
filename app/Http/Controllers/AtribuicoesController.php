@@ -37,26 +37,26 @@ class AtribuicoesController extends Controller {
     }
 
     public function salvar(Request $request) {
-        if (!sizeof(
-            DB::table("vprodaux")
+        if (
+            !DB::table("vprodaux")
                 ->where($request->pr_chave == "P" ? "descr" : "referencia", $request->pr_valor)
                 ->where("lixeira", 0)
-                ->get()
-        )) return 404;
+                ->exists()
+        ) return 404;
         $pr_valor = $request->pr_chave == "P" ?
             DB::table("vprodaux")
                 ->where("descr", $request->pr_valor)
                 ->where("lixeira", 0)
                 ->value("cod_externo")
         : $request->pr_valor;
-        if (sizeof(
+        if (!intval($request->id) &&
             DB::table("vatbold")
                 ->where("psm_chave", $request->psm_chave)
                 ->where("psm_valor", $request->psm_valor)
                 ->where("pr_valor", $pr_valor)
                 ->where("pr_chave", $request->pr_chave)
-                ->get()
-        ) && !intval($request->id)) return 403;
+                ->exists()
+        ) return 403;
         $linha = Atribuicoes::firstOrNew(["id" => $request->id]);
         if ($request->id) $this->backup_atribuicao($linha); // App\Http\Controllers\Controller.php
         switch ($request->psm_chave) {
@@ -368,7 +368,7 @@ class AtribuicoesController extends Controller {
                 WHERE excecoes.id_usuario = ".$id_usuario
             );
             DB::statement("DELETE FROM ".$tab_bkp." WHERE id_usuario_editando = ".$id_usuario);
-            if (!sizeof(DB::table($tab_bkp)->get())) DB::statement("TRUNCATE TABLE ".$tab_bkp);
+            if (!DB::table($tab_bkp)->exists()) DB::statement("TRUNCATE TABLE ".$tab_bkp);
             DB::statement("
                 DELETE FROM ".$tabela."
                 WHERE id_usuario = ".$id_usuario."

@@ -6,8 +6,8 @@ use DB;
 use Illuminate\Http\Request;
 use App\Models\Categorias;
 
-class CategoriasController extends Controller {
-    private function busca($where) {
+class CategoriasController extends ControllerListavel {
+    protected function busca($where) {
         return DB::table("categorias")
                     ->select(
                         "id",
@@ -22,23 +22,13 @@ class CategoriasController extends Controller {
         return view("categorias");
     }
 
-    public function listar(Request $request) {
-        $filtro = trim($request->filtro);
-        if ($filtro) {
-            $busca = $this->busca("descr LIKE '".$filtro."%'");
-            if (sizeof($busca) < 3) $busca = $this->busca("descr LIKE '%".$filtro."%'");
-            if (sizeof($busca) < 3) $busca = $this->busca("(descr LIKE '%".implode("%' AND descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')");
-        } else $busca = $this->busca("1");
-        return json_encode($busca);
-    }
-
     public function consultar(Request $request) {
-        if (sizeof(
+        if (!$request->id &&
             DB::table("categorias")
                 ->where("lixeira", 0)
                 ->where("descr", $request->descr)
-                ->get()
-        ) && !$request->id) return "1";
+                ->exists()
+        ) return "1";
         return "0";
     }
 
@@ -47,16 +37,18 @@ class CategoriasController extends Controller {
     }
 
     public function aviso($id) {
-        $vinculo = sizeof(
-            DB::table("produtos")
-                ->where("id_categoria", $id)
-                ->where("lixeira", 0)
-                ->get()
-        ) > 0;
         $resultado = new \stdClass;
         $nome = Categorias::find($id)->descr;
         $resultado->permitir = 1;
-        $resultado->aviso = $vinculo ? "Não é recomendado excluir ".$nome." porque existem produtos vinculados a essa categoria.<br>Deseja prosseguir assim mesmo?" : "Tem certeza que deseja excluir ".$nome."?";
+        $resultado->aviso = DB::table("produtos")
+                                ->where("id_categoria", $id)
+                                ->where("lixeira", 0)
+                                ->exists()
+        ? 
+            "Não é recomendado excluir ".$nome." porque existem produtos vinculados a essa categoria.<br>Deseja prosseguir assim mesmo?"
+        :
+            "Tem certeza que deseja excluir ".$nome."?"
+        ;
         return json_encode($resultado);
     }
 

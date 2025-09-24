@@ -64,13 +64,13 @@ class ProdutosController extends Controller {
         for ($i = 0; $i < sizeof($maquinas_id); $i++) {
             $comodato = $this->obter_comodato($maquinas_id[$i]); // App\Http\Controllers\Controller.php
 
-            if (!sizeof(
-                DB::table("maquinas")
+            if (
+                !DB::table("maquinas")
                     ->where("id", $maquinas_id[$i])
                     ->where("descr", $maquinas_descr[$i])
                     ->where("lixeira", 0)
-                    ->get()
-            )) {
+                    ->exists()
+            ) {
                 array_push($campos, "maquina-".($i + 1));
                 array_push($valores, $maquinas_descr[$i]);
                 $texto = !$texto ? "Máquinas não encontradas" : "Máquina não encontrada";
@@ -142,18 +142,18 @@ class ProdutosController extends Controller {
     }
 
     public function consultar(Request $request) {
-        if (!sizeof(
-            DB::table("categorias")
+        if (
+            !DB::table("categorias")
                 ->where("id", $request->id_categoria)
                 ->where("descr", $request->categoria)
-                ->get()
-        )) return "invalido";
-        if (sizeof(
+                ->exists()
+        ) return "invalido";
+        if (!$request->id &&
             DB::table("produtos")
                 ->where("lixeira", 0)
                 ->where("cod_externo", $request->cod_externo)
-                ->get()
-        ) && !$request->id) return "duplicado";
+                ->exists()
+        ) return "duplicado";
         if ($request->id) {
             $prmin = floatval(
                 DB::table("produtos")
@@ -164,11 +164,10 @@ class ProdutosController extends Controller {
             $preco = floatval($request->preco);
             if ($prmin > 0 && $preco < $prmin) return "preco".strval($prmin);
         }
-        if (sizeof(
-            DB::table("atribuicoes")
-                ->where("referencia", Produtos::find($request->id)->referencia)
-                ->get()
-        ) && !trim($request->referencia)) return "aviso";
+        if (
+            !trim($request->referencia) &&
+            DB::table("atribuicoes")->where("referencia", Produtos::find($request->id)->referencia)->exists()
+        ) return "aviso";
         return "";
     }
 

@@ -20,7 +20,7 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 
-class Controller extends BaseController {
+abstract class Controller extends BaseController {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
     protected function obter_empresa() {
@@ -90,13 +90,13 @@ class Controller extends BaseController {
     }
 
     protected function empresa_consultar(Request $request) {
-        return (!sizeof(
-            DB::table("empresas")
+        return (
+            !DB::table("empresas")
                 ->where("id", $request->id_empresa)
                 ->where("nome_fantasia", $request->empresa)
                 ->where("lixeira", 0)
-                ->get()
-        ));
+                ->exists()
+        );
     }
 
     protected function log_inserir($acao, $tabela, $fk, $origem = "WEB", $nome = "") {
@@ -313,11 +313,7 @@ class Controller extends BaseController {
         $where = "lixeira = 0 AND id_maquina = ".$comodato->id_maquina." AND id_empresa = ".$comodato->id_empresa;
         $where_g = $where." AND gerado = 1";
         if (!intval($comodato->atb_todos)) {
-            $ret = sizeof(
-                DB::table("atribuicoes")
-                    ->whereRaw($where_g)
-                    ->get()
-            ) > 0;
+            $ret = DB::table("atribuicoes")->whereRaw($where_g)->exists();
             if ($ret) {
                 $this->log_inserir_lote("D", "atribuicoes", $where_g);
                 DB::statement("
@@ -453,12 +449,12 @@ class Controller extends BaseController {
     }
 
     protected function consultar_maquina(Request $request) {
-        return ((!sizeof(
-            DB::table("maquinas")
+        return (((
+            !DB::table("maquinas")
                 ->where("id", $request->id_maquina)
                 ->where("descr", $request->maquina)
                 ->where("lixeira", 0)
-                ->get()
+                ->exists()
         ) && trim($request->maquina)) || (trim($request->id_maquina) && !trim($request->maquina)));
     }
 
@@ -470,12 +466,12 @@ class Controller extends BaseController {
                 return $resultado;
             }
         }
-        if (((trim($request->produto) && !sizeof(
+        if (((trim($request->produto) && !(
             DB::table("vprodaux")
                 ->where("id", $request->id_produto)
                 ->where("descr", $request->produto)
                 ->where("lixeira", 0)
-                ->get()
+                ->exists()
         )) || (trim($request->id_produto) && !trim($request->produto)))) {
             $resultado->el = "produto";
             return $resultado;
