@@ -172,7 +172,7 @@ class SetoresController extends ControllerListavel {
                     $consulta = DB::table("users")
                                     ->select("users.id")
                                     ->join("pessoas", "pessoas.id", "users.id_pessoa")
-                                    ->where("id_setor", $request->id)
+                                    ->where("pessoas.id_setor", $request->id)
                                     ->pluck("id");
                     foreach($consulta as $usuario) {
                         $permissao = DB::table("permissoes")
