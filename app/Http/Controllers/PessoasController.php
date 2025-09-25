@@ -447,11 +447,29 @@ class PessoasController extends Controller {
     }
 
     public function alterar_empresa(Request $request) {
-        if (Auth::user()->admin) {
-            $pessoa = Pessoas::find(Auth::user()->id_pessoa);
-            $pessoa->id_empresa = $request->idEmpresa;
-            $pessoa->save();
-        }
+        if (!intval(Auth::user()->admin)) return 401;
+        $pessoa = Pessoas::find(Auth::user()->id_pessoa);
+        $pessoa->id_empresa = $request->idEmpresa;
+        $pessoa->id_setor = intval($request->idEmpresa) ? 
+            DB::table("setores")
+                ->select("setores.id")
+                ->join("log", function($join) {
+                    $join->on("log.fk", "setores.id")
+                        ->where("log.tabela", "setores");
+                })
+                ->join("permissoes", "permissoes.id_setor", "setores.id")
+                ->where("log.origem", "SYS")
+                ->where("permissoes.financeiro", 1)
+                ->where("permissoes.atribuicoes", 1)
+                ->where("permissoes.retiradas", 1)
+                ->where("permissoes.pessoas", 1)
+                ->where("permissoes.usuarios", 1)
+                ->where("permissoes.solicitacoes", 1)
+                ->where("permissoes.supervisor", 1)
+                ->where("setores.id_empresa", $request->idEmpresa)
+                ->value("id")
+        : 0;
+        $pessoa->save();
     }
 
     public function modal() {
