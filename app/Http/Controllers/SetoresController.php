@@ -157,7 +157,6 @@ class SetoresController extends ControllerListavel {
         if ($this->consultar_main($request)->msg) return 401;
         $cria_usuario = $request->cria_usuario == "S" ? 1 : 0;
         $linha = Setores::firstOrNew(["id" => $request->id]);
-        $permissao = $this->obter_permissao();
         if ($request->id) {
             $adm_ant = intval($linha->cria_usuario);
             if (
