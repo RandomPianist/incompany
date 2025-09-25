@@ -112,12 +112,8 @@ class MaquinasController extends Controller {
 
     private function chamar_busca(Request $request) {
         $filtro = trim($request->filtro);
-        $id_maquina = 0;
-        $tabela = "maquinas";
-        if (isset($request->id_maquina)) {
-            $id_maquina = $request->id_maquina;
-            $tabela = "vprodaux";
-        }
+        $id_maquina = isset($request->id_maquina) ? $request->id_maquina : 0;
+        $tabela = isset($request->id_maquina) ? "vprodaux" : "maquinas";
         if ($filtro) return $this->chamar_busca_main($tabela, "descr", $filtro, $id_maquina);
         if (!$id_maquina) return $this->busca("1", 0);
         $filtro = trim($request->filtro_ref);
