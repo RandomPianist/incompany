@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Categorias;
 
 class CategoriasController extends ControllerListavel {
-    protected function busca($param) {
+    protected function busca($param, $tipo = "") {
         return DB::table("categorias")
                     ->select(
                         "id",

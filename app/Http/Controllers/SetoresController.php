@@ -112,7 +112,7 @@ class SetoresController extends ControllerListavel {
         return $resultado;
     }
 
-    protected function busca($param) {
+    protected function busca($param, $tipo = "") {
         return DB::table("setores")
                     ->select(
                         "setores.id",

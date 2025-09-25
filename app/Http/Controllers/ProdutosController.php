@@ -109,7 +109,7 @@ class ProdutosController extends ControllerListavel {
         return $resultado;
     }
 
-    protected function busca($where) {
+    protected function busca($where, $tipo = "") {
         return DB::table("produtos")
                     ->select(
                         DB::raw("produtos.*"),
