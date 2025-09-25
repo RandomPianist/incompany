@@ -86,7 +86,7 @@ class SetoresController extends ControllerListavel {
         }
 
         if ($this->comparar_permissoes($this->obter_permissao(), $request)) {
-            $resultado->msg = "Não é possível atribuir a um setor permissões que seu usuário não tem";
+            $resultado->msg = "Não é possível atribuir ou retirar de um setor permissões que seu usuário não tem";
             $resultado->el = "";
             return $resultado;
         }
