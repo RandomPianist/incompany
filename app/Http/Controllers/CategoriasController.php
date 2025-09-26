@@ -23,13 +23,7 @@ class CategoriasController extends ControllerListavel {
     }
 
     public function consultar(Request $request) {
-        if (!$request->id &&
-            DB::table("categorias")
-                ->where("lixeira", 0)
-                ->where("descr", $request->descr)
-                ->exists()
-        ) return "1";
-        return "0";
+        return (!$request->id && Categorias::where("lixeira", 0)->where("descr", $request->descr)->exists()) ? "1" : "0";
     }
 
     public function mostrar($id) {
@@ -67,8 +61,8 @@ class CategoriasController extends ControllerListavel {
         $linha->lixeira = 1;
         $linha->save();
         $where = "id_categoria = ".$request->id;
-        DB::statement("UPDATE produtos SET id_categoria = NULL ".$where);
         $this->log_inserir("D", "categorias", $linha->id); // App\Http\Controllers\Controller.php
         $this->log_inserir_lote("E", "produtos", $where); // App\Http\Controllers\Controller.php
+        DB::statement("UPDATE produtos SET id_categoria = NULL ".$where);
     }
 }

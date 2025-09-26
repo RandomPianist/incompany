@@ -13,7 +13,7 @@ CREATE TABLE log2 AS (
 			
 		FROM log
 		
-		WHERE tabela NOT IN ('retiradas', 'estoque', 'solicitacoes', 'setores') AND origem <> 'SYS'
+		WHERE tabela NOT IN ('retiradas', 'estoque', 'solicitacoes', 'setores', 'atribuicoes') AND origem <> 'SYS'
 		
 		GROUP BY
 			tabela,
@@ -28,7 +28,7 @@ CREATE TABLE log2 AS (
 		
 		FROM log
 		
-		WHERE tabela IN ('retiradas', 'estoque', 'solicitacoes', 'setores') OR origem = 'SYS'
+		WHERE tabela IN ('retiradas', 'estoque', 'solicitacoes', 'setores', 'atribuicoes') OR origem = 'SYS'
 	)
 );
 DROP TABLE log;

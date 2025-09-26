@@ -12,7 +12,9 @@ use App\Models\Pessoas;
 use App\Models\Produtos;
 use App\Models\Maquinas;
 use App\Models\Retiradas;
+use App\Models\Empresas;
 use App\Models\Comodatos;
+use App\Models\ComodatosProdutos;
 use App\Models\Atribuicoes;
 use App\Services\GlobaisService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -91,11 +93,10 @@ abstract class Controller extends BaseController {
 
     protected function empresa_consultar(Request $request) {
         return (
-            !DB::table("empresas")
-                ->where("id", $request->id_empresa)
-                ->where("nome_fantasia", $request->empresa)
-                ->where("lixeira", 0)
-                ->exists()
+            !Empresas::where("id", $request->id_empresa)
+                        ->where("nome_fantasia", $request->empresa)
+                        ->where("lixeira", 0)
+                        ->exists()
         );
     }
 
@@ -232,13 +233,13 @@ abstract class Controller extends BaseController {
     }
 
     protected function supervisor_consultar(Request $request) {
-        $consulta = DB::table("pessoas")
-                        ->where("cpf", $request->cpf)
-                        ->where("senha", $request->senha)
-                        ->where("supervisor", 1)
-                        ->where("lixeira", 0)
-                        ->get();
-        return sizeof($consulta) ? $consulta[0]->id : 0;
+        $supervisor = Pessoas::where("cpf", $request->cpf)
+                            ->where("senha", $request->senha)
+                            ->where("supervisor", 1)
+                            ->where("lixeira", 0)
+                            ->value("id");
+        if ($supervisor === null) return 0;
+        return $supervisor;
     }
 
     protected function atribuicao_atualiza_ref($id, $antigo, $novo, $nome = "", $api = false) {
@@ -256,12 +257,8 @@ abstract class Controller extends BaseController {
                             "psm_valor"
                         )
                         ->get();
-            DB::statement("
-                UPDATE atribuicoes
-                SET ".($novo ? "referencia = '".$novo."'" : "lixeira = 1")."
-                WHERE ".$where
-            );
             $this->log_inserir_lote($novo ? "E" : "D", "atribuicoes", $where, $api ? "ERP" : "WEB", $nome);
+            Atribuicoes::whereRaw($where)->update($novo ? ["referencia" => $novo] : ["lixeira" => 1]);
             $this->atualizar_atribuicoes($lista);
         }
     }
@@ -296,14 +293,10 @@ abstract class Controller extends BaseController {
         $where = "lixeira = 0 AND id_maquina = ".$comodato->id_maquina." AND id_empresa = ".$comodato->id_empresa;
         $where_g = $where." AND gerado = 1";
         if (!intval($comodato->atb_todos)) {
-            $ret = DB::table("atribuicoes")->whereRaw($where_g)->exists();
+            $ret = Atribuicoes::whereRaw($where_g)->exists();
             if ($ret) {
                 $this->log_inserir_lote("D", "atribuicoes", $where_g);
-                DB::statement("
-                    UPDATE atribuicoes
-                    SET lixeira = 1
-                    WHERE ".$where_g
-                );
+                Atribuicoes::whereRaw($where_g)->update(["lixeira" => 1]);
                 DB::statement("CALL excluir_atribuicao_sem_retirada()");
             }
             return $ret;
@@ -432,13 +425,12 @@ abstract class Controller extends BaseController {
     }
 
     protected function consultar_maquina(Request $request) {
-        return (((
-            !DB::table("maquinas")
-                ->where("id", $request->id_maquina)
-                ->where("descr", $request->maquina)
-                ->where("lixeira", 0)
-                ->exists()
-        ) && trim($request->maquina)) || (trim($request->id_maquina) && !trim($request->maquina)));
+        return ((
+            trim($request->maquina) &&
+            !Maquinas::where("id", $request->id_maquina)->where("descr", $request->maquina)->where("lixeira", 0)->exists()
+        ) || (
+            trim($request->id_maquina) && !trim($request->maquina)
+        ));
     }
 
     protected function extrato_consultar_main(Request $request) {
@@ -671,11 +663,10 @@ abstract class Controller extends BaseController {
     }
 
     protected function obter_autor_da_solicitacao($solicitacao) {
-        return DB::table("log")
-                ->where("fk", $solicitacao)
-                ->where("tabela", "solicitacoes")
-                ->where("acao", "C")
-                ->value("id_pessoa");
+        return Log::where("fk", $solicitacao)
+                    ->where("tabela", "solicitacoes")
+                    ->where("acao", "C")
+                    ->value("id_pessoa");
     }
 
     protected function view_mensagem($icon, $text) {
@@ -683,9 +674,8 @@ abstract class Controller extends BaseController {
     }
 
     protected function obter_cp($id_comodato, $id_produto) {
-        return DB::table("comodatos_produtos")
-                    ->where("id_produto", $id_produto)
-                    ->where("id_comodato", $id_comodato)
-                    ->value("id");
+        return ComodatosProdutos::where("id_produto", $id_produto)
+                                ->where("id_comodato", $id_comodato)
+                                ->value("id");
     }
 }

@@ -14,7 +14,6 @@ use App\Models\Atribuicoes;
 use App\Models\ComodatosProdutos;
 use App\Models\Empresas;
 use App\Models\Pessoas;
-use App\Models\Log;
 
 class ApiController extends Controller {
     private function info_atb($id_pessoa, $obrigatorios, $grade) {
@@ -295,38 +294,22 @@ class ApiController extends Controller {
     }
 
     public function gerenciar_estoque(Request $request) {
-        $where = "id_produto = ".$request->idProduto." AND id_comodato = ".$this->obter_comodato($request->idMaquina)->id;
-        $precoProd = floatval(
-            DB::table("comodatos_produtos")
-                ->whereRaw($where)
-                ->value("preco")
-        );
+        $cp = ComodatosProdutos::where("id_produto", $request->idProduto)->where("id_comodato", $this->obter_comodato($request->idMaquina)->id);
+        $precoProd = floatval($cp->preco);
         if (isset($request->preco)) {
             if (floatval($request->preco) > 0) $precoProd = floatval($request->preco);
         }
-        DB::statement("
-            UPDATE comodatos_produtos SET
-                minimo = ".$request->minimo.",
-                maximo = ".$request->maximo.",
-                preco = ".$precoProd."
-            WHERE ".$where
-        );
+        $cp->minimo = $request->minimo;
+        $cp->maximo = $request->maximo;
+        $cp->preco = $request->preco;
+        $cp->save();
         $nome = "";
         if (isset($request->usu)) $nome = $request->usu;
-        $this->log_inserir(
-            "E",
-            "comodatos_produtos",
-            DB::table("comodatos_produtos")
-                ->whereRaw($where)
-                ->value("id"),
-            "ERP",
-            $nome
-        ); // App\Http\Controllers\Controller.php
+        $this->log_inserir("E", "comodatos_produtos", $cp->id, "ERP", $nome); // App\Http\Controllers\Controller.php
     }
 
     public function validar_app(Request $request) {
-        return DB::table("pessoas")
-                    ->where("cpf", $request->cpf)
+        return Pessoas::where("cpf", $request->cpf)
                     ->where("senha", $request->senha)
                     ->where("lixeira", 0)
                     ->exists()
@@ -334,17 +317,11 @@ class ApiController extends Controller {
     }
 
     public function ver_pessoa(Request $request) {
-        return json_encode(
-            DB::table("pessoas")
-                ->where("cpf", $request->cpf)
-                ->first()
-        );
+        return json_encode(Pessoas::where("cpf", $request->cpf)->first());
     }
 
     public function produtos_por_pessoa(Request $request) {
-        $id_pessoa = DB::table("pessoas")
-                        ->where("cpf", $request->cpf)
-                        ->value("id");
+        $id_pessoa = Pessoas::where("cpf", $request->cpf)->value("id");
         return json_encode(collect(
             array_merge(
                 $this->produtos_por_pessoa_main($id_pessoa, true),
@@ -550,9 +527,7 @@ class ApiController extends Controller {
     }
 
     public function validar_biometria(Request $request) {
-        $pessoa = DB::table("pessoas")
-                    ->where("biometria", $request->biometria)
-                    ->value("id");
+        $pessoa = Pessoas::where("biometria", $request->biometria)->value("id");
         if ($pessoa == null) return 0;
         return $pessoa;
     }

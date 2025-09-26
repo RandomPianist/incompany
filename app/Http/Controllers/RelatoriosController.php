@@ -11,6 +11,7 @@ use App\Models\Pessoas;
 use App\Models\Empresas;
 use App\Models\Maquinas;
 use App\Models\Solicitacoes;
+use App\Models\SolicitacoesProdutos;
 use App\Models\Produtos;
 
 class RelatoriosController extends Controller {
@@ -612,10 +613,9 @@ class RelatoriosController extends Controller {
     }
 
     public function solicitacao($id) {
-        $consulta = DB::table("solicitacoes_produtos")
-                        ->whereRaw("IFNULL(obs, '') <> ''")
-                        ->where("id_solicitacao", $id)
-                        ->pluck("obs");
+        $consulta = SolicitacoesProdutos::whereRaw("IFNULL(obs, '') <> ''")
+                                        ->where("id_solicitacao", $id)
+                                        ->pluck("obs");
         $solicitacao = Solicitacoes::find($id);
         if ($this->obter_autor_da_solicitacao($solicitacao->id) != Auth::user()->id_pessoa) return 401; // App\Http\Controllers\Controller.php
         $resultado = array();

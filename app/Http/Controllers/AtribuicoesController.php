@@ -9,6 +9,8 @@ use App\Models\Atribuicoes;
 use App\Models\Pessoas;
 use App\Models\Setores;
 use App\Models\Maquinas;
+use App\Models\Log;
+use App\Models\Retiradas;
 
 class AtribuicoesController extends Controller {
     private function consulta_main($select) {
@@ -224,11 +226,14 @@ class AtribuicoesController extends Controller {
         $tabelas = ["atribuicoes", "excecoes"];
         $where = "id_usuario = ".Auth::user()->id;
         foreach ($tabelas as $tabela) {
+            $tab_bkp = $tabela == "atribuicoes" ? "atbbkp" : "excbkp";
             DB::statement("
                 UPDATE ".$tabela."
                 SET rascunho = 'T'
                 WHERE ".$where." AND rascunho = 'R'
             ");
+            DB::statement("DELETE FROM ".$tab_bkp." WHERE id_usuario_editando = ".$id_usuario);
+            if (!DB::table($tab_bkp)->exists()) DB::statement("TRUNCATE TABLE ".$tab_bkp);
         }
         $lista = DB::table("vatbold")
                     ->select(
@@ -261,8 +266,7 @@ class AtribuicoesController extends Controller {
                         ->get();
         foreach ($consulta as $linha) {
             $id_excluir = $linha->id;
-            $id_restaurar = DB::table("atribuicoes")
-                                ->whereRaw("
+            $id_restaurar = Atribuicoes::whereRaw("
                                     (CASE
                                         WHEN cod_produto IS NOT NULL THEN 'P'
                                         ELSE 'R'
@@ -297,7 +301,10 @@ class AtribuicoesController extends Controller {
                 $modelo->rascunho = "S";
                 $this->salvar_main($modelo, $linha->qtd, $linha->validade, $linha->obrigatorio);
                 $this->log_inserir("E", "atribuicoes", $modelo->id);
-                DB::statement("DELETE FROM log WHERE fk = ".$id_excluir." AND acao = 'D' AND tabela = 'atribuicoes'");
+                Log::where("fk", $id_excluir)
+                    ->where("acao", "D")
+                    ->where("tabela", "atribuicoes")
+                    ->delete();
             }
         }
         foreach ($tabelas as $tabela) {
@@ -334,8 +341,8 @@ class AtribuicoesController extends Controller {
                     ->pluck("id")
                     ->toArray();
         if (sizeof($lista)) {
-            DB::statement("DELETE FROM retiradas WHERE id IN (".join(",", $lista).")");
-            DB::statement("DELETE FROM log WHERE fk IN (".join(",", $lista).") AND tabela = 'retiradas'");
+            Retiradas::whereIn("id", $lista)->delete();
+            Log::whereIn("fk", $lista)->where("tabela", "retiradas")->delete();
         }
         foreach ($tabelas as $tabela) {
             $tab_bkp = $tabela == "atribuicoes" ? "atbbkp" : "excbkp";

@@ -63,21 +63,8 @@ class Api2Controller extends Controller {
             $produto = Produtos::find($req_produto->id);
             $continua = false;
             $inserir_log = true;
+            $inserir_log_cp = true;
             $validade_ca = Carbon::createFromFormat('d-m-Y', $req_produto->validade_ca)->format('Y-m-d');
-            $where_cp = "id_comodato = ".$comodato->id." AND id_produto = ".$produto->id;
-            $id_cp = DB::table("comodatos_produtos")
-                        ->whereRaw($where_cp)
-                        ->value("id");
-            if ($id_cp === null) {
-                $cp = new ComodatosProdutos;
-                $cp->id_comodato = $comodato->id;
-                $cp->id_produto = $produto->id;
-                $cp->preco = $produto->preco;
-                $cp->save();
-                array_push($ids_itm, $produto->id);
-                array_push($cods_itm, $produto->cod_externo);
-                $id_cp = $cp->id;
-            }
             if ($produto !== null) {
                 if ($this->comparar_texto($req_produto->cod, $produto->cod_externo)) $continua = true; // App\Http\Controllers\Controller.php
                 if ($this->comparar_texto($req_produto->descr, $produto->descr)) $continua = true; // App\Http\Controllers\Controller.php
@@ -115,13 +102,26 @@ class Api2Controller extends Controller {
                 $inserir_log = false;
                 $this->log_inserir(intval($req_produto->id) ? "E" : "C", "produtos", $produto->id, "ERP", $usuario); // App\Http\Controllers\Controller.php
             }
+            $id_cp = ComodatosProdutos::where("id_comodato", $comodato->id)
+                                        ->where("id_produto", $produto->id)
+                                        ->value("id");
+            if ($id_cp === null) {
+                $cp = new ComodatosProdutos;
+                $cp->id_comodato = $comodato->id;
+                $cp->id_produto = $produto->id;
+                $cp->preco = $produto->preco;
+                $cp->save();
+                array_push($ids_itm, $produto->id);
+                array_push($cods_itm, $produto->cod_externo);
+                $id_cp = $cp->id;
+                $inserir_log_cp = false;
+                $this->log_inserir("C", "comodatos_produtos", $id_cp, "ERP", $usuario); // App\Http\Controllers\Controller.php
+            }
             if ($this->comparar_num($req_produto->preco, $req_produto->prcad)) { // App\Http\Controllers\Controller.php
-                DB::statement("
-                    UPDATE comodatos_produtos
-                    SET preco = ".$req_produto->preco."
-                    WHERE ".$where_cp
-                );
-                if (intval($req_produto->id)) $this->log_inserir("E", "comodatos_produtos", $id_cp, "ERP", $usuario); // App\Http\Controllers\Controller.php
+                $cp = ComodatosProdutos::find($id_cp);
+                $cp->preco = $req_produto->preco;
+                $cp->save();
+                if (intval($req_produto->id) && $inserir_log_cp) $this->log_inserir("E", "comodatos_produtos", $id_cp, "ERP", $usuario); // App\Http\Controllers\Controller.php
             }
             $req_categoria = (object) $req_produto->categoria;
             if (intval($req_categoria->cod)) {
@@ -164,7 +164,7 @@ class Api2Controller extends Controller {
             $estq->es = "E";
             $estq->qtd = $req_produto->qtd;
             $estq->id_cp = $id_cp;
-            $estq->preco = ComodatosProdutos::find($estq->id_cp)->preco;
+            $estq->preco = ComodatosProdutos::find($id_cp)->preco;
             $estq->data = date("Y-m-d");
             $estq->hms = date("H:i:s");
             $estq->save();
@@ -197,10 +197,7 @@ class Api2Controller extends Controller {
 
     public function maquinas_todas(Request $request) {
         if ($request->token != config("app.key")) return 401;
-        $clientes = DB::table("empresas")
-                        ->where("lixeira", 0)
-                        ->whereNotNull("cod_externo")
-                        ->pluck("cod_externo");
+        $clientes = Empresas::where("lixeira", 0)->whereNotNull("cod_externo")->pluck("cod_externo");
         $resultado = array();
         foreach ($clientes as $cft) {
             $consulta = $this->maquinas($cft)->get();
@@ -225,22 +222,14 @@ class Api2Controller extends Controller {
                 ->where("maquinas.lixeira", 0)
                 ->exists()
         ) return "CLIENTE";
-        if (
-            DB::table("maquinas")
-                ->where("descr", $request->maq)
-                ->where("lixeira", 0)
-                ->exists()
-        ) return "MAQUINA";
+        if (Maquinas::where("descr", $request->maq)->where("lixeira", 0)->exists()) return "MAQUINA";
         return "OK";
     }
 
     public function criar(Request $request) {
         if ($request->token != config("app.key")) return 401;
         $cnpj = filter_var($request->cnpj, FILTER_SANITIZE_NUMBER_INT);
-        $id_empresa = DB::table("empresas")
-                        ->where("cnpj", $cnpj)
-                        ->orWhere("cod_externo", $request->emp_cod)
-                        ->value("id");
+        $id_empresa = Empresas::where("cnpj", $cnpj)->orWhere("cod_externo", $request->emp_cod)->value("id");
         $continua = false;
         $empresa = null;
         if ($id_empresa !== null) {
@@ -453,16 +442,13 @@ class Api2Controller extends Controller {
                 if (sizeof($id_sp)) $id_sp = $id_sp[0]->id;
                 else $id_sp = 0;
                 $sp = SolicitacoesProdutos::firstOrNew(["id" => $id_sp]);
-                $sp->id_produto = DB::table("produtos")
-                                        ->where("cod_externo", $req_produto->cod)
-                                        ->value("id");
+                $sp->id_produto = Produtos::where("cod_externo", $req_produto->cod)->value("id");
                 $sp->id_solicitacao = $solicitacao->id;
                 $sp->obs = $req_produto->obs ? $req_produto->obs."|".$req_produto->obs2 : "";
                 $sp->qtd = $req_produto->qtd;
-                $sp->preco = DB::table("comodatos_produtos")
-                                ->where("id_comodato", $solicitacao->id_comodato)
-                                ->where("id_produto", $sp->id_produto)
-                                ->value("preco");
+                $sp->preco = ComodatosProdutos::where("id_comodato", $solicitacao->id_comodato)
+                                            ->where("id_produto", $sp->id_produto)
+                                            ->value("preco");
                 if (!intval($id_sp)) $sp->origem = "ERP";
                 $sp->save();
                 $this->log_inserir(!intval($id_sp) ? "C" : "E", "solicitacoes_produtos", $sp->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
