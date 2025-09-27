@@ -3,12 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Atribuicoes;
-use App\Models\Excbkp;
-use App\Models\Log;
 use App\Models\Empresas;
 use App\Models\Setores;
-use App\Models\Retiradas;
 
 class Pessoas extends Model
 {
@@ -50,32 +46,12 @@ class Pessoas extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
-
-    public function atribuicoes() {
-        return $this->hasMany(Atribuicoes::class, "id_pessoa");
-    }
-
-    public function excbkp() {
-        return $this->hasMany(Excbkp::class, "id_pessoa");
-    }
-
-    public function log_entry() {
-        return $this->hasMany(Log::class, "id_pessoa");
-    }
-
+    
     public function empresa() {
         return $this->belongsTo(Empresas::class, "id_empresa");
     }
 
     public function setor() {
         return $this->belongsTo(Setores::class, "id_setor");
-    }
-
-    public function retiradas() {
-        return $this->hasMany(Retiradas::class, "id_pessoa");
-    }
-
-    public function retiradas_supervisionadas() {
-        return $this->hasMany(Retiradas::class, "id_supervisor");
     }
 }

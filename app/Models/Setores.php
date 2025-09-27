@@ -3,11 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Atribuicoes;
-use App\Models\Excbkp;
 use App\Models\Permissoes;
 use App\Models\Pessoas;
-use App\Models\Retiradas;
 
 class Setores extends Model
 {
@@ -32,23 +29,11 @@ class Setores extends Model
         'updated_at' => 'datetime'
     ];
 
-    public function atribuicoes() {
-        return $this->hasMany(Atribuicoes::class, "id_setor");
-    }
-
-    public function excbkp() {
-        return $this->hasMany(Excbkp::class, "id_setor");
-    }
-
     public function permissao() {
         return $this->hasOne(Permissoes::class, "id_setor");
     }
 
     public function pessoas() {
         return $this->hasMany(Pessoas::class, "id_setor")->where("lixeira", 0);
-    }
-
-    public function retiradas() {
-        return $this->hasMany(Retiradas::class, "id_setor");
     }
 }

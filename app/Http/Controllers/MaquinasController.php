@@ -407,12 +407,7 @@ class MaquinasController extends Controller {
     }
 
     public function consultar(Request $request) {
-        return (!intval($request->id) &&
-            DB::table("maquinas")
-                ->where("lixeira", 0)
-                ->where("descr", $request->descr)
-                ->exists()
-        ) ? "1" : "0";
+        return (!intval($request->id) && Maquinas::where("descr", $request->descr)->exists()) ? "1" : "0";
     }
 
     public function mostrar($id) {
@@ -486,10 +481,7 @@ class MaquinasController extends Controller {
                 $linha->preco = $request->preco[$i];
                 $linha->data = date("Y-m-d");
                 $linha->hms = date("H:i:s");
-                $linha->id_cp = DB::table("comodatos_produtos")
-                                    ->where("id_produto", $request->id_produto[$i])
-                                    ->where("id_comodato", $comodato->id)
-                                    ->value("id");
+                $linha->id_cp = $comodato->cp($request->id_produto[$i])->value("id");
                 $linha->save();
                 $this->log_inserir("C", "estoque", $linha->id); // App\Http\Controllers\Controller.php
                 $gestor = ComodatosProdutos::find($linha->id_cp);
@@ -525,10 +517,7 @@ class MaquinasController extends Controller {
     }
 
     public function preco(Request $request) {
-        $preco = DB::table("comodatos_produtos")
-                    ->where("id_comodato", $this->obter_comodato($request->id_maquina)->id) // App\Http\Controllers\Controller.php
-                    ->where("id_produto", $request->id_produto)
-                    ->value("preco");
+        $preco = $this->obter_comodato($request->id_maquina)->cp($request->id_produto)->value("preco"); // App\Http\Controllers\Controller.php
         if ($preco !== null) return $preco;
         return Produtos::find($request->id_produto)->preco;
     }
@@ -627,10 +616,7 @@ class MaquinasController extends Controller {
         for ($i = 0; $i < sizeof($request->id_produto); $i++) {
             $modelo = null;
             $letra_log = "";
-            $id_cp = DB::table("comodatos_produtos")
-                        ->where("id_comodato", $comodato->id)
-                        ->where("id_produto", $request->id_produto[$i])
-                        ->value("id");
+            $id_cp = $comodato->cp($request->id_produto[$i])->value("id");
             if ($id_cp !== null) {
                 $modelo = ComodatosProdutos::find($id_cp);
                 $lixeira = str_replace("opt-", "", $request->lixeira[$i]);
@@ -660,14 +646,14 @@ class MaquinasController extends Controller {
     }
 
     public function verificar_novo_cp(Request $request) {
-        $id_cp = $this->obter_cp($this->obter_comodato($request->id_maquina)->id, $request->id_produto); // App\Http\Controllers\Controller.php
+        $id_cp = $this->obter_comodato($request->id_maquina)->cp($request->id_produto)->value("id"); // App\Http\Controllers\Controller.php
         if ($id_cp === null) return "1";
         $cp = ComodatosProdutos::find($id_cp);
         return (
-            $this->comparar_num($cp->minimo, $request->minimo) ||
-            $this->comparar_num($cp->maximo, $request->maximo) ||
-            $this->comparar_num($cp->preco, $request->preco) ||
-            $this->comparar_num($cp->lixeira, $request->lixeira)
-        ) ? "1" : "0"; // App\Http\Controllers\Controller.php
+            $this->comparar_num($cp->minimo, $request->minimo) || // App\Http\Controllers\Controller.php
+            $this->comparar_num($cp->maximo, $request->maximo) || // App\Http\Controllers\Controller.php
+            $this->comparar_num($cp->preco, $request->preco) || // App\Http\Controllers\Controller.php
+            $this->comparar_num($cp->lixeira, $request->lixeira) // App\Http\Controllers\Controller.php
+        ) ? "1" : "0";
     }
 }

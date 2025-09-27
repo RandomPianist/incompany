@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Atribuicoes;
 
 class Atbbkp extends Model
 {
@@ -35,8 +34,4 @@ class Atbbkp extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
-
-    public function atribuicao() {
-        return $this->belongsTo(Atribuicoes::class, "id_atribuicao");
-    }
 }

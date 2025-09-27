@@ -276,15 +276,15 @@ class ApiController extends Controller {
         $comodato = $this->obter_comodato($request->id_maquina); // App\Http\Controllers\Controller.php
         for ($i = 0; $i < sizeof($request->idProduto); $i++) {
             $saldo_ant = $this->retorna_saldo_cp($comodato->id, $request->idProduto[$i]); // App\Http\Controllers\Controller.php
-            $id_cp = $this->obter_cp($comodato->id, $request->idProduto[$i]); // App\Http\Controllers\Controller.php
+            $cp = ComodatosProdutos::find($comodato->cp($request->idProduto[$i])->value("id"));
             $linha = new Estoque;
             $linha->data = date("Y-m-d");
             $linha->hms = date("H:i:s");
             $linha->es = $request->es[$i];
             $linha->descr = $request->descr[$i];
             $linha->qtd = $request->qtd[$i];
-            $linha->id_cp = $id_cp;
-            $linha->preco = ComodatosProdutos::find($id_cp)->preco;
+            $linha->id_cp = $cp->id;
+            $linha->preco = $cp->preco;
             $linha->save();
             $nome = "";
             if (isset($request->usu)) $nome = $request->usu;
@@ -294,7 +294,7 @@ class ApiController extends Controller {
     }
 
     public function gerenciar_estoque(Request $request) {
-        $cp = ComodatosProdutos::where("id_produto", $request->idProduto)->where("id_comodato", $this->obter_comodato($request->idMaquina)->id);
+        $cp = ComodatosProdutos::find($this->obter_comodato($request->idMaquina)->cp($request->idProduto)->value("id")); // App\Http\Controllers\Controller.php
         $precoProd = floatval($cp->preco);
         if (isset($request->preco)) {
             if (floatval($request->preco) > 0) $precoProd = floatval($request->preco);
@@ -337,6 +337,7 @@ class ApiController extends Controller {
         $resultado = new \stdClass;
         $resultado->msg = "";
         $cont = 0;
+        $comodato = null;
         $produtos_ids = array();
         $produtos_refer = array();
 
@@ -460,7 +461,7 @@ class ApiController extends Controller {
             $linha->qtd = $retirada["qtd"];
             $linha->data = date("Y-m-d");
             $linha->hms = date("H:i:s");
-            $linha->id_cp = $this->obter_cp($comodato->id, $retirada["id_produto"]); // App\Http\Controllers\Controller.php
+            $linha->id_cp = $comodato->cp($retirada["id_produto"])->value("id");
             $linha->save();
             $reg_log = $this->log_inserir("C", "estoque", $linha->id, "APP"); // App\Http\Controllers\Controller.php
             $reg_log->id_pessoa = $retirada["id_pessoa"];

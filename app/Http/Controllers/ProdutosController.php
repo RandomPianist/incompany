@@ -8,6 +8,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
 use App\Models\Produtos;
+use App\Models\Maquinas;
+use App\Models\Categorias;
 use App\Models\Atribuicoes;
 
 class ProdutosController extends ControllerListavel {
@@ -48,11 +50,10 @@ class ProdutosController extends ControllerListavel {
             $comodato = $this->obter_comodato($maquinas_id[$i]); // App\Http\Controllers\Controller.php
 
             if (
-                !DB::table("maquinas")
-                    ->where("id", $maquinas_id[$i])
-                    ->where("descr", $maquinas_descr[$i])
-                    ->where("lixeira", 0)
-                    ->exists()
+                !Maquinas::where("id", $maquinas_id[$i])
+                        ->where("descr", $maquinas_descr[$i])
+                        ->where("lixeira", 0)
+                        ->exists()
             ) {
                 array_push($campos, "maquina-".($i + 1));
                 array_push($valores, $maquinas_descr[$i]);
@@ -132,16 +133,14 @@ class ProdutosController extends ControllerListavel {
 
     public function consultar(Request $request) {
         if (
-            !DB::table("categorias")
-                ->where("id", $request->id_categoria)
-                ->where("descr", $request->categoria)
-                ->exists()
+            !Categorias::where("id", $request->id_categoria)
+                        ->where("descr", $request->categoria)
+                        ->exists()
         ) return "invalido";
         if (!$request->id &&
-            DB::table("produtos")
-                ->where("lixeira", 0)
-                ->where("cod_externo", $request->cod_externo)
-                ->exists()
+            Produtos::where("lixeira", 0)
+                    ->where("cod_externo", $request->cod_externo)
+                    ->exists()
         ) return "duplicado";
         if ($request->id) {
             $prmin = floatval(
@@ -153,10 +152,13 @@ class ProdutosController extends ControllerListavel {
             $preco = floatval($request->preco);
             if ($prmin > 0 && $preco < $prmin) return "preco".strval($prmin);
         }
-        if (
-            !trim($request->referencia) &&
-            DB::table("atribuicoes")->where("referencia", Produtos::find($request->id)->referencia)->exists()
-        ) return "aviso";
+        $produto = Produtos::find($request->id);
+        if ($produto !== null) {
+            if (
+                !trim($request->referencia) &&
+                $produto->atribuicoes_por_referencia()->exists()
+            ) return "aviso";
+        }
         return "";
     }
 
@@ -301,10 +303,7 @@ class ProdutosController extends ControllerListavel {
 
             $modelo = null;
             $letra_log = "";
-            $id_cp = DB::table("comodatos_produtos")
-                        ->where("id_comodato", $comodato->id)
-                        ->where("id_produto", $request->id_produto)
-                        ->value("id");
+            $id_cp = $comodato->cp($request->id_produto)->value("id");
             if ($id_cp !== null) {
                 $modelo = ComodatosProdutos::find($id_cp);
                 $lixeira = str_replace("opt-", "", $request->lixeira[$i]);

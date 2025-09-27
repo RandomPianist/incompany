@@ -6,8 +6,9 @@ use DB;
 use Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Models\Previas;
 use App\Models\Pessoas;
-use App\Models\Comodatos;
+use App\Models\Produtos;
 use App\Models\Solicitacoes;
 use App\Models\SolicitacoesProdutos;
 
@@ -181,17 +182,13 @@ class SolicitacoesController extends Controller {
                 $sp->id_produto_orig = $request->id_produto[$i];
                 $sp->qtd_orig = $request->qtd[$i];
                 $sp->origem = "WEB";
-                $sp->preco_orig = DB::table("comodatos_produtos AS cp")
-                                    ->where("id_comodato", $solicitacao->id_comodato)
-                                    ->where("id_produto", $sp->id_produto_orig)
-                                    ->value("preco");
+                $sp->preco_orig = Produtos::find($request->id_produto[$i])->cp($solicitacao->id_comodato)->value("preco");
                 $sp->id_solicitacao = $solicitacao->id;
                 $sp->save();
                 $this->log_inserir("C", "solicitacoes_produtos", $solicitacao->id); // App\Http\Controllers\Controller.php
             }
         }
-        $where = "id_comodato = ".$request->id_comodato;
-        DB::statement("UPDATE previas SET confirmado = 1 WHERE ".$where);
+        Previas::whereRaw($where)->update(["confirmado" => 1]);
         $this->log_inserir_lote("E", "previas", $where); // App\Http\Controllers\Controller.php
         return $this->view_mensagem("success", "Solicitação realizada"); // App\Http\Controllers\Controller.php
     }

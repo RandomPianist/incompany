@@ -5,10 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Atribuicoes;
 use App\Models\ComodatosProdutos;
-use App\Models\Previas;
 use App\Models\Categorias;
-use App\Models\Retiradas;
-use App\Models\SolicitacoesProdutos;
 
 class Produtos extends Model
 {
@@ -63,27 +60,11 @@ class Produtos extends Model
         return $this->hasMany(Atribuicoes::class, "referencia", "referencia");
     }
 
-    public function cp() {
-        return $this->hasMany(ComodatosProdutos::class, "id_produto");
-    }
-
-    public function previas() {
-        return $this->hasMany(Previas::class, "id_produto");
+    public function cp($id_comodato) {
+        return $this->hasMany(ComodatosProdutos::class, "id_produto")->where("id_comodato", $id_comodato);
     }
 
     public function categoria() {
         return $this->belongsTo(Categorias::class, "id_categoria");
-    }
-
-    public function retiradas() {
-        return $this->hasMany(Retiradas::class, "id_produto");
-    }
-
-    public function sp() {
-        return $this->hasMany(SolicitacoesProdutos::class, "id_produto");
-    }
-    
-    public function sp_orig() {
-        return $this->hasMany(SolicitacoesProdutos::class, "id_produto_orig");
     }
 }

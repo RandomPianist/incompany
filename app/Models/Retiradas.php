@@ -3,12 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Atribuicoes;
-use App\Models\Comodatos;
-use App\Models\Pessoas;
-use App\Models\Produtos;
-use App\Models\Empresas;
-use App\Models\Setores;
 
 class Retiradas extends Model
 {
@@ -56,32 +50,4 @@ class Retiradas extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
-
-    public function atribuicao() {
-        return $this->belongsTo(Atribuicoes::class, "id_atribuicao");
-    }
-
-    public function comodato() {
-        return $this->belongsTo(Comodatos::class, "id_comodato");
-    }
-
-    public function pessoa() {
-        return $this->belongsTo(Pessoas::class, "id_pessoa");
-    }
-
-    public function supervisor() {
-        return $this->belongsTo(Pessoas::class, "id_supervisor");
-    }
-
-    public function produto() {
-        return $this->belongsTo(Produtos::class, "id_produto");
-    }
-
-    public function empresa() {
-        return $this->belongsTo(Empresas::class, "id_empresa");
-    }
-
-    public function setor() {
-        return $this->belongsTo(Setores::class, "id_setor");
-    }
 }

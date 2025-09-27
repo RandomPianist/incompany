@@ -3,13 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Atbbkp;
-use App\Models\Pessoas;
-use App\Models\Setores;
-use App\Models\Maquinas;
 use App\Models\Produtos;
-use App\Models\Empresas;
-use App\Models\Retiradas;
+use App\Models\Excecoes;
 
 class Atribuicoes extends Model
 {
@@ -56,22 +51,6 @@ class Atribuicoes extends Model
         'updated_at' => 'datetime'
     ];
 
-    public function bkp() {
-        return $this->hasOne(Atbbkp::class, "id_atribuicao");
-    }
-
-    public function pessoa() {
-        return $this->belongsTo(Pessoas::class, "id_pessoa");
-    }
-
-    public function setor() {
-        return $this->belongsTo(Setores::class, "id_setor");
-    }
-
-    public function maquina() {
-        return $this->belongsTo(Maquinas::class, "id_maquina");
-    }
-
     public function produto_por_codigo() {
         return $this->belongsTo(Produtos::class, "cod_produto", "cod_externo");
     }
@@ -80,15 +59,7 @@ class Atribuicoes extends Model
         return $this->belongsTo(Produtos::class, "referencia", "referencia");
     }
 
-    public function empresa() {
-        return $this->belongsTo(Empresas::class, "id_empresa");
-    }
-
-    public function empresa_autor() {
-        return $this->belongsTo(Empresas::class, "id_empresa_autor");
-    }
-
-    public function retiradas() {
-        return $this->hasMany(Retiradas::class, "id_atribuicao");
+    public function excecoes() {
+        return $this->hasMany(Excecoes::class, "id_atribuicao");
     }
 }

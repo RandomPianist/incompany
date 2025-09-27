@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use DB;
 use Auth;
 use App\Models\Setores;
+use App\Models\Pessoas;
 use App\Models\Permissoes;
 use Illuminate\Http\Request;
 
@@ -48,25 +49,24 @@ class SetoresController extends ControllerListavel {
             return $resultado;
         }
 
-        if ((
-            DB::table("pessoas")
-                ->where("id_setor", $request->id)
-                ->where("id_empresa", "<>", $request->id_empresa)
-                ->where("lixeira", 0)
-                ->exists()
-        )) {
-            $nome = Setores::find($id)->descr;
+        if (
+            Pessoas::where("id_setor", $request->id)
+                        ->where("id_empresa", "<>", $request->id_empresa)
+                        ->where("lixeira", 0)
+                        ->exists()
+        ) {
+            $nome = Setores::find($request->id)->descr;
             $resultado->msg = "Não é possível alterar a empresa de ".$nome." porque existem pessoas vinculadas a esse setor";
             $resultado->el = "setor-empresa";
             return $resultado;
         }
 
-        if (!$request->id &&
-            DB::table("setores")
-                ->where("lixeira", 0)
-                ->where("descr", $request->descr)
-                ->where("id_empresa", $request->id_empresa)
-                ->exists()
+        if (
+            !$request->id &&
+            Setores::where("lixeira", 0)
+                    ->where("descr", $request->descr)
+                    ->where("id_empresa", $request->id_empresa)
+                    ->exists()
         ) {
             $resultado->msg = "Já existe um centro de custo de mesmo nome nessa empresa";
             $resultado->el = "descr";
@@ -175,15 +175,13 @@ class SetoresController extends ControllerListavel {
                                     ->where("pessoas.id_setor", $request->id)
                                     ->pluck("id");
                     foreach($consulta as $usuario) {
-                        $permissao = DB::table("permissoes")
-                                        ->where("id_usuario", $usuario)
-                                        ->value("id");
+                        $permissao = Permissoes::where("id_usuario", $usuario)->value("id");
                         array_push($lista, $usuario);
                         array_push($permissoes, $permissao);
                         $this->log_inserir("D", "users", $usuario); // App\Http\Controllers\Controller.php
                         $this->log_inserir("D", "permissoes", $permissao); // App\Http\Controllers\Controller.php
                     }
-                    $lista = join(",", $lista);
+                    $lista = implode(",", $lista);
                     if ($lista) {
                         if (isset($request->id_pessoa)) {
                             for ($i = 0; $i < sizeof($request->id_pessoa); $i++) {
@@ -194,7 +192,7 @@ class SetoresController extends ControllerListavel {
                             }
                         }
                         DB::statement("DELETE FROM users WHERE id IN (".$lista.")");
-                        DB::statement("DELETE FROM permissoes WHERE id IN (".$permissoes.")");
+                        Permissoes::whereIn("id", $permissoes)->delete();
                     }
                 } else if (isset($request->id_pessoa)) {
                     for ($i = 0; $i < sizeof($request->id_pessoa); $i++) {

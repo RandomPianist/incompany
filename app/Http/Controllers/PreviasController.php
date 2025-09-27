@@ -9,16 +9,15 @@ use Illuminate\Http\Request;
 
 class PreviasController extends Controller {
     public function salvar(Request $request) {
-        $id = DB::table("previas")
-                ->where("id_comodato", $request->id_comodato)
+        Previas::where("confirmado", 0)
                 ->where("id_usuario", Auth::user()->id)
+                ->where("id_comodato", $request->id_comodato)
                 ->where("id_produto", $request->id_produto)
-                ->where("confirmado", 0)
                 ->value("id");
         $id_previa = $id === null ? 0 : $id;
         $linha = Previas::firstOrNew(["id" => $id_previa]);
-        $linha->id_comodato = $request->id_comodato;
         $linha->id_usuario = Auth::user()->id;
+        $linha->id_comodato = $request->id_comodato;
         $linha->id_produto = $request->id_produto;
         $linha->qtd = $request->qtd;
         $linha->save();
@@ -28,7 +27,7 @@ class PreviasController extends Controller {
     public function excluir(Request $request) {
         $where = "id_comodato = ".$request->id_comodato." AND id_usuario = ".Auth::user()->id;
         $this->log_inserir_lote("D", "previas", $where); // App\Http\Controllers\Controller.php
-        DB::statement("DELETE FROM previas WHERE ".$where);
+        Previas::whereRaw($where)->delete();
     }
 
     public function preencher(Request $request) {

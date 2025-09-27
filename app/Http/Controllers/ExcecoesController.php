@@ -56,6 +56,7 @@ class ExcecoesController extends Controller {
     }
 
     public function salvar(Request $request) {
+        $atb = Atribuicoes::find($request->id_atribuicao);
         if (
             !DB::table($request->ps_chave == "P" ? "pessoas" : "setores")
                 ->where($request->ps_chave == "P" ? "nome" : "descr", $request->ps_valor)
@@ -63,14 +64,11 @@ class ExcecoesController extends Controller {
                 ->where("lixeira", 0)
                 ->exists()
         ) return 404;
-        if (!intval($request->id) &&
-            DB::table("excecoes")
-                ->where("id_atribuicao", $request->id_atribuicao)
-                ->where($request->ps_chave == "P" ? "id_pessoa" : "id_setor", $request->ps_id)
-                ->exists()
+        if (
+            !intval($request->id) &&
+            $atb->excecoes()->where($request->ps_chave == "P" ? "id_pessoa" : "id_setor", $request->ps_id)->exists()
         ) return 403;
         $id_usuario = Auth::user()->id;
-        $atb = Atribuicoes::find($request->id_atribuicao);
         $this->backup_atribuicao($atb); // App\Http\Controllers\Controller.php
         $atb->gerado = 0;
         $atb->save();

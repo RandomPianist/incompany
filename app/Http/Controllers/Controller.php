@@ -315,27 +315,13 @@ abstract class Controller extends BaseController {
             $modelo = null;
             $letra_log = "E";
             $continua = true;
-            $atb = DB::table("atribuicoes")
-                        ->select(
-                            "id",
-                            "gerado"
-                        )
-                        ->whereRaw($where)
-                        ->where("referencia", $item->referencia)
-                        ->first();
+            $atb = Atribuicoes::whereRaw($where)->where("referencia", $item->referencia)->first();
             if ($atb !== null) {
                 if (intval($atb->gerado)) $modelo = Atribuicoes::find($atb->id);
                 else $continua = false;
             }
-            if ($continua) {
-                $atb = DB::table("atribuicoes")
-                            ->select(
-                                "id",
-                                "gerado"
-                            )
-                            ->whereRaw($where)
-                            ->where("cod_produto", $item->cod_externo)
-                            ->first();
+            if (!$continua) {
+                $atb = Atribuicoes::whereRaw($where)->where("cod_produto", $item->cod_extero)->first();
                 if ($atb !== null) {
                     if (intval($atb->gerado)) $modelo = Atribuicoes::find($atb->id);
                     else $continua = false;
@@ -658,7 +644,7 @@ abstract class Controller extends BaseController {
         if ($lm) array_push($criterios, "Apenas produtos cuja compra é sugerida");
         $tela = new \stdClass;
         $tela->resultado = $resultado;
-        $tela->criterios = join(" | ", $criterios);
+        $tela->criterios = implode(" | ", $criterios);
         return $tela;
     }
 
@@ -671,11 +657,5 @@ abstract class Controller extends BaseController {
 
     protected function view_mensagem($icon, $text) {
         return view("mensagem", compact("icon", "text"));
-    }
-
-    protected function obter_cp($id_comodato, $id_produto) {
-        return ComodatosProdutos::where("id_produto", $id_produto)
-                                ->where("id_comodato", $id_comodato)
-                                ->value("id");
     }
 }

@@ -3,9 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Pessoas;
-use App\Models\Setores;
-use App\Models\Excecoes;
 
 class Excbkp extends Model
 {
@@ -31,16 +28,4 @@ class Excbkp extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
-
-    public function pessoa() {
-        return $this->belongsTo(Pessoas::class, "id_pessoa");
-    }
-
-    public function setor() {
-        return $this->belongsTo(Setores::class, "id_setor");
-    }
-
-    public function excecao() {
-        return $this->belongsTo(Excecoes::class, "id_excecao");
-    }
 }

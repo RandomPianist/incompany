@@ -3,10 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Atribuicoes;
-use App\Models\Comodatos;
 use App\Models\Pessoas;
-use App\Models\Retiradas;
 
 class Empresas extends Model
 {
@@ -40,26 +37,10 @@ class Empresas extends Model
     }
 
     public function filiais() {
-        return $this->hasMany(Empresas::class, "id_matriz");
-    }
-
-    public function empresa() {
-        return $this->hasMany(Atribuicoes::class, "id_empresa");
-    }
-
-    public function empresa_autor() {
-        return $this->hasMany(Atribuicoes::class, "id_empresa_autor");
-    }
-
-    public function comodatos() {
-        return $this->hasMany(Comodatos::class, "id_empresa");
+        return $this->hasMany(Empresas::class, "id_matriz")->where("lixeira", 0);
     }
 
     public function pessoas() {
-        return $this->hasMany(Pessoas::class, "id_empresa");
-    }
-
-    public function retiradas() {
-        return $this->hasMany(Retiradas::class, "id_empresa");
+        return $this->hasMany(Pessoas::class, "id_empresa")->where("lixeira", 0);
     }
 }

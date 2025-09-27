@@ -62,6 +62,7 @@ class Api2Controller extends Controller {
             $req_produto = (object) $req_produto_arr;
             $produto = Produtos::find($req_produto->id);
             $continua = false;
+            $criou = false;
             $inserir_log = true;
             $inserir_log_cp = true;
             $validade_ca = Carbon::createFromFormat('d-m-Y', $req_produto->validade_ca)->format('Y-m-d');
@@ -84,6 +85,7 @@ class Api2Controller extends Controller {
             } else {
                 $produto = new Produtos;
                 $continua = true;
+                $criou = true;
             }
             if ($continua) {
                 $produto->cod_externo = $req_produto->cod;
@@ -102,17 +104,17 @@ class Api2Controller extends Controller {
                 $inserir_log = false;
                 $this->log_inserir(intval($req_produto->id) ? "E" : "C", "produtos", $produto->id, "ERP", $usuario); // App\Http\Controllers\Controller.php
             }
-            $id_cp = ComodatosProdutos::where("id_comodato", $comodato->id)
-                                        ->where("id_produto", $produto->id)
-                                        ->value("id");
+            $id_cp = $comodato->cp($produto->id)->value("id");
             if ($id_cp === null) {
                 $cp = new ComodatosProdutos;
                 $cp->id_comodato = $comodato->id;
                 $cp->id_produto = $produto->id;
                 $cp->preco = $produto->preco;
                 $cp->save();
-                array_push($ids_itm, $produto->id);
-                array_push($cods_itm, $produto->cod_externo);
+                if ($criou) {
+                    array_push($ids_itm, $produto->id);
+                    array_push($cods_itm, $produto->cod_externo);
+                }
                 $id_cp = $cp->id;
                 $inserir_log_cp = false;
                 $this->log_inserir("C", "comodatos_produtos", $id_cp, "ERP", $usuario); // App\Http\Controllers\Controller.php
@@ -295,10 +297,10 @@ class Api2Controller extends Controller {
         $produtos = (object) $produtos;
         $resultado = $this->sincronizar_produtos($request->maq, $request->usu, $produtos);
         return json_encode(array(
-            "ids_cdp" => join("|", $resultado->ids_cdp),
-            "cods_cdp" => join("|", $resultado->cods_cdp),
-            "ids_itm" => join("|", $resultado->ids_itm),
-            "cods_itm" => join("|", $resultado->cods_itm)
+            "ids_cdp" => implode("|", $resultado->ids_cdp),
+            "cods_cdp" => implode("|", $resultado->cods_cdp),
+            "ids_itm" => implode("|", $resultado->ids_itm),
+            "cods_itm" => implode("|", $resultado->cods_itm)
         ));
     }
 
@@ -446,19 +448,17 @@ class Api2Controller extends Controller {
                 $sp->id_solicitacao = $solicitacao->id;
                 $sp->obs = $req_produto->obs ? $req_produto->obs."|".$req_produto->obs2 : "";
                 $sp->qtd = $req_produto->qtd;
-                $sp->preco = ComodatosProdutos::where("id_comodato", $solicitacao->id_comodato)
-                                            ->where("id_produto", $sp->id_produto)
-                                            ->value("preco");
+                $sp->preco = Produtos::find($sp->id_produto)->cp($solicitacao->id_comodato)->value("preco");
                 if (!intval($id_sp)) $sp->origem = "ERP";
                 $sp->save();
                 $this->log_inserir(!intval($id_sp) ? "C" : "E", "solicitacoes_produtos", $sp->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
             }
         }
         return json_encode(array(
-            "ids_cdp" => join("|", $ids_cdp),
-            "cods_cdp" => join("|", $cods_cdp),
-            "ids_itm" => join("|", $ids_itm),
-            "cods_itm" => join("|", $cods_itm)
+            "ids_cdp" => implode("|", $ids_cdp),
+            "cods_cdp" => implode("|", $cods_cdp),
+            "ids_itm" => implode("|", $ids_itm),
+            "cods_itm" => implode("|", $cods_itm)
         ));
     }
 

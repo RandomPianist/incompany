@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Comodatos;
-use App\Models\Produtos;
 
 class Previas extends Model
 {
@@ -30,12 +28,4 @@ class Previas extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
-
-    public function comodato() {
-        return $this->belongsTo(Comodatos::class, "id_comodato");
-    }
-
-    public function produto() {
-        return $this->belongsTo(Produtos::class, "id_produto");
-    }
 }

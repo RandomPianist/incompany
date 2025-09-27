@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Excbkp;
+use App\Models\Atribuicoes;
 
 class Excecoes extends Model
 {
@@ -32,7 +32,7 @@ class Excecoes extends Model
         'updated_at' => 'datetime'
     ];
 
-    public function bkp() {
-        return $this->hasOne(Excbkp::class, "id_excecao");
+    public function atribuicao() {
+        return $this->belongsTo(Atribuicoes::class, "id_excecao");
     }
 }

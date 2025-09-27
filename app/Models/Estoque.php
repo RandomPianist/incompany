@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\ComodatosProdutos;
 
 class Estoque extends Model
 {
@@ -33,8 +32,4 @@ class Estoque extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
-
-    public function cp() {
-        return $this->belongsTo(ComodatosProdutos::class, "id_cp");
-    }
 }

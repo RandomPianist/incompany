@@ -72,7 +72,7 @@ class AtribuicoesController extends Controller {
                 break;
             case "M":
                 $linha->id_maquina = $request->psm_valor;
-                $linha->id_empresa = DB::table("vcomodatos")
+                $linha->id_empresa = DB::table("mat_vcomodatos")
                                         ->where("id_maquina", $request->psm_valor)
                                         ->value("id_empresa");
                 break;

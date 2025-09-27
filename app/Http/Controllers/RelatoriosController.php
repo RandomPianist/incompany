@@ -21,8 +21,7 @@ class RelatoriosController extends Controller {
 
     private function consultar_pessoa(Request $request, $considerar_lixeira) {
         return ((
-            !DB::table("pessoas")
-                ->where("id", $request->id_pessoa)
+            !Pessoas::where("id", $request->id_pessoa)
                 ->where("nome", $request->pessoa)
                 ->where(function($sql) use($considerar_lixeira) {
                     if ($considerar_lixeira) $sql->where("lixeira", 0);
@@ -33,9 +32,9 @@ class RelatoriosController extends Controller {
 
     private function comum($select) {
         return DB::table("comodatos")
+                    ->select(DB::raw($select))
                     ->join("maquinas", "maquinas.id", "comodatos.id_maquina")
                     ->join("empresas", "empresas.id", "comodatos.id_empresa")
-                    ->select(DB::raw($select))
                     ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "empresas")) // App\Http\Controllers\Controller.php
                     ->where("maquinas.lixeira", 0);
     }
@@ -69,7 +68,7 @@ class RelatoriosController extends Controller {
         $criterios = array();
         if ($request->id_maquina) array_push($criterios, "Máquina: ".$request->maquina);
         if ($request->id_empresa) array_push($criterios, "Empresa: ".$request->empresa);
-        $criterios = join(" | ", $criterios);
+        $criterios = implode(" | ", $criterios);
         $titulo = "Máquinas por empresa";
         return sizeof($resultado) ? view("reports/bilateral", compact("resultado", "criterios", "titulo")) : $this->view_mensagem("warning", "Não há nada para exibir");
     }
@@ -86,7 +85,7 @@ class RelatoriosController extends Controller {
         $criterios = array();
         if ($request->id_maquina) array_push($criterios, "Máquina: ".$request->maquina);
         if ($request->id_empresa) array_push($criterios, "Empresa: ".$request->empresa);
-        $criterios = join(" | ", $criterios);
+        $criterios = implode(" | ", $criterios);
         $titulo = "Empresas por máquina";
         return sizeof($resultado) ? view("reports/bilateral", compact("resultado", "criterios", "titulo")) : $this->view_mensagem("warning", "Não há nada para exibir");
     }
@@ -182,7 +181,7 @@ class RelatoriosController extends Controller {
                 })->values()->all()
             ];
         })->sortBy("nome")->values()->all();
-        $retorno->criterios = join(" | ", $criterios);
+        $retorno->criterios = implode(" | ", $criterios);
         $retorno->cidade = "Barueri";
         $retorno->data_extenso = ucfirst(strftime("%d de %B de %Y"));
         return $retorno;
@@ -361,7 +360,7 @@ class RelatoriosController extends Controller {
                 ]
             ];
         })->sortBy("descr")->values()->all();
-        $criterios = join(" | ", $criterios);
+        $criterios = implode(" | ", $criterios);
         if (sizeof($resultado)) return view("reports/extrato".($request->lm == "S" ? "A" : "S"), compact("resultado", "criterios"));
         return $this->view_mensagem("warning", "Não há nada para exibir"); // App\Http\Controllers\Controller.php
     }
@@ -406,7 +405,7 @@ class RelatoriosController extends Controller {
                                 $query2->where("id_empresa", Empresas::find($id_emp)->id_matriz);
                             })->orWhere("id_empresa", $id_emp);
                         })->orWhere(function($query) use($id_emp) {
-                            $query->whereIn("id_empresa", DB::table("empresas")->where("id_matriz", $id_emp)->pluck("id")->toArray());
+                            $query->whereIn("id_empresa", Empresas::where("id_matriz", $id_emp)->pluck("id")->toArray());
                         });
                     }
                 })
@@ -418,8 +417,7 @@ class RelatoriosController extends Controller {
         if ($this->consultar_empresa($request)) return "empresa";
         if ($this->consultar_pessoa($request, false)) return "pessoa";
         if (((
-            !DB::table("setores")
-                ->where("id", $request->id_setor)
+            !Setores::where("id", $request->id_setor)
                 ->where("descr", $request->setor)
                 ->where("lixeira", 0)
                 ->exists()
@@ -484,8 +482,9 @@ class RelatoriosController extends Controller {
                             $query->where("empresas.id", $request->id_empresa)
                                 ->orWhere("empresas.id_matriz", $request->id_empresa);
                         });
-                        $empresa = Empresas::find($request->id_empresa)->razao_social;
-                        if (DB::table("empresas")->where("id_matriz", $request->id_empresa)->exists()) $empresa .= " e filiais";
+                        $m_empresa = Empresas::find($request->id_empresa);
+                        $empresa = $m_empresa->razao_social;
+                        if ($m_empresa->filiais()->exists()) $empresa .= " e filiais";
                         array_push($criterios, "Empresa: ".$empresa);
                     }
                     if ($request->consumo != "todos") {
@@ -528,7 +527,7 @@ class RelatoriosController extends Controller {
                 })->values()->all()
             ];
         })->values()->all();
-        $criterios = join(" | ", $criterios);
+        $criterios = implode(" | ", $criterios);
         $quebra = $request->rel_grupo;
         $titulo = $request->rel_grupo == "pessoa" ? "Consumo por colaborador" : "Consumo por setor";
         if ($request->json == "S") {
@@ -608,7 +607,7 @@ class RelatoriosController extends Controller {
                 })->values()->all()
             ];
         })->values()->all();
-        $criterios = join(" | ", $criterios);
+        $criterios = implode(" | ", $criterios);
         return sizeof($resultado) ? view("reports/ranking", compact("resultado", "criterios", "qtd_total")) : $this->view_mensagem("warning", "Não há nada para exibir"); // App\Http\Controllers\Controller.php
     }
 

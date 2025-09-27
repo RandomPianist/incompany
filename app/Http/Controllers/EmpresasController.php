@@ -49,13 +49,9 @@ class EmpresasController extends Controller {
 
     private function aviso_main($id) {
         $resultado = new \stdClass;
-        $nome = Empresas::find($id)->nome_fantasia;
-        if (
-            DB::table("pessoas")
-                ->where("id_empresa", $id)
-                ->where("lixeira", 0)
-                ->exists()
-        ) {
+        $emp = Empresas::find($id);
+        $nome = $emp->nome_fantasia;
+        if ($emp->pessoas()->exists()) {
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a essa empresa.";
             $resultado->permitir = 0;
         } else if (
@@ -82,7 +78,7 @@ class EmpresasController extends Controller {
         $resultado = new \stdClass;
         $resultado->inicial = $this->busca("M");
         $resultado->final = $this->busca("F");
-        $resultado->matriz_editavel = $id_emp ? sizeof(DB::table("empresas")->where("id_matriz", $id_emp)->where("lixeira", 0)->get()) > 0 ? 1 : 0 : 1;
+        $resultado->matriz_editavel = $id_emp ? Empresas::find($id_emp)->filiais()->exists() ? 1 : 0 : 1;
         return json_encode($resultado);
     }
 
@@ -104,18 +100,8 @@ class EmpresasController extends Controller {
     }
 
     public function consultar(Request $request) {
-        if (!$request->id &&
-            DB::table("empresas")
-                ->where("lixeira", 0)
-                ->where("cnpj", $request->cnpj)
-                ->exists()
-        ) return "R";
-        if (
-            DB::table("empresas")
-                ->where("lixeira", 0)
-                ->where("id_matriz", $request->id)
-                ->exists()
-        ) return "F";
+        if (!$request->id && Empresas::where("lixeira", 0)->where("cnpj", $request->cnpj)->exists()) return "R";
+        if (Empresas::where("lixeira", 0)->where("id_matriz", $request->id)->exists()) return "F";
         return "A";
     }
 
