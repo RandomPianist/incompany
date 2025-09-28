@@ -77,6 +77,8 @@ class SetoresController extends ControllerListavel {
             SELECT
                 setores.descr,
                 setores.cria_usuario,
+                setores.id_empresa,
+                empresa.nome_fantasia AS empresa,
                 CASE ".implode(" ", $condicoes_padrao)." END AS cria_usuario_motivo,
                 ".implode(",", $campos_permissao)."
             
@@ -84,7 +86,10 @@ class SetoresController extends ControllerListavel {
 
             CROSS JOIN permissoes AS minhas_permissoes
 
-            LEFT JOIN permissoes
+            JOIN empresas
+                ON empresas.id = setores.id_empresa
+
+            JOIN permissoes
                 ON permissoes.id_setor = setores.id
 
             LEFT JOIN log
