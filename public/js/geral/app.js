@@ -1,5 +1,6 @@
 let relatorio, pessoa, atribuicao, excecao, colGlobal;
 let anteriores = new Array();
+let permissoes = new Array();
 let validacao_bloqueada = false;
 let focar = true;
 let grupo_emp2 = 0;
@@ -38,234 +39,239 @@ jQuery.fn.sortElements = (function() {
 })();
 
 $(document).ready(function() {
-    $(".modal-body .row:not(.sem-margem)").each(function() {
-        if ($(this).prev().hasClass("row")) $(this).css("margin-top", $(this).prev().find(".tam-max").length ? "-14px" : "11px");
-    });
+    $.get(URL + "/permissoes", function(resp) {
+        if (typeof resp == "string") resp = $.parseJSON(resp);
+        for (x in resp) permissoes[x] = parseInt(resp[x]);
 
-    $(".modal-body button").each(function() {
-        $($(this).parent()).css("padding-top", "1px");
-    });
+        $(".modal-body .row:not(.sem-margem)").each(function() {
+            if ($(this).prev().hasClass("row")) $(this).css("margin-top", $(this).prev().find(".tam-max").length ? "-14px" : "11px");
+        });
 
-    $("#busca").keyup(function(e) {
-        if (e.keyCode == 13) listar();
-    });
+        $(".modal-body button").each(function() {
+            $($(this).parent()).css("padding-top", "1px");
+        });
 
-    $(document).on("keydown", "form", function(event) { 
-        const enter = event.key == "Enter";
-        if (enter && !validacao_bloqueada) {
-            try {
-                pessoa.validar();
-            } catch(err) {
+        $("#busca").keyup(function(e) {
+            if (e.keyCode == 13) listar();
+        });
+
+        $(document).on("keydown", "form", function(event) { 
+            const enter = event.key == "Enter";
+            if (enter && !validacao_bloqueada) {
                 try {
-                    relatorio.validar();
+                    pessoa.validar();
                 } catch(err) {
                     try {
-                        validar_estoque();    
+                        relatorio.validar();
                     } catch(err) {
                         try {
-                            validar_comodato();
+                            validar_estoque();    
                         } catch(err) {
-                            validar();
+                            try {
+                                validar_comodato();
+                            } catch(err) {
+                                validar();
+                            }
                         }
                     }
                 }
             }
-        }
-        return !enter;
-    });
-
-    $(".sortable-columns > th:not(.nao-ordena)").each(function() {
-        var th = $(this),
-            thIndex = th.index(),
-            table = $($(this).parent().attr("for"));
-        
-        th.click(function() {
-            var inverse = $(this).hasClass("text-dark") && $(this).html().indexOf("fa-sort-down") > -1;
-            if ($(this).hasClass("nao-inverte")) {
-                inverse = !inverse;
-                $(this).removeClass("nao-inverte");
-            }
-            $(this).parent().find(".text-dark").removeClass("text-dark");
-            $(this).parent().find(".my-icon").remove();
-            $(this).addClass("text-dark");
-            $(this).append(inverse ? "<i class = 'my-icon ml-2 fad fa-sort-up'></i>" : "<i class = 'my-icon ml-2 fad fa-sort-down'></i>");
-            $(".sortable-columns > th:not(.nao-ordena)").each(function() {
-                if (!$(this).hasClass("text-dark")) $(this).append("<i class = 'my-icon ml-2 fa-light fa-sort'></i>");
-            });
-            table.find("td").filter(function() {
-                return $(this).index() === thIndex;
-            }).sortElements(function(a, b) {
-                return $.text([a]) > $.text([b]) ? inverse ? -1 : 1 : inverse ? 1 : -1;
-            }, function() {
-                return this.parentNode;
-            });
-            colGlobal = thIndex;
+            return !enter;
         });
-    });
 
-    carrega_autocomplete();
-
-    carrega_dinheiro();
-
-    $("input.data").each(function() {
-        let that = $(this);
-        $(that).datepicker({
-            dateFormat: "dd/mm/yy",
-            closeText: "Fechar",
-            prevText: "Anterior",
-            nextText: "Próximo",
-            currentText: "Hoje",
-            monthNames: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
-            monthNamesShort: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
-            dayNames: ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"],
-            dayNamesShort: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
-            dayNamesMin: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
-            weekHeader: "Sm",
-            firstDay: 1,
-            beforeShow: function(elem, dp) {
-                setTimeout(function() {
-                    $(dp.dpDiv[0]).css("width", (elem.offsetWidth > 272 ? elem.offsetWidth : 272) + "px");
-                }, 0);
-            },
-            onSelect: function() {
-                const el = document.getElementById(that.data().prox);
-                if (el !== null) {
-                    setTimeout(function() {
-                        $(el).focus();
-                    }, $(el).hasClass("data") ? 100 : 0);
+        $(".sortable-columns > th:not(.nao-ordena)").each(function() {
+            var th = $(this),
+                thIndex = th.index(),
+                table = $($(this).parent().attr("for"));
+            
+            th.click(function() {
+                var inverse = $(this).hasClass("text-dark") && $(this).html().indexOf("fa-sort-down") > -1;
+                if ($(this).hasClass("nao-inverte")) {
+                    inverse = !inverse;
+                    $(this).removeClass("nao-inverte");
                 }
-            }
-        });
-        $(that).keyup(function() {
-            let resultado = apenasNumeros($(that).val());
-            if (resultado.length >= 8) {
-                resultado = resultado.substring(0, 8);
-                resultado = resultado.substring(0, 2) + "/" + resultado.substring(2, 4) + "/" + resultado.substring(4, 8);
-                $(that).val(resultado);    
-            }
-        });
-        $(that).blur(function() {
-            let aux = $(that).val().split("/");
-            data = new Date(parseInt(aux[2]), parseInt(aux[1]) - 1, parseInt(aux[0]));
-            if (data.getFullYear() != aux[2] || data.getMonth() + 1 != aux[1] || data.getDate() != aux[0]) $(that).val("");
-        });
-    });
-
-    $("#relatorioBilateralModal").on("hide.bs.modal", function() {
-        if ($("#rel-grupo1").val() == "maquinas-por-empresa") relatorio.inverter();
-    });
-
-    $("#estoqueModal").on("hide.bs.modal", function() {
-        $("#estoqueModal .remove-linha").each(function() {
-            $(this).trigger("click");
-        });
-        $("#estoqueModal #produto-1").val("");
-        $("#estoqueModal #id_produto-1").val("");
-        $("#estoqueModal #es-1").val("E");
-        $("#estoqueModal #preco-1").val(0);
-        $("#estoqueModal #qtd-1").val(1);
-        $("#estoqueModal #obs-1").val("ENTRADA");
-    });
-
-    ["cp", "mp"].forEach((tipo) => {
-        $("#" + tipo + "Modal").on("hide.bs.modal", function() {
-            if (document.querySelector("#" + tipo + "Modal .form-search.new") === null) cp_mp_limpar_tudo(tipo);
-            else cp_mp_pergunta_salvar(tipo);
-        });
-        $("#" + tipo + "Modal .form-control-lg").each(function() {
-            $(this).on("keyup", function(e) {
-                if (e.keyCode == 13) cp_mp_listar(tipo, true);
-            }).on("focus", function() {
-                validacao_bloqueada = true;
-            }).on("blur", function() {
-                validacao_bloqueada = false;
+                $(this).parent().find(".text-dark").removeClass("text-dark");
+                $(this).parent().find(".my-icon").remove();
+                $(this).addClass("text-dark");
+                $(this).append(inverse ? "<i class = 'my-icon ml-2 fad fa-sort-up'></i>" : "<i class = 'my-icon ml-2 fad fa-sort-down'></i>");
+                $(".sortable-columns > th:not(.nao-ordena)").each(function() {
+                    if (!$(this).hasClass("text-dark")) $(this).append("<i class = 'my-icon ml-2 fa-light fa-sort'></i>");
+                });
+                table.find("td").filter(function() {
+                    return $(this).index() === thIndex;
+                }).sortElements(function(a, b) {
+                    return $.text([a]) > $.text([b]) ? inverse ? -1 : 1 : inverse ? 1 : -1;
+                }, function() {
+                    return this.parentNode;
+                });
+                colGlobal = thIndex;
             });
         });
-    });
 
-    $("#atribuicoesModal").on("hide.bs.modal", function() {
-        if (document.querySelector("#atribuicoesModal .linha-atb.new") !== null) atribuicao.pergunta_salvar();
-    });
+        carrega_autocomplete();
 
-    $("#setoresModal").on("hide.bs.modal", function() {
-        $(".linha-usuario").each(function() {
-            $(this).remove();
+        carrega_dinheiro();
+
+        $("input.data").each(function() {
+            let that = $(this);
+            $(that).datepicker({
+                dateFormat: "dd/mm/yy",
+                closeText: "Fechar",
+                prevText: "Anterior",
+                nextText: "Próximo",
+                currentText: "Hoje",
+                monthNames: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
+                monthNamesShort: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+                dayNames: ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"],
+                dayNamesShort: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
+                dayNamesMin: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
+                weekHeader: "Sm",
+                firstDay: 1,
+                beforeShow: function(elem, dp) {
+                    setTimeout(function() {
+                        $(dp.dpDiv[0]).css("width", (elem.offsetWidth > 272 ? elem.offsetWidth : 272) + "px");
+                    }, 0);
+                },
+                onSelect: function() {
+                    const el = document.getElementById(that.data().prox);
+                    if (el !== null) {
+                        setTimeout(function() {
+                            $(el).focus();
+                        }, $(el).hasClass("data") ? 100 : 0);
+                    }
+                }
+            });
+            $(that).keyup(function() {
+                let resultado = apenasNumeros($(that).val());
+                if (resultado.length >= 8) {
+                    resultado = resultado.substring(0, 8);
+                    resultado = resultado.substring(0, 2) + "/" + resultado.substring(2, 4) + "/" + resultado.substring(4, 8);
+                    $(that).val(resultado);    
+                }
+            });
+            $(that).blur(function() {
+                let aux = $(that).val().split("/");
+                data = new Date(parseInt(aux[2]), parseInt(aux[1]) - 1, parseInt(aux[0]));
+                if (data.getFullYear() != aux[2] || data.getMonth() + 1 != aux[1] || data.getDate() != aux[0]) $(that).val("");
+            });
         });
-    });
 
-    $(".modal").each(function() {
-        let that = this;
-        $(this).on("shown.bs.modal", function () {
-            let cont = 0;
-            if (focar) {
-                do {
-                    var el = $($("#" + that.id + " input[type=text]")[cont]);
-                    el.focus();
-                    cont++;
-                } while ($($(el).parent()).hasClass("d-none") || $(el).attr("disabled"))
-            } else focar = true;
-            carrega_autocomplete();
-        })
-    });
-
-    $(".form-control").each(function() {
-        $(this).keydown(function() {
-            $(this).removeClass("invalido");
+        $("#relatorioBilateralModal").on("hide.bs.modal", function() {
+            if ($("#rel-grupo1").val() == "maquinas-por-empresa") relatorio.inverter();
         });
-    });
 
-    $(".user-pic .m-auto").each(function() {
-        $(this).html($(this).html().replaceAll("\n", "").replaceAll(" ", ""));
-    });
+        $("#estoqueModal").on("hide.bs.modal", function() {
+            $("#estoqueModal .remove-linha").each(function() {
+                $(this).trigger("click");
+            });
+            $("#estoqueModal #produto-1").val("");
+            $("#estoqueModal #id_produto-1").val("");
+            $("#estoqueModal #es-1").val("E");
+            $("#estoqueModal #preco-1").val(0);
+            $("#estoqueModal #qtd-1").val(1);
+            $("#estoqueModal #obs-1").val("ENTRADA");
+        });
 
-    $.get(URL + "/colaboradores/mostrar/" + USUARIO, function(data) {
-        if (typeof data == "string") data = $.parseJSON(data);
-        foto_pessoa(".main-toolbar .user-pic", data.foto ? data.foto : "");
-    });
+        ["cp", "mp"].forEach((tipo) => {
+            $("#" + tipo + "Modal").on("hide.bs.modal", function() {
+                if (document.querySelector("#" + tipo + "Modal .form-search.new") === null) cp_mp_limpar_tudo(tipo);
+                else cp_mp_pergunta_salvar(tipo);
+            });
+            $("#" + tipo + "Modal .form-control-lg").each(function() {
+                $(this).on("keyup", function(e) {
+                    if (e.keyCode == 13) cp_mp_listar(tipo, true);
+                }).on("focus", function() {
+                    validacao_bloqueada = true;
+                }).on("blur", function() {
+                    validacao_bloqueada = false;
+                });
+            });
+        });
 
-    document.querySelector(".user-card").onmouseover = function() {
-        document.querySelector(".dropdown-toolbar-user").style.display = "block";
-    }
+        $("#atribuicoesModal").on("hide.bs.modal", function() {
+            if (document.querySelector("#atribuicoesModal .linha-atb.new") !== null) atribuicao.pergunta_salvar();
+        });
 
-    document.querySelector(".user-card").onmouseleave = function(e) {
-        let el = document.querySelector(".dropdown-toolbar-user");
-        if (!el.contains(e.target) && !document.querySelector(".main-toolbar.shadow-sm").contains(e.target)) el.style.removeProperty("display");
-    }
+        $("#setoresModal").on("hide.bs.modal", function() {
+            $(".linha-usuario").each(function() {
+                $(this).remove();
+            });
+        });
 
-    setTimeout(function() {
-        [".main-toolbar.shadow-sm", ".dropdown-toolbar-user"].forEach((seletor) => {
-            document.querySelector(seletor).onmouseleave = function() {
-                document.querySelector(".dropdown-toolbar-user").style.removeProperty("display");
-            }
-        })
-    }, 200);
-    
-    let url = "";
-    ["categorias", "empresas", "maquinas", "pessoas", "produtos", "setores"].forEach((view) => {
-        if (location.href.indexOf(view) > -1) url = view;
-    });
+        $(".modal").each(function() {
+            let that = this;
+            $(this).on("shown.bs.modal", function () {
+                let cont = 0;
+                if (focar) {
+                    do {
+                        var el = $($("#" + that.id + " input[type=text]")[cont]);
+                        el.focus();
+                        cont++;
+                    } while ($($(el).parent()).hasClass("d-none") || $(el).attr("disabled"))
+                } else focar = true;
+                carrega_autocomplete();
+            })
+        });
 
-    try {
-        if (ID) {
-            $.get(URL + "/obter-descr", {
-                id : ID,
-                tabela : url
-            }, function (val) {
-                if (url == "empresas") grupo_emp2 = val;
-                // else $("#busca").val(val);
+        $(".form-control").each(function() {
+            $(this).keydown(function() {
+                $(this).removeClass("invalido");
+            });
+        });
+
+        $(".user-pic .m-auto").each(function() {
+            $(this).html($(this).html().replaceAll("\n", "").replaceAll(" ", ""));
+        });
+
+        $.get(URL + "/colaboradores/mostrar/" + USUARIO, function(data) {
+            if (typeof data == "string") data = $.parseJSON(data);
+            foto_pessoa(".main-toolbar .user-pic", data.foto ? data.foto : "");
+        });
+
+        document.querySelector(".user-card").onmouseover = function() {
+            document.querySelector(".dropdown-toolbar-user").style.display = "block";
+        }
+
+        document.querySelector(".user-card").onmouseleave = function(e) {
+            let el = document.querySelector(".dropdown-toolbar-user");
+            if (!el.contains(e.target) && !document.querySelector(".main-toolbar.shadow-sm").contains(e.target)) el.style.removeProperty("display");
+        }
+
+        setTimeout(function() {
+            [".main-toolbar.shadow-sm", ".dropdown-toolbar-user"].forEach((seletor) => {
+                document.querySelector(seletor).onmouseleave = function() {
+                    document.querySelector(".dropdown-toolbar-user").style.removeProperty("display");
+                }
+            })
+        }, 200);
+        
+        let url = "";
+        ["categorias", "empresas", "maquinas", "pessoas", "produtos", "setores"].forEach((view) => {
+            if (location.href.indexOf(view) > -1) url = view;
+        });
+
+        try {
+            if (ID) {
+                $.get(URL + "/obter-descr", {
+                    id : ID,
+                    tabela : url
+                }, function (val) {
+                    if (url == "empresas") grupo_emp2 = val;
+                    // else $("#busca").val(val);
+                    listar(url == "produtos" ? 1 : 0);
+                    avisarSolicitacao();
+                });
+            } else if (FILTRO) $("#busca").val(FILTRO);
+            
+            if (!ID) {
                 listar(url == "produtos" ? 1 : 0);
                 avisarSolicitacao();
-            });
-        } else if (FILTRO) $("#busca").val(FILTRO);
-        
-        if (!ID) {
+            }
+        } catch(err) {
             listar(url == "produtos" ? 1 : 0);
             avisarSolicitacao();
         }
-    } catch(err) {
-        listar(url == "produtos" ? 1 : 0);
-        avisarSolicitacao();
-    }
+    });
 });
 
 async function avisarSolicitacao() {

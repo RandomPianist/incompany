@@ -13,15 +13,13 @@ function listar(coluna) {
                     "<td class = 'text-right' width = '10%'>" + linha.id.toString().padStart(4, "0") + "</td>" +
                     "<td width = '35%'>" + linha.descr + "</td>" +
                     "<td width = '40%'>" + linha.empresa + "</td>" +
-                    "<td class = 'text-center btn-table-action' width = '15%'>" +
-                        "<i class = 'my-icon far fa-box'    title = 'Atribuir produto' onclick = 'atribuicao = new Atribuicoes(false, " + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-tshirt' title = 'Atribuir grade'   onclick = 'atribuicao = new Atribuicoes(true, " + linha.id + ")'></i>" +
-                        (
-                            !EMPRESA ?
-                                "<i class = 'my-icon far fa-edit'      title = 'Editar'  onclick = 'chamar_modal(" + linha.id + ")'></i>" +
-                                "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/setores"' + ")'></i>"
-                            : ""
-                        ) +
+                    "<td class = 'text-center btn-table-action' width = '15%'>";
+                if (permissoes.atribuicoes) {
+                    resultado += "<i class = 'my-icon far fa-box' title = 'Atribuir produto' onclick = 'atribuicao = new Atribuicoes(false, " + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-tshirt'       title = 'Atribuir grade'   onclick = 'atribuicao = new Atribuicoes(true, " + linha.id + ")'></i>";
+                }
+                resultado += "<i class = 'my-icon far fa-edit' title = 'Editar'  onclick = 'chamar_modal(" + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/setores"' + ")'></i>" +
                     "</td>" +
                 "</tr>";
             });

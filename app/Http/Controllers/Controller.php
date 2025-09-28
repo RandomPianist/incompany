@@ -109,7 +109,7 @@ abstract class Controller extends BaseController {
         if (in_array($origem, ["WEB", "SYS"])) {
             $linha->id_pessoa = Auth::user()->id_pessoa;
             $linha->nome = Pessoas::find($linha->id_pessoa)->nome;
-        } else if ($nome) $linha->nome = $nome;
+        } elseif ($nome) $linha->nome = $nome;
         $linha->data = date("Y-m-d");
         $linha->hms = date("H:i:s");
         $linha->save();
@@ -124,7 +124,7 @@ abstract class Controller extends BaseController {
         }
         if (!$where) {
             $tabela .= " LEFT JOIN log ON log.fk = ".$tabela.".id AND log.tabela = '".$tabela."' ";
-            $where = " WHERE log.id IS NULL ";
+            $where = " log.id IS NULL ";
         }
         DB::statement("
             INSERT INTO log (acao, origem, tabela, fk, id_pessoa, nome, data, hms) (
@@ -186,7 +186,6 @@ abstract class Controller extends BaseController {
         $linha = new Retiradas;
         if (isset($json["obs"])) $linha->observacao = $json["obs"];
         if (isset($json["hora"])) $linha->hms = $json["hora"];
-        if (isset($json["biometria_ou_senha"])) $linha->biometria_ou_senha = $json["biometria_ou_senha"];
         if (isset($json["biometria"])) $linha->biometria = $json["biometria"];
         if (isset($json["id_supervisor"])) {
             if (intval($json["id_supervisor"])) $linha->id_supervisor = $json["id_supervisor"];

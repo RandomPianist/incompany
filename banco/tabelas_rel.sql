@@ -61,7 +61,6 @@ CREATE TABLE pessoas (
     lixeira TINYINT DEFAULT 0,
     id_setor INT,
 	id_empresa INT,
-    id_usuario INT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	FOREIGN KEY (id_setor) REFERENCES setores(id),
@@ -84,8 +83,6 @@ CREATE TABLE users (
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_pessoa) REFERENCES pessoas(id)
 );
-
-ALTER TABLE pessoas ADD FOREIGN KEY (id_usuario) REFERENCES users(id);
 
 CREATE TABLE permissoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -194,7 +191,7 @@ CREATE TABLE atribuicoes (
 	validade INT,
 	obrigatorio TINYINT DEFAULT 0,
     gerado TINYINT DEFAULT 0,
-    rascunho ENUM('C', 'E', 'R', 'S') DEFAULT 'S', -- (C)riando, (E)ditando, (R)emovendo, (S)alvo, (T)emporário
+    rascunho ENUM('C', 'E', 'R', 'S', 'T') DEFAULT 'S', -- (C)riando, (E)ditando, (R)emovendo, (S)alvo, (T)emporário
     lixeira TINYINT DEFAULT 0,
 
     id_pessoa INT,
@@ -254,7 +251,7 @@ CREATE TABLE excecoes (
     id_pessoa INT,
     id_setor INT,
     id_usuario INT,
-    rascunho ENUM('C', 'E', 'R', 'S') DEFAULT 'S', -- (C)riando, (E)ditando, (R)emovendo, (S)alvo, (T)emporário
+    rascunho ENUM('C', 'E', 'R', 'S', 'T') DEFAULT 'S', -- (C)riando, (E)ditando, (R)emovendo, (S)alvo, (T)emporário
     lixeira TINYINT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -288,7 +285,6 @@ CREATE TABLE retiradas (
     observacao TEXT,
     ca VARCHAR(16),
     preco NUMERIC(8,2),
-    biometria_ou_senha ENUM('B', 'S'),
     numero_ped INT,
     biometria LONGTEXT,
     id_atribuicao INT,

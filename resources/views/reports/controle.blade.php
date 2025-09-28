@@ -20,16 +20,16 @@
             <div class = "c-2">CPF: {{ $item["cpf"] }}</div>
             <div class = "c-3"></div>
             <div class = "c-1">CARGO: {{ $item["funcao"] }}</div>
-            <div class = "c-2">SETOR: {{ $item["setor"] }}</div>
+            <div class = "c-2">CENTRO DE CUSTO: {{ $item["setor"] }}</div>
             <div class = "c-3">DATA ADMISSÃO: {{ date_format(date_create($item["admissao"]), "d/m/Y") }}</div>
         </div>
         <table class = "table table-sm table-bordered table-striped">
             <thead>
                 <tr class = "report-row rep-tb-header">
-                    <td width = "67%">
+                    <td width = "72%">
                         <span>RECEBIMENTO DE E.P.I</span>
                     </td>
-                    <td width = "33%">
+                    <td width = "28%">
                         <span>DEVOLUÇÃO DE E.P.I</span>
                     </td>
                 </tr>
@@ -38,15 +38,15 @@
         <table class = "report-body table table-sm table-bordered table-striped px-5 rep-tb-color-black">
             <thead>
                 <tr class = "report-row">
-                    <td width = "8%">Data</td>
-                    <td width = "20%">E.P.I</td>
-                    <td width = "9%">C.A</td>
-                    <td width = "8%">Validade do C.A</td>
-                    <td width = "8%">Quantidade</td>
-                    <td width = "14%">Assinatura</td>
                     <td width = "10%">Data</td>
+                    <td width = "23%">E.P.I</td>
+                    <td width = "8%">C.A</td>
+                    <td width = "9%">Validade do C.A</td>
+                    <td width = "8%">Quantidade</td>
+                    <td width = "14%">{{ $item["titulo"] }}</td>
+                    <td width = "8%">Data</td>
                     <td width = "10%">C.A</td>
-                    <td width = "13%">Assinatura</td>
+                    <td width = "10%">Assinatura</td>
                 </tr>
             </thead>
         </table>
@@ -55,15 +55,21 @@
                 <tbody>
                     @foreach ($item["retiradas"] as $retirada)
                         <tr class = "report-row">
-                            <td width = "8%">{{ $retirada["data"] }}</td>
-                            <td width = "20%">{{ $retirada["produto"] }}</td>
-                            <td width = "9%">{{ $retirada["ca"] }}</td>
-                            <td width = "8%">{{ $retirada["validade_ca"] != null ? date_format(date_create($retirada["validade_ca"]), "d/m/Y") : "" }}</td>
+                            <td width = "10%">{{ $retirada["data"] }}</td>
+                            <td width = "23%">{{ $retirada["produto"] }}</td>
+                            <td width = "8%">{{ $retirada["ca"] }}</td>
+                            <td width = "9%">{{ $retirada["validade_ca"] != null ? date_format(date_create($retirada["validade_ca"]), "d/m/Y") : "" }}</td>
                             <td width = "8%" class = "text-right">{{ $retirada["qtd"] }}</td>
-                            <td width = "14%">&nbsp;</td>
+                            <td width = "14%" class = "text-center">
+                                @if ($retirada["biometria"])
+                                    <img src = "data:image/jpeg;base64,{{ $retirada["biometria"] }}" style = 'width:40px' />
+                                @else
+                                    &nbsp;
+                                @endif
+                            </td>
+                            <td width = "8%">&nbsp;</td>
                             <td width = "10%">&nbsp;</td>
                             <td width = "10%">&nbsp;</td>
-                            <td width = "13%">&nbsp;</td>
                         </tr>
                     @endforeach
                 </tbody>

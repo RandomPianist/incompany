@@ -174,7 +174,7 @@ class ProdutosController extends ControllerListavel {
                         ->where("produtos.id", $id)
                         ->first();
         if ($produto->foto == null) $produto->foto = "";
-        else if (stripos($produto->foto, "//") === false) $produto->foto = asset("storage/".$produto->foto);
+        elseif (strpos($produto->foto, "//") === false) $produto->foto = asset("storage/".$produto->foto);
         return json_encode($produto);
     }
 

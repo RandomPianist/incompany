@@ -467,7 +467,7 @@ class MaquinasController extends Controller {
                 if ($saldo_ant > $qtdRequest) {
                     $linha->es = "S";
                     $linha->qtd = $saldo_ant - $qtdRequest;
-                } else if ($saldo_ant < $qtdRequest) {
+                } elseif ($saldo_ant < $qtdRequest) {
                     $linha->es = "E";
                     $linha->qtd = ($saldo_ant - $qtdRequest) * -1;
                 } else $ajusteIgualEstoque = true;

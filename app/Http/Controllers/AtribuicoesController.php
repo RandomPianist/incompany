@@ -13,6 +13,12 @@ use App\Models\Log;
 use App\Models\Retiradas;
 
 class AtribuicoesController extends Controller {
+    private function apagar_backup($tabela) {
+        $tab_bkp = $tabela == "atribuicoes" ? "atbbkp" : "excbkp";
+        DB::table($tab_bkp)->where("id_usuario_editando", Auth::user()->id)->delete();
+        if (!DB::table($tab_bkp)->exists()) DB::table($tab_bkp)->truncate();
+    }
+
     private function consulta_main($select) {
         return DB::table("vprodaux")
                     ->select(DB::raw($select))
@@ -87,6 +93,7 @@ class AtribuicoesController extends Controller {
         }
         $linha->rascunho = $request->id ? "E" : "C";
         $linha->gerado = 0;
+        $linha->data = date("Y-m-d");
         $this->salvar_main($linha, $request->qtd, $request->validade, $request->obrigatorio);
         return 201;
     }
@@ -226,14 +233,11 @@ class AtribuicoesController extends Controller {
         $tabelas = ["atribuicoes", "excecoes"];
         $where = "id_usuario = ".Auth::user()->id;
         foreach ($tabelas as $tabela) {
-            $tab_bkp = $tabela == "atribuicoes" ? "atbbkp" : "excbkp";
-            DB::statement("
-                UPDATE ".$tabela."
-                SET rascunho = 'T'
-                WHERE ".$where." AND rascunho = 'R'
-            ");
-            DB::statement("DELETE FROM ".$tab_bkp." WHERE id_usuario_editando = ".$id_usuario);
-            if (!DB::table($tab_bkp)->exists()) DB::statement("TRUNCATE TABLE ".$tab_bkp);
+            DB::table($tabela)
+                ->whereRaw($where)
+                ->where("rascunho", "R")
+                ->update(["rascunho" => "T"]);
+            $this->apagar_backup($tabela);
         }
         $lista = DB::table("vatbold")
                     ->select(
@@ -308,24 +312,15 @@ class AtribuicoesController extends Controller {
             }
         }
         foreach ($tabelas as $tabela) {
-            $this->log_inserir_lote("C", $tabela, $where." AND rascunho = 'C'"); // App\Http\Controllers\Controller.php
-            DB::statement("
-                UPDATE ".$tabela."
-                SET rascunho = 'S'
-                WHERE ".$where." AND rascunho = 'C'
-            ");
-            $this->log_inserir_lote("E", $tabela, $where." AND rascunho = 'E'"); // App\Http\Controllers\Controller.php
-            DB::statement("
-                UPDATE ".$tabela."
-                SET rascunho = 'S'".($tabela == "atribuicoes" ? ", gerado = 0, data = '".date('Y-m-d')."'" : "")."
-                WHERE ".$where." AND rascunho = 'E'
-            ");
-            $this->log_inserir_lote("D", $tabela, $where." AND rascunho = 'T'"); // App\Http\Controllers\Controller.php
-            DB::statement("
-                UPDATE ".$tabela."
-                SET rascunho = 'S', lixeira = 1
-                WHERE ".$where." AND rascunho = 'T'
-            ");
+            $acoes = ["C", "E", "D"];
+            foreach ($acoes as $acao) $this->log_inserir_lote($acao, $tabela, $where." AND rascunho = '".($acao != "D" ? $acao : "T")."'"); // App\Http\Controllers\Controller.php
+            DB::table($tabela)
+                ->whereRaw($where)
+                ->where("rascunho", "<>", "S")
+                ->update([
+                    'lixeira' => DB::raw("CASE WHEN (rascunho = 'T') THEN 1 ELSE 0 END"),
+                    'rascunho' => 'S'
+               ]);
         }
         $this->atualizar_atribuicoes($lista); // App\Http\Controllers\Controller.php
     }
@@ -345,13 +340,10 @@ class AtribuicoesController extends Controller {
             Log::whereIn("fk", $lista)->where("tabela", "retiradas")->delete();
         }
         foreach ($tabelas as $tabela) {
-            $tab_bkp = $tabela == "atribuicoes" ? "atbbkp" : "excbkp";
-            DB::statement("
-                UPDATE ".$tabela."
-                SET rascunho = 'S'
-                WHERE id_usuario = ".$id_usuario."
-                  AND rascunho IN ('E', 'R')
-            ");
+            DB::table($tabela)
+                ->where("id_usuario", $id_usuario)
+                ->whereIn("rascunho", ["E", "R"])
+                ->update(["rascunho" => "S"]);
             DB::statement($tabela == "atribuicoes" ? "
                 UPDATE atribuicoes
                 JOIN atbbkp
@@ -374,13 +366,11 @@ class AtribuicoesController extends Controller {
                     excecoes.id_usuario = excbkp.id_usuario
                 WHERE excecoes.id_usuario = ".$id_usuario
             );
-            DB::statement("DELETE FROM ".$tab_bkp." WHERE id_usuario_editando = ".$id_usuario);
-            if (!DB::table($tab_bkp)->exists()) DB::statement("TRUNCATE TABLE ".$tab_bkp);
-            DB::statement("
-                DELETE FROM ".$tabela."
-                WHERE id_usuario = ".$id_usuario."
-                  AND rascunho = 'C'
-            ");
+            $this->apagar_backup($tabela);
+            DB::table($tabela)
+                ->where("id_usuario", $id_usuario)
+                ->where("rascunho", "C")
+                ->delete();
         }
     }
 }

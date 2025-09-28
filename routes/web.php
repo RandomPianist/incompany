@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware("auth")->group(function () {
     Route::get("/",                [DashboardController::class, "iniciar"])->name("home");
+    Route::get("/permissoes",      [HomeController::class, "permissoes"]);
     Route::get("/autocomplete",    [HomeController::class, "autocomplete"]);
     Route::get("/obter-descr",     [HomeController::class, "obter_descr"]);
     Route::get("/consultar-geral", [HomeController::class, "consultar_geral"]);
@@ -69,18 +70,14 @@ Route::middleware("auth")->group(function () {
     });
 
     Route::group(["prefix" => "setores"], function() {
-        Route::get ("/",                        [SetoresController::class, "ver"])->name("setores");
-        Route::get ("/listar",                  [SetoresController::class, "listar"]);
-        Route::get ("/consultar",               [SetoresController::class, "consultar"]);
-        Route::get ("/usuarios/{id}",           [SetoresController::class, "usuarios"]);
-        Route::get ("/pessoas/{id}",            [SetoresController::class, "pessoas"]);
-        Route::get ("/mostrar/{id}",            [SetoresController::class, "mostrar"]);
-        Route::get ("/aviso/{id}",              [SetoresController::class, "aviso"]);
-        Route::get ("/primeiro-admin/{id_emp}", [SetoresController::class, "primeiro_admin"]);
-        Route::get ("/permissao",               [SetoresController::class, "permissao"]);
-        Route::get ("/por-empresa/{id_emp}",    [SetoresController::class, "por_empresa"]);
-        Route::post("/salvar",                  [SetoresController::class, "salvar"]);
-        Route::post("/excluir",                 [SetoresController::class, "excluir"]);
+        Route::get ("/",              [SetoresController::class, "ver"])->name("setores");
+        Route::get ("/listar",        [SetoresController::class, "listar"]);
+        Route::get ("/usuarios/{id}", [SetoresController::class, "usuarios"]);
+        Route::get ("/pessoas/{id}",  [SetoresController::class, "pessoas"]);
+        Route::get ("/mostrar/{id}",  [SetoresController::class, "mostrar"]);
+        Route::get ("/aviso/{id}",    [SetoresController::class, "aviso"]);
+        Route::post("/salvar",        [SetoresController::class, "salvar"]);
+        Route::post("/excluir",       [SetoresController::class, "excluir"]);
     });
 
     Route::group(["prefix" => "empresas"], function() {

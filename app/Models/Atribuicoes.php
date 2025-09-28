@@ -37,7 +37,7 @@ class Atribuicoes extends Model
         'validade' => 'integer',
         'obrigatorio' => 'boolean',
         'gerado' => 'boolean',
-        'rascunho' => 'string', // enum 'C', 'E', 'R', 'S'
+        'rascunho' => 'string', // enum 'C', 'E', 'R', 'S', 'T'
         'lixeira' => 'boolean',
         'id_pessoa' => 'integer',
         'id_setor' => 'integer',

@@ -30,10 +30,12 @@ function listar(coluna) {
                             "<i class = 'my-icon far fa-trash-alt'          title = 'Excluir'       onclick = 'excluir(" + linha.id + ", " + '"/maquinas"' + ")'></i>";
                     }
                 } else {
-                    resultado += "<i class = 'my-icon far fa-box' title = 'Atribuir produto'    onclick = 'atribuicao = new Atribuicoes(false, " + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-tshirt'       title = 'Atribuir grade'      onclick = 'atribuicao = new Atribuicoes(true, " + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-tools'        title = 'Configurar contrato' onclick = 'configurar_comodato(" + linha.id + ")'></i>";
-                    if (linha.tem_cod == "S") resultado += "<i class = 'my-icon far fa-cart-arrow-down' title = 'Solicitar compra' onclick = 'chamarRelatorioItens(" + linha.id + ")'></i>";
+                    if (permissoes.atribuicoes) {
+                        resultado += "<i class = 'my-icon far fa-box' title = 'Atribuir produto'    onclick = 'atribuicao = new Atribuicoes(false, " + linha.id + ")'></i>" +
+                            "<i class = 'my-icon far fa-tshirt'       title = 'Atribuir grade'      onclick = 'atribuicao = new Atribuicoes(true, " + linha.id + ")'></i>" +
+                            "<i class = 'my-icon far fa-tools'        title = 'Configurar contrato' onclick = 'configurar_comodato(" + linha.id + ")'></i>";
+                    }
+                    if (linha.tem_cod == "S" && permissoes.solicitacoes) resultado += "<i class = 'my-icon far fa-cart-arrow-down' title = 'Solicitar compra' onclick = 'chamarRelatorioItens(" + linha.id + ")'></i>";
                 }
                 resultado += "</td></tr>";
             });

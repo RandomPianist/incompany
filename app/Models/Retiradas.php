@@ -15,7 +15,6 @@ class Retiradas extends Model
         'observacao',
         'ca',
         'preco',
-        'biometria_ou_senha',
         'numero_ped',
         'biometria',
         'id_atribuicao',
@@ -37,7 +36,6 @@ class Retiradas extends Model
         'observacao' => 'string',
         'ca' => 'string',
         'preco' => 'decimal:2',
-        'biometria_ou_senha' => 'string', // enum 'B', 'S'
         'numero_ped' => 'integer',
         'biometria' => 'string',
         'id_atribuicao' => 'integer',

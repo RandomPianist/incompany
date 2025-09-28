@@ -54,7 +54,7 @@ class EmpresasController extends Controller {
         if ($emp->pessoas()->exists()) {
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a essa empresa.";
             $resultado->permitir = 0;
-        } else if (
+        } elseif (
             DB::table("comodatos")
                 ->whereRaw("CURDATE() >= inicio AND CURDATE() < fim")
                 ->where("id_empresa", $id)

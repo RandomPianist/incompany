@@ -26,7 +26,7 @@ class Excecoes extends Model
         'id_pessoa' => 'integer',
         'id_setor' => 'integer',
         'id_usuario' => 'integer',
-        'rascunho' => 'string', // enum 'C', 'E', 'R', 'S'
+        'rascunho' => 'string', // enum 'C', 'E', 'R', 'S', 'T'
         'lixeira' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'

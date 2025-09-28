@@ -23,7 +23,6 @@ class Pessoas extends Model
         'lixeira',
         'id_setor',
         'id_empresa',
-        'id_usuario',
         'created_at',
         'updated_at'
     ];
@@ -42,7 +41,6 @@ class Pessoas extends Model
         'lixeira' => 'boolean',
         'id_setor' => 'integer',
         'id_empresa' => 'integer',
-        'id_usuario' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];

@@ -5,105 +5,29 @@ namespace App\Http\Controllers;
 use DB;
 use Auth;
 use App\Models\Setores;
-use App\Models\Pessoas;
 use App\Models\Permissoes;
+use App\Models\Pessoas;
 use Illuminate\Http\Request;
 
 class SetoresController extends ControllerListavel {
-    private function setor_do_sistema($id) {
-        return DB::table("log")
-                    ->where("acao", "C")
-                    ->where("origem", "SYS")
-                    ->where("tabela", "setores")
-                    ->where("fk", $id)
-                    ->exists();
-    }
-
-    private function obter_permissao() {
-        $permissao = Permissoes::find(
-            DB::table("permissoes")
-                ->where("id_usuario", Auth::user()->id)
-                ->value("id")
-        );
-        return $permissao;
-    }
-
-    private function comparar_permissoes(Permissoes $permissao, Request $request) {
-        return (
-            $this->comparar_num($permissao->financeiro, $request->financeiro == "S" ? 1 : 0) || // App\Http\Controllers\Controller.php
-            $this->comparar_num($permissao->atribuicoes, $request->atribuicoes == "S" ? 1 : 0) || // App\Http\Controllers\Controller.php
-            $this->comparar_num($permissao->retiradas, $request->retiradas == "S" ? 1 : 0) || // App\Http\Controllers\Controller.php
-            $this->comparar_num($permissao->pessoas, $request->pessoas == "S" ? 1 : 0) || // App\Http\Controllers\Controller.php
-            $this->comparar_num($permissao->usuarios, $request->usuarios == "S" ? 1 : 0) || // App\Http\Controllers\Controller.php
-            $this->comparar_num($permissao->solicitacoes, $request->solicitacoes == "S" ? 1 : 0) || // App\Http\Controllers\Controller.php
-            $this->comparar_num($permissao->supervisor, $request->supervisor == "S" ? 1 : 0) // App\Http\Controllers\Controller.php
-        );
-    }
-
-    private function consultar_main(Request $request) {
-        $resultado = new \stdClass;
-
-        if ($this->empresa_consultar($request)) { // App\Http\Controllers\Controller.php
-            $resultado->msg = "Empresa não encontrada";
-            $resultado->el = "setor-empresa";
-            return $resultado;
-        }
-
-        if (
-            Pessoas::where("id_setor", $request->id)
-                        ->where("id_empresa", "<>", $request->id_empresa)
-                        ->where("lixeira", 0)
-                        ->exists()
-        ) {
-            $nome = Setores::find($request->id)->descr;
-            $resultado->msg = "Não é possível alterar a empresa de ".$nome." porque existem pessoas vinculadas a esse setor";
-            $resultado->el = "setor-empresa";
-            return $resultado;
-        }
-
-        if (
-            !$request->id &&
-            Setores::where("lixeira", 0)
-                    ->where("descr", $request->descr)
-                    ->where("id_empresa", $request->id_empresa)
-                    ->exists()
-        ) {
-            $resultado->msg = "Já existe um centro de custo de mesmo nome nessa empresa";
-            $resultado->el = "descr";
-            return $resultado;
-        }
-
-        if ($this->setor_do_sistema($request->id)) {
-            $setor = Setores::find($request->id);
-            if (
-                $this->comparar_permissoes($setor->permissao(), $request) ||
-                $this->comparar_num($setor->cria_usuario, $request->cria_usuario == "S" ? 1 : 0) // App\Http\Controllers\Controller.php
-            ) {
-                $resultado->msg = "Não é possível alterar as configurações de um setor do sistema";
-                $resultado->el = "";
-                return $resultado;
-            }
-        }
-
-        if ($this->comparar_permissoes($this->obter_permissao(), $request)) {
-            $resultado->msg = "Não é possível atribuir ou retirar de um setor permissões que seu usuário não tem";
-            $resultado->el = "";
-            return $resultado;
-        }
-
-        $resultado->msg = "";
-        $resultado->el = "";
-        return $resultado;
-    }
+    protected $permissoes_lista = ["usuarios", "atribuicoes", "retiradas", "pessoas", "financeiro", "supervisor", "solicitacoes"];
 
     private function aviso_main($id) {
         $resultado = new \stdClass;
         $resultado->permitir = 0;
         $setor = Setores::find($id);
         $nome = $setor->descr;
-        if ($this->setor_do_sistema($id)) {
+        if (
+            DB::table("setores")
+                ->join("log", function($join) {
+                    $join->on("log.fk", "setores.id")
+                        ->where("log.origem", "SYS")
+                        ->where("log.tabela", "setores");
+                })
+                ->exists()
+        ) {
             $resultado->aviso = "Não é possível excluir um setor do sistema";
-        } else if ($setor->pessoas()->exists()) {
+        } elseif ($setor->pessoas()->exists()) {
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a esse setor";
         } else {
             $resultado->permitir = 1;
@@ -127,11 +51,8 @@ class SetoresController extends ControllerListavel {
     }
 
     public function ver() {
-        return view("setores");
-    }
-
-    public function consultar(Request $request) {
-        return json_encode($this->consultar_main($request));
+        $permissoes = $this->permissoes_lista;
+        return view("setores", compact("permissoes"));
     }
 
     public function aviso($id) {
@@ -139,22 +60,45 @@ class SetoresController extends ControllerListavel {
     }
 
     public function mostrar($id) {
-        return json_encode(
-            DB::table("setores")
-                ->select(
-                    "setores.descr",
-                    "setores.cria_usuario",
-                    "permissoes.*"
-                )
-                ->join("permissoes", "permissoes.id_setor", "setores.id")
-                ->where("setores.id", $id)
-                ->first()
-        );
+        $condicoes_padrao = [
+            "WHEN (log.id IS NOT NULL) THEN 'SYS'",
+            "WHEN (minhas_permissoes.usuarios = 0) THEN 'PER'",
+            "ELSE ''"
+        ];
+        $campos_permissao = array();
+        foreach ($this->permissoes_lista as $campo) {
+            $sql = "permissoes".$campo.", CASE ";
+            $condicoes = $campo == "usuarios" ? ["WHEN (setores.id = ".Pessoas::find(Auth::user()->id_pessoa)->id_setor.") THEN 'USU'"] : [];
+            foreach ($condicoes_padrao as $condicao) array_push($condicoes, $condicao);
+            $sql .= implode(" ", $condicoes)." END AS ".$campo."_motivo";
+            array_push($campos_permissao, $sql);
+        }
+        return json_encode(DB::select(DB::raw("
+            SELECT
+                setores.descr,
+                setores.cria_usuario,
+                CASE ".implode(" ", $condicoes_padrao)." END AS cria_usuario_motivo,
+                ".implode(",", $campos_permissao)."
+            
+            FROM setores
+
+            CROSS JOIN permissoes AS minhas_permissoes
+
+            LEFT JOIN permissoes
+                ON permissoes.id_setor = setores.id
+
+            LEFT JOIN log
+                ON log.fk = setores.id
+                    AND log.origem = 'SYS'
+                    AND log.acao = 'C'
+                    AND log.tabela = 'setores'
+
+            WHERE setores.id = ".$id."
+                AND minhas_permissoes.id_usuario = ".Auth::user()->id
+        )));
     }
 
     public function salvar(Request $request) {
-        if (!trim($request->descr)) return 400;
-        if ($this->consultar_main($request)->msg) return 401;
         $cria_usuario = $request->cria_usuario == "S" ? 1 : 0;
         $linha = Setores::firstOrNew(["id" => $request->id]);
         if ($request->id) {
@@ -162,7 +106,13 @@ class SetoresController extends ControllerListavel {
             if (
                 $adm_ant == $cria_usuario &&
                 $linha->id_empresa == $request->id_empresa &&
-                !$this->comparar_permissoes($linha->permissao(), $request) && 
+                !$this->comparar_num($linha->permissao()->financeiro, $request->financeiro == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($linha->permissao()->atribuicoes, $request->atribuicoes == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($linha->permissao()->retiradas, $request->retiradas == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($linha->permissao()->pessoas, $request->pessoas == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($linha->permissao()->usuarios, $request->usuarios == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($linha->permissao()->solicitacoes, $request->solicitacoes == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($linha->permissao()->supervisor, $request->supervisor == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
                 !$this->comparar_texto($request->descr, $linha->descr) // App\Http\Controllers\Controller.php
             ) return 400;
             if ($adm_ant != $cria_usuario) {
@@ -173,6 +123,7 @@ class SetoresController extends ControllerListavel {
                                     ->select("users.id")
                                     ->join("pessoas", "pessoas.id", "users.id_pessoa")
                                     ->where("pessoas.id_setor", $request->id)
+                                    ->where("users.admin", 0)
                                     ->pluck("id");
                     foreach($consulta as $usuario) {
                         $permissao = Permissoes::where("id_usuario", $usuario)->value("id");
@@ -181,8 +132,7 @@ class SetoresController extends ControllerListavel {
                         $this->log_inserir("D", "users", $usuario); // App\Http\Controllers\Controller.php
                         $this->log_inserir("D", "permissoes", $permissao); // App\Http\Controllers\Controller.php
                     }
-                    $lista = implode(",", $lista);
-                    if ($lista) {
+                    if (sizeof($lista)) {
                         if (isset($request->id_pessoa)) {
                             for ($i = 0; $i < sizeof($request->id_pessoa); $i++) {
                                 $modelo = Pessoas::find($request->id_pessoa[$i]);
@@ -191,17 +141,22 @@ class SetoresController extends ControllerListavel {
                                 $this->log_inserir("E", "pessoas", $modelo->id); // App\Http\Controllers\Controller.php
                             }
                         }
-                        DB::statement("DELETE FROM users WHERE id IN (".$lista.")");
+                        DB::table("users")->whereIn("id", $lista)->delete();
                         Permissoes::whereIn("id", $permissoes)->delete();
                     }
-                } else if (isset($request->id_pessoa)) {
+                } elseif (isset($request->id_pessoa)) {
                     for ($i = 0; $i < sizeof($request->id_pessoa); $i++) {
-                        $senha = Hash::make($request->password[$i]);
-                        DB::statement("INSERT INTO users (name, email, password, id_pessoa) VALUES ('".trim($request->nome[$i])."', '".trim($request->email[$i])."', '".$senha."', ".$request->id_pessoa[$i].")");
-                        $this->log_inserir("C", "users", DB::table("users")
-                                                            ->selectRaw("MAX(id) AS id")
-                                                            ->value("id")
-                        ); // App\Http\Controllers\Controller.php
+                        $id_usuario = DB::table("users")->insertGetId([
+                            "name" => trim($request->nome[$i]),
+                            "email" => trim($request->email[$i]),
+                            "senha" => Hash::make($request->password[$i]),
+                            "id_pessoa" => $request->id_pessoa[$i]
+                        ]);
+                        $this->log_inserir("C", "users", $id_usuario); // App\Http\Controllers\Controller.php
+                        $permissao = $linha->permissao()->replicate(["id_setor"]);
+                        $permissao->id_usuario = $id_usuario;
+                        $permissao->save();
+                        $this->log_inserir("C", "permissoes", $permissao->id); // App\Http\Controllers\Controller.php
                     }
                 }
             }
@@ -217,6 +172,8 @@ class SetoresController extends ControllerListavel {
     public function excluir(Request $request) {
         if (!$this->aviso_main($request->id)->permitir) return 401;
         $linha = Setores::find($request->id);
+        $emp = $this->obter_empresa();
+        if ($emp && $linha->id_empresa != $emp) return 403;
         $linha->lixeira = 1;
         $linha->save();
         $this->log_inserir("D", "setores", $linha->id); // App\Http\Controllers\Controller.php
@@ -233,6 +190,7 @@ class SetoresController extends ControllerListavel {
                 ->join("users", "users.id_pessoa", "pessoas.id")
                 ->where("pessoas.id_setor", $id)
                 ->where("pessoas.lixeira", 0)
+                ->where("users.admin", 0)
                 ->get()
         );
     }

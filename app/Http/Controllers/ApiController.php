@@ -40,7 +40,7 @@ class ApiController extends Controller {
                         if ($obrigatorios) {
                             $sql->where("obrigatorio", 1)
                                 ->where("esta_pendente", 1);
-                        } else if ($grade) $sql->whereNotNull("referencia");
+                        } elseif ($grade) $sql->whereNotNull("referencia");
                         else $sql->whereNull("referencia");
                     })
                     ->where("id_pessoa", $id_pessoa)
@@ -450,7 +450,6 @@ class ApiController extends Controller {
                     "obs" => $retirada["obs"]
                 ];
             }    
-            if (isset($retirada["biometria_ou_senha"])) $salvar += ["biometria_ou_senha" => $retirada["biometria_ou_senha"]];
             if (isset($retirada["biometria"])) $salvar += ["biometria" => $retirada["biometria"]];
             
             $this->retirada_salvar($salvar); // App\Http\Controllers\Controller.php

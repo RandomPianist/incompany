@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use DB;
 use Auth;
+use App\Models\Permissoes;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller {
@@ -20,10 +21,10 @@ class HomeController extends Controller {
                     if ($char == "<") {
                         $insideTag = true;
                         $result .= $char;
-                    } else if ($char == ">") {
+                    } elseif ($char == ">") {
                         $insideTag = false;
                         $result .= $char;
-                    } else if (!$insideTag) {
+                    } elseif (!$insideTag) {
                         $result .= ctype_upper($subject[$i + $j]) ? strtoupper($char) : strtolower($char);
                         $j++;
                     } else $result .= $char;
@@ -58,14 +59,14 @@ class HomeController extends Controller {
                     WHERE id_maquina = ".$request->filter."
                 )");
             }
-        } else if ($tabela == "produtos") {
+        } elseif ($tabela == "produtos") {
             $tabela = "vprodaux";
             $where .= "id IN (
                 SELECT id_produto
                 FROM vprodutosgeral
                 WHERE id_pessoa = ".Auth::user()->id_pessoa.
             ")";
-        } else if ($tabela == "maquinas") {
+        } elseif ($tabela == "maquinas") {
             $where .= "id IN (
                 SELECT id_maquina
                 FROM mat_vcomodatos
@@ -87,7 +88,7 @@ class HomeController extends Controller {
         $query .= " FROM ".$tabela;
         $query .= " WHERE ";
         if (strpos($request->table, "todos") !== false) $query .= "1";
-        else if (strpos($request->table, "lixeira") !== false) $query .= "lixeira = 1";
+        elseif (strpos($request->table, "lixeira") !== false) $query .= "lixeira = 1";
         else $query .= "lixeira = 0";
         $query .= $where;
         if ($request->column == "referencia") $query .= " GROUP BY referencia";
@@ -145,5 +146,9 @@ class HomeController extends Controller {
                     ->where($coluna, $request->filtro)
                     ->where("lixeira", 0)
                     ->exists() ? "1" : "0";
+    }
+
+    public function permissoes() {
+        return json_encode(Permissoes::where("id_usuario", Auth::user()->id));
     }
 }

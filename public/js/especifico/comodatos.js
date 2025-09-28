@@ -29,11 +29,11 @@ function comodatar(id) {
         $("#comodato-empresa").attr("disabled", false);
 
         $("#atb_todos").val(0);
-        $("#atb_todos-chk").prop("checked", false);
+        $("#atb_todos-chk").prop("checked", false).attr("disabled", permissoes.atribuicoes ? false : true);
         $("#travar_ret").val(1);
-        $("#travar_ret-chk").prop("checked", true);
+        $("#travar_ret-chk").prop("checked", true).attr("disabled", false);
         $("#travar_estq").val(1);
-        $("#travar_estq-chk").prop("checked", true);
+        $("#travar_estq-chk").prop("checked", true).attr("disabled", false);
         
         $("#com-quantidade").val(1);
         $("#com-validade").val(1);
@@ -96,7 +96,8 @@ function configurar_comodato(id_maquina) {
         
         ["travar_ret", "travar_estq", "atb_todos"].forEach((id) => {
             $("#" + id).val(data[id]);
-            $("#" + id + "-chk").prop("checked", parseInt(data[id]) ? true : false).attr("disabled", EMPRESA && id != "atb_todos" ? true : false);
+            $("#" + id + "-chk").prop("checked", parseInt(data[id]) ? true : false)
+                .attr("disabled", (EMPRESA && (id != "atb_todos" || (id == "atb_todos" && !permissoes.atribuicoes))) ? true : false);
             anteriores[id] = parseInt(data[id]);
         });
         anteriores.quantidade = parseInt(data.qtd);

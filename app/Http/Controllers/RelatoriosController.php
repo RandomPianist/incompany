@@ -108,6 +108,7 @@ class RelatoriosController extends Controller {
                     "empresas.cnpj",
                     "produtos.validade_ca",
                     "retiradas.qtd",
+                    DB::raw("IFNULL(retiradas.biometria, '') AS biometria"),
                     DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data"),
                     DB::raw("
                         DATE_FORMAT(
@@ -146,7 +147,7 @@ class RelatoriosController extends Controller {
                     if ($request->id_pessoa) {
                         array_push($criterios, "Colaborador: ".Pessoas::find($request->id_pessoa)->nome);
                         $sql->where("retiradas.id_pessoa", $request->id_pessoa);
-                    } else if ($id_emp) {
+                    } elseif ($id_emp) {
                         $sql->where(function($query) use($id_emp) {
                             $query->where("pessoas.id_empresa", $id_emp)
                                 ->orWhere("empresas.id_matriz", $id_emp)
@@ -161,6 +162,16 @@ class RelatoriosController extends Controller {
                 ->orderby("retiradas.id")
                 ->get()
         )->groupBy("id_pessoa")->map(function($itens) {
+            $biometrias = $itens->pluck("biometria");
+            $todosVazios = $biometrias->every(function($val) {
+                return $val == "";
+            });
+            $todosPreenchidos = $biometrias->every(function($val) {
+                return $val !== '';
+            });
+            $titulo = "Assinatura / Biometria";
+            if ($todosVazios) $titulo = "Assinatura";
+            elseif ($todosPreenchidos) $titulo = "Biometria";
             return [
                 "nome" => $itens[0]->nome,
                 "cpf" => $itens[0]->cpf,
@@ -169,12 +180,14 @@ class RelatoriosController extends Controller {
                 "setor" => $itens[0]->setor,
                 "empresa" => $itens[0]->razao_social,
                 "cnpj" => $itens[0]->cnpj,
+                "titulo" => $titulo,
                 "retiradas" => $itens->map(function($retirada) {
                     return [
                         "produto" => $retirada->produto,
                         "data" => $retirada->data_hora, 
                         "obs" => $retirada->obs,
                         "ca" => $retirada->ca,
+                        "biometria" => $retirada->biometria,
                         "validade_ca" => $retirada->validade_ca,
                         "qtd" => intval($retirada->qtd)
                     ];
@@ -494,7 +507,7 @@ class RelatoriosController extends Controller {
                     if ($request->rel_grupo != "pessoa") {
                         $sql->where("pessoas.lixeira", 0)
                             ->where("setores.lixeira", 0);
-                    } else if ($request->tipo_colab != "todos") {
+                    } elseif ($request->tipo_colab != "todos") {
                         $sql->where("pessoas.lixeira", $request->tipo_colab == "ativos" ? 0 : 1);
                         array_push($criterios, "Apenas colaboradores ".$request->tipo_colab);
                     }

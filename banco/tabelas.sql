@@ -58,7 +58,6 @@ CREATE TABLE pessoas (
     lixeira TINYINT DEFAULT 0,
     id_setor INT,
 	id_empresa INT,
-    id_usuario INT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -248,7 +247,6 @@ CREATE TABLE retiradas (
     observacao TEXT,
     ca VARCHAR(16),
     preco NUMERIC(8,2),
-    biometria_ou_senha ENUM('B', 'S'),
     numero_ped INT,
     biometria LONGTEXT,
     id_atribuicao INT,

@@ -20,13 +20,15 @@ function listar(coluna) {
                     "<td class = 'text-center btn-table-action' width = '20%'>";
                 if (parseInt(linha.possui_retiradas)) {
                     resultado += "<i class = 'my-icon fa-light fa-file' title = 'Retiradas' onclick = 'retirada_pessoa(" + linha.id + ")'></i>";
-                    if (!EMPRESA) resultado += "<i class = 'my-icon fa-regular fa-clock-rotate-left' title = 'Desfazer retiradas' onclick = 'desfazer_retiradas(" + linha.id + ")'></i>";
+                    if (!EMPRESA && permissoes.retiradas) resultado += "<i class = 'my-icon fa-regular fa-clock-rotate-left' title = 'Desfazer retiradas' onclick = 'desfazer_retiradas(" + linha.id + ")'></i>";
                 }
-                resultado += "<i class = 'my-icon far fa-calendar-alt' title = 'Próximas retiradas' onclick = 'proximas_retiradas(" + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-box'               title = 'Atribuir produto'   onclick = 'atribuicao = new Atribuicoes(false, " + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-tshirt'            title = 'Atribuir grade'     onclick = 'atribuicao = new Atribuicoes(true, " + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-edit'              title = 'Editar'             onclick = 'pessoa = new Pessoa(" + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-trash-alt'         title = 'Excluir'            onclick = 'excluir(" + linha.id + ", " + '"/colaboradores"' + ")'></i>" +
+                resultado += "<i class = 'my-icon far fa-calendar-alt' title = 'Próximas retiradas' onclick = 'proximas_retiradas(" + linha.id + ")'></i>";
+                if (permissoes.atribuicoes) {
+                    resultado += "<i class = 'my-icon far fa-box' title = 'Atribuir produto' onclick = 'atribuicao = new Atribuicoes(false, " + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-tshirt'       title = 'Atribuir grade'   onclick = 'atribuicao = new Atribuicoes(true, " + linha.id + ")'></i>";
+                }
+                resultado += "<i class = 'my-icon far fa-edit' title = 'Editar'  onclick = 'pessoa = new Pessoa(" + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/colaboradores"' + ")'></i>" +
                     "</td>" +
                 "</tr>";
             });

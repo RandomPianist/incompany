@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use DB;
 use Carbon\Carbon;
 use App\Models\Pessoas;
+use App\Models\Retiradas;
 use Illuminate\Http\Request;
 
 class RetiradasController extends Controller {
@@ -31,7 +32,7 @@ class RetiradasController extends Controller {
         if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
         $where = "id_pessoa = ".$request->id_pessoa;
         $this->log_inserir_lote("D", "retiradas", $where); // App\Http\Controllers\Controller.php
-        DB::statement("DELETE FROM retiradas WHERE ".$where);
+        Retiradas::whereRaw($where)->delete();
         return 200;
     }
 
