@@ -100,7 +100,7 @@ class SetoresController extends ControllerListavel {
 
             WHERE setores.id = ".$id."
                 AND minhas_permissoes.id_usuario = ".Auth::user()->id
-        )));
+        ))[0]);
     }
 
     public function salvar(Request $request) {

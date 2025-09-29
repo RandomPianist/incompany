@@ -50,7 +50,7 @@
                                 <div class = "custom-control custom-switch">
                                     <input id = "cria_usuario" name = "cria_usuario" type = "hidden" />
                                     <input id = "cria_usuario-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "muda_cria_usuario(this)" />
-                                    <label for = "cria_usuario-chk" class = "custom-control-label">Pessoas nesse centro de custo são usuários<label>
+                                    <label id = "{{ $permissoes[$i] }}-lbl" for = "cria_usuario-chk" class = "custom-control-label">Pessoas nesse centro de custo são usuários<label>
                                 </div>
                             </div>
                         </div>
@@ -60,7 +60,7 @@
                                     <div class = "custom-control custom-switch">
                                         <input id = "{{ $permissoes[$i] }}" name = "{{ $permissoes[$i] }}" type = "hidden" />
                                         <input id = "{{ $permissoes[$i] }}-chk" class = "checkbox custom-control-input" type = "checkbox" />
-                                        <label for = "{{ $permissoes[$i] }}-chk" class = "custom-control-label">
+                                        <label id = "{{ $permissoes[$i] }}-lbl" for = "{{ $permissoes[$i] }}-chk" class = "custom-control-label">
                                             Pessoas nesse centro de custo
                                             @if ($permissoes[$i] == "financeiro") têm, @else podem, @endif
                                             por padrão,
