@@ -48,6 +48,14 @@ CREATE TABLE setores (
     FOREIGN KEY (id_empresa) REFERENCES empresas(id)
 );
 
+-- nome, cpf, foto
+-- função, admissão, setor (remover quando usuário)
+-- empresa
+-- email, telefone
+-- senha, password (remover quando funcionário)
+-- supervisor
+-- permissões (remover quando funcionário)
+
 CREATE TABLE pessoas (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	nome VARCHAR(64),

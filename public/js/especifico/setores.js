@@ -44,8 +44,8 @@ function chamar_modal(id) {
                         legenda = "Alterar essa opção apagaria seu usuário";
                         break;
                 }
-                if (legenda) $("#" + _x + "-lbl").attr("title", legenda);
-                else $("#" + _x + "-lbl").removeAttr("title");
+                if (legenda) $("#setor-" + _x + "-lbl").attr("title", legenda);
+                else $("#setor-" + _x + "-lbl").removeAttr("title");
             }
 
             if (typeof data == "string") data = $.parseJSON(data);
@@ -65,26 +65,31 @@ function chamar_modal(id) {
             $("#cria_usuario").val(parseInt(data.cria_usuario) ? "S" : "N");
             $("#cria_usuario-chk").prop("checked", $("#cria_usuario").val() == "S");
             explicar(data, "cria_usuario");
-            for (x in permissoes) {
-                $("#" + x).val(parseInt(data[x]) ? "S" : "N");
-                $("#" + x + "-chk").prop("checked", $("#" + x).val() == "S").attr("disabled", data[x + "_motivo"] ? true : false);
-                explicar(data, x);
-            }
-            modal("setoresModal", id);
+            modal("setoresModal", id, function() {
+                muda_cria_usuario($("#cria_usuario-chk"), function() {
+                    for (x in permissoes) {
+                        $("#setor-" + x).val(parseInt(data[x]) ? "S" : "N");
+                        $("#setor-" + x + "-chk").prop("checked", $("#setor-" + x).val() == "S").attr("disabled", data[x + "_motivo"] ? true : false);
+                        explicar(data, x);
+                    }
+                });
+            });
         });
     } else {
         modal("setoresModal", 0, function() {
             $("#setor-empresa").removeAttr("title");
-            let lista = [["usuarios", "cria_usuario"]];
-            for (x in permissoes) {
-                if (x != "usuarios") lista.push([x]);
-            }
-            lista.forEach((el) => {
-                el.forEach((_id) => {
-                    $("#" + _id).val("N");
-                    $("#" + _id + "-chk").prop("checked", false);
-                    if (!permissoes[el[0]]) $("#" + _id + "-lbl").attr("title", "Não é possível atribuir a um centro de custo uma permissão que seu usuário não tem");
-                    else $("#" + _id + "-lbl").removeAttr("title");
+            muda_cria_usuario($("#cria_usuario-chk"), function() {
+                let lista = [["usuarios", "cria_usuario"]];
+                for (x in permissoes) {
+                    if (x != "usuarios") lista.push([x]);
+                }
+                lista.forEach((el) => {
+                    el.forEach((_id) => {
+                        $("#" + _id).val("N");
+                        $("#" + _id + "-chk").prop("checked", false);
+                        if (!permissoes[el[0]]) $("#setor-" + _id + "-lbl").attr("title", "Não é possível atribuir a um centro de custo uma permissão que seu usuário não tem");
+                        else $("#setor-" + _id + "-lbl").removeAttr("title");
+                    });
                 });
             });
         });
@@ -131,15 +136,16 @@ function validar() {
     });
 }
 
-function muda_cria_usuario(el) {
+function muda_cria_usuario(el, callback) {
     const escrever = function(container, texto) {
-        $(container).append(texto);
+        $(container).append(texto + htmlPermissoes(true, $(el).prop("checked")));
         $("#setoresModal .linha-usuario:last-child").addClass("mb-4");
         $(".form-control").each(function() {
             $(this).keydown(function() {
                 $(this).removeClass("invalido");
             });
         });
+        if (callback !== undefined) callback();
     }
 
     let obter_campo_senha = function(_i, _nome) {

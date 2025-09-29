@@ -806,10 +806,6 @@ function limitar(el, zero) {
     if (texto.length > 11) $(el).val("".padStart(11, "9"));
 }
 
-function numerico(el) {
-    $(el).val(apenasNumeros($(el).val()).substring(0, 4));
-}
-
 function foto_pessoa(seletor, caminho) {
     if (caminho) caminho = URL + "/storage/" + caminho;
     $(seletor).css("background-image", caminho ? "url('" + caminho + "')" : "");
@@ -1009,7 +1005,52 @@ function cp_mp_listar(tipo, abrir) {
 
 function atualizarChk(id, numerico) {
     const checked = $("#" + id + "-chk").prop("checked");
+    if (id == "pessoa-supervisor") $("#senha").attr("title", "Senha para retirar produtos " + (checked ? "e autorizar retiradas de produtos antes do vencimento" : ""));
     $("#" + id).val(checked ? numerico ? "1" : "0" : checked ? "S" : "N");
+}
+
+function htmlPermissoes(setor, usuario) {
+    $("#" + (setor ? "setores" : "pessoas") + "Modal .linha-permissao").each(function() {
+        $(this).remove();
+    });
+    const prefixo = (setor ? "setor" : "pessoa") + "-";
+    let resultado = "";
+    for (x in permissoes) {
+        resultado += "<div class = 'row linha-permissao " + ((!usuario && x != "supervisor") ? "d-none" : "") + "'>" +
+            "<div class = 'col-12'>" +
+                "<div class = 'custom-control custom-switch'>" +
+                    "<input id = '" + prefixo + x + "' name = '" + x + "' type = 'hidden' />" +
+                    "<input id = '" + prefixo + x + "-chk' class = 'checkbox custom-control-input' type = 'checkbox' onchange = 'atualizarChk(" + '"' + prefixo + x + '"' + ", false)' />" +
+                    "<label id = '" + prefixo + x + "-lbl' for = '" + prefixo + x + "' class = 'custom-control-label lbl-permissao'>" +
+                    (setor ? 
+                        "Pessoas nesse centro de custo " +
+                            (x == "financeiro" ? "têm" : "podem") +
+                        ", por padrão," 
+                    :
+                        "Esse ?? " + (x == "financeiro" ? "tem" : "pode")
+                    ) + " ";
+        switch(x) {
+            case "financeiro":
+                resultado += "acesso ao módulo financeiro";
+                break;
+            case "atribuicoes":
+                resultado += "atribuir produtos e grades a funcionários";
+                break;
+            case "retiradas":
+                resultado += "fazer retiradas retroativas";
+                break;
+            case "supervisor":
+                resultado += "usar" + (setor ? "suas senhas" : "sua senha") + " para autorizar retiradas de produtos antes do vencimento";
+                break;
+            case "solicitacoes":
+                resultado += "solicitar reposição de produtos";
+                break;
+            default:
+                resultado += "criar, editar e excluir " + (x == "usuarios" ? "usuários, exceto administradores" : "funcionários");
+        }
+        resultado += ".</label></div></div></div>";
+    }
+    return resultado;
 }
 
 function Atribuicoes(grade, _psm_valor) {

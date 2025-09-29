@@ -50,11 +50,10 @@
                                 <div class = "custom-control custom-switch">
                                     <input id = "cria_usuario" name = "cria_usuario" type = "hidden" />
                                     <input id = "cria_usuario-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "muda_cria_usuario(this)" />
-                                    <label id = "{{ $permissoes[$i] }}-lbl" for = "cria_usuario-chk" class = "custom-control-label">Pessoas nesse centro de custo são usuários<label>
+                                    <label id = "cria_usuario-lbl" for = "cria_usuario-chk" class = "custom-control-label">Pessoas nesse centro de custo são usuários<label>
                                 </div>
                             </div>
                         </div>
-                        @include("components.permissoes")
                     </div>
                 </div>
                 <div class = "d-flex">

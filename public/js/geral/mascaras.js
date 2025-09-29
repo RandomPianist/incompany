@@ -2,6 +2,10 @@ function apenasNumeros(val) {
     return val.replace(/\D/g, "").replace(",", "");
 }
 
+function numerico(el) {
+    $(el).val(apenasNumeros($(el).val()).substring(0, 4));
+}
+
 function dinheiro(texto_final) {
     if (texto_final !== texto_final.toString()) texto_final = texto_final.toFixed(2);
     texto_final = apenasNumeros(texto_final.toString());
