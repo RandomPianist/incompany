@@ -25,6 +25,7 @@ class Empresas extends Model
         'razao_social' => 'string',
         'nome_fantasia' => 'string',
         'cnpj' => 'string',
+        'cidade' => 'string',
         'cod_externo' => 'string',
         'lixeira' => 'boolean',
         'id_matriz' => 'integer',

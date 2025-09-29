@@ -10,29 +10,56 @@ use App\Models\Pessoas;
 use Illuminate\Http\Request;
 
 class SetoresController extends ControllerListavel {
-    protected $permissoes_lista = ["usuarios", "atribuicoes", "retiradas", "pessoas", "financeiro", "supervisor", "solicitacoes"];
+    private function setor_do_sistema($id) {
+        return DB::table("setores")
+                    ->join("log", function($join) {
+                        $join->on("log.fk", "setores.id")
+                            ->where("log.origem", "SYS")
+                            ->where("log.tabela", "setores");
+                    })
+                    ->where("setores.id", $id)
+                    ->exists();
+    }
 
     private function aviso_main($id) {
         $resultado = new \stdClass;
         $resultado->permitir = 0;
         $setor = Setores::find($id);
         $nome = $setor->descr;
-        if (
-            DB::table("setores")
-                ->join("log", function($join) {
-                    $join->on("log.fk", "setores.id")
-                        ->where("log.origem", "SYS")
-                        ->where("log.tabela", "setores");
-                })
-                ->exists()
-        ) {
-            $resultado->aviso = "Não é possível excluir um setor do sistema";
+        if ($this->setor_do_sistema($id)) {
+            $resultado->aviso = "Não é possível excluir um centro de custo do sistema";
         } elseif ($setor->pessoas()->exists()) {
-            $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a esse setor";
+            $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a esse centro de custo";
         } else {
             $resultado->permitir = 1;
             $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
         }
+        return $resultado;
+    }
+
+    private function consultar_main(Request $request) {
+        $resultado = new \stdClass;
+
+        if ($this->empresa_consultar($request)) { // App\Http\Controllers\Controller.php
+            $resultado->msg = "Empresa não encontrada";
+            $resultado->el = "setor-empresa";
+            return $resultado;
+        }
+        
+        if (
+            !$request->id &&
+            Setores::where("lixeira", 0)
+                    ->where("descr", $request->descr)
+                    ->where("id_empresa", $request->id_empresa)
+                    ->exists()
+        ) {
+            $resultado->msg = "Já existe um centro de custo de mesmo nome nessa empresa";
+            $resultado->el = "descr";
+            return $resultado;
+        }
+
+        $resultado->msg = "";
+        $resultado->el = "";
         return $resultado;
     }
 
@@ -51,12 +78,15 @@ class SetoresController extends ControllerListavel {
     }
 
     public function ver() {
-        $permissoes = $this->permissoes_lista;
-        return view("setores", compact("permissoes"));
+        return view("setores");
     }
 
     public function aviso($id) {
         return json_encode($this->aviso_main($id));
+    }
+
+    public function consultar(Request $request) {
+        return json_encode($this->consultar_main($request));
     }
 
     public function mostrar($id) {
@@ -79,6 +109,11 @@ class SetoresController extends ControllerListavel {
                 setores.cria_usuario,
                 setores.id_empresa,
                 empresa.nome_fantasia AS empresa,
+                CASE
+                    WHEN (log.id IS NOT NULL) THEN 'SYS'
+                    WHEN (lim.id_setor IS NOT NULL) THEN 'PES'
+                    ELSE ''
+                END AS empresa_motivo,
                 CASE ".implode(" ", $condicoes_padrao)." END AS cria_usuario_motivo,
                 ".implode(",", $campos_permissao)."
             
@@ -92,6 +127,12 @@ class SetoresController extends ControllerListavel {
             JOIN permissoes
                 ON permissoes.id_setor = setores.id
 
+            LEFT JOIN (
+                SELECT DISTINCTROW id_setor
+                FROM pessoas
+                WHERE lixeira = 0
+            ) ON lim ON lim.id_setor = setores.id
+
             LEFT JOIN log
                 ON log.fk = setores.id
                     AND log.origem = 'SYS'
@@ -104,6 +145,7 @@ class SetoresController extends ControllerListavel {
     }
 
     public function salvar(Request $request) {
+        if ($this->consultar_main($request)->msg) return 401;
         $cria_usuario = $request->cria_usuario == "S" ? 1 : 0;
         $linha = Setores::firstOrNew(["id" => $request->id]);
         if ($request->id) {
@@ -142,6 +184,7 @@ class SetoresController extends ControllerListavel {
                             for ($i = 0; $i < sizeof($request->id_pessoa); $i++) {
                                 $modelo = Pessoas::find($request->id_pessoa[$i]);
                                 $modelo->senha = $request->password[$i];
+                                $modelo->email = DB::table("users")->where("id_pessoa", $request->id_pessoa[$i])->value("email");
                                 $modelo->save();
                                 $this->log_inserir("E", "pessoas", $modelo->id); // App\Http\Controllers\Controller.php
                             }
@@ -151,13 +194,29 @@ class SetoresController extends ControllerListavel {
                     }
                 } elseif (isset($request->id_pessoa)) {
                     for ($i = 0; $i < sizeof($request->id_pessoa); $i++) {
+                        $editou_pessoa = false;
+                        $modelo = Pessoas::find($request->id_pessoa[$i]);
+                        $email = $modelo->email;
+                        if (isset($request->email[$i])) {
+                            $email = $request->email[$i];
+                            if ($this->comparar_texto($email, $modelo->email)) $editou_pessoa = true; // App\Http\Controllers\Controller.php
+                        }
+                        $telefone = $modelo->telefone;
+                        if (isset($request->phone[$i])) {
+                            $telefone = $request->phone[$i];
+                            if ($this->comparar_texto($telefone, $modelo->telefone)) $editou_pessoa = true; // App\Http\Controllers\Controller.php
+                        }
                         $id_usuario = DB::table("users")->insertGetId([
-                            "name" => trim($request->nome[$i]),
-                            "email" => trim($request->email[$i]),
+                            "name" => $modelo->nome,
+                            "email" => $email,
                             "senha" => Hash::make($request->password[$i]),
                             "id_pessoa" => $request->id_pessoa[$i]
                         ]);
                         $this->log_inserir("C", "users", $id_usuario); // App\Http\Controllers\Controller.php
+                        $modelo->telefone = $telefone;
+                        $modelo->email = $email;
+                        $modelo->save();
+                        if ($editou_pessoa) $this->log_inserir("E", "pessoas", $modelo->id); // App\Http\Controllers\Controller.php
                         $permissao = $linha->permissao()->replicate(["id_setor"]);
                         $permissao->id_usuario = $id_usuario;
                         $permissao->save();
@@ -193,6 +252,7 @@ class SetoresController extends ControllerListavel {
                     "pessoas.nome"
                 )
                 ->join("users", "users.id_pessoa", "pessoas.id")
+                ->whereNull("pessoas.senha")
                 ->where("pessoas.id_setor", $id)
                 ->where("pessoas.lixeira", 0)
                 ->where("users.admin", 0)
@@ -201,17 +261,28 @@ class SetoresController extends ControllerListavel {
     }
 
     public function pessoas($id) {
-        return json_encode(
-            DB::table("pessoas")
-                ->select(
-                    "pessoas.id",
-                    "pessoas.nome"
-                )
-                ->leftjoin("users", "users.id_pessoa", "pessoas.id")
-                ->where("pessoas.id_setor", $id)
-                ->where("pessoas.lixeira", 0)
-                ->whereNull("users.id")
-                ->get()
-        );
+        $resultado = new \stdClass;
+        $consulta = DB::table("pessoas")
+                        ->select(
+                            "pessoas.id",
+                            "pessoas.nome",
+                            DB::raw("IFNULL(pessoas.email, '') AS email"),
+                            DB::raw("IFNULL(pessoas.telefone, '') AS telefone")
+                        )
+                        ->leftjoin("users", "users.id_pessoa", "pessoas.id")
+                        ->whereNull("users.id")
+                        ->where("pessoas.id_setor", $id)
+                        ->where("pessoas.lixeira", 0)
+                        ->get();
+        $resultado->mostrar_email = 0;
+        foreach($consulta as $linha) {
+            if (!$linha->email) $resultado->mostrar_email = 1;
+        }
+        $resultado->mostrar_fone = 0;
+        foreach($consulta as $linha) {
+            if (!$linha->telefone) $resultado->mostrar_fone = 1;
+        }
+        $resultado->consulta = $consulta;
+        return json_encode($resultado);
     }
 }

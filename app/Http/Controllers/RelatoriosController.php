@@ -106,6 +106,7 @@ class RelatoriosController extends Controller {
                     "produtos.ca",
                     "empresas.razao_social",
                     "empresas.cnpj",
+                    DB::raw("IFNULL(empresas.cidade, 'Barueri') AS cidade"),
                     "produtos.validade_ca",
                     "retiradas.qtd",
                     DB::raw("IFNULL(retiradas.biometria, '') AS biometria"),
@@ -178,6 +179,7 @@ class RelatoriosController extends Controller {
                 "setor" => $itens[0]->setor,
                 "empresa" => $itens[0]->razao_social,
                 "cnpj" => $itens[0]->cnpj,
+                "cidade" => $itens[0]->cidade,
                 "titulo" => $titulo,
                 "retiradas" => $itens->map(function($retirada) {
                     return [
@@ -193,7 +195,6 @@ class RelatoriosController extends Controller {
             ];
         })->sortBy("nome")->values()->all();
         $retorno->criterios = implode(" | ", $criterios);
-        $retorno->cidade = "Barueri";
         $retorno->data_extenso = ucfirst(strftime("%d de %B de %Y"));
         return $retorno;
     }
@@ -381,13 +382,11 @@ class RelatoriosController extends Controller {
 
         $resultado = $principal->resultado;
         $criterios = $principal->criterios;
-        $cidade = $principal->cidade;
         $data_extenso = $principal->data_extenso;
 
         $pdf = \PDF::loadView('reports/controle', [
             "resultado" =>    $principal->resultado, 
             "criterios" =>    $principal->criterios,
-            "cidade" =>       $principal->cidade,
             "data_extenso" => $principal->data_extenso
         ])
             ->setOption('page-size', 'A4')

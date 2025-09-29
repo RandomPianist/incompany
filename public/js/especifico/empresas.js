@@ -131,7 +131,7 @@ async function validar() {
         erro = "Preencha o campo";
         $("#cnpj").addClass("invalido");
     }
-    const aux = verifica_vazios(["nome_fantasia", "razao_social"], erro);
+    const aux = verifica_vazios(["nome_fantasia", "razao_social", "cidade"], erro);
     erro = aux.erro;
     let alterou = aux.alterou;
     if (!erro && !validar_cnpj($("#cnpj").val())) {

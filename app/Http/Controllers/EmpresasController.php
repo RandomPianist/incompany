@@ -117,11 +117,13 @@ class EmpresasController extends Controller {
         if (!trim($request->cnpj)) return 400;
         if (!trim($request->razao_social)) return 400;
         if (!trim($request->nome_fantasia)) return 400;
+        if (!trim($request->cidade)) return 400;
         if ($this->consultar($request) == "R") return 401;
         $linha = Empresas::firstOrNew(["id" => $request->id]);
         if (
             $request->id &&
             !$this->comparar_texto($request->cnpj, $linha->cnpj) && // App\Http\Controllers\Controller.php
+            !$this->comparar_texto($request->cidade, $linha->cidade) && // App\Http\Controllers\Controller.php
             !$this->comparar_texto($request->razao_social, $linha->razao_social) && // App\Http\Controllers\Controller.php
             !$this->comparar_texto($request->nome_fantasia, $linha->nome_fantasia) // App\Http\Controllers\Controller.php
         ) return 400;
@@ -129,6 +131,7 @@ class EmpresasController extends Controller {
         $linha->nome_fantasia = mb_strtoupper($request->nome_fantasia);
         $linha->razao_social = mb_strtoupper($request->razao_social);
         $linha->cnpj = $request->cnpj;
+        $linha->cidade = $request->cidade;
         $linha->id_matriz = $request->id_matriz ? $request->id_matriz : 0;
         $linha->save();
         $this->log_inserir($request->id ? "E" : "C", "empresas", $linha->id); // App\Http\Controllers\Controller.php

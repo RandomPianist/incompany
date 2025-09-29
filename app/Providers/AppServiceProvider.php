@@ -39,7 +39,8 @@ class AppServiceProvider extends ServiceProvider
                     $emp = Empresas::find($servico->srv_obter_empresa()); // App\Services\GlobaisService.php
                     $view->with([
                         'admin' => $emp === null,
-                        'empresa_descr' => $emp !== null ? $emp->nome_fantasia : "Todas"
+                        'empresa_descr' => $emp !== null ? $emp->nome_fantasia : "Todas",
+                        'permissoes' => ["usuarios", "atribuicoes", "retiradas", "pessoas", "financeiro", "supervisor", "solicitacoes"]
                     ]);
                 }
             });

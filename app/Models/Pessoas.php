@@ -37,6 +37,8 @@ class Pessoas extends Model
         'admissao' => 'date',
         'foto64' => 'string',
         'biometria' => 'string',
+        'telefone' => 'string',
+        'email' => 'string',
         'supervisor' => 'boolean',
         'lixeira' => 'boolean',
         'id_setor' => 'integer',

@@ -89,14 +89,14 @@
             <p>Sob pena de ser punido conforme Lei n. 6.514, de 22/12/77, artigo 158</p>
             <p>Declaro, ainda que recebi treinamento e orientação referente ao uso do E.P.I e as Normas de Segurança do Trabalho.</p>
             <div class = "data-extenso">
-                <span class = "traduzir">{{$cidade}}, {{$data_extenso}}</span>
+                <span class = "traduzir">{{ $item[0]["cidade"] }}, {{ $data_extenso }}</span>
             </div>
             <div class = "assinatura">
                 <div class = "asn_1">
-                    <span>{{$resultado[0]["empresa"]}}</span>
+                    <span>{{ $resultado[0]["empresa"] }}</span>
                 </div>
                 <div class = "asn_2">
-                    <span>{{$item["nome"]}}</span>
+                    <span>{{ $item["nome"] }}</span>
                 </div>
             </div>
             <div class = "assinatura-print" style = "margin-top:80px">
@@ -106,8 +106,8 @@
                         <td class = "text-center" width = "50%" style = "vertical-align:bottom">________________________________________________</td>
                     </tr>
                     <tr>
-                        <td class = "text-center" width = "50%" style = "vertical-align:top">{{$resultado[0]["empresa"]}}</td>
-                        <td class = "text-center" width = "50%" style = "vertical-align:top">{{$item["nome"]}}</td>
+                        <td class = "text-center" width = "50%" style = "vertical-align:top">{{ $resultado[0]["empresa"] }}</td>
+                        <td class = "text-center" width = "50%" style = "vertical-align:top">{{ $item["nome"] }}</td>
                     </tr>
                 </table>
             </div>

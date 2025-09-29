@@ -36,6 +36,13 @@
                                 <span class = "custom-label-form tam-max"></span>
                             </div>
                         </div>
+                        <div class = "row">
+                            <div class = "col-12">
+                                <label for = "cidade" class = "custom-label-form">Cidade: *</label>
+                                <input id = "cidade" name = "cidade" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 32)" />
+                                <span class = "custom-label-form tam-max"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class = "d-flex">

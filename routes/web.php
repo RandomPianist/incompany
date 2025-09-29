@@ -72,6 +72,7 @@ Route::middleware("auth")->group(function () {
     Route::group(["prefix" => "setores"], function() {
         Route::get ("/",              [SetoresController::class, "ver"])->name("setores");
         Route::get ("/listar",        [SetoresController::class, "listar"]);
+        Route::get ("/consultar",     [SetoresController::class, "consultar"]);
         Route::get ("/usuarios/{id}", [SetoresController::class, "usuarios"]);
         Route::get ("/pessoas/{id}",  [SetoresController::class, "pessoas"]);
         Route::get ("/mostrar/{id}",  [SetoresController::class, "mostrar"]);
