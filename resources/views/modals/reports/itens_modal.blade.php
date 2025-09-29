@@ -75,7 +75,7 @@
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">
                                     <input id = "rel-lm" name = "lm" type = "hidden" />
-                                    <input id = "rel-lm-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "$(this).prev().val(this.checked ? 'S' : 'N')" />
+                                    <input id = "rel-lm-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "atualizarChk('rel-lm', false)" />
                                     <label for = "rel-lm-chk" class = "custom-control-label"><label>
                                 </div>
                             </div>

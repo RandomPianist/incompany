@@ -83,7 +83,7 @@
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">
                                     <input id = "travar_ret" name = "travar_ret" type = "hidden" />
-                                    <input id = "travar_ret-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "$('#travar_ret').val($(this).prop('checked') ? '1' : '0')" />
+                                    <input id = "travar_ret-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "atualizarChk('travar_ret', true)" />
                                     <label for = "travar_ret-chk" class = "custom-control-label">Solicitar senha de supervisor para produtos antes do vencimento<label>
                                 </div>
                             </div>
@@ -92,7 +92,7 @@
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">
                                     <input id = "travar_estq" name = "travar_estq" type = "hidden" />
-                                    <input id = "travar_estq-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "$('#travar_estq').val($(this).prop('checked') ? '1' : '0')" />
+                                    <input id = "travar_estq-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "atualizarChk('travar_estq', true)" />
                                     <label for = "travar_estq-chk" class = "custom-control-label">Habilitar retiradas somente com estoque disponível<label>
                                 </div>
                             </div>

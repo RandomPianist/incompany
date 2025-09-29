@@ -1007,6 +1007,11 @@ function cp_mp_listar(tipo, abrir) {
     })
 }
 
+function atualizarChk(id, numerico) {
+    const checked = $("#" + id + "-chk").prop("checked");
+    $("#" + id).val(checked ? numerico ? "1" : "0" : checked ? "S" : "N");
+}
+
 function Atribuicoes(grade, _psm_valor) {
     let idatb = 0;
     let hab = true;

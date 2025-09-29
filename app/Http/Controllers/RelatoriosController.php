@@ -163,15 +163,13 @@ class RelatoriosController extends Controller {
                 ->get()
         )->groupBy("id_pessoa")->map(function($itens) {
             $biometrias = $itens->pluck("biometria");
-            $todosVazios = $biometrias->every(function($val) {
-                return $val == "";
-            });
-            $todosPreenchidos = $biometrias->every(function($val) {
-                return $val !== '';
-            });
             $titulo = "Assinatura / Biometria";
-            if ($todosVazios) $titulo = "Assinatura";
-            elseif ($todosPreenchidos) $titulo = "Biometria";
+            if ($biometrias->every(function($val) {
+                return $val == "";
+            })) $titulo = "Assinatura";
+            elseif ($biometrias->every(function($val) {
+                return $val !== "";
+            })) $titulo = "Biometria";
             return [
                 "nome" => $itens[0]->nome,
                 "cpf" => $itens[0]->cpf,

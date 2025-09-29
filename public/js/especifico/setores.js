@@ -38,7 +38,7 @@ function chamar_modal(id) {
                         legenda = "Não é possível editar essa configuração em um setor do sistema";
                         break;
                     case "PER":
-                        legenda = "Essa opção está desativada porque não é possível " + (parseInt(_data[_x] ? "retirar de" : "atribuir a")) + " um setor uma permissão que seu usuário não tem";
+                        legenda = "Não é possível " + (parseInt(_data[_x] ? "retirar de" : "atribuir a")) + " um setor uma permissão que seu usuário não tem";
                         break;
                     case "USU":
                         legenda = "Alterar essa opção apagaria seu usuário";
@@ -63,9 +63,73 @@ function chamar_modal(id) {
             modal("setoresModal", id);
         });
     } else {
-        modal("setoresModal", id, function() {
-            $("#cria_usuario").val("N");
-            $("#cria_usuario-chk").prop("checked", false);
+        modal("setoresModal", 0, function() {
+            let lista = [["usuarios", "cria_usuario"]];
+            for (x in permissoes) {
+                if (x != "usuarios") lista.push([x]);
+            }
+            lista.forEach((el) => {
+                el.forEach((_id) => {
+                    $("#" + _id).val("N");
+                    $("#" + _id + "-chk").prop("checked", false);
+                    if (!permissoes[el[0]]) $("#" + _id + "-lbl").attr("title", "Não é possível atribuir a um setor uma permissão que seu usuário não tem");
+                    else $("#" + _id + "-lbl").removeAttr("title");
+                })
+            });
+        });
+    }
+}
+
+function muda_cria_usuario(el) {
+    const escrever = function(container, texto) {
+        $(container).append(texto);
+        $("#setoresModal .linha-usuario:last-child").addClass("mb-4");
+        $(".form-control").each(function() {
+            $(this).keydown(function() {
+                $(this).removeClass("invalido");
+            });
+        });
+    }
+
+    $(el).prev().val($(el).prop("checked") ? "S" : "N");
+    const id = parseInt($("#id").val());
+    $(".linha-usuario").each(function() {
+        $(this).remove();
+    });
+    if (!id) return;
+    if ($(el).prop("checked")) {
+        $.get(URL + "/setores/pessoas/" + id, function(data) {
+            if (typeof data == "string") data = $.parseJSON(data);
+            let resultado = "";
+            for (let i = 1; i <= data.length; i++) {
+                resultado += "<div class = 'row linha-usuario mb-2'>" +
+                    "<input type = 'hidden' name = 'id_pessoa[]' value = '" + data[i - 1].id + "' />" +
+                    "<div class = 'col-4 pr-1'>" +
+                        "<input type = 'text' name = 'email[]' class = 'validar form-control' id = 'email-" + i + "' placeholder = 'Email de " + data[i - 1].nome + "' />" +
+                    "</div>" +
+                    "<div class = 'col-4 px-1'>" +
+                        "<input type = 'text' name = 'phone[]' class = 'validar form-control' id = 'phone-" + i + "' placeholder = 'Telefone de " + data[i - 1].nome + "' />" +
+                    "</div>" +
+                    "<div class = 'col-4 pl-1'>" +
+                        "<input type = 'text' name = 'password[]' class = 'validar form-control' id = 'senha-" + i + "' placeholder = 'Senha de " + data[i - 1].nome + "' />" +
+                    "</div>" +
+                "</div>";
+            }
+            escrever($("#setoresModal .container"), resultado);
+        });
+    } else {
+        $.get(URL + "/setores/usuarios/" + id, function(data) {
+            if (typeof data == "string") data = $.parseJSON(data);
+            let resultado = "";
+            for (let i = 1; i <= data.length; i++) {
+                resultado += "<div class = 'row linha-usuario mb-2'>" +
+                    "<input type = 'hidden' name = 'id_pessoa[]' value = '" + data[i - 1].id + "' />" +
+                    "<div class = 'col-12'>" +
+                        "<input type = 'text' name = 'password[]' class = 'validar form-control' id = 'senha-" + i + "' placeholder = 'Senha de " + data[i - 1].nome + "' onkeyup = 'numerico(this)' />" +
+                    "</div>" +
+                "</div>";
+            }
+            escrever($("#setoresModal .container"), resultado);
         });
     }
 }

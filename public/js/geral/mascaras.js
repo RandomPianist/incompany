@@ -19,3 +19,14 @@ function dinheiro(texto_final) {
     texto_final = "R$ " + texto_final;
     return texto_final;
 }
+
+const phoneMask = (value) => {
+    if (!value) return "";
+    value = value.replace(/\D/g, "");
+    if (value.length >= 8 && value.length <= 13) {
+        if (value.length == 10 || value.length == 11) value = value.replace(/(\d{2})(\d)/, "($1) $2");
+        else if (value.length == 12 || value.length == 13) value = value.replace(/(\d{2})(\d{2})(\d)/, "+$1 ($2) $3");
+        value = value.replace(/(\d)(\d{4})$/, "$1-$2");
+    }
+    return value;
+}

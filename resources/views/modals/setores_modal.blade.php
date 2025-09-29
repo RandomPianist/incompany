@@ -1,7 +1,7 @@
 
 <!-- Modal -->
 <div class = "modal fade" id = "setoresModal" aria-labelledby = "setoresModalLabel" aria-hidden = "true">
-    <div class = "modal-dialog" role = "document">
+    <div class = "modal-dialog modal-lg" role = "document">
         <div class = "modal-content">
             <div class = "modal-header">
                 <h6 class = "modal-title header-color" id = "setoresModalLabel"></h6>
@@ -59,7 +59,7 @@
                                 <div class = "col-12">
                                     <div class = "custom-control custom-switch">
                                         <input id = "{{ $permissoes[$i] }}" name = "{{ $permissoes[$i] }}" type = "hidden" />
-                                        <input id = "{{ $permissoes[$i] }}-chk" class = "checkbox custom-control-input" type = "checkbox" />
+                                        <input id = "{{ $permissoes[$i] }}-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "atualizarChk('{{ $permissoes[$i] }}', false)" />
                                         <label id = "{{ $permissoes[$i] }}-lbl" for = "{{ $permissoes[$i] }}-chk" class = "custom-control-label">
                                             Pessoas nesse centro de custo
                                             @if ($permissoes[$i] == "financeiro") têm, @else podem, @endif
