@@ -104,6 +104,91 @@ abstract class Controller extends BaseController {
         DB::table($tabela)->where("fk", $id)->update(["id_usuario_editando" => 0]);
     }
 
+    protected function obter_usuario_editando($tabela, $id, $acao) {
+        $resultado = new \stdClass;
+        $consulta = null;
+        switch($tabela) {
+            case "categorias":
+                $consulta = DB::table("categorias")
+                                ->select(
+                                    "descr AS titulo",
+                                    DB::raw("
+                                        CASE
+                                            WHEN (users2.id IS NOT NULL AND users1.id IS NULL) THEN 'o produto'
+                                            ELSE ''
+                                        END AS associado
+                                    "),
+                                    DB::raw("
+                                        CASE
+                                            WHEN users1.id IS NOT NULL THEN users1.name
+                                            WHEN users2.id IS NOT NULL THEN users2.name
+                                            ELSE ''
+                                        END AS usuario
+                                    ")
+                                )
+                                ->leftjoin("users AS users1", "users1.id", "categorias.id_usuario_editando")
+                                ->leftjoinSub(
+                                    DB::table("produtos")
+                                        ->select(
+                                            "id_categoria",
+                                            DB::raw("MIN(id_usuario_editando) AS id_usuario_editando")
+                                        )
+                                        ->where("id_usuario_editando", "<>", 0)
+                                        ->where("lixeira", 0)
+                                        ->groupby("id_categoria"),
+                                    "prod",
+                                    "prod.id_categoria",
+                                    "categorias.id"
+                                )
+                                ->leftjoin("users AS users2", "users2.id", "prod.id_usuario_editando")
+                                ->where("categorias.id", $id)
+                                ->first();
+                break;
+            case "empresas":
+                $consulta = DB::table("empresas")
+                                ->select(
+                                    "nome_fantasia AS titulo",
+                                    DB::raw("CASE
+                                        WHEN users1.id IS NOT NULL THEN 'a empresa'
+                                        WHEN users2.id IS NOT NULL THEN 'a pessoa'
+                                        ELSE ''
+                                    END AS tabela"),
+                                    DB::raw("CASE
+                                        WHEN users1.id IS NOT NULL THEN users1.name
+                                        WHEN users2.id IS NOT NULL THEN users2.name
+                                        ELSE ''
+                                    END AS usuario")
+                                )
+                                ->leftjoin("users AS users1", "users1.id", "empresas.id_usuario_editando")
+                                ->leftjoinSub(
+                                    DB::table("pessoas")
+                                        ->select(
+                                            "id_empresa",
+                                            DB::raw("MIN(id_usuario_editando) AS id_usuario_editando")
+                                        )
+                                        ->where("id_usuario_editando", "<>", 0)
+                                        ->where("lixeira", 0)
+                                        ->groupby("id_empresa"),
+                                    "pes",
+                                    "pes.id_empresa",
+                                    "empresas.id"
+                                )
+                                ->leftjoin("users AS users2", "users2.id", "pes.id_usuario_editando")
+                                ->where("empresas.id", $id)
+                                ->first();
+                break;
+            case "maquinas":
+                break;
+            case "pessoas":
+                break;
+            case "produtos":
+                break;
+            case "setores":
+                break;
+        }
+        return $resultado;
+    }
+
     protected function obter_nome_usuario($id) {
         return "<b>".mb_strtoupper(DB::table("users")->where("id", $id)->value("name"))."</b>";
     }
