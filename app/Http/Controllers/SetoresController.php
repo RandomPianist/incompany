@@ -145,6 +145,123 @@ class SetoresController extends ControllerListavel {
     public function salvar(Request $request) {
         if ($this->consultar_main($request)->msg) return 401;
         $cria_usuario = $request->cria_usuario == "S" ? 1 : 0;
+        $supervisor = $request->supervisor == "S" ? 1 : 0;
+        $cria_usuario_ant = null;
+        $supervisor_ant = null;
+        $setor = Setores::firstOrNew(["id" => $request->id]);
+        if ($request->id) {
+            $cria_usuario_ant = $setor->cria_usuario;
+            $supervisor_ant = $setor->permissao()->supervisor;
+            if (
+                $setor->id_empresa == $request->id_empresa &&
+                !$this->comparar_texto($request->descr, $linha->descr) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($supervisor_ant, $supervisor) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($cria_usuario_ant, $cria_usuario) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao()->financeiro, $request->financeiro == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao()->atribuicoes, $request->atribuicoes == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao()->retiradas, $request->retiradas == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao()->pessoas, $request->pessoas == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao()->usuarios, $request->usuarios == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao()->solicitacoes, $request->solicitacoes == "S" ? 1 : 0) // App\Http\Controllers\Controller.php
+            ) return 400;
+        }
+        $setor->descr = mb_strtoupper($request->descr);
+        $setor->id_empresa = $request->id_empresa;
+        $setor->cria_usuario = $cria_usuario;
+        $setor->save();
+        $this->log_inserir($request->id ? "E" : "C", "setores", $setor->id); // App\Http\Controllers\Controller.php
+        $setor->permissao()->updateOrCreate(
+            ["id_setor" => $setor->id],
+            [
+                "financeiro" => $request->financeiro == "S" ? 1 : 0,
+                "atribuicoes" => $request->atribuicoes == "S" ? 1 : 0,
+                "retiradas" => $request->retiradas == "S" ? 1 : 0,
+                "pessoas" => $request->pessoas == "S" ? 1 : 0,
+                "usuarios" => $request->usuarios == "S" ? 1 : 0,
+                "solicitacoes" => $request->solicitacoes == "S" ? 1 : 0,
+                "supervisor" => $supervisor
+            ]
+        );
+        $this->log_inserir($request->id ? "E" : "C", "permissoes", $setor->permissao()->id); // App\Http\Controllers\Controller.php
+        if ($request->id && $cria_usuario != $cria_usuario_ant) {
+            if ($cria_usuario_ant) {
+                $usuarios = DB::table("users")
+                                ->select(
+                                    "users.id",
+                                    "users.id_pessoa",
+                                    "permissoes.id AS id_permissao"
+                                )
+                                ->join("pessoas", "pessoas.id", "users.id_pessoa")
+                                ->join("permissoes", "permissoes.id_usuario", "users.id")
+                                ->where("pessoas.id_setor", $request->id)
+                                ->where("users.admin", 0)
+                                ->get();
+                foreach($usuarios as $usuario) {
+                    if (isset($request->id_pessoa)) {
+                        $posicao = array_search($usuario->id_pessoa, $request->id_pessoa);
+                        if ($posicao !== false) {
+                            $pessoa = Pessoas::find($request->id_pessoa[$posicao]);
+                            $pessoa->senha = $request->password[$posicao];
+                            $pessoa->email = DB::table("users")->where("id_pessoa", $pessoa->id)->value("email");
+                            $pessoa->save();
+                            $this->log_inserir("E", "pessoas", $pessoa->id); // App\Http\Controllers\Controller.php
+                        }
+                    }
+                    // continuar
+                    $this->log_inserir("D", "users", $usuario->id); // App\Http\Controllers\Controller.php
+                    $this->log_inserir("D", "permissoes", $usuario->id_permissao); // App\Http\Controllers\Controller.php
+                    DB::table("users")->where("id", $usuario->id)->delete();
+                    Permissoes::find($usuario->id_permissao)->delete();
+                }
+
+                foreach($consulta as $usuario) {
+                    array_push($lista, $usuario->id);
+                    array_push($pessoas, $usuario->id_pessoa);
+                    array_push($permissoes, $usuario->id_permissao);
+                    $this->log_inserir("D", "users", $usuario->id); // App\Http\Controllers\Controller.php
+                    $this->log_inserir("D", "permissoes", $usuario->id_permissao); // App\Http\Controllers\Controller.php
+                }
+                if (sizeof($lista)) {
+                    if (isset($request->id_pessoa)) {
+                        for ($i = 0; $i < sizeof($request->id_pessoa); $i++) {
+                            $modelo = Pessoas::find($request->id_pessoa[$i]);
+                            $modelo->senha = $request->password[$i];
+                            $modelo->email = DB::table("users")->where("id_pessoa", $request->id_pessoa[$i])->value("email");
+                            $modelo->save();
+                            $this->log_inserir("E", "pessoas", $modelo->id); // App\Http\Controllers\Controller.php
+                        }
+                    }
+                    if ($comparar_sup) {
+                        if ($request->supervisor == "S") {
+                            foreach ($pessoas as $pessoa) {
+                                $modelo = Pessoas::find($pessoa);
+                                if (!intval($modelo->supervisor)) {
+                                    $modelo->supervisor = 1;
+                                    $modelo->save();
+                                    if (!in_array($modelo->id, $request->id_pessoa)) $this->log_inserir("E", "pessoas", $modelo->id); // App\Http\Controllers\Controller.php
+                                }
+                            }
+                        } else {
+                            foreach ($pessoas as $pessoa) {
+                                $modelo = Pessoas::find($pessoa);
+                                if (intval($modelo->supervisor)) {
+                                    $modelo->supervisor = 0;
+                                    $modelo->save();
+                                    if (!in_array($modelo->id, $request->id_pessoa)) $this->log_inserir("E", "pessoas", $modelo->id); // App\Http\Controllers\Controller.php
+                                }
+                            }
+                        }
+                    }
+                    DB::table("users")->whereIn("id", $lista)->delete();
+                    Permissoes::whereIn("id", $permissoes)->delete();
+                }
+            }
+        }
+    }
+
+    public function salvar_old(Request $request) {
+        if ($this->consultar_main($request)->msg) return 401;
+        $cria_usuario = $request->cria_usuario == "S" ? 1 : 0;
         $linha = Setores::firstOrNew(["id" => $request->id]);
         if ($request->id) {
             $comparar_sup = $this->comparar_num($linha->permissao()->supervisor, $request->supervisor == "S" ? 1 : 0); // App\Http\Controllers\Controller.php
