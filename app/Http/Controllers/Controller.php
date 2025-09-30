@@ -100,6 +100,14 @@ abstract class Controller extends BaseController {
         );
     }
 
+    protected function descartar_main($tabela, $id) {
+        DB::table($tabela)->where("fk", $id)->update(["id_usuario_editando" => 0]);
+    }
+
+    protected function obter_nome_usuario($id) {
+        return "<b>".mb_strtoupper(DB::table("users")->where("id", $id)->value("name"))."</b>";
+    }
+
     protected function log_inserir($acao, $tabela, $fk, $origem = "WEB", $nome = "") {
         $linha = new Log;
         $linha->acao = $acao;
@@ -113,6 +121,7 @@ abstract class Controller extends BaseController {
         $linha->data = date("Y-m-d");
         $linha->hms = date("H:i:s");
         $linha->save();
+        if (in_array($tabela, ["categorias", "empresas", "maquinas", "pessoas", "produtos", "setores"])) $this->descartar_main($tabela, $fk);
         return $linha;
     }
 

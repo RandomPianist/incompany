@@ -131,8 +131,12 @@ function validar() {
             erro = data.msg;
             $("#" + data.el).addClass("invalido");
         }
-        if (!erro) $("#setoresModal form").submit();
-        else s_alert(erro);
+        if (!erro) {
+            $(".telefone").each(function() {
+                $(this).val(apenasNumeros($(this).val()));
+            });
+            $("#setoresModal form").submit();
+        } else s_alert(erro);
     });
 }
 
@@ -149,7 +153,7 @@ function muda_cria_usuario(el, callback) {
     }
 
     let obter_campo_senha = function(_i, _nome) {
-        return "<input type = 'text' name = 'password[]' class = 'validar form-control' id = 'senha-" + _i + "' placeholder = 'Senha de " + _nome + "' />"
+        return "<input type = 'password' name = 'password[]' class = 'validar form-control' id = 'senha-" + _i + "' placeholder = 'Senha de " + _nome + "' />"
     }
 
     $(el).prev().val($(el).prop("checked") ? "S" : "N");
@@ -169,7 +173,7 @@ function muda_cria_usuario(el, callback) {
                 resultado += "<div class = 'row linha-usuario mb-2'>" +
                     "<input type = 'hidden' name = 'id_pessoa[]' value = '" + data.consulta[i - 1].id + "' />";
                 let campo_email = "<input type = 'text' name = 'email[]' class = 'validar form-control' id = 'email-" + i + "' placeholder = 'Email de " + nome + "' value = '" + data.consulta[i - 1].email + "' />";
-                let campo_fone = "<input type = 'text' name = 'phone[]' class = 'validar form-control' id = 'phone-" + i + "' placeholder = 'Telefone de " + nome + "' value = '" + data.consulta[i - 1].telefone + "' onkeyup = 'this.value=phoneMask(this.value)' />";
+                let campo_fone = "<input type = 'text' name = 'phone[]' class = 'validar telefone form-control' id = 'phone-" + i + "' placeholder = 'Telefone de " + nome + "' value = '" + data.consulta[i - 1].telefone + "' onkeyup = 'this.value=phoneMask(this.value)' />";
                 if (mostrar_email && mostrar_fone) {
                     resultado += "<div class = 'col-4 pr-1'>" +
                         campo_email +

@@ -27,6 +27,7 @@ class Produtos extends Model
         'cod_externo',
         'lixeira',
         'id_categoria',
+        'id_usuario_editando',
         'created_at',
         'updated_at'
     ];
@@ -48,6 +49,7 @@ class Produtos extends Model
         'cod_externo' => 'string',
         'lixeira' => 'boolean',
         'id_categoria' => 'integer',
+        'id_usuario_editando' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];

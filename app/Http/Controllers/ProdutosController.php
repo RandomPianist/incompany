@@ -180,7 +180,7 @@ class ProdutosController extends ControllerListavel {
 
     public function aviso($id) {
         $resultado = new \stdClass;
-        $nome = Produtos::find($id)->descr;
+        $nome = "<b>".Produtos::find($id)->descr."</b>";
         $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
         $resultado->permitir = 1;
         return json_encode($resultado);

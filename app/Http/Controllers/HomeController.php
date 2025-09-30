@@ -151,4 +151,26 @@ class HomeController extends Controller {
     public function permissoes() {
         return json_encode(Permissoes::where("id_usuario", Auth::user()->id));
     }
+
+    public function pode_abrir($tabela, $id) {
+        $coluna = "descr";
+        if (in_array($tabela, ["empresas", "pessoas"])) {
+            $coluna = "nome";
+            if ($tabela == "empresas") $coluna .= "_fantasia";
+        }
+        return json_encode(
+            DB::table($tabela)
+                ->select(
+                    $tabela.".".$coluna." AS titulo",
+                    "IFNULL(users.name, '') AS usuario"
+                )
+                ->leftjoin("users", "users.id", $tabela.".id_usuario_editando")
+                ->where("tabela.id", $id)
+                ->first()
+        );
+    }
+
+    public function descartar(Request $request) {
+        $this->descartar_main($request->tabela, $request->id);
+    }
 }

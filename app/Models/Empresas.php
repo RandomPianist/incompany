@@ -16,6 +16,7 @@ class Empresas extends Model
         'cod_externo',
         'lixeira',
         'id_matriz',
+        'id_usuario_editando',
         'created_at',
         'updated_at'
     ];
@@ -29,6 +30,7 @@ class Empresas extends Model
         'cod_externo' => 'string',
         'lixeira' => 'boolean',
         'id_matriz' => 'integer',
+        'id_usuario_editando' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];

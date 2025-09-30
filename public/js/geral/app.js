@@ -192,10 +192,17 @@ $(document).ready(function() {
             if (document.querySelector("#atribuicoesModal .linha-atb.new") !== null) atribuicao.pergunta_salvar();
         });
 
+        ["categorias", "empresas", "maquinas", "pessoas", "produtos"].forEach((tipo) => {
+            $("#" + tipo + "Modal").on("hide.bs.modal", function() {
+                descartar(tipo);
+            });
+        });
+
         $("#setoresModal").on("hide.bs.modal", function() {
             $(".linha-usuario").each(function() {
                 $(this).remove();
             });
+            descartar("setores");
         });
 
         $(".modal").each(function() {
@@ -433,6 +440,18 @@ async function cp_mp_pergunta_salvar(tipo) {
         }
     } else if (resp.isDenied) cp_mp_limpar_tudo(tipo);    
     else $("#" + tipo + "Modal").modal();
+}
+
+function descartar(_tabela) {
+    try {
+        const _id = $(_tabela == "pessoas" ? "#pessoa-id" : "#id").val();
+        if (parseInt(_id)) {
+            $.post(URL + "/descartar", {
+                id : _id,
+                tabela : _tabela
+            });
+        }
+    } catch(err) {}
 }
 
 function ordenar(coluna) {
@@ -1415,7 +1434,7 @@ function Atribuicoes(grade, _psm_valor) {
                     })
                 });
             });
-        } else s_alert("Não é possível listar as atribuições de " + data.nome + " porque elas estão sendo editadas por " + data.usuario);
+        } else s_alert("Não é possível listar as atribuições de <b>" + data.nome + "</b> porque elas estão sendo editadas por <b>" + data.usuario + "</b>");
     });
 }
 

@@ -173,7 +173,7 @@ function chamar_modal(id, e) {
     if (id) {
         $.get(URL + "/empresas/mostrar/" + id, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
-            $("#id_matriz, #cnpj, #razao_social, #nome_fantasia").each(function() {
+            $("#id_matriz, #cnpj, #razao_social, #nome_fantasia, #cidade").each(function() {
                 $(this).val(data[$(this).attr("id")]);
             });
             if (parseInt(data.id_matriz)) $("#empresasModalLabel").html("Editando filial");

@@ -28,11 +28,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware("auth")->group(function () {
-    Route::get("/",                [DashboardController::class, "iniciar"])->name("home");
-    Route::get("/permissoes",      [HomeController::class, "permissoes"]);
-    Route::get("/autocomplete",    [HomeController::class, "autocomplete"]);
-    Route::get("/obter-descr",     [HomeController::class, "obter_descr"]);
-    Route::get("/consultar-geral", [HomeController::class, "consultar_geral"]);
+    Route::get ("/",                         [DashboardController::class, "iniciar"])->name("home");
+    Route::get ("/permissoes",               [HomeController::class, "permissoes"]);
+    Route::get ("/autocomplete",             [HomeController::class, "autocomplete"]);
+    Route::get ("/obter-descr",              [HomeController::class, "obter_descr"]);
+    Route::get ("/consultar-geral",          [HomeController::class, "consultar_geral"]);
+    Route::get ("/pode-abrir/{tabela}/{id}", [HomeController::class, "pode_abrir"]);
+    Route::post("/descartar",                [HomeController::class, "descartar"]);
 
     Route::group(["prefix" => "dashboard"], function() {
         Route::get("/dados",                           [DashboardController::class, "dados"]);

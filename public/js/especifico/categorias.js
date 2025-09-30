@@ -42,9 +42,14 @@ function validar() {
 function chamar_modal(id) {
     $("#categoriasModalLabel").html((id ? "Editando" : "Cadastrando") + " categoria");
     if (id) {
-        $.get(URL + "/categorias/mostrar/" + id, function(descr) {
-            $("#descr").val(descr);
-            modal("categoriasModal", id); 
+        $.get(URL + "/pode-abrir/categorias/" + id, function(data) {
+            if (typeof data == "string") data = $.parseJSON(data);
+            if (!data.usuario) {
+                $.get(URL + "/categorias/mostrar/" + id, function(descr) {
+                    $("#descr").val(descr);
+                    modal("categoriasModal", id); 
+                });
+            } else s_alert("Não é possível editar " + data.titulo + " porque essa categoria está sendo editada por <b>" + data.usuario + "</b>");
         });
     } else modal("categoriasModal", id); 
 }

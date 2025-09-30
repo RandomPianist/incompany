@@ -50,10 +50,12 @@ class EmpresasController extends Controller {
     private function aviso_main($id) {
         $resultado = new \stdClass;
         $emp = Empresas::find($id);
-        $nome = $emp->nome_fantasia;
-        if ($emp->pessoas()->exists()) {
+        $nome = "<b>".$emp->nome_fantasia."</b>";
+        $resultado->permitir = 0;
+        if (intval($emp->id_usuario_editando)) {
+            $resultado->aviso = "Não é possível excluir ".$nome." porque essa empresa está sendo editada por ".$this->obter_nome_usuario($emp->id_usuario_editando); // App\Http\Controllers\Controller.php
+        } elseif ($emp->pessoas()->exists()) {
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a essa empresa.";
-            $resultado->permitir = 0;
         } elseif (
             DB::table("comodatos")
                 ->whereRaw("CURDATE() >= inicio AND CURDATE() < fim")
@@ -61,7 +63,6 @@ class EmpresasController extends Controller {
                 ->exists()
         ) {
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem máquinas comodatadas para essa empresa.";
-            $resultado->permitir = 0;
         } else {
             $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
             $resultado->permitir = 1;
@@ -106,7 +107,10 @@ class EmpresasController extends Controller {
     }
 
     public function mostrar($id) {
-        return json_encode(Empresas::find($id));
+        $emp = Empresas::find($id);
+        $emp->id_usuario_editando = Auth::user()->id;
+        $emp->save();
+        return json_encode($emp);
     }
 
     public function aviso($id) {

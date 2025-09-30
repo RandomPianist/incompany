@@ -15,6 +15,7 @@ class Setores extends Model
         'cria_usuario',
         'lixeira',
         'id_empresa',
+        'id_usuario_editando',
         'created_at',
         'updated_at'
     ];
@@ -25,6 +26,7 @@ class Setores extends Model
         'cria_usuario' => 'boolean',
         'lixeira' => 'boolean',
         'id_empresa' => 'integer',
+        'id_usuario_editando' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];

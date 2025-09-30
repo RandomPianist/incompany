@@ -13,6 +13,7 @@ class Categorias extends Model
         'descr',
         'id_externo',
         'lixeira',
+        'id_usuario_editando',
         'created_at',
         'updated_at'
     ];
@@ -22,6 +23,7 @@ class Categorias extends Model
         'descr' => 'string',
         'id_externo' => 'integer',
         'lixeira' => 'boolean',
+        'id_usuario_editando' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];

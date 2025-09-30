@@ -186,12 +186,11 @@ class SetoresController extends ControllerListavel {
         if ($request->id) {
             $atualizar = array();
             if ($supervisor != $supervisor_ant) {
-                $pessoas = Pessoas::where("id_setor", $request->id);
+                $pessoas = Pessoas::where("id_setor", $request->id)->get();
                 foreach ($pessoas as $pessoa) {
                     if ($this->comparar_num($pessoa->supervisor, $supervisor)) { // App\Http\Controllers\Controller.php
-                        $atualizar += [
-                            // continua
-                        ];
+                        $chave = "id".$pessoa->id;
+                        $atualizar[$chave] = array_merge($atualizar[$chave] ?? [], ["supervisor" => $supervisor]);
                     }
                 }
             }
@@ -213,11 +212,11 @@ class SetoresController extends ControllerListavel {
                         if (isset($request->id_pessoa)) {
                             $posicao = array_search($usuario->id_pessoa, $request->id_pessoa);
                             if ($posicao !== false) {
-                                $atualizar += [
-                                    "id" => $usuario->id_pessoa,
+                                $chave = "id".$usuario->id_pessoa;
+                                $atualizar[$chave] = array_merge($atualizar[$chave] ?? [], [
                                     "senha" => $request->password[$posicao],
                                     "email" => $usuario->email
-                                ];
+                                ]);
                             }
                         }
                         $this->log_inserir("D", "users", $usuario->id); // App\Http\Controllers\Controller.php
@@ -225,154 +224,39 @@ class SetoresController extends ControllerListavel {
                         DB::table("users")->where("id", $usuario->id)->delete();
                         Permissoes::find($usuario->id_permissao)->delete();
                     }
-                }
-            } elseif (isset($request->id_pessoa)) {
-
-            }
-        }
-    }
-
-    public function salvar_old(Request $request) {
-        if ($this->consultar_main($request)->msg) return 401;
-        $cria_usuario = $request->cria_usuario == "S" ? 1 : 0;
-        $linha = Setores::firstOrNew(["id" => $request->id]);
-        if ($request->id) {
-            $comparar_sup = $this->comparar_num($linha->permissao()->supervisor, $request->supervisor == "S" ? 1 : 0); // App\Http\Controllers\Controller.php
-            $adm_ant = intval($linha->cria_usuario);
-            if (
-                !$comparar_sup &&
-                $adm_ant == $cria_usuario &&
-                $linha->id_empresa == $request->id_empresa &&
-                !$this->comparar_num($linha->permissao()->financeiro, $request->financeiro == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($linha->permissao()->atribuicoes, $request->atribuicoes == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($linha->permissao()->retiradas, $request->retiradas == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($linha->permissao()->pessoas, $request->pessoas == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($linha->permissao()->usuarios, $request->usuarios == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($linha->permissao()->solicitacoes, $request->solicitacoes == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_texto($request->descr, $linha->descr) // App\Http\Controllers\Controller.php
-            ) return 400;
-            if ($adm_ant != $cria_usuario) {
-                if ($adm_ant) {
-                    $lista = array();
-                    $pessoas = array();
-                    $permissoes = array();
-                    $consulta = DB::table("users")
-                                    ->select(
-                                        "users.id",
-                                        "users.id_pessoa",
-                                        "permissoes.id AS id_permissao"
-                                    )
-                                    ->join("pessoas", "pessoas.id", "users.id_pessoa")
-                                    ->join("permissoes", "permissoes.id_usuario", "users.id")
-                                    ->where("pessoas.id_setor", $request->id)
-                                    ->where("users.admin", 0)
-                                    ->get();
-                    foreach($consulta as $usuario) {
-                        array_push($lista, $usuario->id);
-                        array_push($pessoas, $usuario->id_pessoa);
-                        array_push($permissoes, $usuario->id_permissao);
-                        $this->log_inserir("D", "users", $usuario->id); // App\Http\Controllers\Controller.php
-                        $this->log_inserir("D", "permissoes", $usuario->id_permissao); // App\Http\Controllers\Controller.php
-                    }
-                    if (sizeof($lista)) {
-                        if (isset($request->id_pessoa)) {
-                            for ($i = 0; $i < sizeof($request->id_pessoa); $i++) {
-                                $modelo = Pessoas::find($request->id_pessoa[$i]);
-                                $modelo->senha = $request->password[$i];
-                                $modelo->email = DB::table("users")->where("id_pessoa", $request->id_pessoa[$i])->value("email");
-                                $modelo->save();
-                                $this->log_inserir("E", "pessoas", $modelo->id); // App\Http\Controllers\Controller.php
-                            }
-                        }
-                        if ($comparar_sup) {
-                            if ($request->supervisor == "S") {
-                                foreach ($pessoas as $pessoa) {
-                                    $modelo = Pessoas::find($pessoa);
-                                    if (!intval($modelo->supervisor)) {
-                                        $modelo->supervisor = 1;
-                                        $modelo->save();
-                                        if (!in_array($modelo->id, $request->id_pessoa)) $this->log_inserir("E", "pessoas", $modelo->id); // App\Http\Controllers\Controller.php
-                                    }
-                                }
-                            } else {
-                                foreach ($pessoas as $pessoa) {
-                                    $modelo = Pessoas::find($pessoa);
-                                    if (intval($modelo->supervisor)) {
-                                        $modelo->supervisor = 0;
-                                        $modelo->save();
-                                        if (!in_array($modelo->id, $request->id_pessoa)) $this->log_inserir("E", "pessoas", $modelo->id); // App\Http\Controllers\Controller.php
-                                    }
-                                }
-                            }
-                        }
-                        DB::table("users")->whereIn("id", $lista)->delete();
-                        Permissoes::whereIn("id", $permissoes)->delete();
-                    }
                 } elseif (isset($request->id_pessoa)) {
                     for ($i = 0; $i < sizeof($request->id_pessoa); $i++) {
-                        $editou_pessoa = false;
-                        $modelo = Pessoas::find($request->id_pessoa[$i]);
-                        $email = $modelo->email;
-                        if (isset($request->email[$i])) {
-                            $email = $request->email[$i];
-                            if ($this->comparar_texto($email, $modelo->email)) $editou_pessoa = true; // App\Http\Controllers\Controller.php
-                        }
-                        $telefone = $modelo->telefone;
-                        if (isset($request->phone[$i])) {
-                            $telefone = $request->phone[$i];
-                            if ($this->comparar_texto($telefone, $modelo->telefone)) $editou_pessoa = true; // App\Http\Controllers\Controller.php
-                        }
-                        if ($comparar_sup) {
-                            if ($request->supervisor == "S") {
-                                if (!intval($modelo->supervisor)) {
-                                    $modelo->supervisor = 1;
-                                    $modelo->save();
-                                    $editou_pessoa = true;
-                                }
-                            } else {
-                                if (intval($modelo->supervisor)) {
-                                    $modelo->supervisor = 0;
-                                    $modelo->save();
-                                    $editou_pessoa = true;
-                                }
-                            }
-                        }
+                        $pessoa = Pessoas::find($request->id_pessoa[$i]);
+                        $chave = "id".$pessoa->id;
+                        
                         $id_usuario = DB::table("users")->insertGetId([
-                            "name" => $modelo->nome,
+                            "name" => $pessoa->nome,
                             "email" => $email,
-                            "senha" => Hash::make($request->password[$i]),
-                            "id_pessoa" => $request->id_pessoa[$i]
+                            "password" => Hash::make($request->password[$i]),
+                            "id_pessoa" => $pessoa->id
                         ]);
                         $this->log_inserir("C", "users", $id_usuario); // App\Http\Controllers\Controller.php
-                        $modelo->telefone = $telefone;
-                        $modelo->email = $email;
-                        $modelo->save();
-                        if ($editou_pessoa) $this->log_inserir("E", "pessoas", $modelo->id); // App\Http\Controllers\Controller.php
-                        $permissao = $linha->permissao()->replicate(["id_setor"]);
+                        
+                        if (isset($request->email[$i])) {
+                            if ($this->comparar_texto($request->email[$i], $pessoa->email)) $atualizar[$chave] = array_merge($atualizar[$chave] ?? [], ["email" => $request->email[$i]]); // App\Http\Controllers\Controller.php
+                        }
+                        if (isset($request->phone[$i])) {
+                            if ($this->comparar_texto($request->phone[$i], $pessoa->telefone)) $atualizar[$chave] = array_merge($atualizar[$chave] ?? [], ["telefone" => $request->phone[$i]]); // App\Http\Controllers\Controller.php
+                        }
+                        
+                        $permissao = $setor->permissao()->replicate(["id_setor"]);
                         $permissao->id_usuario = $id_usuario;
                         $permissao->save();
                         $this->log_inserir("C", "permissoes", $permissao->id); // App\Http\Controllers\Controller.php
                     }
                 }
             }
+            foreach ($atualizar as $pessoa => $info) {
+                $id = str_replace("id", "", $pessoa);
+                Pessoas::find($id)->update($info);
+                $this->log_inserir("E", "pessoas", $id);
+            }
         }
-        $linha->descr = mb_strtoupper($request->descr);
-        $linha->id_empresa = $request->id_empresa;
-        $linha->cria_usuario = $cria_usuario;
-        $linha->save();
-        $this->log_inserir($request->id ? "E" : "C", "setores", $linha->id); // App\Http\Controllers\Controller.php
-        $linha->permissao()->updateOrCreate(
-            ["id_setor" => $linha->id],
-            [
-                "financeiro" => $request->financeiro == "S" ? 1 : 0,
-                "atribuicoes" => $request->atribuicoes == "S" ? 1 : 0,
-                "retiradas" => $request->retiradas == "S" ? 1 : 0,
-                "pessoas" => $request->pessoas == "S" ? 1 : 0,
-                "usuarios" => $request->usuarios == "S" ? 1 : 0,
-                "solicitacoes" => $request->solicitacoes == "S" ? 1 : 0,
-                "supervisor" => $request->supervisor == "S" ? 1 : 0
-            ]
-        );
         return redirect("/setores");
     }
 

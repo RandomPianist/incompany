@@ -1,27 +1,6 @@
 CREATE DATABASE incompany_;
 USE incompany_;
 
-CREATE TABLE maquinas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    descr VARCHAR(32),
-    patrimonio VARCHAR(128),
-    id_ant INT,
-    lixeira TINYINT DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
-CREATE INDEX idx_maquinas_lixeira ON maquinas(lixeira); 
-
-CREATE TABLE categorias (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    descr VARCHAR(32),
-    id_externo INT,
-    lixeira TINYINT DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
 CREATE TABLE empresas (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	razao_social VARCHAR(128),
@@ -31,6 +10,7 @@ CREATE TABLE empresas (
 	cod_externo VARCHAR(32),
     lixeira TINYINT DEFAULT 0,
 	id_matriz INT,
+    id_usuario_editando INT DEFAULT 0,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -41,9 +21,18 @@ CREATE TABLE setores (
 	cria_usuario TINYINT DEFAULT 0,
 	lixeira TINYINT DEFAULT 0,
 	id_empresa INT,
+    id_usuario_editando INT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- nome, cpf, foto
+-- função, admissão, setor (remover quando usuário)
+-- empresa
+-- email, telefone
+-- senha, password (remover quando funcionário)
+-- supervisor
+-- permissões (remover quando funcionário)
 
 CREATE TABLE pessoas (
 	id INT AUTO_INCREMENT PRIMARY KEY,
@@ -61,6 +50,7 @@ CREATE TABLE pessoas (
     lixeira TINYINT DEFAULT 0,
     id_setor INT,
 	id_empresa INT,
+    id_usuario_editando INT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -77,6 +67,30 @@ CREATE TABLE users (
     remember_token VARCHAR(100),
     admin TINYINT DEFAULT 0,
     id_pessoa INT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE maquinas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    descr VARCHAR(32),
+    patrimonio VARCHAR(128),
+    id_ant INT,
+    lixeira TINYINT DEFAULT 0,
+    id_usuario_editando INT DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario_editando) REFERENCES users(id)
+);
+
+CREATE INDEX idx_maquinas_lixeira ON maquinas(lixeira); 
+
+CREATE TABLE categorias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    descr VARCHAR(32),
+    id_externo INT,
+    lixeira TINYINT DEFAULT 0,
+    id_usuario_editando INT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -113,6 +127,7 @@ CREATE TABLE produtos (
     cod_externo VARCHAR(8),
     lixeira TINYINT DEFAULT 0,
 	id_categoria INT,
+    id_usuario_editando INT DEFAULT 0,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -214,7 +229,7 @@ CREATE TABLE atbbkp (
     gerado TINYINT DEFAULT 0,
     id_usuario INT,
     id_atribuicao INT,
-    id_usuario_editando INT,
+    id_usuario_editando INT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -237,7 +252,7 @@ CREATE TABLE excbkp (
     id_setor INT,
     id_usuario INT,
     id_excecao INT,
-    id_usuario_editando INT,
+    id_usuario_editando INT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

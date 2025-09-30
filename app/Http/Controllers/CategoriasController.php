@@ -7,6 +7,24 @@ use Illuminate\Http\Request;
 use App\Models\Categorias;
 
 class CategoriasController extends ControllerListavel {
+    private function aviso_main($id) {
+        $resultado = new \stdClass;
+        $categoria = Categorias::find($id);
+        $nome = "<b>".$categoria->descr."</b>";
+        if (!intval($categoria->id_usuario_editando)) {
+            $resultado->permitir = 1;
+            $resultado->aviso = $categoria->produtos()->exists() ? 
+                "Não é recomendado excluir ".$nome." porque existem produtos vinculados a essa categoria.<br>Deseja prosseguir assim mesmo?"
+            :
+                "Tem certeza que deseja excluir ".$nome."?"
+            ;
+        } else {
+            $resultado->permitir = 0;
+            $resultado->aviso = "Não é possível excluir ".$nome." porque essa categoria está sendo editada por ".$this->obter_nome_usuario($categoria->id_usuario_editando); // App\Http\Controllers\Controller.php
+        }
+        return $resultado;
+    }
+
     protected function busca($param, $tipo = "") {
         return DB::table("categorias")
                     ->select(
@@ -27,20 +45,14 @@ class CategoriasController extends ControllerListavel {
     }
 
     public function mostrar($id) {
-        return Categorias::find($id)->descr;
+        $categoria = Categorias::find($id);
+        $categoria->id_usuario_editando = Auth::user()->id;
+        $categoria->save();
+        return $categoria->descr;
     }
 
     public function aviso($id) {
-        $resultado = new \stdClass;
-        $categoria = Categorias::find($id);
-        $nome = $categoria->descr;
-        $resultado->permitir = 1;
-        $resultado->aviso = $categoria->produtos()->exists() ? 
-            "Não é recomendado excluir ".$nome." porque existem produtos vinculados a essa categoria.<br>Deseja prosseguir assim mesmo?"
-        :
-            "Tem certeza que deseja excluir ".$nome."?"
-        ;
-        return json_encode($resultado);
+        return json_encode($this->aviso_main($id));
     }
 
     public function salvar(Request $request) {
@@ -57,6 +69,7 @@ class CategoriasController extends ControllerListavel {
     }
 
     public function excluir(Request $request) {
+        if (!intval($this->aviso_main($id)->permitir)) return 401;
         $linha = Categorias::find($request->id);
         $linha->lixeira = 1;
         $linha->save();
