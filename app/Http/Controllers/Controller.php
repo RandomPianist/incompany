@@ -107,35 +107,59 @@ abstract class Controller extends BaseController {
     protected function obter_usuario_editando($tabela, $id, $acao) {
         $resultado = new \stdClass;
         $consulta = null;
+        $msg = "Não é possível ".$acao." <b>".$consulta->titulo."</b> porque ess".$consulta->tipo." está sendo editad".$consulta->artigo." por <b>".$consulta->usuario."</b>";
+        
+        $msg = "Não é possível ".$acao." <b>".$consulta->titulo."</b> porque ".$consulta->associado_artigo." ".$consulta->associado_tipo." <b>".$consulta->associado_titulo."</b>,";
+        $msg .= "associado a ess".$consulta->tipo.", está sendo editad".$consulta->associado_artigo." por <b>".$consulta->associado_usuario."</b>";
         switch($tabela) {
             case "categorias":
                 $consulta = DB::table("categorias")
                                 ->select(
-                                    "descr AS titulo",
-                                    DB::raw("
-                                        CASE
-                                            WHEN (users2.id IS NOT NULL AND users1.id IS NULL) THEN 'o produto'
-                                            ELSE ''
-                                        END AS associado
-                                    "),
-                                    DB::raw("
-                                        CASE
-                                            WHEN users1.id IS NOT NULL THEN users1.name
-                                            WHEN users2.id IS NOT NULL THEN users2.name
-                                            ELSE ''
-                                        END AS usuario
-                                    ")
+                                    "categorias.descr AS titulo",
+                                    "prod.descr AS associado1_titulo",
+                                    DB::raw("'' AS associado2_titulo"),
+                                    
+                                    DB::raw("'a' AS artigo"),
+                                    DB::raw("'a categoria' AS tipo"),
+                                    
+                                    DB::raw("'o' AS associado1_artigo"),
+                                    DB::raw("'produto' AS associado1_tipo"),
+
+                                    DB::raw("'' AS associado2_artigo"),
+                                    DB::raw("'' AS associado2_tipo"),
+                                    
+                                    DB::raw("IFNULL(users1.name, '') AS usuario"),
+                                    DB::raw("IFNULL(users2.name, '') AS associado1_usuario"),
+                                    DB::raw("'' AS associado2_usuario")
                                 )
                                 ->leftjoin("users AS users1", "users1.id", "categorias.id_usuario_editando")
                                 ->leftjoinSub(
                                     DB::table("produtos")
                                         ->select(
-                                            "id_categoria",
-                                            DB::raw("MIN(id_usuario_editando) AS id_usuario_editando")
+                                            "produtos.descr",
+                                            "produtos.id_categoria",
+                                            "produtos.id_usuario_editando"
                                         )
-                                        ->where("id_usuario_editando", "<>", 0)
-                                        ->where("lixeira", 0)
-                                        ->groupby("id_categoria"),
+                                        ->joinSub(
+                                            DB::table("produtos AS p")
+                                                ->select(
+                                                    "id_categoria",
+                                                    DB::raw("MIN(id_usuario_editando) AS id_usuario_editando")
+                                                )
+                                                ->where("id_usuario_editando", "<>", 0)
+                                                ->where("lixeira", 0)
+                                                ->groupby("id_categoria"),
+                                            "lim",
+                                            function($join) {
+                                                $join->on("lim.id_usuario_editando", "produtos.id_usuario_editando")
+                                                    ->on("lim.id_categoria", "produtos.id_categoria");
+                                            }
+                                        )
+                                        ->groupby(
+                                            "produtos.descr",
+                                            "produtos.id_categoria",
+                                            "produtos.id_usuario_editando"
+                                        ),
                                     "prod",
                                     "prod.id_categoria",
                                     "categorias.id"
@@ -147,41 +171,190 @@ abstract class Controller extends BaseController {
             case "empresas":
                 $consulta = DB::table("empresas")
                                 ->select(
-                                    "nome_fantasia AS titulo",
-                                    DB::raw("CASE
-                                        WHEN users1.id IS NOT NULL THEN 'a empresa'
-                                        WHEN users2.id IS NOT NULL THEN 'a pessoa'
-                                        ELSE ''
-                                    END AS tabela"),
-                                    DB::raw("CASE
-                                        WHEN users1.id IS NOT NULL THEN users1.name
-                                        WHEN users2.id IS NOT NULL THEN users2.name
-                                        ELSE ''
-                                    END AS usuario")
+                                    "empresas.nome_fantasia AS titulo",
+                                    "set.descr AS associado1_titulo",
+                                    "pes.nome AS associado2_titulo",
+                                    
+                                    DB::raw("'a' AS artigo"),
+                                    DB::raw("'a empresa' AS tipo"),
+                                    
+                                    DB::raw("'o' AS associado1_artigo"),
+                                    DB::raw("'setor' AS associado1_tipo"),
+
+                                    DB::raw("'a' AS associado2_artigo"),
+                                    DB::raw("'pessoa' AS associado2_tipo"),
+                                    
+                                    DB::raw("IFNULL(users1.name, '') AS usuario"),
+                                    DB::raw("IFNULL(users2.name, '') AS associado1_usuario"),
+                                    DB::raw("IFNULL(users3.name, '') AS associado2_usuario"),
                                 )
                                 ->leftjoin("users AS users1", "users1.id", "empresas.id_usuario_editando")
                                 ->leftjoinSub(
+                                    DB::table("setores")
+                                        ->select(
+                                            "setores.descr",
+                                            "setores.id_empresa",
+                                            "setores.id_usuario_editando"
+                                        )
+                                        ->joinSub(
+                                            DB::table("setores AS s")
+                                                ->select(
+                                                    "id_empresa",
+                                                    DB::raw("MIN(id_usuario_editando) AS id_usuario_editando")
+                                                )
+                                                ->where("id_usuario_editando", "<>", 0)
+                                                ->where("lixeira", 0)
+                                                ->groupby("id_empresa"),
+                                            "lim",
+                                            function($join) {
+                                                $join->on("lim.id_usuario_editando", "setores.id_usuario_editando")
+                                                    ->on("lim.id_empresa", "setores.id_empresa");
+                                            }
+                                        )
+                                        ->groupby(
+                                            "setores.descr",
+                                            "setores.id_empresa",
+                                            "setores.id_usuario_editando"
+                                        ),
+                                    "set",
+                                    "set.id_empresa",
+                                    "empresas.id"
+                                )
+                                ->leftjoin("users AS users2", "users2.id", "set.id_usuario_editando")
+                                ->leftjoinSub(
                                     DB::table("pessoas")
                                         ->select(
-                                            "id_empresa",
-                                            DB::raw("MIN(id_usuario_editando) AS id_usuario_editando")
+                                            "pessoas.nome",
+                                            "pessoas.id_empresa",
+                                            "pessoas.id_usuario_editando"
                                         )
-                                        ->where("id_usuario_editando", "<>", 0)
-                                        ->where("lixeira", 0)
-                                        ->groupby("id_empresa"),
+                                        ->joinSub(
+                                            DB::table("pessoas AS p")
+                                                ->select(
+                                                    "id_empresa",
+                                                    DB::raw("MIN(id_usuario_editando) AS id_usuario_editando")
+                                                )
+                                                ->where("id_usuario_editando", "<>", 0)
+                                                ->where("lixeira", 0)
+                                                ->groupby("id_empresa"),
+                                            "lim",
+                                            function($join) {
+                                                $join->on("lim.id_usuario_editando", "pessoas.id_usuario_editando")
+                                                    ->on("lim.id_empresa", "pessoas.id_empresa");
+                                            }
+                                        )
+                                        ->groupby(
+                                            "pessoas.nome",
+                                            "pessoas.id_empresa",
+                                            "pessoas.id_usuario_editando"
+                                        ),
                                     "pes",
                                     "pes.id_empresa",
                                     "empresas.id"
                                 )
-                                ->leftjoin("users AS users2", "users2.id", "pes.id_usuario_editando")
+                                ->leftjoin("users AS users3", "users2.id", "pes.id_usuario_editando")
                                 ->where("empresas.id", $id)
                                 ->first();
                 break;
-            case "maquinas":
-                break;
             case "pessoas":
+                $consulta = DB::table("pessoas")
+                                ->select(
+                                    "pessoas.nome AS titulo",
+                                    "emp.nome_fantasia AS associado1_titulo",
+                                    "set.descr AS associado2_titulo",
+                                    
+                                    DB::raw("'a' AS artigo"),
+                                    DB::raw("'a pessoa' AS tipo"),
+                                    
+                                    DB::raw("'a' AS associado1_artigo"),
+                                    DB::raw("'empresa' AS associado1_tipo"),
+
+                                    DB::raw("'o' AS associado2_artigo"),
+                                    DB::raw("'setor' AS associado2_tipo"),
+                                    
+                                    DB::raw("IFNULL(users1.name, '') AS usuario"),
+                                    DB::raw("IFNULL(users2.name, '') AS associado1_usuario"),
+                                    DB::raw("IFNULL(users3.name, '') AS associado2_usuario"),
+                                )
+                                ->leftjoin("users AS users1", "users1.id", "empresas.id_usuario_editando")
+                                ->leftjoinSub(
+                                    DB::table("setores")
+                                        ->select(
+                                            "id",
+                                            "descr",
+                                            "id_usuario_editando"
+                                        )
+                                        ->where("id_usuario_editando", "<>", "0"),
+                                    "set",
+                                    "set.id",
+                                    "pessoas.id_setor"
+                                )
+                                ->leftjoin("users AS users2", "users2.id", "set.id_usuario_editando")
+                                ->leftjoinSub(
+                                    DB::table("empresas")
+                                        ->select(
+                                            "id",
+                                            "nome_fantasia",
+                                            "id_usuario_editando"
+                                        )
+                                        ->where("id_usuario_editando", "<>", "0"),
+                                    "emp",
+                                    "emp.id",
+                                    "pessoas.id_setor"
+                                )
+                                ->leftjoin("users AS users3", "users2.id", "emp.id_usuario_editando")
+                                ->where("pessoas.id", $id)
+                                ->first();
                 break;
             case "produtos":
+                $consulta = DB::table("produtos")
+                                ->select(
+                                    "produtos.descr AS titulo",
+                                    "cat.descr AS associado1_titulo",
+                                    DB::raw("'' AS associado2_titulo"),
+                                    
+                                    DB::raw("'o' AS artigo"),
+                                    DB::raw("'e produto' AS tipo"),
+                                    
+                                    DB::raw("'a' AS associado1_artigo"),
+                                    DB::raw("'empresa' AS associado1_tipo"),
+
+                                    DB::raw("'o' AS associado2_artigo"),
+                                    DB::raw("'setor' AS associado2_tipo"),
+                                    
+                                    DB::raw("IFNULL(users1.name, '') AS usuario"),
+                                    DB::raw("IFNULL(users2.name, '') AS associado1_usuario"),
+                                    DB::raw("IFNULL(users3.name, '') AS associado2_usuario"),
+                                )
+                                ->leftjoin("users AS users1", "users1.id", "empresas.id_usuario_editando")
+                                ->leftjoinSub(
+                                    DB::table("setores")
+                                        ->select(
+                                            "id",
+                                            "descr",
+                                            "id_usuario_editando"
+                                        )
+                                        ->where("id_usuario_editando", "<>", "0"),
+                                    "set",
+                                    "set.id",
+                                    "pessoas.id_setor"
+                                )
+                                ->leftjoin("users AS users2", "users2.id", "set.id_usuario_editando")
+                                ->leftjoinSub(
+                                    DB::table("empresas")
+                                        ->select(
+                                            "id",
+                                            "nome_fantasia",
+                                            "id_usuario_editando"
+                                        )
+                                        ->where("id_usuario_editando", "<>", "0"),
+                                    "emp",
+                                    "emp.id",
+                                    "pessoas.id_setor"
+                                )
+                                ->leftjoin("users AS users3", "users2.id", "emp.id_usuario_editando")
+                                ->where("pessoas.id", $id)
+                                ->first();
                 break;
             case "setores":
                 break;

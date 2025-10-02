@@ -77,10 +77,8 @@ CREATE TABLE maquinas (
     patrimonio VARCHAR(128),
     id_ant INT,
     lixeira TINYINT DEFAULT 0,
-    id_usuario_editando INT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_usuario_editando) REFERENCES users(id)
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_maquinas_lixeira ON maquinas(lixeira); 
