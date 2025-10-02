@@ -110,6 +110,32 @@ class ProdutosController extends ControllerListavel {
         return $resultado;
     }
 
+    private function aviso_main($id) {
+        $resultado = $this->pode_abrir_main("produtos", $id, "excluir"); // App\Http\Controllers\Controller.php
+        if (!$resultado->permitir) return $resultado;
+        $resultado = new \stdClass;
+        $nome = "<b>".Produtos::find($id)->descr."</b>";
+        $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
+        $resultado->permitir = 1;
+        return $resultado;
+    }
+
+    private function mostrar_main($id) {
+        $produto = DB::table("produtos")
+                        ->select(
+                            DB::raw("produtos.*"),
+                            DB::raw("IFNULL(categorias.descr, 'A CLASSIFICAR') AS categoria"),
+                            DB::raw("IFNULL(produtos.consumo, 0) AS e_consumo"),
+                            DB::raw("DATE_FORMAT(produtos.validade_ca, '%d/%m/%Y') AS validade_ca_fmt")
+                        )
+                        ->leftjoin("categorias", "categorias.id", "produtos.id_categoria")
+                        ->where("produtos.id", $id)
+                        ->first();
+        if ($produto->foto == null) $produto->foto = "";
+        elseif (strpos($produto->foto, "//") === false) $produto->foto = asset("storage/".$produto->foto);
+        return json_encode($produto);
+    }
+
     protected function busca($where, $tipo = "") {
         return DB::table("produtos")
                     ->select(
@@ -163,27 +189,16 @@ class ProdutosController extends ControllerListavel {
     }
 
     public function mostrar($id) {
-        $produto = DB::table("produtos")
-                        ->select(
-                            DB::raw("produtos.*"),
-                            DB::raw("IFNULL(categorias.descr, 'A CLASSIFICAR') AS categoria"),
-                            DB::raw("IFNULL(produtos.consumo, 0) AS e_consumo"),
-                            DB::raw("DATE_FORMAT(produtos.validade_ca, '%d/%m/%Y') AS validade_ca_fmt")
-                        )
-                        ->leftjoin("categorias", "categorias.id", "produtos.id_categoria")
-                        ->where("produtos.id", $id)
-                        ->first();
-        if ($produto->foto == null) $produto->foto = "";
-        elseif (strpos($produto->foto, "//") === false) $produto->foto = asset("storage/".$produto->foto);
-        return json_encode($produto);
+        $this->alterar_usuario_editando("produtos", $id); // App\Http\Controllers\Controller.php
+        return $this->mostrar_main($id);
+    }
+
+    public function mostrar2($id) {
+        return $this->mostrar_main($id);
     }
 
     public function aviso($id) {
-        $resultado = new \stdClass;
-        $nome = "<b>".Produtos::find($id)->descr."</b>";
-        $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
-        $resultado->permitir = 1;
-        return json_encode($resultado);
+        return json_encode($this->aviso_main($id));
     }
 
     public function validade(Request $request) {
@@ -238,6 +253,7 @@ class ProdutosController extends ControllerListavel {
     }
 
     public function excluir(Request $request) {
+        if (!$this->aviso_main($request->id)->permitir) return 401;
         $linha = Produtos::find($request->id);
         $ant = DB::table("vatbold")
                     ->select(

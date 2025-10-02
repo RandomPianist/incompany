@@ -86,7 +86,7 @@ function chamar_modal(id) {
                 lista.forEach((el) => {
                     el.forEach((_id) => {
                         $("#" + _id).val("N");
-                        $("#" + _id + "-chk").prop("checked", false);
+                        $("#" + _id + "-chk").prop("checked", false).attr("disabled", !permissoes[el[0]] ? true : false);
                         if (!permissoes[el[0]]) $("#setor-" + _id + "-lbl").attr("title", "Não é possível atribuir a um centro de custo uma permissão que seu usuário não tem");
                         else $("#setor-" + _id + "-lbl").removeAttr("title");
                     });

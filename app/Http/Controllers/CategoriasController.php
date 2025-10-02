@@ -8,20 +8,17 @@ use App\Models\Categorias;
 
 class CategoriasController extends ControllerListavel {
     private function aviso_main($id) {
+        $resultado = $this->pode_abrir_main("categorias", $id, "excluir"); // App\Http\Controllers\Controller.php
+        if (!$resultado->permitir) return $resultado;
         $resultado = new \stdClass;
         $categoria = Categorias::find($id);
         $nome = "<b>".$categoria->descr."</b>";
-        if (!intval($categoria->id_usuario_editando)) {
-            $resultado->permitir = 1;
-            $resultado->aviso = $categoria->produtos()->exists() ? 
-                "Não é recomendado excluir ".$nome." porque existem produtos vinculados a essa categoria.<br>Deseja prosseguir assim mesmo?"
-            :
-                "Tem certeza que deseja excluir ".$nome."?"
-            ;
-        } else {
-            $resultado->permitir = 0;
-            $resultado->aviso = "Não é possível excluir ".$nome." porque essa categoria está sendo editada por ".$this->obter_nome_usuario($categoria->id_usuario_editando); // App\Http\Controllers\Controller.php
-        }
+        $resultado->permitir = 1;
+        $resultado->aviso = $categoria->produtos()->exists() ? 
+            "Não é recomendado excluir ".$nome." porque existem produtos vinculados a essa categoria.<br>Deseja prosseguir assim mesmo?"
+        :
+            "Tem certeza que deseja excluir ".$nome."?"
+        ;
         return $resultado;
     }
 
@@ -45,10 +42,7 @@ class CategoriasController extends ControllerListavel {
     }
 
     public function mostrar($id) {
-        $categoria = Categorias::find($id);
-        $categoria->id_usuario_editando = Auth::user()->id;
-        $categoria->save();
-        return $categoria->descr;
+        return $this->alterar_usuario_editando("categorias", $id)->descr; // App\Http\Controllers\Controller.php
     }
 
     public function aviso($id) {
@@ -69,7 +63,7 @@ class CategoriasController extends ControllerListavel {
     }
 
     public function excluir(Request $request) {
-        if (!intval($this->aviso_main($id)->permitir)) return 401;
+        if (!$this->aviso_main($request->id)->permitir) return 401;
         $linha = Categorias::find($request->id);
         $linha->lixeira = 1;
         $linha->save();

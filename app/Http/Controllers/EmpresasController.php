@@ -48,13 +48,13 @@ class EmpresasController extends Controller {
     }
 
     private function aviso_main($id) {
+        $resultado = $this->pode_abrir_main("empresas", $id, "excluir"); // App\Http\Controllers\Controller.php
+        if (!$resultado->permitir) return $resultado;
         $resultado = new \stdClass;
         $emp = Empresas::find($id);
         $nome = "<b>".$emp->nome_fantasia."</b>";
         $resultado->permitir = 0;
-        if (intval($emp->id_usuario_editando)) {
-            $resultado->aviso = "Não é possível excluir ".$nome." porque essa empresa está sendo editada por ".$this->obter_nome_usuario($emp->id_usuario_editando); // App\Http\Controllers\Controller.php
-        } elseif ($emp->pessoas()->exists()) {
+        if ($emp->pessoas()->exists()) {
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a essa empresa.";
         } elseif (
             DB::table("comodatos")
@@ -107,10 +107,7 @@ class EmpresasController extends Controller {
     }
 
     public function mostrar($id) {
-        $emp = Empresas::find($id);
-        $emp->id_usuario_editando = Auth::user()->id;
-        $emp->save();
-        return json_encode($emp);
+        return json_encode($this->alterar_usuario_editando("empresas", $id)); // App\Http\Controllers\Controller.php
     }
 
     public function aviso($id) {

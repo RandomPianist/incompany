@@ -153,24 +153,10 @@ class HomeController extends Controller {
     }
 
     public function pode_abrir($tabela, $id) {
-        $coluna = "descr";
-        if (in_array($tabela, ["empresas", "pessoas"])) {
-            $coluna = "nome";
-            if ($tabela == "empresas") $coluna .= "_fantasia";
-        }
-        return json_encode(
-            DB::table($tabela)
-                ->select(
-                    $tabela.".".$coluna." AS titulo",
-                    "IFNULL(users.name, '') AS usuario"
-                )
-                ->leftjoin("users", "users.id", $tabela.".id_usuario_editando")
-                ->where("tabela.id", $id)
-                ->first()
-        );
+        return json_encode($this->pode_abrir_main($tabela, $id, "editar")); // App\Http\Controllers\Controller.php
     }
 
     public function descartar(Request $request) {
-        $this->descartar_main($request->tabela, $request->id);
+        $this->alterar_usuario_editando($request->tabela, $request->id, true); // App\Http\Controllers\Controller.php
     }
 }

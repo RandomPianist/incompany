@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 
 class SetoresController extends ControllerListavel {
     private function aviso_main($id) {
+        $resultado = $this->pode_abrir_main("setores", $id, "excluir"); // App\Http\Controllers\Controller.php
+        if (!$resultado->permitir) return $resultado;
         $resultado = new \stdClass;
         $resultado->permitir = 0;
         $setor = Setores::find($id);
@@ -88,6 +90,7 @@ class SetoresController extends ControllerListavel {
     }
 
     public function mostrar($id) {
+        $this->alterar_usuario_editando("setores", $id); // App\Http\Controllers\Controller.php
         $condicoes_padrao = [
             "WHEN (log.id IS NOT NULL) THEN 'SYS'",
             "WHEN (minhas_permissoes.usuarios = 0) THEN 'PER'",

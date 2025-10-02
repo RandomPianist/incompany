@@ -126,7 +126,7 @@ function atualizaPreco(seq) {
 }
 
 function mp(id) {
-    $.get(URL + "/produtos/mostrar/" + id, function(prod) {
+    $.get(URL + "/produtos/mostrar2/" + id, function(prod) {
         if (typeof prod == "string") prod = $.parseJSON(prod);
         limpar_invalido();
         $("#mpModalLabel").html(prod.descr + " - contratos do produto");

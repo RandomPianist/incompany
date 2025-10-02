@@ -109,14 +109,15 @@ Route::middleware("auth")->group(function () {
     });
 
     Route::group(["prefix" => "produtos"], function() {
-        Route::get ("/",             [ProdutosController::class, "ver"])->name("produtos");
-        Route::get ("/listar",       [ProdutosController::class, "listar"]);
-        Route::get ("/consultar",    [ProdutosController::class, "consultar"]);
-        Route::get ("/mostrar/{id}", [ProdutosController::class, "mostrar"]);
-        Route::get ("/aviso/{id}",   [ProdutosController::class, "aviso"]);
-        Route::get ("/validade",     [ProdutosController::class, "validade"]);
-        Route::post("/salvar",       [ProdutosController::class, "salvar"]);
-        Route::post("/excluir",      [ProdutosController::class, "excluir"]);
+        Route::get ("/",              [ProdutosController::class, "ver"])->name("produtos");
+        Route::get ("/listar",        [ProdutosController::class, "listar"]);
+        Route::get ("/consultar",     [ProdutosController::class, "consultar"]);
+        Route::get ("/mostrar/{id}",  [ProdutosController::class, "mostrar"]);
+        Route::get ("/mostrar2/{id}", [ProdutosController::class, "mostrar2"]);
+        Route::get ("/aviso/{id}",    [ProdutosController::class, "aviso"]);
+        Route::get ("/validade",      [ProdutosController::class, "validade"]);
+        Route::post("/salvar",        [ProdutosController::class, "salvar"]);
+        Route::post("/excluir",       [ProdutosController::class, "excluir"]);
         Route::group(["prefix" => "maquina"], function() {
             Route::post("/",          [ProdutosController::class, "maquina"]);
             Route::get ("/consultar", [ProdutosController::class, "consultar_maquina"]);

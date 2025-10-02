@@ -588,4 +588,21 @@ BEGIN
     COMMIT;
 END $$
 
+CREATE PROCEDURE limpar_usuario_editando()
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+    UPDATE categorias SET id_usuario_editando = 0;
+    UPDATE empresas SET id_usuario_editando = 0;
+    UPDATE pessoas SET id_usuario_editando = 0;
+    UPDATE produtos SET id_usuario_editando = 0;
+    UPDATE setores SET id_usuario_editando = 0;
+    COMMIT;
+END $$
+
 DELIMITER ;

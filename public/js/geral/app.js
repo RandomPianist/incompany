@@ -192,7 +192,7 @@ $(document).ready(function() {
             if (document.querySelector("#atribuicoesModal .linha-atb.new") !== null) atribuicao.pergunta_salvar();
         });
 
-        ["categorias", "empresas", "maquinas", "pessoas", "produtos"].forEach((tipo) => {
+        ["categorias", "empresas", "pessoas", "produtos"].forEach((tipo) => {
             $("#" + tipo + "Modal").on("hide.bs.modal", function() {
                 descartar(tipo);
             });
@@ -491,6 +491,19 @@ function esconderImagemErro() {
 
 function modal(nome, id, callback) {
     const concluir = function() {
+        limpar_invalido();
+        if (callback === undefined) callback = function() {}
+        if (id) $("#" + (nome == "pessoasModal" ? "pessoa-id" : "id")).val(id);
+        $("#" + nome + " input[type=text], #" + nome + " input[type=number], #" + nome + " input[type=hidden], #" + nome + " textarea").each(function() {
+            if (!id && $(this).attr("name") != "_token" && (!(nome == "pessoasModal" && $(this).attr("name") == "tipo"))) $(this).val("");
+            if (!$(this).hasClass("autocomplete")) $(this).trigger("keyup");
+            anteriores[$(this).attr("id")] = $(this).val();
+        });
+        if (!id) {
+            $("#" + nome + " input[type=checkbox]").each(function() {
+                $(this).prop("checked", false);
+            });
+        }
         if (!id && ["pessoasModal", "setoresModal", "maquinasModal", "categoriasModal"].indexOf(nome) > -1) {
             let el = $("#" + (nome == "pessoasModal" ? "nome" : "descr"));
             $(el).val($("#busca").val());
@@ -499,42 +512,37 @@ function modal(nome, id, callback) {
         $("#" + nome).modal();
         callback();
     }
-
-    limpar_invalido();
-    if (callback === undefined) callback = function() {}
-    if (id) $("#" + (nome == "pessoasModal" ? "pessoa-id" : "id")).val(id);
-    $("#" + nome + " input[type=text], #" + nome + " input[type=number], #" + nome + " input[type=hidden], #" + nome + " textarea").each(function() {
-        if (!id && $(this).attr("name") != "_token" && (!(nome == "pessoasModal" && $(this).attr("name") == "tipo"))) $(this).val("");
-        if (!$(this).hasClass("autocomplete")) $(this).trigger("keyup");
-        anteriores[$(this).attr("id")] = $(this).val();
-    });
-    if (!id) {
-        $("#" + nome + " input[type=checkbox]").each(function() {
-            $(this).prop("checked", false);
-        });
-    }
-    if (nome == "pessoasModal") {
-        $.get(URL + "/colaboradores/modal", function(data) {
+    
+    if (id && ["categoriasModal", "empresasModal", "pessoasModal", "produtosModal", "setoresModal"].indexOf(nome) > -1) {
+        $.get(URL + "/pode-abrir/" + nome.replace("Modal", "") + "/" + id, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
-            let primeiro = 0;
-            let resultado = !EMPRESA ? "<option value = '0'>--</option>" : "";
-            data.empresas.forEach((empresa) => {
-                resultado += "<option value = '" + empresa.id + "'" + (data.filial == "S" ? " disabled" : "") + ">" + empresa.nome_fantasia + "</option>";
-                if (data.filial != "S" && !primeiro) primeiro = parseInt(empresa.id);
-                empresa.filiais.forEach((filial) => {
-                    resultado += "<option value = '" + filial.id + "'>- " + filial.nome_fantasia + "</option>";
-                    if (!primeiro) primeiro = parseInt(filial.id);
-                });
-            });
-            $("#pessoa-empresa-select").html(resultado);
-            try {
-                if (TIPO != "A") $("#pessoa-empresa-select").val(primeiro);
-            } catch(err) {}
-            pessoa.setorPorEmpresa(function() {
-                concluir();
-            });
+            if (!parseInt(data.permitir)) s_alert(data.aviso);
+            else concluir();
         });
     } else concluir();
+
+    // if (nome == "pessoasModal") {
+    //     $.get(URL + "/colaboradores/modal", function(data) {
+    //         if (typeof data == "string") data = $.parseJSON(data);
+    //         let primeiro = 0;
+    //         let resultado = !EMPRESA ? "<option value = '0'>--</option>" : "";
+    //         data.empresas.forEach((empresa) => {
+    //             resultado += "<option value = '" + empresa.id + "'" + (data.filial == "S" ? " disabled" : "") + ">" + empresa.nome_fantasia + "</option>";
+    //             if (data.filial != "S" && !primeiro) primeiro = parseInt(empresa.id);
+    //             empresa.filiais.forEach((filial) => {
+    //                 resultado += "<option value = '" + filial.id + "'>- " + filial.nome_fantasia + "</option>";
+    //                 if (!primeiro) primeiro = parseInt(filial.id);
+    //             });
+    //         });
+    //         $("#pessoa-empresa-select").html(resultado);
+    //         try {
+    //             if (TIPO != "A") $("#pessoa-empresa-select").val(primeiro);
+    //         } catch(err) {}
+    //         pessoa.setorPorEmpresa(function() {
+    //             concluir();
+    //         });
+    //     });
+    // }
 }
 
 function modal2(nome, limpar) {
