@@ -149,7 +149,7 @@ class HomeController extends Controller {
     }
 
     public function permissoes() {
-        return json_encode(Permissoes::where("id_usuario", Auth::user()->id));
+        return json_encode(Permissoes::where("id_usuario", Auth::user()->id)->first());
     }
 
     public function pode_abrir($tabela, $id) {
