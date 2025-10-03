@@ -111,7 +111,7 @@ class AtribuicoesController extends Controller {
                         ->selectRaw("UPPER(IFNULL(users1.name, users2.name)) AS usuario")
                         ->leftjoin("excecoes", "excecoes.id_atribuicao", "atribuicoes.id")
                         ->leftjoin("users AS users1", "users1.id", "excecoes.id_usuario")
-                        ->leftjoin("users AS users2", "users2.id", "atribuicoes.id_usuario")
+                        ->leftjoin("users AS users2", "users2.id", "vatbold.id_usuario")
                         ->where("vatbold.psm_valor", $request->id)
                         ->where("vatbold.pr_chave", $request->tipo)
                         ->where("vatbold.psm_chave", $request->tipo2)
