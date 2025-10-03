@@ -109,7 +109,7 @@ class AtribuicoesController extends Controller {
         $resultado = new \stdClass;
         $consulta = DB::table("vatbold")
                         ->selectRaw("UPPER(IFNULL(users1.name, users2.name)) AS usuario")
-                        ->leftjoin("excecoes", "excecoes.id_atribuicao", "atribuicoes.id")
+                        ->leftjoin("excecoes", "excecoes.id_atribuicao", "vatbold.id")
                         ->leftjoin("users AS users1", "users1.id", "excecoes.id_usuario")
                         ->leftjoin("users AS users2", "users2.id", "vatbold.id_usuario")
                         ->where("vatbold.psm_valor", $request->id)
