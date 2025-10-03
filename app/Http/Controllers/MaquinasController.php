@@ -395,6 +395,7 @@ class MaquinasController extends Controller {
     }
 
     public function listar(Request $request) {
+        $id_maquina = isset($request->id_maquina) ? $request->id_maquina : 0;
         $busca = $this->chamar_busca($request);
         if (!$id_maquina) return json_encode($busca);
         $resultado = new \stdClass;
