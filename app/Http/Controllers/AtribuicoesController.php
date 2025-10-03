@@ -108,7 +108,7 @@ class AtribuicoesController extends Controller {
     public function permissao(Request $request) {
         $resultado = new \stdClass;
         $consulta = DB::table("vatbold")
-                        ->selectRaw("UPPERCASE(IFNULL(users1.name, users2.name)) AS usuario")
+                        ->selectRaw("UPPER(IFNULL(users1.name, users2.name)) AS usuario")
                         ->leftjoin("excecoes", "excecoes.id_atribuicao", "atribuicoes.id")
                         ->leftjoin("users AS users1", "users1.id", "excecoes.id_usuario")
                         ->leftjoin("users AS users2", "users2.id", "atribuicoes.id_usuario")
