@@ -18,7 +18,8 @@ BEGIN
             comodatos.id,
             minhas_empresas.id_pessoa,
             comodatos.id_maquina,
-            comodatos.travar_estq
+            comodatos.travar_estq,
+            comodatos.id_empresa
 
         FROM (
             SELECT

@@ -1,5 +1,5 @@
-CREATE DATABASE incompany_;
-USE incompany_;
+CREATE DATABASE incompany__;
+USE incompany__;
 
 CREATE TABLE empresas (
 	id INT AUTO_INCREMENT PRIMARY KEY,

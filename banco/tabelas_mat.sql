@@ -2,7 +2,8 @@ CREATE TABLE mat_vcomodatos (
     id INT,
     id_pessoa INT,
     id_maquina INT,
-    travar_estq INT
+    travar_estq INT,
+    id_empresa INT
 );
 ALTER TABLE mat_vcomodatos
     ADD INDEX idx_mat_vcomodatos_id (id),
