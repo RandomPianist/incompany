@@ -11,7 +11,7 @@ use App\Models\Pessoas;
 use App\Models\Empresas;
 
 class PessoasController extends ControllerListavel {
-    protected function busca($where, $tipo) {
+    protected function busca($where, $tipo = "") {
         return DB::table("pessoas")
                     ->select(
                         "pessoas.id",
