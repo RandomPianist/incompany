@@ -40,8 +40,7 @@ jQuery.fn.sortElements = (function() {
 
 $(document).ready(function() {
     $.get(URL + "/permissoes", function(resp) {
-        if (typeof resp == "string") resp = $.parseJSON(resp);
-        for (x in resp) permissoes[x] = parseInt(resp[x]);
+        if (typeof resp == "string") permissoes = $.parseJSON(resp);
 
         $(".modal-body .row:not(.sem-margem)").each(function() {
             if ($(this).prev().hasClass("row")) $(this).css("margin-top", $(this).prev().find(".tam-max").length ? "-14px" : "11px");
