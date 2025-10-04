@@ -197,7 +197,6 @@ class ApiController extends Controller {
                         ->where(function($sql) use($request) {
                             if ($request->idemp) $sql->whereRaw($request->idemp." IN (empresas.id, empresas.id_matriz)");
                             if ($request->idmaq) $sql->where("comodatos.id_maquina", $request->idmaq);
-                            if (!$request->listagerados) $sql->where("retiradas.gerou_pedido", "N");
                         })
                         ->groupBy(
                             "empresas.id",
@@ -340,6 +339,11 @@ class ApiController extends Controller {
         $comodato = null;
         $produtos_ids = array();
         $produtos_refer = array();
+
+        if (!DB::table("mat_vultretirada")->exists()) {
+            $resultado->code = 500;
+            $resultado->msg = "O sistema está em automanutenção. Tente novamente em alguns minutos.";
+        }
 
         while (isset($request[$cont]["id_atribuicao"]) && !$resultado->msg) {
             $retirada = $request[$cont];
