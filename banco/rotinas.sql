@@ -216,7 +216,7 @@ BEGIN
         SET @query = CONCAT(@query, ' WHERE tab.id_pessoa IN (', p_valor, ')');
     END IF;
 
-    SET @query = CONCAT(@query, ' AND produtos.lixeira = 0 GROUP BY tab.id_pessoa, tab.id_atribucao, tab.cod, tab.ref, tab.src, vatbreal.id_setor, vatbreal.lixeira');
+    SET @query = CONCAT(@query, ' AND produtos.lixeira = 0 GROUP BY tab.id_pessoa, tab.id_atribuicao, tab.cod, tab.ref, tab.src, vatbreal.id_setor, vatbreal.lixeira');
 
     START TRANSACTION;
 
