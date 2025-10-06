@@ -253,6 +253,10 @@ class PessoasController extends ControllerListavel {
         }
     }
 
+    public function aviso($id) {
+        return json_encode($this->aviso_main($id));
+    }
+
     public function excluir($id) {
         if (!$this->aviso_main($request->id)->permitir) return 400;
         $linha = Pessoas::find($request->id);

@@ -52,10 +52,15 @@ function Pessoa(_id) {
                 if ($(this).hasClass("d-flex")) $(this).removeClass("d-flex").addClass("d-flex-tmp");
             }
         });
-        $(".row-setor .col-4").each(function() {
-            if (id_empresa) $(this).removeClass("d-none");
-            else $(this).addClass("d-none");
-        });
+        if (id_empresa) {
+            $(".row-setor .col-4").each(function() {
+                $(this).removeClass("col-4").addClass("col-6");
+            });
+        } else {
+            $(".row-setor .col-6").each(function() {
+                $(this).removeClass("col-6").addClass("col-4");
+            });
+        }
         if (id_empresa) {
             $.get(URL + "/empresas/setores/" + id_empresa, function(data) {
                 if (typeof data == "string") data = $.parseJSON(data);
