@@ -133,7 +133,7 @@ class SetoresController extends ControllerListavel {
                 SELECT DISTINCTROW id_setor
                 FROM pessoas
                 WHERE lixeira = 0
-            ) AS lim ON lim ON lim.id_setor = setores.id
+            ) AS lim ON lim.id_setor = setores.id
 
             LEFT JOIN log
                 ON log.fk = setores.id
