@@ -45,7 +45,7 @@ class ConcorrenciaService {
     }
 
     private function join_um_para_n($coluna_nome, $tabela, $alias, $fk, $pk) {
-        $colunas = $tabela.".".$coluna_nome.", ".$tabela.".".$fk.", ".$tabela.".id_usuario_editando";
+        $colunas = $tabela.".id, ".$tabela.".".$coluna_nome.", ".$tabela.".".$fk.", ".$tabela.".id_usuario_editando";
         return "LEFT JOIN (
             SELECT ".$colunas."
 
