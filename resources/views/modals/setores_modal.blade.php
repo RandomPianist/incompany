@@ -44,7 +44,7 @@
                                     data-campo_id = "setor-id_empresa"
                                 ></i>
                             </div>
-                        </di>
+                        </div>
                         <div class = "row">
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">
