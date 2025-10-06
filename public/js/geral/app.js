@@ -1047,7 +1047,7 @@ function obterHtmlPermissoes(setor, usuario) {
                 "<div class = 'custom-control custom-switch'>" +
                     "<input id = '" + prefixo + x + "' name = '" + x + "' type = 'hidden' />" +
                     "<input id = '" + prefixo + x + "-chk' class = 'checkbox custom-control-input' type = 'checkbox' />" +
-                    "<label id = '" + prefixo + x + "-lbl' for = '" + prefixo + x + "' class = 'custom-control-label lbl-permissao'>" +
+                    "<label id = '" + prefixo + x + "-lbl' for = '" + prefixo + x + "-chk' class = 'custom-control-label lbl-permissao'>" +
                     (setor ? 
                         "Pessoas nesse centro de custo " +
                             (x == "financeiro" ? "têm" : "podem") +
