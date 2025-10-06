@@ -53,7 +53,7 @@
                                 <label for = "pessoa-setor-select" class = "custom-label-form">Centro de custo: *</label>
                                 <select id = "pessoa-setor-select" class = "form-control" onchange = "pessoa.mudou_setor($(this).val())"></select>
                             </div>
-                            <div class = "col-1 pt-4 d-flex align-items-center col-setor">
+                            <div class = "col-1 d-flex align-items-center col-setor">
                                 <i
                                     class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
                                     data-atalho = "setores"
