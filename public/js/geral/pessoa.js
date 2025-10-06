@@ -52,7 +52,7 @@ function Pessoa(_id) {
                 let resultado = "";
                 let primeiro = 0;
                 data.forEach((setor) => {
-                    resultado += "<option value = '" + setor.id + "'" + (!parseInt(data.ativo) ? " disabled" : "") + ">" + setor.descr + "</option>";
+                    resultado += "<option value = '" + setor.id + "'" + (!parseInt(setor.ativo) ? " disabled" : "") + ">" + setor.descr + "</option>";
                     try {
                         if (parseInt(setor.cria_usuario) && ["A", "U"].indexOf(TIPO) > -1) primeiro = parseInt(setor.id);
                     } catch(err) {}

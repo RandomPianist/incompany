@@ -173,8 +173,8 @@ class EmpresasController extends Controller {
                 )
                 ->crossjoin("permissoes AS minhas_permissoes")
                 ->join("permissoes", "permissoes.id_setor", "setores.id")
-                ->where("lixeira", 0)
-                ->where("id_empresa", $id)
+                ->where("setores.lixeira", 0)
+                ->where("setores.id_empresa", $id)
                 ->where("minhas_permissoes.id_usuario", Auth::user()->id)
                 ->get()
         );
