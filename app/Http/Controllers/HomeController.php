@@ -79,8 +79,8 @@ class HomeController extends Controller {
                 $where .= " AND referencia NOT IN (
                     SELECT pr_valor
                     FROM vatbold
-                    WHERE psm_valor = ".$filtro[1]."
-                      AND psm_chave = ".$filtro[0]."
+                    WHERE psm_valor = '".$filtro[1]."'
+                      AND psm_chave = '".$filtro[0]."'
                       AND pr_chave = 'R'
                 )";
             } else $where .= " AND ".$filter_col." = '".$request->filter."'";
