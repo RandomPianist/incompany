@@ -52,7 +52,7 @@
 
     @include("components.loader")
 
-    <link rel = "stylesheet" href = "{{ asset('css/especifico/pessoa.css') }}" />
+    <link rel = "stylesheet" href = "{{ asset('css/especifico/pessoas.css') }}" />
     
     <script type = "text/javascript" language = "JavaScript">
         const ID = "{{ request('id') ?? '' }}";

@@ -44,7 +44,7 @@ $(document).ready(function() {
         if (typeof resp == "string") resp = $.parseJSON(resp);
 
         for (let x in resp) {
-            if (x.indexOf("_") == -1) permissoes[x] = resp[x];
+            if (x.indexOf("_") == -1 && x != "id") permissoes[x] = resp[x];
         }
 
         $(".modal-body .row:not(.sem-margem)").each(function() {
