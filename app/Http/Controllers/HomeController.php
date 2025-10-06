@@ -74,12 +74,16 @@ class HomeController extends Controller {
         } else $where .= "1";
 
         if ($filter_col) {
-            $where .= $request->column != "referencia" ? " AND ".$filter_col." = '".$request->filter."'" : " AND referencia NOT IN (
-                SELECT pr_valor
-                FROM vatbold
-                WHERE psm_valor = ".$request->filter."
-                  AND pr_chave = 'R'
-            )";
+            if ($request->column == "referencia") {
+                $filtro = explode("|", $request->filter);
+                $where .= " AND referencia NOT IN (
+                    SELECT pr_valor
+                    FROM vatbold
+                    WHERE psm_valor = ".$filtro[1]."
+                      AND psm_chave = ".$filtro[0]."
+                      AND pr_chave = 'R'
+                )";
+            } else $where .= " AND ".$filter_col." = '".$request->filter."'";
         }
 
         $query = "SELECT ";

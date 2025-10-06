@@ -1422,7 +1422,7 @@ function Atribuicoes(grade, _psm_valor) {
                     if (typeof data == "string") data = $.parseJSON(data);
                     $("#atribuicoesModalLabel").html(data[_psm_chave == "P" ? "nome" : "descr"].toUpperCase() + " - Atribuindo " + (grade ? "grades" : "produtos"));
                     if (grade) {
-                        $("#referencia").attr("data-filter", _psm_valor);
+                        $("#referencia").attr("data-filter", _psm_chave + "|" + _psm_valor);
                         $("#div-produto").addClass("d-none");
                         $("#div-referencia").removeClass("d-none");
                     } else {
