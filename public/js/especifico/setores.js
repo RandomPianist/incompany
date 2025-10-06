@@ -143,6 +143,7 @@ function validar() {
 function muda_cria_usuario(el, callback) {
     const escrever = function(container, texto) {
         $(container).append(texto + obterHtmlPermissoes(true, $(el).prop("checked")));
+        permissoesListeners(false);
         $("#setoresModal .linha-usuario:last-child").addClass("mb-4");
         $(".form-control").each(function() {
             $(this).keydown(function() {

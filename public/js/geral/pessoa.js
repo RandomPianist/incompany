@@ -1,6 +1,8 @@
 function Pessoa(_id) {
     let that = this;
     let carregando = true;
+    let mostrandoSenha = false;
+    let impedirMostrarSenha = false;
     let dados, htmlPermissoes, usuario, ant_id_setor, ant_id_empresa;
 
     this.permissoesRascunho = new Array();
@@ -14,20 +16,28 @@ function Pessoa(_id) {
         else if (supervisor) titulo = "supervisor";
         else titulo = "funcionário";
         $("#pessoasModalLabel").html((_id ? "Editando" : "Cadastrando") + " " + titulo);
-        $("#pessoasModal .container").append(htmlPermissoes.replace("??", titulo));
+        $("#pessoasModal .container").append(htmlPermissoes.replaceAll("??", titulo));
+        permissoesListeners(false);
         for (x in permissoes) {
             if (that.permissoesRascunho[x] !== undefined) var permissao = that.permissoesRascunho[x];
             else var permissao = false;
-            $("#pessoa-" + x).prop("checked", permissao).attr("disabled", !permissoes[x]);
+            $("#pessoa-" + x + "-chk").prop("checked", permissao).attr("disabled", !permissoes[x]);
             if (permissoes[x]) $("#pessoa-" + x + "-lbl").removeAttr("title");
             else ("#pessoa-" + x + "-lbl").attr("title", "Não é possível atribuir a esse " + titulo + " permissões que seu usuário não tem");
         }
+        let id_usuario = 0;
+        if (dados !== undefined) id_usuario = parseInt(dados.id_usuario);
         const _usuario = ["a", "u"].indexOf(titulo.charAt(0)) > -1;
-        const mostrar_password = _usuario && (!_id || id == USUARIO);
-        $($("#senha").parent()).removeClass(mostrar_password ? "col-5" : "col-11").addClass(mostrar_password ? "col-11" : "col-5");
-        $($("#password").parent()).removeClass(mostrar_password ? "d-none" : "col-6").addClass(mostrar_password ? "col-6" : "d-none");
+        const mostrar_password = _usuario && (!_id || _id == USUARIO || !id_usuario);
+        if (mostrar_password) {
+            $($("#senha").parent()).removeClass("col-11").addClass("col-5");
+            $($("#password").parent()).removeClass("d-none");
+        } else {
+            $($("#senha").parent()).removeClass("col-5").addClass("col-11");
+            $($("#password").parent()).addClass("d-none");
+        }
         $("#senha").attr("title", "Senha para retirar produtos " + (supervisor ? "e autorizar retiradas de produtos antes do vencimento" : ""));
-        if (_usuario && id && id != USUARIO) $(".row-senha").addClass("d-none");
+        if (_usuario && _id && _id != USUARIO && id_usuario) $(".row-senha").addClass("d-none");
         else $(".row-senha").removeClass("d-none");
     }
 
@@ -99,28 +109,32 @@ function Pessoa(_id) {
     }
 
     this.mostrar_senha = function() {
-        setTimeout(function() {
-            const chk = $("#mostrar-senha-chk").prop("checked");
-            const concluir = function(senha) {
-                $("#senha").attr("type", chk ? "text" : "password");
-                $("#senha").val(senha);
-                $("#mostrar_senha").removeClass(chk ? "fa-eye-slash" : "fa-eye").addClass(chk ? "fa-eye" : "fa-eye-slash");
-            }
-            if (chk) {
-                if (_id) {
-                    $.post(URL + "/colaboradores/senha", {
-                        _token : $("meta[name='csrf-token']").attr("content"),
-                        id : _id 
-                    }, function(data) {
-                        concluir(data);
-                        setTimeout(function() {
-                            $("#mostrar-senha-chk").prop("checked", false);
-                            that.mostrar_senha();
-                        }, 2000);
-                    });
-                } else concluir($("#senha").val());
-            } else concluir("");
-        }, 10);
+        if (!impedirMostrarSenha) {
+            impedirMostrarSenha = true;
+            setTimeout(function() {
+                mostrandoSenha = !mostrandoSenha;
+                const concluir = function(senha) {
+                    $("#senha").attr("type", mostrandoSenha ? "text" : "password");
+                    $("#senha").val(senha);
+                    $("#mostrar_senha").removeClass(mostrandoSenha ? "fa-eye-slash" : "fa-eye").addClass(mostrandoSenha ? "fa-eye" : "fa-eye-slash");
+                    if (!mostrandoSenha) impedirMostrarSenha = false;
+                }
+                if (mostrandoSenha) {
+                    if (_id) {
+                        $.post(URL + "/colaboradores/senha", {
+                            _token : $("meta[name='csrf-token']").attr("content"),
+                            id : _id 
+                        }, function(data) {
+                            concluir(data);
+                            setTimeout(function() {
+                                impedirMostrarSenha = false;
+                                that.mostrar_senha();
+                            }, 2000);
+                        });
+                    } else concluir($("#senha").val());
+                } else concluir("");
+            }, 10);
+        }
     }
 
     this.validar = function() {

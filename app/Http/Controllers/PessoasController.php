@@ -154,6 +154,7 @@ class PessoasController extends ControllerListavel {
                             ELSE ''
                         END AS email
                     "),
+                    DB::raw("IFNULL(users.id, 0) AS id_usuario"),
                     DB::raw("IFNULL(permissoes.financeiro, 0) AS financeiro"),
                     DB::raw("IFNULL(permissoes.atribuicoes, 0) AS atribuicoes"),
                     DB::raw("IFNULL(permissoes.retiradas, 0) AS retiradas"),

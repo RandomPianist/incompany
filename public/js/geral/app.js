@@ -1026,6 +1026,15 @@ function atualizarChk(id, numerico) {
     }
 }
 
+function permissoesListeners(setor) {
+    const prefixo = (setor ? "setor" : "pessoa") + "-";
+    for (x in permissoes) {
+        $("#" + prefixo + x + "-chk").off("change").on("change", function() {
+            atualizarChk(prefixo + x, false);
+        });
+    }
+}
+
 function obterHtmlPermissoes(setor, usuario) {
     $("#" + (setor ? "setores" : "pessoas") + "Modal .linha-permissao").each(function() {
         $(this).remove();
@@ -1037,7 +1046,7 @@ function obterHtmlPermissoes(setor, usuario) {
             "<div class = 'col-12'>" +
                 "<div class = 'custom-control custom-switch'>" +
                     "<input id = '" + prefixo + x + "' name = '" + x + "' type = 'hidden' />" +
-                    "<input id = '" + prefixo + x + "-chk' class = 'checkbox custom-control-input' type = 'checkbox' onchange = 'atualizarChk(" + '"' + prefixo + x + '"' + ", false)' />" +
+                    "<input id = '" + prefixo + x + "-chk' class = 'checkbox custom-control-input' type = 'checkbox' />" +
                     "<label id = '" + prefixo + x + "-lbl' for = '" + prefixo + x + "' class = 'custom-control-label lbl-permissao'>" +
                     (setor ? 
                         "Pessoas nesse centro de custo " +
