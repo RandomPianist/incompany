@@ -48,12 +48,12 @@
                                 <label for = "admissao" class = "custom-label-form">Admissão:</label>
                                 <input id = "admissao" name = "admissao" class = "form-control data" autocomplete = "off" type = "text" />
                             </div>
-                            <div class = "col-3 pr-0 col-setor">
+                            <div class = "col-3 pr-0">
                                 <input type = "hidden" name = "id_setor" id = "id_setor" />
                                 <label for = "pessoa-setor-select" class = "custom-label-form">Centro de custo: *</label>
                                 <select id = "pessoa-setor-select" class = "form-control" onchange = "pessoa.mudou_setor($(this).val())"></select>
                             </div>
-                            <div class = "col-1 d-flex align-items-center col-setor">
+                            <div class = "col-1 d-flex align-items-center">
                                 <i
                                     class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
                                     data-atalho = "setores"

@@ -43,15 +43,6 @@ function Pessoa(_id) {
 
     this.mudou_empresa = function(id_empresa, callback) {
         id_empresa = parseInt(id_empresa);
-        $(".col-setor").each(function() {
-            if (id_empresa) {
-                $(this).removeClass("d-none");
-                if ($(this).hasClass("d-flex-tmp")) $(this).removeClass("d-flex-tmp").addClass("d-flex");
-            } else {
-                $(this).addClass("d-none");
-                if ($(this).hasClass("d-flex")) $(this).removeClass("d-flex").addClass("d-flex-tmp");
-            }
-        });
         if (id_empresa) {
             $.get(URL + "/empresas/setores/" + id_empresa, function(data) {
                 if (typeof data == "string") data = $.parseJSON(data);
@@ -67,8 +58,8 @@ function Pessoa(_id) {
                     } catch(err) {}
                 });
                 $("#pessoa-setor-select").html(resultado);
-                $(".row-setor .col-6").each(function() {
-                    $(this).removeClass("col-6").addClass("col-4");
+                $(".row-setor").each(function() {
+                    $(this).removeClass("d-none");
                 });
                 let setor = 0;
                 if (dados === undefined) setor = primeiro;
@@ -77,8 +68,8 @@ function Pessoa(_id) {
                 that.mudou_setor($("#pessoa-setor-select").val(), callback);
             });
         } else {
-            $(".row-setor .col-4").each(function() {
-                $(this).removeClass("col-4").addClass("col-6");
+            $(".row-setor").each(function() {
+                $(this).addClass("d-none");
             });
             that.mudou_setor(0, callback);
         }
