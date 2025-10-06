@@ -167,7 +167,7 @@ abstract class Controller extends BaseController {
 
     protected function alterar_usuario_editando($tabela, $id, $remover = false) {
         $consulta = DB::table($tabela)->where("id", $id);
-        $consulta->update(["id_usuario_editando" => $remover ? 0 : Auth::user()->id]);
+        if ($remover || !intval($consulta->first()->id_usuario_editando)) $consulta->update(["id_usuario_editando" => $remover ? 0 : Auth::user()->id]);
         return $consulta->first();
     }
 
