@@ -97,7 +97,10 @@ class PessoasController extends ControllerListavel {
                         $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
                         if ($id_emp) $sql->whereRaw($id_emp." IN (empresas.id, empresas.id_matriz)");
                         if (in_array($tipo, ["A", "U"])) {
-                            $sql->where("setores.cria_usuario", 1);
+                            $sql->where(function($q) {
+                                $q->whereNull("setores.id")
+                                    ->orWhere("setores.cria_usuario", 1);
+                            });
                             if ($tipo == "A") $sql->where("pessoas.id_empresa", 0);
                         } else $sql->where("pessoas.supervisor", ($tipo == "S" ? 1 : 0));
                     })
