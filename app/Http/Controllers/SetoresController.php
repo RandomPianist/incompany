@@ -110,7 +110,7 @@ class SetoresController extends ControllerListavel {
                 setores.descr,
                 setores.cria_usuario,
                 setores.id_empresa,
-                empresa.nome_fantasia AS empresa,
+                empresas.nome_fantasia AS empresa,
                 CASE
                     WHEN (log.id IS NOT NULL) THEN 'SYS'
                     WHEN (lim.id_setor IS NOT NULL) THEN 'PES'
