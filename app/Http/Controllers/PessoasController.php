@@ -9,8 +9,11 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
 use App\Models\Permissoes;
+use App\Http\Traits\NomearTrait;
 
 class PessoasController extends ControllerListavel {
+    use NomearTrait;
+
     private function consultar_main(Request $request) {
         $resultado = new \stdClass;
         if (trim($request->cpf) && !$request->id &&
@@ -251,6 +254,7 @@ class PessoasController extends ControllerListavel {
             $this->log_inserir("D", "users", $usuario->id); // App\Http\Controllers\Controller.php
             DB::table("users")->where("id", $usuario->id)->delete();
         }
+        return redirect("/colaboradores/pagina/".substr(strtoupper($this->nomear($pessoa->id)), 0, 1)); // App\Http\Traits\NomearTrait.php
     }
 
     public function aviso($id) {

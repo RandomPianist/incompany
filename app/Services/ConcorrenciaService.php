@@ -5,8 +5,11 @@ namespace App\Services;
 use DB;
 use Auth;
 use App\Models\Pessoas;
+use App\Http\Traits\NomearTrait;
 
 class ConcorrenciaService {
+    use NomearTrait;
+
     private function campos_usuario($terceiro) {
         return "
             IFNULL(users1.name, '') AS usuario,
@@ -67,13 +70,8 @@ class ConcorrenciaService {
 
     private function obter_mensagem($msg, $consulta) {
         $id_pessoa = intval($consulta["id_pessoa"]);
-        if (!$id_pessoa) return $msg;
-        $pessoa = Pessoas::find($id_pessoa);
-        $titulo = "";
-        if (!intval($pessoa->id_empresa)) $titulo = "administrador";
-        elseif (DB::table("users")->where("id_pessoa", $id_pessoa)->exists()) $titulo = "usuário";
-        elseif ($pessoa->supervisor) $titulo = "supervisor";
-        else $titulo = "funcionário";
+        if (!$id_pessoa) return $msg;        
+        $titulo = $this->nomear($id_pessoa); // App\Http\Traits\NomearTrait.php
         $msg = str_replace("a pessoa", ($consulta["pessoa_associado"] == "S" ? "o" : "e")." ".$titulo, $msg);
         $msg = str_replace("o pessoa", ($consulta["pessoa_associado"] == "S" ? "o" : "e")." ".$titulo, $msg);
         return $msg;
