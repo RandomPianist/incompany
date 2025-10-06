@@ -1042,7 +1042,7 @@ function obterHtmlPermissoes(setor, usuario) {
     const prefixo = (setor ? "setor" : "pessoa") + "-";
     let resultado = "";
     for (let x in permissoes) {
-        resultado += "<div class = 'row linha-permissao " + ((!usuario && x != "supervisor") ? "d-none" : "") + "'>" +
+        resultado += "<div class = 'row linha-permissao" + ((!usuario && x != "supervisor") ? " d-none" : "") + "'>" +
             "<div class = 'col-12'>" +
                 "<div class = 'custom-control custom-switch'>" +
                     "<input id = '" + prefixo + x + "' name = '" + x + "' type = 'hidden' />" +
@@ -1076,7 +1076,7 @@ function obterHtmlPermissoes(setor, usuario) {
         }
         resultado += ".</label></div></div></div>";
     }
-    return resultado;
+    return resultado.replace("linha-permissao'", "linha-permissao mt-3'");
 }
 
 function Atribuicoes(grade, _psm_valor) {
