@@ -43,6 +43,8 @@
     @include("components.naoencontrado")
     @include("components.add")
 
+    <link rel = "stylesheet" href = "{{ asset('css/especifico/setores.css') }}" />
+
     <script type = "text/javascript" language = "JavaScript">
         const ID = "{{ request('id') ?? '' }}";
         const FILTRO = "{{ request('filtro') ?? '' }}";
