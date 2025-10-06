@@ -24,15 +24,17 @@
                             <th width = "10%" class = "text-right">
                                 <span>Código</span>
                             </th>
-                            <th width = "25%">
+                            <th width = "@if ($titulo == 'Administradores') 65% @else 25% @endif">
                                 <span>Nome</span>
                             </th>
-                            <th width = "20%">
-                                <span>Empresa</span>
-                            </th>
-                            <th width = "20%">
-                                <span>Centro de custo</span>
-                            </th>
+                            @if ($titulo != "Administradores")
+                                <th width = "20%">
+                                    <span>Empresa</span>
+                                </th>
+                                <th width = "20%">
+                                    <span>Centro de custo</span>
+                                </th>
+                            @endif
                             <th width = "20%" class = "text-center nao-ordena">
                                 <span>Ações</span>
                             </th>

@@ -14,10 +14,12 @@ function listar(coluna) {
                 resultado += "<tr>" +
                     "<td width = '5%'>" + biometria + "</td>" +
                     "<td width = '10%' class = 'text-right'>" + linha.id.toString().padStart(4, "0") + "</td>" +
-                    "<td width = '25%'>" + linha.nome + "</td>" +
-                    "<td width = '20%'>" + linha.empresa + "</td>" +
-                    "<td width = '20%'>" + linha.setor + "</td>" +
-                    "<td class = 'text-center btn-table-action' width = '20%'>";
+                    "<td width = '" + (TIPO == "A" ? 65 : 25) + "%'>" + linha.nome + "</td>";
+                if (TIPO != "A") {
+                    resultado += "<td width = '20%'>" + linha.empresa + "</td>" +
+                        "<td width = '20%'>" + linha.setor + "</td>";
+                }
+                resultado += "<td class = 'text-center btn-table-action' width = '20%'>";
                 if (parseInt(linha.possui_retiradas)) {
                     resultado += "<i class = 'my-icon fa-light fa-file' title = 'Retiradas' onclick = 'retirada_pessoa(" + linha.id + ")'></i>";
                     if (!EMPRESA && permissoes.retiradas) resultado += "<i class = 'my-icon fa-regular fa-clock-rotate-left' title = 'Desfazer retiradas' onclick = 'desfazer_retiradas(" + linha.id + ")'></i>";
