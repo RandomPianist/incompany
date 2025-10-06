@@ -53,15 +53,6 @@ function Pessoa(_id) {
             }
         });
         if (id_empresa) {
-            $(".row-setor .col-4").each(function() {
-                $(this).removeClass("col-4").addClass("col-6");
-            });
-        } else {
-            $(".row-setor .col-6").each(function() {
-                $(this).removeClass("col-6").addClass("col-4");
-            });
-        }
-        if (id_empresa) {
             $.get(URL + "/empresas/setores/" + id_empresa, function(data) {
                 if (typeof data == "string") data = $.parseJSON(data);
                 let resultado = "";
@@ -76,13 +67,21 @@ function Pessoa(_id) {
                     } catch(err) {}
                 });
                 $("#pessoa-setor-select").html(resultado);
+                $(".row-setor .col-6").each(function() {
+                    $(this).removeClass("col-6").addClass("col-4");
+                });
                 let setor = 0;
                 if (dados === undefined) setor = primeiro;
                 else if (dados.id_empresa == id_empresa) setor = parseInt(dados.id_setor);
                 if (setor) $("#pessoa-setor-select").val(setor);
                 that.mudou_setor($("#pessoa-setor-select").val(), callback);
             });
-        } else that.mudou_setor(0, callback);
+        } else {
+            $(".row-setor .col-4").each(function() {
+                $(this).removeClass("col-4").addClass("col-6");
+            });
+            that.mudou_setor(0, callback);
+        }
     }
 
     this.mudou_setor = function(id_setor, callback) {
