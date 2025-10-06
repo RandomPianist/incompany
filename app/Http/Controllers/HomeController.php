@@ -9,6 +9,10 @@ use App\Models\Pessoas;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller {
+    private function obter_permissao() {
+        return Permissoes::where("id_usuario", Auth::user()->id)->first();
+    }
+
     private function str_ireplace2($search, $replace, $subject) {
         $len = strlen($search);
         $result = "";
@@ -40,7 +44,7 @@ class HomeController extends Controller {
     }
 
     public function iniciar() {
-        if (Permissoes::where("id_usuario", Auth::user()->id)->first()->financeiro) return view("dashboard");
+        if ($this->obter_permissao()->financeiro) return view("dashboard");
         if (Pessoas::find(Auth::user()->id_pessoa)) return redirect("/colaboradores/pagina/A");
         return redirect("/colaboradores/pagina/F");
     }
@@ -160,7 +164,7 @@ class HomeController extends Controller {
     }
 
     public function permissoes() {
-        return json_encode(Permissoes::where("id_usuario", Auth::user()->id)->first());
+        return json_encode($this->obter_permissao());
     }
 
     public function pode_abrir($tabela, $id) {
