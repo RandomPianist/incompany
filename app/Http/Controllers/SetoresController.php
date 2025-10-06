@@ -99,7 +99,7 @@ class SetoresController extends ControllerListavel {
         $campos_permissao = array();
         $permissoes_lista = ["financeiro", "atribuicoes", "retiradas", "pessoas", "usuarios", "solicitacoes", "supervisor"];
         foreach ($permissoes_lista as $campo) {
-            $sql = "permissoes".$campo.", CASE ";
+            $sql = "permissoes.".$campo.", CASE ";
             $condicoes = $campo == "usuarios" ? ["WHEN (setores.id = ".Pessoas::find(Auth::user()->id_pessoa)->id_setor.") THEN 'USU'"] : [];
             foreach ($condicoes_padrao as $condicao) array_push($condicoes, str_replace("usuarios", $campo, $condicao));
             $sql .= implode(" ", $condicoes)." END AS ".$campo."_motivo";
