@@ -87,7 +87,7 @@ class AtribuicoesController extends Controller {
             case "P":
                 $linha->cod_produto = $pr_valor;
                 break;
-            case "M":
+            case "R":
                 $linha->referencia = $pr_valor;
                 break;
         }
@@ -107,8 +107,12 @@ class AtribuicoesController extends Controller {
 
     public function permissao(Request $request) {
         $resultado = new \stdClass;
+        $resultado->code = 200;
         $consulta = DB::table("vatbold")
-                        ->selectRaw("UPPER(IFNULL(users1.name, users2.name)) AS usuario")
+                        ->select(
+                            DB::raw("IFNULL(users1.id, users2.id) AS id_usuario"),
+                            DB::raw("UPPER(IFNULL(users1.name, users2.name)) AS usuario")
+                        )
                         ->leftjoin("excecoes", "excecoes.id_atribuicao", "vatbold.id")
                         ->leftjoin("users AS users1", "users1.id", "excecoes.id_usuario")
                         ->leftjoin("users AS users2", "users2.id", "vatbold.id_usuario")
@@ -116,14 +120,19 @@ class AtribuicoesController extends Controller {
                         ->where("vatbold.pr_chave", $request->tipo)
                         ->where("vatbold.psm_chave", $request->tipo2)
                         ->where(function($sql) {
+                            $sql->whereNotNull("users1.id")
+                                ->orWhere(function ($q) {
+                                    $q->whereNotNull("users2.id");
+                                });
+                        })
+                        ->where(function($sql) {
                             $sql->where("vatbold.rascunho", "<>", "S")
                                 ->orWhere("excecoes.rascunho", "<>", "S");
                         })
                         ->get();
-        if (!sizeof($consulta)) {
-            $resultado->code = 200;
-            return json_encode($resultado);
-        }
+        if (!sizeof($consulta)) return json_encode($resultado);
+        if ($consulta[0]->id_usuario == Auth::user()->id) return json_encode($resultado);
+        
         switch($request->tipo2) {
             case "P":
                 $resultado->nome = Pessoas::find($request->id)->nome;
@@ -135,6 +144,7 @@ class AtribuicoesController extends Controller {
                 $resultado->nome = Maquinas::find($request->id)->descr;
                 break;
         }
+        $resultado->code = 403;
         $resultado->usuario = $consulta[0]->usuario;
         return json_encode($resultado);
     }
