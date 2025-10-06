@@ -43,7 +43,7 @@ $(document).ready(function() {
     $.get(URL + "/permissoes", function(resp) {
         if (typeof resp == "string") resp = $.parseJSON(resp);
 
-        for (x in resp) {
+        for (let x in resp) {
             if (x.indexOf("_") == -1) permissoes[x] = resp[x];
         }
 
@@ -1019,7 +1019,7 @@ function cp_mp_listar(tipo, abrir) {
 function atualizarChk(id, numerico) {
     if (pessoa !== null) numerico = true;
     const checked = $("#" + id + "-chk").prop("checked");
-    $("#" + id).val(checked ? numerico ? "1" : "0" : checked ? "S" : "N");
+    $("#" + id).val(numerico ? checked ? "1" : "0" : checked ? "S" : "N");
     if (pessoa !== null) {
         pessoa.permissoesRascunho[id.replace("pessoa-", "")] = checked;
         if (id == "pessoa-supervisor") pessoa.mudaTitulo();
@@ -1028,7 +1028,7 @@ function atualizarChk(id, numerico) {
 
 function permissoesListeners(setor) {
     const prefixo = (setor ? "setor" : "pessoa") + "-";
-    for (x in permissoes) {
+    for (let x in permissoes) {
         $("#" + prefixo + x + "-chk").off("change").on("change", function() {
             atualizarChk(prefixo + x, false);
         });
@@ -1041,7 +1041,7 @@ function obterHtmlPermissoes(setor, usuario) {
     });
     const prefixo = (setor ? "setor" : "pessoa") + "-";
     let resultado = "";
-    for (x in permissoes) {
+    for (let x in permissoes) {
         resultado += "<div class = 'row linha-permissao " + ((!usuario && x != "supervisor") ? "d-none" : "") + "'>" +
             "<div class = 'col-12'>" +
                 "<div class = 'custom-control custom-switch'>" +
