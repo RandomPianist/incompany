@@ -1,8 +1,9 @@
-let relatorio, pessoa, atribuicao, excecao, colGlobal;
+let relatorio, atribuicao, excecao, colGlobal;
 let anteriores = new Array();
 let permissoes = new Array();
 let validacao_bloqueada = false;
 let focar = true;
+let pessoa = null;
 let grupo_emp2 = 0;
 
 jQuery.fn.sortElements = (function() {
@@ -40,7 +41,11 @@ jQuery.fn.sortElements = (function() {
 
 $(document).ready(function() {
     $.get(URL + "/permissoes", function(resp) {
-        if (typeof resp == "string") permissoes = $.parseJSON(resp);
+        if (typeof resp == "string") resp = $.parseJSON(resp);
+
+        for (x in resp) {
+            if (x.indexOf("_") == -1) permissoes[x] = resp[x];
+        }
 
         $(".modal-body .row:not(.sem-margem)").each(function() {
             if ($(this).prev().hasClass("row")) $(this).css("margin-top", $(this).prev().find(".tam-max").length ? "-14px" : "11px");
@@ -202,6 +207,10 @@ $(document).ready(function() {
                 $(this).remove();
             });
             descartar("setores");
+        });
+
+        $("#pessoasModal").on("hide.bs.modal", function() {
+            pessoa = null;
         });
 
         $(".modal").each(function() {
@@ -519,29 +528,6 @@ function modal(nome, id, callback) {
             else concluir();
         });
     } else concluir();
-
-    // if (nome == "pessoasModal") {
-    //     $.get(URL + "/colaboradores/modal", function(data) {
-    //         if (typeof data == "string") data = $.parseJSON(data);
-    //         let primeiro = 0;
-    //         let resultado = !EMPRESA ? "<option value = '0'>--</option>" : "";
-    //         data.empresas.forEach((empresa) => {
-    //             resultado += "<option value = '" + empresa.id + "'" + (data.filial == "S" ? " disabled" : "") + ">" + empresa.nome_fantasia + "</option>";
-    //             if (data.filial != "S" && !primeiro) primeiro = parseInt(empresa.id);
-    //             empresa.filiais.forEach((filial) => {
-    //                 resultado += "<option value = '" + filial.id + "'>- " + filial.nome_fantasia + "</option>";
-    //                 if (!primeiro) primeiro = parseInt(filial.id);
-    //             });
-    //         });
-    //         $("#pessoa-empresa-select").html(resultado);
-    //         try {
-    //             if (TIPO != "A") $("#pessoa-empresa-select").val(primeiro);
-    //         } catch(err) {}
-    //         pessoa.setorPorEmpresa(function() {
-    //             concluir();
-    //         });
-    //     });
-    // }
 }
 
 function modal2(nome, limpar) {
@@ -1030,12 +1016,16 @@ function cp_mp_listar(tipo, abrir) {
 }
 
 function atualizarChk(id, numerico) {
+    if (pessoa !== null) numerico = true;
     const checked = $("#" + id + "-chk").prop("checked");
-    if (id == "pessoa-supervisor") $("#senha").attr("title", "Senha para retirar produtos " + (checked ? "e autorizar retiradas de produtos antes do vencimento" : ""));
     $("#" + id).val(checked ? numerico ? "1" : "0" : checked ? "S" : "N");
+    if (pessoa !== null) {
+        pessoa.permissoesRascunho[id.replace("pessoa-", "")] = checked;
+        if (id == "pessoa-supervisor") pessoa.mudaTitulo();
+    }
 }
 
-function htmlPermissoes(setor, usuario) {
+function obterHtmlPermissoes(setor, usuario) {
     $("#" + (setor ? "setores" : "pessoas") + "Modal .linha-permissao").each(function() {
         $(this).remove();
     });
@@ -1066,7 +1056,7 @@ function htmlPermissoes(setor, usuario) {
                 resultado += "fazer retiradas retroativas";
                 break;
             case "supervisor":
-                resultado += "usar" + (setor ? "suas senhas" : "sua senha") + " para autorizar retiradas de produtos antes do vencimento";
+                resultado += "usar " + (setor ? "suas senhas" : "sua senha") + " para autorizar retiradas de produtos antes do vencimento";
                 break;
             case "solicitacoes":
                 resultado += "solicitar reposição de produtos";

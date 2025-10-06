@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Pessoas;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -38,11 +39,19 @@ class AuthenticatedSessionController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
+            if (intval(Pessoas::find(Auth::user()->id_pessoa)->lixeira)) {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->back()->withErrors([
+                    'email' => 'Usuário inativo ou excluído',
+                ]);
+            }
             return redirect()->intended('/');
         }
 
         return redirect()->back()->withErrors([
-            'email' => 'As credenciais fornecidas estão incorretas.',
+            'email' => 'Email ou senha inválidos',
         ]);
     }
 

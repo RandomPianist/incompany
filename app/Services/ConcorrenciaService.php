@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use DB;
+use App\Models\Pessoas;
 
 class ConcorrenciasService {
     private function campos_usuario($terceiro) {
@@ -60,6 +61,19 @@ class ConcorrenciasService {
         ) AS ".$alias." ON ".$alias.".".$fk." = ".$pk;
     }
 
+    private function obter_mensagem($msg, $consulta) {
+        $id_pessoa = intval($consulta["id_pessoa"]);
+        if (!$id_pessoa) return $msg;
+        $pessoa = Pessoas::find($id_pessoa);
+        $titulo = "";
+        if (!intval($pessoa->id_empresa)) $titulo = "administrador";
+        else if (DB::table("users")->where("id_pessoa", $id_pessoa)->exists()) $titulo = "usuário";
+        else if ($pessoa->supervisor) $titulo = "supervisor";
+        else $titulo = "funcionário";
+        $msg = str_replace("a pessoa", ($consulta["pessoa_associado"] == "S" ? "e" : "o")." ".$titulo, $msg);
+        return $msg;
+    }
+
     public function srv_pode_abrir($tabela, $id, $acao) {
         $resultado = new \stdClass;
         $resultado->permitir = 1;
@@ -106,6 +120,9 @@ class ConcorrenciasService {
                         'a' AS associado2_artigo,
                         'pessoa' AS associado2_tipo,
 
+                        pes.id AS id_pessoa,
+                        'S' AS pessoa_associado,
+
                         ".$this->campos_usuario(true)."
 
                     ".$this->from($tabela)."
@@ -133,6 +150,9 @@ class ConcorrenciasService {
 
                         'o' AS associado2_artigo,
                         'centro de custo' AS associado2_tipo,
+
+                        pessoas.id AS id_pessoa,
+                        'N' AS pessoa_associado,
 
                         ".$this->campos_usuario(true)."
 
@@ -162,6 +182,9 @@ class ConcorrenciasService {
                         '' AS associado2_artigo,
                         '' AS associado2_tipo,
 
+                        0 AS id_pessoa,
+                        'N' AS pessoa_associado,
+
                         ".$this->campos_usuario(false)."
 
                     ".$this->from($tabela)."
@@ -186,6 +209,9 @@ class ConcorrenciasService {
                         'a' AS associado2_artigo,
                         'pessoa' AS associado2_tipo,
 
+                        pes.id AS id_pessoa,
+                        'S' AS pessoa_associado,
+
                         ".$this->campos_usuario(true)."
 
                     ".$this->from($tabela)."
@@ -205,7 +231,7 @@ class ConcorrenciasService {
         $consulta = (array) DB::select(DB::raw($query))[0];
         if ($consulta["usuario"]) {
             $resultado->permitir = 0;
-            $resultado->aviso = "Não é possível ".$acao." <b>".mb_strtoupper($consulta["titulo"])."</b> porque ess".$consulta["tipo"]." está sendo editad".$consulta["artigo"]." por <b>".mb_strtoupper($consulta["usuario"])."</b>";
+            $resultado->aviso = $this->obter_mensagem("Não é possível ".$acao." <b>".mb_strtoupper($consulta["titulo"])."</b> porque ess".$consulta["tipo"]." está sendo editad".$consulta["artigo"]." por <b>".mb_strtoupper($consulta["usuario"])."</b>", $consulta);
             return $resultado;
         }
         $msg = "";
@@ -214,6 +240,7 @@ class ConcorrenciasService {
             if (!$msg && $consulta[$chave."_usuario"]) {
                 $msg = "Não é possível ".$acao." <b>".mb_strtoupper($consulta["titulo"])."</b> porque ".$consulta[$chave."_artigo"]." ".$consulta[$chave."_tipo"]." <b>".mb_strtoupper($consulta[$chave."_titulo"])."</b>,";
                 $msg .= "associado a ess".$consulta["tipo"].", está sendo editad".$consulta[$chave."_artigo"]." por <b>".mb_strtoupper($consulta[$chave."_usuario"])."</b>";
+                $msg = $this->obter_mensagem($msg, $consulta);
             }
         }
         $resultado->aviso = $msg;

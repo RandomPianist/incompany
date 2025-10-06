@@ -24,7 +24,7 @@
             window.onload = function() {
                 s_alert({
                     icon : "error",
-                    html : "Email ou senha inválidos"
+                    html : "{{ $errors->first() }}"
                 });
             }
         </script>

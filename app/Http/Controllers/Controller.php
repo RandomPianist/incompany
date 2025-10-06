@@ -44,10 +44,9 @@ abstract class Controller extends BaseController {
     }
 
     protected function verifica_vazios(Request $request, $chaves) {
-        $arr_req = (array) $request;
         $erro = false;
-        foreach ($arr_req as $chave => $valor) {
-            if (in_array($chave, $chaves) && !trim($valor)) $erro = true;
+        foreach ($chaves as $chave) {
+            if (!trim($request->input($chave))) $erro = true;
         }
         return $erro;
     }
@@ -101,6 +100,66 @@ abstract class Controller extends BaseController {
         );
     }
 
+    protected function busca_emp($tipo, $id_emp = 0, $id_matriz = 0) {
+        return DB::table("empresas")
+                    ->select(
+                        "id",
+                        "nome_fantasia",
+                        "id_matriz"
+                    )
+                    ->where(function($sql) use($param, $id_emp, $id_matriz) {
+                        if ($param == "T") {
+                            $m_emp = $this->obter_empresa();
+                            $sql->where("id_matriz", $id_matriz);
+                            if ($id_emp) {
+                                $where = "id = ".$id_emp;
+                                if (DB::table("empresas")
+                                        ->where("id_matriz", $id_emp)
+                                        ->where("lixeira", 0)
+                                        ->exists()
+                                ) $where .= " OR id_matriz = ".$id_emp;
+                                $sql->whereRaw($where);
+                            }
+                            if ($m_emp) {
+                                $possiveis = [$m_emp];
+                                $matriz = intval(Empresas::find($possiveis[0])->id_matriz);
+                                if ($matriz) {
+                                    array_push($possiveis, $matriz);
+                                    $sql->whereIn("id", $possiveis);
+                                }
+                            }
+                        } else {
+                            $empresa_usuario = Pessoas::find(Auth::user()->id_pessoa)->empresa();
+                            if ($empresa_usuario !== null) {
+                                if ($param == "F" && !intval($empresa_usuario->id_matriz)) $sql->where("id_matriz", $empresa_usuario->id);
+                                else $sql->where("id", $param == "M" ? !intval($empresa_usuario->id_matriz) ? $empresa_usuario->id : $empresa_usuario->id_matriz : $empresa_usuario->id);
+                            } else $sql->where("id_matriz", $param == "M" ? "=" : ">", 0);
+                        }
+                    })
+                    ->where("lixeira", 0)
+                    ->orderBy("nome_fantasia")
+                    ->get();
+    }
+
+    protected function minhas_empresas() {
+        $resultado = new \stdClass;
+        $id_emp = $this->obter_empresa();
+        $matriz = $id_emp ? intval(Empresas::find($id_emp)->id_matriz) : 0;
+        $filial = "N";
+        if ($matriz > 0) {
+            $filial = "S";
+            $id_emp = $matriz;
+        }
+        $empresas = $this->busca_emp("T", $id_emp, 0);
+        foreach($empresas as $matriz) {
+            $filiais = $this->busca_emp("T", $id_emp, $matriz->id);
+            $matriz->filiais = $filiais;
+        }
+        $resultado->filial = $filial;
+        $resultado->empresas = $empresas;
+        return $resultado;
+    }
+
     protected function pode_abrir_main($tabela, $id, $acao) {
         $servico = new ConcorrenciaService;
         return $servico->srv_pode_abrir($tabela, $id, $acao);
@@ -125,7 +184,25 @@ abstract class Controller extends BaseController {
         $linha->data = date("Y-m-d");
         $linha->hms = date("H:i:s");
         $linha->save();
-        if (in_array($tabela, ["categorias", "empresas", "pessoas", "produtos", "setores"])) $this->alterar_usuario_editando($tabela, $fk, true);
+        if ($tabela == "users" && $acao == "D") {
+            DB::statement("
+                INSERT INTO usrbkp (
+                    SELECT
+                        id,
+                        name,
+                        email,
+                        password,
+                        id_pessoa,
+                        admin,
+                        created_at,
+                        updated_at
+                    
+                    FROM users
+
+                    WHERE id = ".$fk."
+                )
+            ");
+        } else if (in_array($tabela, ["categorias", "empresas", "pessoas", "produtos", "setores"])) $this->alterar_usuario_editando($tabela, $fk, true);
         return $linha;
     }
 

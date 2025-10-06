@@ -38,7 +38,7 @@
                                 <input type = "file" name = "foto" class = "d-none" />
                             </div>
                         </div>
-                        <div class = "row">
+                        <div class = "row row-setor">
                             <div class = "col-4">
                                 <label for = "funcao" class = "custom-label-form">Função:</label>
                                 <input id = "funcao" name = "funcao" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 64)" />
@@ -48,11 +48,12 @@
                                 <label for = "admissao" class = "custom-label-form">Admissão:</label>
                                 <input id = "admissao" name = "admissao" class = "form-control data" autocomplete = "off" type = "text" />
                             </div>
-                            <div class = "col-3 pr-0">
-                                <label for = "pessoa-setor" class = "custom-label-form">Centro de custo: *</label>
-                                <select id = "pessoa-setor-select" name = "id_setor" class = "form-control" onchange = "pessoa.toggle_user($(this).val())"></select>
+                            <div class = "col-3 pr-0 col-setor">
+                                <input type = "hidden" name = "id_setor" id = "id_setor" />
+                                <label for = "pessoa-setor-select" class = "custom-label-form">Centro de custo: *</label>
+                                <select id = "pessoa-setor-select" class = "form-control" onchange = "pessoa.mudou_setor($(this).val())"></select>
                             </div>
-                            <div class = "col-1 pt-4 d-flex align-items-center">
+                            <div class = "col-1 pt-4 d-flex align-items-center col-setor">
                                 <i
                                     class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
                                     data-atalho = "setores"
@@ -63,8 +64,8 @@
                         </div>
                         <div class = "row">
                             <div class = "col-11 pr-0">
-                                <label for = "pessoa-empresa" class = "custom-label-form">Empresa: *</label>
-                                <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control" onchange = "pessoa.toggle_emp()"></select>
+                                <label for = "pessoa-empresa-select" class = "custom-label-form">Empresa: *</label>
+                                <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control" onchange = "pessoa.mudou_empresa($(this).val())"></select>
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
                                 <i
@@ -85,7 +86,7 @@
                                 <input id = "telefone" name = "telefone" class = "form-control" autocomplete = "off" type = "text" onkeyup = "this.value=phoneMask(this.value)" />
                             </div>
                         </div>
-                        <div class = "row">
+                        <div class = "row row-senha">
                             <div class = "col-5">
                                 <label for = "senha" class = "custom-label-form">Senha numérica: *</label>
                                 <input id = "senha" name = "senha" class = "form-control" autocomplete = "off" type = "password" onkeyup = "numerico(this)" title = "Senha para retirar produtos" />

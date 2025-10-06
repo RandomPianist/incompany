@@ -409,3 +409,15 @@ CREATE TABLE log (
     FOREIGN KEY (fk) REFERENCES solicitacoes_produtos(id),
 	FOREIGN KEY (fk) REFERENCES users(id)
 );
+
+CREATE TABLE usrbkp (
+    id INT,
+    name VARCHAR(255),
+    email VARCHAR(255),
+    password VARCHAR(255),
+    id_pessoa INT,
+    admin TINYINT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    FOREIGN KEY (id_pessoa) REFERENCES pessoas(id)
+);

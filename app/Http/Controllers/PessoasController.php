@@ -8,9 +8,52 @@ use Hash;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
-use App\Models\Empresas;
+use App\Models\Permissoes;
 
 class PessoasController extends ControllerListavel {
+    private function consultar_main(Request $request) {
+        $resultado = new \stdClass;
+        if (trim($request->cpf) && !$request->id &&
+            Pessoas::where("lixeira", 0)
+                    ->where("cpf", $request->cpf)
+                    ->exists()
+        ) {
+            $resultado->tipo = "duplicado";
+            $resultado->dado = "CPF";
+        } else if (!$request->id &&
+            DB::table("pessoas")
+                ->leftjoin("users", "users.id_pessoa", "pessoas.id")
+                ->where(function($sql) {
+                    $sql->where("users.email", $request->email)
+                        ->orWhere("pessoas.email", $request->email);
+                })
+                ->where("pessoas.lixeira", 0)
+                ->exists()
+        ) {
+            $resultado->tipo = "duplicado";
+            $resultado->dado = "e-mail";
+        } else {
+            $resultado->tipo = "ok";
+            $resultado->dado = "";
+        }
+        return $resultado;
+    }
+
+    private function aviso_main($id) {
+        $resultado = $this->pode_abrir_main("pessoas", $id, "excluir"); // App\Http\Controllers\Controller.php
+        if (!$resultado->permitir) return $resultado;
+        $resultado = new \stdClass;
+        if ($id != Auth::user()->id_pessoa) {
+            $nome = Pessoas::find($id)->nome;
+            $resultado->permitir = 1;
+            $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
+            return $resultado;
+        }
+        $resultado->permitir = 0;
+        $resultado->aviso = "Não é possível excluir a si mesmo";
+        return $resultado;
+    }
+
     protected function busca($where, $tipo = "") {
         return DB::table("pessoas")
                     ->select(
@@ -55,7 +98,7 @@ class PessoasController extends ControllerListavel {
                             if ($tipo == "A") $sql->where("pessoas.id_empresa", 0);
                         } else $sql->where("pessoas.supervisor", ($tipo == "S" ? 1 : 0));
                     })
-                    ->whereRaw($where)
+                    ->whereRaw(str_replace("?", "pessoas.nome", $where))
                     ->where("pessoas.lixeira", 0)
                     ->get();
     }
@@ -89,6 +132,7 @@ class PessoasController extends ControllerListavel {
     }
 
     public function mostrar($id) {
+        $this->alterar_usuario_editando("pessoas", $id); // App\Http\Controllers\Controller.php
         return json_encode(
             DB::table("pessoas")
                 ->select(
@@ -99,11 +143,25 @@ class PessoasController extends ControllerListavel {
                     "pessoas.funcao",
                     "pessoas.supervisor",
                     "pessoas.foto",
+                    "pessoas.telefone",
+                    DB::raw("IFNULL(setores.cria_usuario, 1) AS cria_usuario"),
                     DB::raw("DATE_FORMAT(pessoas.admissao, '%d/%m/%Y') AS admissao"),
                     DB::raw("IFNULL(users.name, pessoas.nome) AS nome"),
-                    "users.email",
-                    "permissoes.*"
+                    DB::raw("
+                        CASE
+                            WHEN users.email IS NOT NULL THEN users.email
+                            WHEN pessoas.email IS NOT NULL THEN pessoas.email
+                            ELSE ''
+                        END AS email
+                    "),
+                    DB::raw("IFNULL(permissoes.financeiro, 0) AS financeiro"),
+                    DB::raw("IFNULL(permissoes.atribuicoes, 0) AS atribuicoes"),
+                    DB::raw("IFNULL(permissoes.retiradas, 0) AS retiradas"),
+                    DB::raw("IFNULL(permissoes.usuarios, 0) AS usuarios"),
+                    DB::raw("IFNULL(permissoes.pessoas, 0) AS pessoas"),
+                    DB::raw("IFNULL(permissoes.solicitacoes, 0) AS solicitacoes")
                 )
+                ->leftjoin("setores", "setores.id", "pessoas.id_setor")
                 ->leftjoin("users", "users.id_pessoa", "pessoas.id")
                 ->leftjoin("permissoes", "permissoes.id_usuario", "users.id")
                 ->where("pessoas.id", $id)
@@ -112,11 +170,94 @@ class PessoasController extends ControllerListavel {
     }
 
     public function salvar(Request $request) {
+        if ($this->verifica_vazios($request, ["nome", "funcao", "admissao", "cpf", "telefone"])) return 400; // App\Http\Controllers\Controller.php
+        if ($this->cria_usuario($request->id_setor)) {
+            if (!trim($request->email)) return 400;
+            if (!filter_var($request->email, FILTER_VALIDATE_EMAIL)) return 400;
+        }
+        $admissao = Carbon::createFromFormat('d/m/Y', $request->admissao)->startOfDay();
+        $hj = Carbon::today();
+        if ($admissao->greaterThan($hj)) return 400;
+        if ($this->consultar_main($request)->tipo != "ok") return 401;
 
+        if ($this->obter_empresa()) { // App\Http\Controllers\Controller.php
+            $dados = $this->minhas_empresas(); // App\Http\Controllers\Controller.php
+            $empresas_possiveis_obj = $dados->empresas;
+            $empresas_possiveis_arr = array();
+            foreach ($empresas_possiveis_obj as $matriz) {
+                if ($dados->filial == "N") array_push($empresas_possiveis_arr, intval($matriz->id));
+                $filiais = $matriz->filiais;
+                foreach ($filiais as $filial) array_push($empresas_possiveis_arr, intval($filial->id));
+            }
+            if (!in_array(intval($request->id_empresa), $empresas_possiveis_arr)) return 401;
+        }
+
+        $pessoa = Pessoas::firstOrNew(["id" => $request->id]);
+        $pessoa->nome = mb_strtoupper($request->nome);
+        $pessoa->cpf = $request->cpf;
+        $pessoa->funcao = mb_strtoupper($request->funcao);
+        $pessoa->admissao = Carbon::createFromFormat('d/m/Y', $request->admissao)->format('Y-m-d');
+        $pessoa->id_empresa = $request->id_empresa;
+        $pessoa->id_setor = $request->id_setor;
+        if (trim($request->senha)) $pessoa->senha = $request->senha;
+        $pessoa->supervisor = $request->supervisor;
+        if ($request->file("foto")) $pessoa->foto = $request->file("foto")->store("uploads", "public");
+        $pessoa->telefone = $request->telefone;
+        $pessoa->email = $request->email;
+        $pessoa->save();
+        $this->log_inserir($request->id ? "E" : "C", "pessoas", $pessoa->id); // App\Http\Controllers\Controller.php
+
+        $usuario = DB::table("users")
+                            ->select(
+                                "id",
+                                "email"
+                            )
+                            ->where("id_pessoa", $pessoa->id)
+                            ->first();
+        if ($pessoa->setor()->cria_usuario) {
+            $json_usuario = array();
+            $id_usuario = 0;
+            $password = trim($request->password);
+            $email = trim($request->email);
+            if ($password) $json_usuario += ["password" => Hash::make($password)];
+
+            if ($usuario !== null) {
+                if ($email != $usuario->email && $email) $json_usuario += ["email" => $email];
+            } else if ($email) $json_usuario += ["email" => $email];
+
+            if ($usuario === null) {
+                $json_usuario += ["id_pessoa" => $pessoa->id];
+                $id_usuario = DB::table("users")->insertGetId($json_usuario);
+            } else {
+                DB::table("users")->where("id", $usuario->id)->update($json_usuario);
+                $id_usuario = $usuario->id;
+            }
+            $this->log_inserir($usuario === null ? "C" : "E", "users", $id_usuario); // App\Http\Controllers\Controller.php
+            $permissao = Permissoes::updateOrCreate(
+                ["id_usuario" => $id_usuario],
+                [
+                    "financeiro" => $request->financeiro,
+                    "atribuicoes" => $request->atribuicoes,
+                    "retiradas" => $request->retiradas,
+                    "pessoas" => $request->pessoas,
+                    "usuarios" => $request->usuarios,
+                    "solicitacoes" => $request->solicitacoes,
+                    "supervisor" => $request->supervisor
+                ]
+            );
+            $this->log_inserir($usuario === null ? "C" : "E", "permissoes", $permissao->id); // App\Http\Controllers\Controller.php
+        } else if ($usuario !== null) {
+            $this->log_inserir("D", "users", $usuario->id); // App\Http\Controllers\Controller.php
+            DB::table("users")->where("id", $usuario->id)->delete();
+        }
     }
 
-    public function excluir(Request $request) {
-
+    public function excluir($id) {
+        if (!$this->aviso_main($request->id)->permitir) return 400;
+        $linha = Pessoas::find($request->id);
+        $linha->lixeira = 1;
+        $linha->save();
+        $this->log_inserir("D", "pessoas", $linha->id); // App\Http\Controllers\Controller.php
     }
 
     public function alterar_empresa(Request $request) {

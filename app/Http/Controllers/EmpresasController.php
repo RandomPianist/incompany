@@ -28,25 +28,6 @@ class EmpresasController extends Controller {
         return $cnpj[13] == ($resto < 2 ? 0 : 11 - $resto);
     }
 
-    private function busca($param) {
-        return DB::table("empresas")
-                    ->select(
-                        "id",
-                        "nome_fantasia",
-                        "id_matriz"
-                    )
-                    ->where(function($sql) use($param) {
-                        $empresa_usuario = Empresas::find($this->obter_empresa()); // App\Http\Controllers\Controller.php
-                        if ($empresa_usuario !== null) {
-                            if ($param == "F" && !intval($empresa_usuario->id_matriz)) $sql->where("id_matriz", $empresa_usuario->id);
-                            else $sql->where("id", $param == "M" ? !intval($empresa_usuario->id_matriz) ? $empresa_usuario->id : $empresa_usuario->id_matriz : $empresa_usuario->id);
-                        } else $sql->where("id_matriz", $param == "M" ? "=" : ">", 0);
-                    })
-                    ->where("lixeira", 0)
-                    ->orderBy("nome_fantasia")
-                    ->get();
-    }
-
     private function aviso_main($id) {
         $resultado = $this->pode_abrir_main("empresas", $id, "excluir"); // App\Http\Controllers\Controller.php
         if (!$resultado->permitir) return $resultado;
@@ -75,10 +56,10 @@ class EmpresasController extends Controller {
     }
 
     public function listar() {
-        $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
+        $id_emp = $this->obter_empresa();
         $resultado = new \stdClass;
-        $resultado->inicial = $this->busca("M");
-        $resultado->final = $this->busca("F");
+        $resultado->inicial = $this->busca_emp("M"); // App\Http\Controllers\Controller.php
+        $resultado->final = $this->busca_emp("F"); // App\Http\Controllers\Controller.php
         $resultado->matriz_editavel = $id_emp ? Empresas::find($id_emp)->filiais()->exists() ? 1 : 0 : 1;
         return json_encode($resultado);
     }
@@ -102,7 +83,6 @@ class EmpresasController extends Controller {
 
     public function consultar(Request $request) {
         if (!$request->id && Empresas::where("lixeira", 0)->where("cnpj", $request->cnpj)->exists()) return "R";
-        if (Empresas::where("lixeira", 0)->where("id_matriz", $request->id)->exists()) return "F";
         return "A";
     }
 
@@ -115,10 +95,7 @@ class EmpresasController extends Controller {
     }
 
     public function salvar(Request $request) {
-        if (!trim($request->cnpj)) return 400;
-        if (!trim($request->razao_social)) return 400;
-        if (!trim($request->nome_fantasia)) return 400;
-        if (!trim($request->cidade)) return 400;
+        if ($this->verifica_vazios($request, ["cnpj", "razao_social", "nome_fantasia", "cidade"])) return 400; // App\Http\Controllers\Controller.php
         if ($this->consultar($request) == "R") return 401;
         $linha = Empresas::firstOrNew(["id" => $request->id]);
         if (
@@ -173,5 +150,37 @@ class EmpresasController extends Controller {
         $linha->save();
         $this->log_inserir("D", "empresas", $linha->id); // App\Http\Controllers\Controller.php
         return 200;
+    }
+
+    public function setores($id) {
+        $resultado = new \stdClass;
+        $permissoes = array();
+        $lista = ["financeiro", "atribuicoes", "retiradas", "pessoas", "usuarios", "solicitacoes", "supervisor"];
+        foreach ($lista as $permissao) array_push($permissoes, "(permissoes.".$permissao." = 1 AND minhas_permissoes.".$permissao." = 0)");
+        return json_encode(
+            DB::table("setores")
+                ->select(
+                    "setores.id",
+                    "setores.descr",
+                    "setores.cria_usuario",
+                    "permissoes.supervisor",
+                    DB::raw("
+                        CASE
+                            WHEN (".implode(" OR ", $permissoes).") THEN 0
+                            ELSE 1
+                        END AS ativo
+                    ")
+                )
+                ->crossjoin("permissoes AS minhas_permissoes")
+                ->join("permissoes", "permissoes.id_setor", "setores.id")
+                ->where("lixeira", 0)
+                ->where("id_empresa", $request->id)
+                ->where("minhas_permissoes.id_usuario", Auth::user()->id)
+                ->get()
+        );
+    }
+
+    public function minhas() {
+        return json_encode($this->minhas_empresas()); // App\Http\Controllers\Controller.php
     }
 }

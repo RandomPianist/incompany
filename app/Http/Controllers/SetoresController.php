@@ -154,7 +154,7 @@ class SetoresController extends ControllerListavel {
         $setor = Setores::firstOrNew(["id" => $request->id]);
         if ($request->id) {
             $cria_usuario_ant = $setor->cria_usuario;
-            $supervisor_ant = $setor->permissao()->supervisor;
+            $supervisor_ant = $setor->permissao()->supervisor ? 1 : 0;
             if (
                 $setor->id_empresa == $request->id_empresa &&
                 !$this->comparar_texto($request->descr, $linha->descr) && // App\Http\Controllers\Controller.php
@@ -191,7 +191,7 @@ class SetoresController extends ControllerListavel {
             if ($supervisor != $supervisor_ant) {
                 $pessoas = Pessoas::where("id_setor", $request->id)->get();
                 foreach ($pessoas as $pessoa) {
-                    if ($this->comparar_num($pessoa->supervisor, $supervisor)) { // App\Http\Controllers\Controller.php
+                    if ($this->comparar_num($pessoa->supervisor ? 1 : 0, $supervisor)) { // App\Http\Controllers\Controller.php
                         $chave = "id".$pessoa->id;
                         $atualizar[$chave] = array_merge($atualizar[$chave] ?? [], ["supervisor" => $supervisor]);
                     }
@@ -223,9 +223,7 @@ class SetoresController extends ControllerListavel {
                             }
                         }
                         $this->log_inserir("D", "users", $usuario->id); // App\Http\Controllers\Controller.php
-                        $this->log_inserir("D", "permissoes", $usuario->id_permissao); // App\Http\Controllers\Controller.php
                         DB::table("users")->where("id", $usuario->id)->delete();
-                        Permissoes::find($usuario->id_permissao)->delete();
                     }
                 } elseif (isset($request->id_pessoa)) {
                     for ($i = 0; $i < sizeof($request->id_pessoa); $i++) {
@@ -313,6 +311,13 @@ class SetoresController extends ControllerListavel {
             if (!$linha->telefone) $resultado->mostrar_fone = 1;
         }
         $resultado->consulta = $consulta;
+        return json_encode($resultado);
+    }
+
+    public function permissoes($id) {
+        $setor = Setores::find($id);
+        $resultado = $setor->permissao();
+        $resultado->cria_usuario = $setor->cria_usuario;
         return json_encode($resultado);
     }
 }
