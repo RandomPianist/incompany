@@ -107,8 +107,8 @@ abstract class Controller extends BaseController {
                         "nome_fantasia",
                         "id_matriz"
                     )
-                    ->where(function($sql) use($param, $id_emp, $id_matriz) {
-                        if ($param == "T") {
+                    ->where(function($sql) use($tipo, $id_emp, $id_matriz) {
+                        if ($tipo == "T") {
                             $m_emp = $this->obter_empresa();
                             $sql->where("id_matriz", $id_matriz);
                             if ($id_emp) {
@@ -131,9 +131,9 @@ abstract class Controller extends BaseController {
                         } else {
                             $empresa_usuario = Pessoas::find(Auth::user()->id_pessoa)->empresa();
                             if ($empresa_usuario !== null) {
-                                if ($param == "F" && !intval($empresa_usuario->id_matriz)) $sql->where("id_matriz", $empresa_usuario->id);
-                                else $sql->where("id", $param == "M" ? !intval($empresa_usuario->id_matriz) ? $empresa_usuario->id : $empresa_usuario->id_matriz : $empresa_usuario->id);
-                            } else $sql->where("id_matriz", $param == "M" ? "=" : ">", 0);
+                                if ($tipo == "F" && !intval($empresa_usuario->id_matriz)) $sql->where("id_matriz", $empresa_usuario->id);
+                                else $sql->where("id", $tipo == "M" ? !intval($empresa_usuario->id_matriz) ? $empresa_usuario->id : $empresa_usuario->id_matriz : $empresa_usuario->id);
+                            } else $sql->where("id_matriz", $tipo == "M" ? "=" : ">", 0);
                         }
                     })
                     ->where("lixeira", 0)
