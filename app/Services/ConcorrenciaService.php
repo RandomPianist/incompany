@@ -5,7 +5,7 @@ namespace App\Services;
 use DB;
 use App\Models\Pessoas;
 
-class ConcorrenciasService {
+class ConcorrenciaService {
     private function campos_usuario($terceiro) {
         return "
             IFNULL(users1.name, '') AS usuario,
