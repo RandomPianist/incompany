@@ -229,7 +229,7 @@ function Pessoa(_id) {
                 } else {
                     ant_id_empresa = 0;
                     ant_id_setor = 0;
-                    $($("#pessoasModal .user-pic").parent()).removeClass("d-none");
+                    $($("#pessoasModal .user-pic").parent()).addClass("d-none");
                 }
                 modal("pessoasModal", _id, function() {
                     carregando = false;
