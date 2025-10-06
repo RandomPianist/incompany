@@ -142,6 +142,8 @@ function validar() {
 
 function muda_cria_usuario(el, callback) {
     const escrever = function(container, texto) {
+        if (texto) $("#setoresModal > .modal-dialog").addClass("modal-xl", "modal-xl-kx").removeClass("modal-lg");
+        else $("#setoresModal > .modal-dialog").removeClass("modal-xl", "modal-xl-kx").addClass("modal-lg");
         $(container).append(texto + obterHtmlPermissoes(true, $(el).prop("checked")));
         permissoesListeners(false);
         $("#setoresModal .linha-usuario:last-child").addClass("mb-4");
