@@ -455,6 +455,7 @@ function descartar(_tabela) {
         const _id = $(_tabela == "pessoas" ? "#pessoa-id" : "#id").val();
         if (parseInt(_id)) {
             $.post(URL + "/descartar", {
+                _token : $("meta[name='csrf-token']").attr("content"),
                 id : _id,
                 tabela : _tabela
             });

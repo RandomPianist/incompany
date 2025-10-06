@@ -3,14 +3,18 @@
 namespace App\Services;
 
 use DB;
+use Auth;
 use App\Models\Pessoas;
 
 class ConcorrenciaService {
     private function campos_usuario($terceiro) {
         return "
             IFNULL(users1.name, '') AS usuario,
+            IFNULL(users1.id, 0) AS usuario_id,
             IFNULL(users2.name, '') AS associado1_usuario,
-            ".($terceiro ? "IFNULL(users3.name, '')" : "''")." AS associado2_usuario
+            IFNULL(users2.id, 0) AS associado1_usuario_id,
+            ".($terceiro ? "IFNULL(users3.name, '')" : "''")." AS associado2_usuario,
+            ".($terceiro ? "IFNULL(users3.id, 0)" : "0")." AS associado2_usuario_id
         ";
     }
 
@@ -70,7 +74,8 @@ class ConcorrenciaService {
         else if (DB::table("users")->where("id_pessoa", $id_pessoa)->exists()) $titulo = "usuário";
         else if ($pessoa->supervisor) $titulo = "supervisor";
         else $titulo = "funcionário";
-        $msg = str_replace("a pessoa", ($consulta["pessoa_associado"] == "S" ? "e" : "o")." ".$titulo, $msg);
+        $msg = str_replace("a pessoa", ($consulta["pessoa_associado"] == "S" ? "o" : "e")." ".$titulo, $msg);
+        $msg = str_replace("o pessoa", ($consulta["pessoa_associado"] == "S" ? "o" : "e")." ".$titulo, $msg);
         return $msg;
     }
 
@@ -228,8 +233,12 @@ class ConcorrenciaService {
         }
         if (!$query) return $resultado;
         $query .= " WHERE ".$tabela.".id = ".$id;
-        $consulta = (array) DB::select(DB::raw($query))[0];
-        if ($consulta["usuario"]) {
+        $consulta = (array) DB::select(DB::raw(str_replace(" set ", " `set` ", $query)))[0];
+        if (
+            intval($consulta["usuario_id"]) &&
+            intval($consulta["usuario_id"]) != Auth::user()->id
+        ) {
+            if (intval($consulta["id_pessoa"])) $consulta["artigo"] = "o";
             $resultado->permitir = 0;
             $resultado->aviso = $this->obter_mensagem("Não é possível ".$acao." <b>".mb_strtoupper($consulta["titulo"])."</b> porque ess".$consulta["tipo"]." está sendo editad".$consulta["artigo"]." por <b>".mb_strtoupper($consulta["usuario"])."</b>", $consulta);
             return $resultado;
@@ -237,7 +246,12 @@ class ConcorrenciaService {
         $msg = "";
         for ($i = 1; $i <= 2; $i++) {
             $chave = "associado".$i;
-            if (!$msg && $consulta[$chave."_usuario"]) {
+            if (
+                !$msg &&
+                intval($consulta[$chave."_usuario_id"]) &&
+                intval($consulta[$chave."_usuario_id"]) != Auth::user()->id
+            ) {
+                if (intval($consulta["id_pessoa"])) $consulta[$chave."_artigo"] = "o";
                 $msg = "Não é possível ".$acao." <b>".mb_strtoupper($consulta["titulo"])."</b> porque ".$consulta[$chave."_artigo"]." ".$consulta[$chave."_tipo"]." <b>".mb_strtoupper($consulta[$chave."_titulo"])."</b>,";
                 $msg .= "associado a ess".$consulta["tipo"].", está sendo editad".$consulta[$chave."_artigo"]." por <b>".mb_strtoupper($consulta[$chave."_usuario"])."</b>";
                 $msg = $this->obter_mensagem($msg, $consulta);
