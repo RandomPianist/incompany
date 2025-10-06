@@ -154,18 +154,18 @@ class SetoresController extends ControllerListavel {
         $setor = Setores::firstOrNew(["id" => $request->id]);
         if ($request->id) {
             $cria_usuario_ant = $setor->cria_usuario;
-            $supervisor_ant = $setor->permissao()->supervisor ? 1 : 0;
+            $supervisor_ant = $setor->permissao->supervisor ? 1 : 0;
             if (
                 $setor->id_empresa == $request->id_empresa &&
                 !$this->comparar_texto($request->descr, $linha->descr) && // App\Http\Controllers\Controller.php
                 !$this->comparar_num($supervisor_ant, $supervisor) && // App\Http\Controllers\Controller.php
                 !$this->comparar_num($cria_usuario_ant, $cria_usuario) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($setor->permissao()->financeiro, $request->financeiro == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($setor->permissao()->atribuicoes, $request->atribuicoes == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($setor->permissao()->retiradas, $request->retiradas == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($setor->permissao()->pessoas, $request->pessoas == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($setor->permissao()->usuarios, $request->usuarios == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($setor->permissao()->solicitacoes, $request->solicitacoes == "S" ? 1 : 0) // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao->financeiro, $request->financeiro == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao->atribuicoes, $request->atribuicoes == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao->retiradas, $request->retiradas == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao->pessoas, $request->pessoas == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao->usuarios, $request->usuarios == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao->solicitacoes, $request->solicitacoes == "S" ? 1 : 0) // App\Http\Controllers\Controller.php
             ) return 400;
         }
         $setor->descr = mb_strtoupper($request->descr);
@@ -173,7 +173,7 @@ class SetoresController extends ControllerListavel {
         $setor->cria_usuario = $cria_usuario;
         $setor->save();
         $this->log_inserir($request->id ? "E" : "C", "setores", $setor->id); // App\Http\Controllers\Controller.php
-        $setor->permissao()->updateOrCreate(
+        $setor->permissao->updateOrCreate(
             ["id_setor" => $setor->id],
             [
                 "financeiro" => $request->financeiro == "S" ? 1 : 0,
@@ -185,7 +185,7 @@ class SetoresController extends ControllerListavel {
                 "supervisor" => $supervisor
             ]
         );
-        $this->log_inserir($request->id ? "E" : "C", "permissoes", $setor->permissao()->id); // App\Http\Controllers\Controller.php
+        $this->log_inserir($request->id ? "E" : "C", "permissoes", $setor->permissao->id); // App\Http\Controllers\Controller.php
         if ($request->id) {
             $atualizar = array();
             if ($supervisor != $supervisor_ant) {
@@ -245,7 +245,7 @@ class SetoresController extends ControllerListavel {
                             if ($this->comparar_texto($request->phone[$i], $pessoa->telefone)) $atualizar[$chave] = array_merge($atualizar[$chave] ?? [], ["telefone" => $request->phone[$i]]); // App\Http\Controllers\Controller.php
                         }
                         
-                        $permissao = $setor->permissao()->replicate(["id_setor"]);
+                        $permissao = $setor->permissao->replicate(["id_setor"]);
                         $permissao->id_usuario = $id_usuario;
                         $permissao->save();
                         $this->log_inserir("C", "permissoes", $permissao->id); // App\Http\Controllers\Controller.php
@@ -316,7 +316,7 @@ class SetoresController extends ControllerListavel {
 
     public function permissoes($id) {
         $setor = Setores::find($id);
-        $resultado = $setor->permissao();
+        $resultado = $setor->permissao;
         $resultado->cria_usuario = $setor->cria_usuario;
         return json_encode($resultado);
     }

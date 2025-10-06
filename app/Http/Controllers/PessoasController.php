@@ -20,7 +20,7 @@ class PessoasController extends ControllerListavel {
         ) {
             $resultado->tipo = "duplicado";
             $resultado->dado = "CPF";
-        } else if (!$request->id &&
+        } elseif (!$request->id &&
             DB::table("pessoas")
                 ->leftjoin("users", "users.id_pessoa", "pessoas.id")
                 ->where(function($sql) {
@@ -214,7 +214,7 @@ class PessoasController extends ControllerListavel {
                             )
                             ->where("id_pessoa", $pessoa->id)
                             ->first();
-        if ($pessoa->setor()->cria_usuario) {
+        if ($pessoa->setor->cria_usuario) {
             $json_usuario = array();
             $id_usuario = 0;
             $password = trim($request->password);
@@ -223,7 +223,7 @@ class PessoasController extends ControllerListavel {
 
             if ($usuario !== null) {
                 if ($email != $usuario->email && $email) $json_usuario += ["email" => $email];
-            } else if ($email) $json_usuario += ["email" => $email];
+            } elseif ($email) $json_usuario += ["email" => $email];
 
             if ($usuario === null) {
                 $json_usuario += ["id_pessoa" => $pessoa->id];
@@ -246,7 +246,7 @@ class PessoasController extends ControllerListavel {
                 ]
             );
             $this->log_inserir($usuario === null ? "C" : "E", "permissoes", $permissao->id); // App\Http\Controllers\Controller.php
-        } else if ($usuario !== null) {
+        } elseif ($usuario !== null) {
             $this->log_inserir("D", "users", $usuario->id); // App\Http\Controllers\Controller.php
             DB::table("users")->where("id", $usuario->id)->delete();
         }

@@ -66,7 +66,7 @@ class ExcecoesController extends Controller {
         ) return 404;
         if (
             !intval($request->id) &&
-            $atb->excecoes()->where($request->ps_chave == "P" ? "id_pessoa" : "id_setor", $request->ps_id)->exists()
+            $atb->excecoes->where($request->ps_chave == "P" ? "id_pessoa" : "id_setor", $request->ps_id)->exists()
         ) return 403;
         $id_usuario = Auth::user()->id;
         $this->backup_atribuicao($atb); // App\Http\Controllers\Controller.php

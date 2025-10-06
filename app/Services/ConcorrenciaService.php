@@ -71,8 +71,8 @@ class ConcorrenciaService {
         $pessoa = Pessoas::find($id_pessoa);
         $titulo = "";
         if (!intval($pessoa->id_empresa)) $titulo = "administrador";
-        else if (DB::table("users")->where("id_pessoa", $id_pessoa)->exists()) $titulo = "usuário";
-        else if ($pessoa->supervisor) $titulo = "supervisor";
+        elseif (DB::table("users")->where("id_pessoa", $id_pessoa)->exists()) $titulo = "usuário";
+        elseif ($pessoa->supervisor) $titulo = "supervisor";
         else $titulo = "funcionário";
         $msg = str_replace("a pessoa", ($consulta["pessoa_associado"] == "S" ? "o" : "e")." ".$titulo, $msg);
         $msg = str_replace("o pessoa", ($consulta["pessoa_associado"] == "S" ? "o" : "e")." ".$titulo, $msg);

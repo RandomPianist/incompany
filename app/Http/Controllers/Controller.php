@@ -129,7 +129,7 @@ abstract class Controller extends BaseController {
                                 }
                             }
                         } else {
-                            $empresa_usuario = Pessoas::find(Auth::user()->id_pessoa)->empresa();
+                            $empresa_usuario = Pessoas::find(Auth::user()->id_pessoa)->empresa;
                             if ($empresa_usuario !== null) {
                                 if ($tipo == "F" && !intval($empresa_usuario->id_matriz)) $sql->where("id_matriz", $empresa_usuario->id);
                                 else $sql->where("id", $tipo == "M" ? !intval($empresa_usuario->id_matriz) ? $empresa_usuario->id : $empresa_usuario->id_matriz : $empresa_usuario->id);
@@ -202,7 +202,7 @@ abstract class Controller extends BaseController {
                     WHERE id = ".$fk."
                 )
             ");
-        } else if (in_array($tabela, ["categorias", "empresas", "pessoas", "produtos", "setores"])) $this->alterar_usuario_editando($tabela, $fk, true);
+        } elseif (in_array($tabela, ["categorias", "empresas", "pessoas", "produtos", "setores"])) $this->alterar_usuario_editando($tabela, $fk, true);
         return $linha;
     }
 

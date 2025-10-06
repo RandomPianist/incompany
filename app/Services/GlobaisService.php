@@ -53,7 +53,7 @@ class GlobaisService {
                 WHERE ((log.tabela = 'pessoas' AND ".$param.")
                     OR (".$param2." AND (log.tabela = 'atribuicoes' OR (log.tabela = 'retiradas' AND retiradas.id IS NOT NULL))))
             ";
-        } else if ($tabela == "maquinas") {
+        } elseif ($tabela == "maquinas") {
             $query .= "
                 LEFT JOIN maquinas AS main
                     ON main.id = log.fk
@@ -72,7 +72,7 @@ class GlobaisService {
                    OR (log.tabela = 'comodatos' AND comodatos.id IS NOT NULL)
                    OR (log.tabela = 'estoque' AND estoque.id IS NOT NULL))
             ";
-        } else if ($tabela == "setores") {
+        } elseif ($tabela == "setores") {
             $query .= "
                 LEFT JOIN (
                     SELECT id
