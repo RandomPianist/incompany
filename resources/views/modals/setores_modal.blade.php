@@ -56,7 +56,7 @@
                         </div>
                     </div>
                 </div>
-                <div class = "d-flex">
+                <div class = "d-flex mt-4">
                     <button type = "button" class = "btn btn-target mx-auto mb-4 px-5" onclick = "validar()">Salvar</button>
                 </div>
             </form>
