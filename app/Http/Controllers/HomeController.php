@@ -40,7 +40,7 @@ class HomeController extends Controller {
     }
 
     public function iniciar() {
-        if (Permissoes::where("id_usuario", Auth::user()->id)->financeiro) return view("dashboard");
+        if (Permissoes::where("id_usuario", Auth::user()->id)->first()->financeiro) return view("dashboard");
         if (Pessoas::find(Auth::user()->id_pessoa)) return redirect("/colaboradores/pagina/A");
         return redirect("/colaboradores/pagina/F");
     }
