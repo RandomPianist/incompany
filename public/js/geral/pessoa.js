@@ -26,7 +26,7 @@ function Pessoa(_id) {
             else var permissao = false;
             $("#pessoa-" + x + "-chk").prop("checked", permissao).attr("disabled", !permissoes[x]);
             if (permissoes[x]) $("#pessoa-" + x + "-lbl").removeAttr("title");
-            else ("#pessoa-" + x + "-lbl").attr("title", "Não é possível atribuir a esse " + titulo + " permissões que seu usuário não tem");
+            else $("#pessoa-" + x + "-lbl").attr("title", "Não é possível atribuir a esse " + titulo + " permissões que seu usuário não tem");
         }
         let id_usuario = 0;
         if (dados !== undefined) id_usuario = parseInt(dados.id_usuario);
