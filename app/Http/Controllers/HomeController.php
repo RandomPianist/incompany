@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use DB;
 use Auth;
 use App\Models\Permissoes;
+use App\Models\Pessoas;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller {
@@ -36,6 +37,12 @@ class HomeController extends Controller {
             }
         }
         return $result;
+    }
+
+    public function iniciar() {
+        if (Permissoes::where("id_usuario", Auth::user()->id)->financeiro) return view("dashboard");
+        if (Pessoas::find(Auth::user()->id_pessoa)) return redirect("/colaboradores/pagina/A");
+        return redirect("/colaboradores/pagina/F");
     }
 
     public function autocomplete(Request $request) {

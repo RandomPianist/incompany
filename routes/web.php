@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware("auth")->group(function () {
-    Route::get ("/",                         [DashboardController::class, "iniciar"])->name("home");
+    Route::get ("/",                         [HomeController::class, "iniciar"])->name("home");
     Route::get ("/permissoes",               [HomeController::class, "permissoes"]);
     Route::get ("/autocomplete",             [HomeController::class, "autocomplete"]);
     Route::get ("/obter-descr",              [HomeController::class, "obter_descr"]);

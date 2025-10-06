@@ -127,10 +127,6 @@ class DashboardController extends Controller {
         return $atrasos;
     }
 
-    public function iniciar() {
-        return view("dashboard");
-    }
-
     public function maquinas(Request $request) {
         return json_encode($this->maquinas_main($request->inicio, $request->fim));
     }
