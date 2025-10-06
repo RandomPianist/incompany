@@ -15,6 +15,9 @@ function Pessoa(_id) {
         else if (usuario) titulo = "usuário";
         else if (supervisor) titulo = "supervisor";
         else titulo = "funcionário";
+        $("#pessoasModal .linha-permissao").each(function() {
+            $(this).remove();
+        });
         $("#pessoasModalLabel").html((_id ? "Editando" : "Cadastrando") + " " + titulo);
         $("#pessoasModal .container").append(htmlPermissoes.replaceAll("??", titulo));
         permissoesListeners(false);
