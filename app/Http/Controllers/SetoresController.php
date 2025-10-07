@@ -10,6 +10,17 @@ use App\Models\Pessoas;
 use Illuminate\Http\Request;
 
 class SetoresController extends ControllerListavel {
+    private function setor_do_sistema_main($id) {
+        return DB::table("setores")
+                    ->join("log", function($join) {
+                        $join->on("log.fk", "setores.id")
+                            ->where("log.origem", "SYS")
+                            ->where("log.tabela", "setores");
+                    })
+                    ->where("setores.id", $id)
+                    ->exists();
+    }
+
     private function aviso_main($id) {
         $resultado = $this->pode_abrir_main("setores", $id, "excluir"); // App\Http\Controllers\Controller.php
         if (!$resultado->permitir) return $resultado;
@@ -17,16 +28,7 @@ class SetoresController extends ControllerListavel {
         $resultado->permitir = 0;
         $setor = Setores::find($id);
         $nome = $setor->descr;
-        if (
-            DB::table("setores")
-                ->join("log", function($join) {
-                    $join->on("log.fk", "setores.id")
-                        ->where("log.origem", "SYS")
-                        ->where("log.tabela", "setores");
-                })
-                ->where("setores.id", $id)
-                ->exists()
-        ) {
+        if ($this->setor_do_sistema_main($id)) {
             $resultado->aviso = "Não é possível excluir um centro de custo do sistema";
         } elseif ($setor->pessoas()->exists()) {
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a esse centro de custo";
@@ -89,67 +91,64 @@ class SetoresController extends ControllerListavel {
         return json_encode($this->consultar_main($request));
     }
 
+    public function setor_do_sistema($id) {
+        return $this->setor_do_sistema_main($id) ? "1" : "0";
+    }
+
     public function mostrar($id) {
         $this->alterar_usuario_editando("setores", $id); // App\Http\Controllers\Controller.php
-        $condicoes_padrao = [
-            "WHEN (log.id IS NOT NULL) THEN 'SYS'",
-            "WHEN (minhas_permissoes.usuarios = 0) THEN 'PER'",
-            "ELSE ''"
-        ];
-        $campos_permissao = array();
-        $permissoes_lista = ["financeiro", "atribuicoes", "retiradas", "pessoas", "usuarios", "solicitacoes", "supervisor"];
-        foreach ($permissoes_lista as $campo) {
-            $sql = "permissoes.".$campo.", CASE ";
-            $condicoes = $campo == "usuarios" ? ["WHEN (setores.id = ".Pessoas::find(Auth::user()->id_pessoa)->id_setor.") THEN 'USU'"] : [];
-            foreach ($condicoes_padrao as $condicao) array_push($condicoes, str_replace("usuarios", $campo, $condicao));
-            $sql .= implode(" ", $condicoes)." END AS ".$campo."_motivo";
-            array_push($campos_permissao, $sql);
-        }
-        return json_encode(DB::select(DB::raw("
-            SELECT
-                setores.descr,
-                setores.cria_usuario,
-                setores.id_empresa,
-                empresas.nome_fantasia AS empresa,
-                CASE
-                    WHEN (log.id IS NOT NULL) THEN 'SYS'
-                    WHEN (lim.id_setor IS NOT NULL) THEN 'PES'
-                    ELSE ''
-                END AS empresa_motivo,
-                CASE ".implode(" ", $condicoes_padrao)." END AS cria_usuario_motivo,
-                ".implode(",", $campos_permissao)."
-            
-            FROM setores
-
-            CROSS JOIN permissoes AS minhas_permissoes
-
-            JOIN empresas
-                ON empresas.id = setores.id_empresa
-
-            JOIN permissoes
-                ON permissoes.id_setor = setores.id
-
-            LEFT JOIN (
-                SELECT DISTINCTROW id_setor
-                FROM pessoas
-                WHERE lixeira = 0
-            ) AS lim ON lim.id_setor = setores.id
-
-            LEFT JOIN log
-                ON log.fk = setores.id
-                    AND log.origem = 'SYS'
-                    AND log.acao = 'C'
-                    AND log.tabela = 'setores'
-
-            WHERE setores.id = ".$id."
-                AND minhas_permissoes.id_usuario = ".Auth::user()->id
-        ))[0]);
+        return json_encode(
+            DB::table("setores")
+                ->select(
+                    "setores.id",
+                    "setores.descr",
+                    "setores.cria_usuario",
+                    "setores.id_empresa",
+                    "empresas.nome_fantasia AS empresa",
+                    "permissoes.financeiro",
+                    "permissoes.atribuicoes",
+                    "permissoes.retiradas",
+                    "permissoes.usuarios",
+                    "permissoes.pessoas",
+                    "permissoes.supervisor",
+                    "permissoes.solicitacoes",
+                    DB::raw("
+                        CASE
+                            WHEN log.id IS NOT NULL THEN 1
+                            ELSE 0
+                        END AS sistema
+                    "),
+                    DB::raw("
+                        CASE
+                            WHEN setores.id = ".Pessoas::find(Auth::user()->id_pessoa)->id_setor." THEN 1
+                            ELSE 0
+                        END AS meu_setor
+                    ")
+                )
+                ->leftjoin("empresas", "empresas.id", "setores.id_empresa")
+                ->leftjoin("permissoes", "permissoes.id_setor", "setores.id")
+                ->leftjoin("log", function($join) {
+                    $join->on("log.fk", "setores.id")
+                        ->where("log.origem", "SYS")
+                        ->where("log.tabela", "setores");
+                })
+                ->leftjoinSub(
+                    DB::table("pessoas")
+                        ->selectRaw("DISTINCTROW id_setor")
+                        ->where("lixeira", 0),
+                    "pes",
+                    "pes.id_setor",
+                    "setores.id"
+                )
+                ->where("setores.id", $id)
+                ->first()
+        );
     }
 
     public function salvar(Request $request) {
         if ($this->consultar_main($request)->msg) return 401;
-        $cria_usuario = $request->cria_usuario == "S" ? 1 : 0;
-        $supervisor = $request->supervisor == "S" ? 1 : 0;
+        $cria_usuario = $request->cria_usuario;
+        $supervisor = $request->supervisor;
         $cria_usuario_ant = null;
         $supervisor_ant = null;
         $setor = Setores::firstOrNew(["id" => $request->id]);
@@ -161,12 +160,12 @@ class SetoresController extends ControllerListavel {
                 !$this->comparar_texto($request->descr, $linha->descr) && // App\Http\Controllers\Controller.php
                 !$this->comparar_num($supervisor_ant, $supervisor) && // App\Http\Controllers\Controller.php
                 !$this->comparar_num($cria_usuario_ant, $cria_usuario) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($setor->permissao->financeiro, $request->financeiro == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($setor->permissao->atribuicoes, $request->atribuicoes == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($setor->permissao->retiradas, $request->retiradas == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($setor->permissao->pessoas, $request->pessoas == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($setor->permissao->usuarios, $request->usuarios == "S" ? 1 : 0) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($setor->permissao->solicitacoes, $request->solicitacoes == "S" ? 1 : 0) // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao->financeiro, $request->financeiro) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao->atribuicoes, $request->atribuicoes) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao->retiradas, $request->retiradas) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao->pessoas, $request->pessoas) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao->usuarios, $request->usuarios) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($setor->permissao->solicitacoes, $request->solicitacoes) // App\Http\Controllers\Controller.php
             ) return 400;
         }
         $setor->descr = mb_strtoupper($request->descr);
@@ -177,12 +176,12 @@ class SetoresController extends ControllerListavel {
         $setor->permissao->updateOrCreate(
             ["id_setor" => $setor->id],
             [
-                "financeiro" => $request->financeiro == "S" ? 1 : 0,
-                "atribuicoes" => $request->atribuicoes == "S" ? 1 : 0,
-                "retiradas" => $request->retiradas == "S" ? 1 : 0,
-                "pessoas" => $request->pessoas == "S" ? 1 : 0,
-                "usuarios" => $request->usuarios == "S" ? 1 : 0,
-                "solicitacoes" => $request->solicitacoes == "S" ? 1 : 0,
+                "financeiro" => $request->financeiro,
+                "atribuicoes" => $request->atribuicoes,
+                "retiradas" => $request->retiradas,
+                "pessoas" => $request->pessoas,
+                "usuarios" => $request->usuarios,
+                "solicitacoes" => $request->solicitacoes,
                 "supervisor" => $supervisor
             ]
         );

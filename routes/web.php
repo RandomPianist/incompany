@@ -80,6 +80,7 @@ Route::middleware("auth")->group(function () {
         Route::get ("/pessoas/{id}",    [SetoresController::class, "pessoas"]);
         Route::get ("/mostrar/{id}",    [SetoresController::class, "mostrar"]);
         Route::get ("/aviso/{id}",      [SetoresController::class, "aviso"]);
+        Route::get ("/do-sistema/{id}", [SetoresController::class, "setor_do_sistema"]);
         Route::post("/salvar",          [SetoresController::class, "salvar"]);
         Route::post("/excluir",         [SetoresController::class, "excluir"]);
     });

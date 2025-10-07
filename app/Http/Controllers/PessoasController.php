@@ -82,14 +82,18 @@ class PessoasController extends ControllerListavel {
                         DB::raw("IFNULL(empresas.nome_fantasia, 'A CLASSIFICAR') AS empresa"),
                         DB::raw("
                             CASE
-                                WHEN (pessoas.id IN (
-                                    SELECT id_pessoa
-                                    FROM retiradas
-                                    WHERE ".$this->obter_where(Auth::user()->id_pessoa, "retiradas")."
-                                )) THEN 1
+                                WHEN ret.id_pessoa IS NOT NULL THEN 1
                                 ELSE 0
                             END AS possui_retiradas
                         ")
+                    )
+                    ->leftjoinSub(
+                        DB::table("retiradas")
+                            ->selectRaw("DISTINCTROW id_pessoa")
+                            ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas")),
+                        "ret",
+                        "ret.id_pessoa",
+                        "pessoas.id"
                     )
                     ->leftjoin("setores", "setores.id", "pessoas.id_setor")
                     ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")

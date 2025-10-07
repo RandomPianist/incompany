@@ -1017,7 +1017,6 @@ function cp_mp_listar(tipo, abrir) {
 }
 
 function atualizarChk(id, numerico) {
-    if (pessoa !== null) numerico = true;
     const checked = $("#" + id + "-chk").prop("checked");
     $("#" + id).val(numerico ? checked ? "1" : "0" : checked ? "S" : "N");
     if (pessoa !== null) {
@@ -1030,7 +1029,7 @@ function permissoesListeners(setor) {
     const prefixo = (setor ? "setor" : "pessoa") + "-";
     for (let x in permissoes) {
         $("#" + prefixo + x + "-chk").off("change").on("change", function() {
-            atualizarChk(prefixo + x, false);
+            atualizarChk(prefixo + x, true);
         });
     }
 }

@@ -161,17 +161,17 @@ CREATE VIEW vpendentesgeral AS (
     SELECT
         mat_vatribuicoes.id_pessoa,
 
-        vatbold.validade,
-        vatbold.id AS id_atribuicao,
-        vatbold.obrigatorio,
-        vatbold.pr_chave AS produto_ou_referencia_chave,
+        mat_vatbaux2.validade,
+        mat_vatbaux2.id AS id_atribuicao,
+        mat_vatbaux2.obrigatorio,
+        mat_vatbaux2.pr_chave AS produto_ou_referencia_chave,
         
         produtos.id AS id_produto,
         CASE
-            WHEN (vatbold.pr_chave = 'R') THEN produtos.referencia
+            WHEN (mat_vatbaux2.pr_chave = 'R') THEN produtos.referencia
             ELSE produtos.id
         END AS chave_produto,
-        vatbold.pr_valor AS nome_produto,
+        mat_vatbaux2.pr_valor AS nome_produto,
         produtos.referencia,
         produtos.descr,
         produtos.detalhes,
@@ -180,62 +180,60 @@ CREATE VIEW vpendentesgeral AS (
         IFNULL(produtos.foto, '') AS foto,
         
         CASE
-            WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN
+            WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL mat_vatbaux2.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN
                 ROUND(CASE
                     WHEN (vprodutos.travar_estq = 1) THEN
                         CASE
-                            WHEN (vprodutos.qtd >= (vatbold.qtd - mat_vretiradas.valor)) THEN (vatbold.qtd - mat_vretiradas.valor)
+                            WHEN (vprodutos.qtd >= (mat_vatbaux2.qtd - mat_vretiradas.valor)) THEN (mat_vatbaux2.qtd - mat_vretiradas.valor)
                             ELSE vprodutos.qtd
                         END
-                    ELSE (vatbold.qtd - mat_vretiradas.valor)
+                    ELSE (mat_vatbaux2.qtd - mat_vretiradas.valor)
                 END)
             ELSE 0
         END AS qtd,
         IFNULL(DATE_FORMAT(mat_vultretirada.data, '%d/%m/%Y'), '') AS ultima_retirada,
         DATE_FORMAT((
             CASE
-                WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN CURDATE()
-                ELSE (DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY))
+                WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL mat_vatbaux2.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN CURDATE()
+                ELSE (DATE_ADD(mat_vultretirada.data, INTERVAL mat_vatbaux2.validade DAY))
             END
         ), '%d/%m/%Y') AS proxima_retirada,
-        IFNULL(DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY), vatbold.data) AS proxima_retirada_real,
+        IFNULL(DATE_ADD(mat_vultretirada.data, INTERVAL mat_vatbaux2.validade DAY), mat_vatbaux2.data) AS proxima_retirada_real,
         CASE
-            WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN 1
+            WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL mat_vatbaux2.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN 1
             ELSE 0
         END AS esta_pendente
         
-    FROM vatbold
+    FROM mat_vatbaux2
 
     JOIN mat_vatribuicoes
-        ON mat_vatribuicoes.id_atribuicao = vatbold.id
+        ON mat_vatribuicoes.id_atribuicao = mat_vatbaux2.id
         
     JOIN produtos
-        ON produtos.cod_externo = vatbold.cod_produto
-            OR produtos.referencia = vatbold.referencia
+        ON produtos.cod_externo = mat_vatbaux2.cod_produto
+            OR produtos.referencia = mat_vatbaux2.referencia
 
     JOIN vprodutosgeral AS vprodutos
         ON vprodutos.id_pessoa = mat_vatribuicoes.id_pessoa
             AND vprodutos.id_produto = produtos.id
 
     JOIN mat_vretiradas
-        ON mat_vretiradas.id_atribuicao = vatbold.id
+        ON mat_vretiradas.id_atribuicao = mat_vatbaux2.id
             AND mat_vretiradas.id_pessoa = mat_vatribuicoes.id_pessoa
 
     JOIN mat_vultretirada
-        ON mat_vultretirada.id_atribuicao = vatbold.id
+        ON mat_vultretirada.id_atribuicao = mat_vatbaux2.id
             AND mat_vultretirada.id_pessoa = mat_vatribuicoes.id_pessoa
-
-    WHERE vatbold.rascunho = 'S'
 
     GROUP BY
         mat_vatribuicoes.id_pessoa,
-        vatbold.id,
-        vatbold.pr_chave,
-		vatbold.pr_valor,
-        vatbold.obrigatorio,
-        vatbold.validade,
-        vatbold.qtd,
-        vatbold.data,
+        mat_vatbaux2.id,
+        mat_vatbaux2.pr_chave,
+		mat_vatbaux2.pr_valor,
+        mat_vatbaux2.obrigatorio,
+        mat_vatbaux2.validade,
+        mat_vatbaux2.qtd,
+        mat_vatbaux2.data,
         produtos.id,
         produtos.referencia,
         produtos.descr,
@@ -248,7 +246,7 @@ CREATE VIEW vpendentesgeral AS (
         vprodutos.travar_estq,
         mat_vretiradas.valor,
         CASE
-            WHEN (vatbold.pr_chave = 'R') THEN produtos.referencia
+            WHEN (mat_vatbaux2.pr_chave = 'R') THEN produtos.referencia
             ELSE produtos.id
         END
 );
@@ -257,17 +255,17 @@ CREATE VIEW vpendentesmaq AS (
     SELECT
         mat_vatribuicoes.id_pessoa,
 
-        vatbold.validade,
-        vatbold.id AS id_atribuicao,
-        vatbold.obrigatorio,
-        vatbold.pr_chave AS produto_ou_referencia_chave,
+        mat_vatbaux2.validade,
+        mat_vatbaux2.id AS id_atribuicao,
+        mat_vatbaux2.obrigatorio,
+        mat_vatbaux2.pr_chave AS produto_ou_referencia_chave,
         
         produtos.id AS id_produto,
         CASE
-            WHEN (vatbold.pr_chave = 'R') THEN produtos.referencia
+            WHEN (mat_vatbaux2.pr_chave = 'R') THEN produtos.referencia
             ELSE produtos.id
         END AS chave_produto,
-        vatbold.pr_valor AS nome_produto,
+        mat_vatbaux2.pr_valor AS nome_produto,
         produtos.referencia,
         produtos.descr,
         produtos.detalhes,
@@ -276,62 +274,60 @@ CREATE VIEW vpendentesmaq AS (
         IFNULL(produtos.foto, '') AS foto,
         
         CASE
-            WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN
+            WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL mat_vatbaux2.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN
                 ROUND(CASE
                     WHEN (vprodutos.travar_estq = 1) THEN
                         CASE
-                            WHEN (vprodutos.qtd >= (vatbold.qtd - mat_vretiradas.valor)) THEN (vatbold.qtd - mat_vretiradas.valor)
+                            WHEN (vprodutos.qtd >= (mat_vatbaux2.qtd - mat_vretiradas.valor)) THEN (mat_vatbaux2.qtd - mat_vretiradas.valor)
                             ELSE vprodutos.qtd
                         END
-                    ELSE (vatbold.qtd - mat_vretiradas.valor)
+                    ELSE (mat_vatbaux2.qtd - mat_vretiradas.valor)
                 END)
             ELSE 0
         END AS qtd,
         IFNULL(DATE_FORMAT(mat_vultretirada.data, '%d/%m/%Y'), '') AS ultima_retirada,
         DATE_FORMAT((
             CASE
-                WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN CURDATE()
-                ELSE (DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY))
+                WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL mat_vatbaux2.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN CURDATE()
+                ELSE (DATE_ADD(mat_vultretirada.data, INTERVAL mat_vatbaux2.validade DAY))
             END
         ), '%d/%m/%Y') AS proxima_retirada,
-        IFNULL(DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY), vatbold.data) AS proxima_retirada_real,
+        IFNULL(DATE_ADD(mat_vultretirada.data, INTERVAL mat_vatbaux2.validade DAY), mat_vatbaux2.data) AS proxima_retirada_real,
         CASE
-            WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN 1
+            WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL mat_vatbaux2.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN 1
             ELSE 0
         END AS esta_pendente,
         vprodutos.id_maquina
         
-    FROM vatbold
+    FROM mat_vatbaux2
 
     JOIN mat_vatribuicoes
-        ON mat_vatribuicoes.id_atribuicao = vatbold.id
+        ON mat_vatribuicoes.id_atribuicao = mat_vatbaux2.id
         
     JOIN produtos
-        ON produtos.cod_externo = vatbold.cod_produto
-            OR produtos.referencia = vatbold.referencia
+        ON produtos.cod_externo = mat_vatbaux2.cod_produto
+            OR produtos.referencia = mat_vatbaux2.referencia
 
     JOIN vprodutosmaq AS vprodutos
         ON vprodutos.id_pessoa = mat_vatribuicoes.id_pessoa
             AND vprodutos.id_produto = produtos.id
 
     JOIN mat_vretiradas
-        ON mat_vretiradas.id_atribuicao = vatbold.id
+        ON mat_vretiradas.id_atribuicao = mat_vatbaux2.id
             AND mat_vretiradas.id_pessoa = mat_vatribuicoes.id_pessoa
 
     JOIN mat_vultretirada
-        ON mat_vultretirada.id_atribuicao = vatbold.id
-
-    WHERE vatbold.rascunho = 'S'
+        ON mat_vultretirada.id_atribuicao = mat_vatbaux2.id
 
     GROUP BY
         mat_vatribuicoes.id_pessoa,
-        vatbold.id,
-        vatbold.pr_chave,
-		vatbold.pr_valor,
-        vatbold.obrigatorio,
-        vatbold.validade,
-        vatbold.qtd,
-        vatbold.data,
+        mat_vatbaux2.id,
+        mat_vatbaux2.pr_chave,
+		mat_vatbaux2.pr_valor,
+        mat_vatbaux2.obrigatorio,
+        mat_vatbaux2.validade,
+        mat_vatbaux2.qtd,
+        mat_vatbaux2.data,
         produtos.id,
         produtos.referencia,
         produtos.descr,
@@ -345,7 +341,7 @@ CREATE VIEW vpendentesmaq AS (
         vprodutos.id_maquina,
         mat_vretiradas.valor,
         CASE
-            WHEN (vatbold.pr_chave = 'R') THEN produtos.referencia
+            WHEN (mat_vatbaux2.pr_chave = 'R') THEN produtos.referencia
             ELSE produtos.id
         END
 );
