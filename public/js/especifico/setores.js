@@ -66,6 +66,10 @@ function Setor(_id) {
     }
 
     this.muda_cria_usuario = function(callback) {
+        let obter_campo_senha = function(_i, _nome) {
+            return "<input type = 'password' name = 'password[]' class = 'validar form-control' id = 'senha-" + _i + "' placeholder = 'Senha de " + _nome + "' />"
+        }
+
         const concluir = function(texto) {
             const setorDoSistema = parseInt(dados.sistema);
             if (texto === undefined) texto = "";
