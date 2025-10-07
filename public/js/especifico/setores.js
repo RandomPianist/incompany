@@ -159,7 +159,7 @@ function Setor(_id) {
             $("#descr").val(dados.descr);
             $("#setor-id_empresa").val(dados.id_empresa);
             $("#setor-empresa").val(dados.empresa);
-            $("#cria_usuario-chk").prop("checked", parseInt(dados.cria_usario) ? true : false);
+            $("#cria_usuario-chk").prop("checked", parseInt(dados.cria_usuario) ? true : false);
             $("#cria_usuario").val(dados.cria_usuario);
             for (let x in permissoes) that.permissoesRascunho[x] = parseInt(dados[x]) ? true : false;
             mostrar();
