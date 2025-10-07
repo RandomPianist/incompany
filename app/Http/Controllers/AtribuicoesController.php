@@ -251,9 +251,8 @@ class AtribuicoesController extends Controller {
         }
         $lista = DB::table("vatbold")
                     ->select(
-                        "vatbold.psm_chave",
-                        "vatbold.psm_valor",
-                        DB::raw("GROUP_CONCAT(vatbold.id SEPARATOR ',') AS ids")
+                        "psm_chave",
+                        "psm_valor"
                     )
                     ->joinSub(
                         DB::table("atribuicoes")
@@ -271,8 +270,8 @@ class AtribuicoesController extends Controller {
                         "vatbold.id"
                     )
                     ->groupby(
-                        "vatbold.psm_chave",
-                        "vatbold.psm_valor"
+                        "psm_chave",
+                        "psm_valor"
                     )
                     ->get();
         $consulta = DB::table("vatbold")
@@ -332,37 +331,6 @@ class AtribuicoesController extends Controller {
                     'lixeira' => DB::raw("CASE WHEN (rascunho = 'T') THEN 1 ELSE 0 END"),
                     'rascunho' => 'S'
                ]);
-        }
-        $ids = array();
-        $psm_chave = array();
-        $psm_valor = array();
-        foreach ($lista as $linha) {
-            array_push($ids, $linha->ids);
-            array_push($psm_chave, $linha->psm_chave);
-            array_push($psm_valor, $linha->psm_valor);
-        }
-        DB::table("mat_vatbaux2")->whereRaw("id IN (".implode(",", $ids).")")->delete();
-        for ($i = 0; $i < sizeof($psm_chave); $i++) {
-            DB::statement("
-                INSERT INTO mat_vatbaux (
-                    SELECT
-                        id,
-                        pr_chave,
-                        pr_valor,
-                        validade,
-                        obrigatorio,
-                        referencia,
-                        cod_produto,
-                        qtd,
-                        data
-
-                    FROM mat_vatbold
-
-                    WHERE psm_chave = '".$psm_chave[$i]."'
-                      AND psm_valor = '".$psm_valor[$i]."'
-                      AND rascunho = 'S'
-                )
-            ");
         }
         $this->atualizar_atribuicoes($lista); // App\Http\Controllers\Controller.php
     }

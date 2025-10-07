@@ -39,7 +39,7 @@ CREATE TABLE mat_vretiradas (
     valor NUMERIC(10,5)
 );
 ALTER TABLE mat_vretiradas
-    ADD INDEX idx_mat_vretiradas_atr_pessoa_data (id_atribuicao, id_pessoa, valor),
+    ADD INDEX idx_mat_vretiradas_atr_pessoa (id_atribuicao, id_pessoa),
     ADD INDEX idx_mat_vretiradas_pessoa (id_pessoa),
     ADD INDEX idx_mat_vretiradas_setor (id_setor);
 CREATE TABLE mat_vultretirada (
@@ -49,20 +49,6 @@ CREATE TABLE mat_vultretirada (
     data DATE
 );
 ALTER TABLE mat_vultretirada
-    ADD INDEX idx_mat_vultretirada_atr_pessoa_data (id_atribuicao, id_pessoa, data),
+    ADD INDEX idx_mat_vultretirada_atr_pessoa (id_atribuicao, id_pessoa),
     ADD INDEX idx_mat_vultretirada_pessoa (id_pessoa),
     ADD INDEX idx_mat_vultretirada_setor (id_setor);
-CREATE TABLE mat_vatbaux2 (
-    id INT,
-    pr_chave ENUM('P', 'R'),
-    pr_valor VARCHAR(64),
-    validade INT,
-    obrigatorio TINYINT,
-    referencia VARCHAR(64),
-    cod_produto VARCHAR(8),
-    qtd NUMERIC(10,5),
-    data DATE
-);
-ALTER TABLE mat_vatbaux2
-    ADD INDEX idx_mat_vatbaux2_id (id),
-    ADD INDEX idx_mat_vatbaux2_pr (pr_chave, pr_valor);
