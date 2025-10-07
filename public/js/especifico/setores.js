@@ -33,7 +33,7 @@ function Setor(_id) {
         });
         erro = verifica_vazios(lista).erro;
         let alterouPermissoes = false;
-        for (x in permissoes) {
+        for (let x in permissoes) {
             if ($("#" + permissoes[x]).val() != anteriores[permissoes[x]]) alterouPermissoes = true;
         }
     
@@ -75,16 +75,8 @@ function Setor(_id) {
                 $(this).remove();
             });
             $("#setoresModal .container").append(texto + obterHtmlPermissoes(true, $("#cria_usuario-chk").prop("checked")));
-            permissoesListeners(true);
             $("#setoresModal .linha-usuario:last-child").addClass("mb-4");
-            for (x in permissoes) {
-                if (that.permissoesRascunho[x] !== undefined) var permissao = that.permissoesRascunho[x];
-                else var permissao = false;
-                $("#setor-" + x + "-chk").prop("checked", permissao).attr("disabled", !permissoes[x] || setorDoSistema);
-                if (setorDoSistema) $("#setor-" + x + "-lbl").attr("title", "Não é permitido alterar essa configuração em um setor do sistema");
-                else if (!permissoes[x]) $("#setor-" + x + "-lbl").attr("title", "Não é possível atribuir a esse centro de custo permissões que seu usuário não tem");
-                else $("#setor-" + x + "-lbl").removeAttr("title");
-            }
+            permissoesPreencher(setorDoSistema);
             if (callback !== undefined) callback();
         }
 
@@ -94,7 +86,7 @@ function Setor(_id) {
         }
 
         if ($("#cria_usuario-chk").prop("checked")) {
-            $.get(URL + "/setores/pessoas/" + id, function(data) {
+            $.get(URL + "/setores/pessoas/" + _id, function(data) {
                 if (typeof data == "string") data = $.parseJSON(data);
                 const mostrar_email = parseInt(data.mostrar_email);
                 const mostrar_fone = parseInt(data.mostrar_fone);
@@ -139,7 +131,7 @@ function Setor(_id) {
                 escrever(resultado);
             });
         } else {
-            $.get(URL + "/setores/usuarios/" + id, function(data) {
+            $.get(URL + "/setores/usuarios/" + _id, function(data) {
                 if (typeof data == "string") data = $.parseJSON(data);
                 let resultado = "";
                 for (let i = 1; i <= data.length; i++) {
@@ -157,7 +149,7 @@ function Setor(_id) {
 
     $("#setoresModalLabel").html((_id ? "Editando" : "Cadastrando") + " centro de custo");
     if (_id) {
-        $.get(URL + "/colaboradores/mostrar/" + _id, function(_dados) {
+        $.get(URL + "/setores/mostrar/" + _id, function(_dados) {
             if (typeof _dados == "string") _dados = $.parseJSON(_dados);
             dados = _dados;
             $("#descr").val(dados.descr);
@@ -165,7 +157,7 @@ function Setor(_id) {
             $("#setor-empresa").val(dados.empresa);
             $("#cria_usuario-chk").prop("checked", parseInt(dados.cria_usario) ? true : false);
             $("#cria_usuario").val(dados.cria_usuario);
-            for (x in permissoes) that.permissoesRascunho[x] = parseInt(dados[x]) ? true : false;
+            for (let x in permissoes) that.permissoesRascunho[x] = parseInt(dados[x]) ? true : false;
             mostrar();
         });
     } else {

@@ -1027,12 +1027,24 @@ function atualizarChk(id, numerico) {
     if (setor !== null) setor.permissoesRascunho[id.replace("setor-", "")] = checked;
 }
 
-function permissoesListeners(setor) {
-    const prefixo = (setor ? "setor" : "pessoa") + "-";
+function permissoesPreencher(setorDoSistema, titulo) {
+    const _setor = setorDoSistema > -1;
+    const prefixo = "#" + (_setor ? "setor" : "pessoa") + "-";
+    const obj = _setor ? setor : pessoa;
+    if (titulo === undefined) {
+        titulo = "centro de custo";
+        setorDoSistema = 0;
+    }
     for (let x in permissoes) {
-        $("#" + prefixo + x + "-chk").off("change").on("change", function() {
+        $(prefixo + x + "-chk").off("change").on("change", function() {
             atualizarChk(prefixo + x, true);
         });
+        if (obj.permissoesRascunho[x] !== undefined) var permissao = obj.permissoesRascunho[x];
+        else var permissao = false;
+        $(prefixo + x + "-chk").prop("checked", permissao).attr("disabled", setorDoSistema || !permissoes[x]);
+        if (setorDoSistema) $("#setor-" + x + "-lbl").attr("title", "Não é permitido alterar essa configuração em um centro de custo do sistema");
+        else if (!permissoes[x]) $(prefixo + x + "-lbl").attr("title", "Não é possível atribuir a esse " + titulo + " permissões que seu usuário não tem");
+        else $(prefixo + x + "-lbl").removeAttr("title");
     }
 }
 

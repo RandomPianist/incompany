@@ -20,14 +20,7 @@ function Pessoa(_id) {
         });
         $("#pessoasModalLabel").html((_id ? "Editando" : "Cadastrando") + " " + titulo);
         $("#pessoasModal .container").append(htmlPermissoes.replaceAll("??", titulo));
-        permissoesListeners(false);
-        for (x in permissoes) {
-            if (that.permissoesRascunho[x] !== undefined) var permissao = that.permissoesRascunho[x];
-            else var permissao = false;
-            $("#pessoa-" + x + "-chk").prop("checked", permissao).attr("disabled", !permissoes[x]);
-            if (permissoes[x]) $("#pessoa-" + x + "-lbl").removeAttr("title");
-            else $("#pessoa-" + x + "-lbl").attr("title", "Não é possível atribuir a esse " + titulo + " permissões que seu usuário não tem");
-        }
+        permissoesPreencher(-1, titulo);
         let id_usuario = 0;
         if (dados !== undefined) id_usuario = parseInt(dados.id_usuario);
         const _usuario = ["a", "u"].indexOf(titulo.charAt(0)) > -1;
@@ -90,7 +83,7 @@ function Pessoa(_id) {
             $.get(URL + "/setores/permissoes/" + id_setor, function(data) {
                 if (typeof data == "string") data = $.parseJSON(data);
                 if (!carregando) {
-                    for (x in permissoes) that.permissoesRascunho[x] = data[x] && permissoes[x];
+                    for (let x in permissoes) that.permissoesRascunho[x] = data[x] && permissoes[x];
                 }
                 htmlPermissoes = obterHtmlPermissoes(false, data.cria_usuario);
                 usuario = data.cria_usuario;
@@ -98,7 +91,7 @@ function Pessoa(_id) {
             });
         } else {
             if (!carregando) {
-                for (x in permissoes) that.permissoesRascunho[x] = permissoes[x];
+                for (let x in permissoes) that.permissoesRascunho[x] = permissoes[x];
             }
             htmlPermissoes = obterHtmlPermissoes(false, true);
             usuario = true;
@@ -226,7 +219,7 @@ function Pessoa(_id) {
                     foto_pessoa("#pessoasModal .user-pic", dados.foto ? dados.foto : "");
                     ant_id_empresa = parseInt(dados.id_empresa);
                     ant_id_setor = parseInt(dados.id_setor);
-                    for (x in permissoes) that.permissoesRascunho[x] = parseInt(dados[x]) ? true : false;
+                    for (let x in permissoes) that.permissoesRascunho[x] = parseInt(dados[x]) ? true : false;
                     htmlPermissoes = obterHtmlPermissoes(false, parseInt(dados.cria_usuario));
                     that.mudaTitulo();
                 } else {

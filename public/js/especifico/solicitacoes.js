@@ -100,7 +100,7 @@ function detalhar(_tipo, _id_produto) {
             c_supervisor : supervisor,
             c_origem : origem
         };
-        for (x in lista) {
+        for (let x in lista) {
             if (!lista[x]) {
                 $("." + x.substring(2)).each(function() {
                     $(this).css("display", "none");
