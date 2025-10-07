@@ -10,17 +10,6 @@ use App\Models\Pessoas;
 use Illuminate\Http\Request;
 
 class SetoresController extends ControllerListavel {
-    private function setor_do_sistema_main($id) {
-        return DB::table("setores")
-                    ->join("log", function($join) {
-                        $join->on("log.fk", "setores.id")
-                            ->where("log.origem", "SYS")
-                            ->where("log.tabela", "setores");
-                    })
-                    ->where("setores.id", $id)
-                    ->exists();
-    }
-
     private function aviso_main($id) {
         $resultado = $this->pode_abrir_main("setores", $id, "excluir"); // App\Http\Controllers\Controller.php
         if (!$resultado->permitir) return $resultado;
@@ -28,7 +17,16 @@ class SetoresController extends ControllerListavel {
         $resultado->permitir = 0;
         $setor = Setores::find($id);
         $nome = $setor->descr;
-        if ($this->setor_do_sistema_main($id)) {
+        if (
+            DB::table("setores")
+                ->join("log", function($join) {
+                    $join->on("log.fk", "setores.id")
+                        ->where("log.origem", "SYS")
+                        ->where("log.tabela", "setores");
+                })
+                ->where("setores.id", $id)
+                ->exists()
+        ) {
             $resultado->aviso = "Não é possível excluir um centro de custo do sistema";
         } elseif ($setor->pessoas()->exists()) {
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a esse centro de custo";
@@ -89,10 +87,6 @@ class SetoresController extends ControllerListavel {
 
     public function consultar(Request $request) {
         return json_encode($this->consultar_main($request));
-    }
-
-    public function setor_do_sistema($id) {
-        return $this->setor_do_sistema_main($id) ? "1" : "0";
     }
 
     public function mostrar($id) {
