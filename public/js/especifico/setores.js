@@ -132,7 +132,7 @@ function Setor(_id) {
                     }
                     resultado += "</div>";
                 }
-                escrever(resultado);
+                concluir(resultado);
             });
         } else {
             $.get(URL + "/setores/usuarios/" + _id, function(data) {
@@ -146,7 +146,7 @@ function Setor(_id) {
                         "</div>" +
                     "</div>";
                 }
-                escrever($("#setoresModal .container"), resultado);
+                concluir(resultado);
             });
         }
     }
