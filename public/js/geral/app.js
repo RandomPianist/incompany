@@ -4,6 +4,7 @@ let permissoes = new Array();
 let validacao_bloqueada = false;
 let focar = true;
 let pessoa = null;
+let setor = null;
 let grupo_emp2 = 0;
 
 jQuery.fn.sortElements = (function() {
@@ -196,21 +197,21 @@ $(document).ready(function() {
             if (document.querySelector("#atribuicoesModal .linha-atb.new") !== null) atribuicao.pergunta_salvar();
         });
 
-        ["categorias", "empresas", "pessoas", "produtos"].forEach((tipo) => {
+        ["categorias", "empresas", "pessoas", "produtos", "setores"].forEach((tipo) => {
             $("#" + tipo + "Modal").on("hide.bs.modal", function() {
+                switch(tipo) {
+                    case "setores":
+                        $(".linha-usuario").each(function() {
+                            $(this).remove();
+                        });
+                        setor = null;
+                        break;
+                    case "pessoas":
+                        pessoa = null;
+                        break;
+                }
                 descartar(tipo);
             });
-        });
-
-        $("#setoresModal").on("hide.bs.modal", function() {
-            $(".linha-usuario").each(function() {
-                $(this).remove();
-            });
-            descartar("setores");
-        });
-
-        $("#pessoasModal").on("hide.bs.modal", function() {
-            pessoa = null;
         });
 
         $(".modal").each(function() {
@@ -1023,6 +1024,7 @@ function atualizarChk(id, numerico) {
         pessoa.permissoesRascunho[id.replace("pessoa-", "")] = checked;
         if (id == "pessoa-supervisor") pessoa.mudaTitulo();
     }
+    if (setor !== null) setor.permissoesRascunho[id.replace("setor-", "")] = checked;
 }
 
 function permissoesListeners(setor) {
@@ -1454,8 +1456,8 @@ function Excecoes(_id_atribuicao) {
         $.get(URL + "/atribuicoes/excecoes/listar/" + _id_atribuicao, function(data) {
             let resultado = "";
             if (typeof data == "string") data = $.parseJSON(data);
-            let pessoa = false;
-            let setor = false;
+            let ha_pessoa = false;
+            let ha_setor = false;
             if (data.length) {
                 resultado += "<thead>" +
                     "<tr>" +
@@ -1466,8 +1468,8 @@ function Excecoes(_id_atribuicao) {
                 "</thead>" +
                 "<tbody>";
                 data.forEach((excecao) => {
-                    if (excecao.ps_chave == "P") pessoa = true;
-                    if (excecao.ps_chave == "S") setor = true;
+                    if (excecao.ps_chave == "P") ha_pessoa = true;
+                    if (excecao.ps_chave == "S") ha_setor = true;
                     resultado += "<tr>" +
                         "<td class = 'exc-tipo'>" + (excecao.ps_chave == "P" ? "FUNCIONÁRIO" : "CENTRO DE CUSTO") + "</td>" +
                         "<td>" +
@@ -1488,8 +1490,8 @@ function Excecoes(_id_atribuicao) {
             $("#table-excecoes").html(resultado);
             if (data.length) {
                 let titulo = "";
-                if (pessoa) titulo += "Nome";
-                if (setor) {
+                if (ha_pessoa) titulo += "Nome";
+                if (ha_setor) {
                     if (titulo) titulo += "/";
                     titulo += "Descrição";
                 }

@@ -38,6 +38,20 @@
                                 <input type = "file" name = "foto" class = "d-none" />
                             </div>
                         </div>
+                        <div class = "row">
+                            <div class = "col-11 pr-0">
+                                <label for = "pessoa-empresa-select" class = "custom-label-form">Empresa: *</label>
+                                <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control" onchange = "pessoa.mudou_empresa($(this).val())"></select>
+                            </div>
+                            <div class = "col-1 pt-4 d-flex align-items-center">
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "empresas"
+                                    data-campo_id = "pessoa-empresa-select"
+                                    data-campo_descr = ""
+                                ></i>
+                            </div>
+                        </div>
                         <div class = "row row-setor">
                             <div class = "col-4">
                                 <label for = "funcao" class = "custom-label-form">Função:</label>
@@ -58,20 +72,6 @@
                                     class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
                                     data-atalho = "setores"
                                     data-campo_id = "pessoa-setor-select"
-                                    data-campo_descr = ""
-                                ></i>
-                            </div>
-                        </div>
-                        <div class = "row">
-                            <div class = "col-11 pr-0">
-                                <label for = "pessoa-empresa-select" class = "custom-label-form">Empresa: *</label>
-                                <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control" onchange = "pessoa.mudou_empresa($(this).val())"></select>
-                            </div>
-                            <div class = "col-1 pt-4 d-flex align-items-center">
-                                <i
-                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
-                                    data-atalho = "empresas"
-                                    data-campo_id = "pessoa-empresa-select"
                                     data-campo_descr = ""
                                 ></i>
                             </div>

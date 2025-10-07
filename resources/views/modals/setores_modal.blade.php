@@ -49,7 +49,7 @@
                             <div class = "col-12">
                                 <div class = "custom-control custom-switch">
                                     <input id = "cria_usuario" name = "cria_usuario" type = "hidden" />
-                                    <input id = "cria_usuario-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "muda_cria_usuario(this)" />
+                                    <input id = "cria_usuario-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "setor.muda_cria_usuario()" />
                                     <label id = "cria_usuario-lbl" for = "cria_usuario-chk" class = "custom-control-label">Pessoas nesse centro de custo são usuários<label>
                                 </div>
                             </div>
@@ -57,7 +57,7 @@
                     </div>
                 </div>
                 <div class = "d-flex mt-4">
-                    <button type = "button" class = "btn btn-target mx-auto mb-4 px-5" onclick = "validar()">Salvar</button>
+                    <button type = "button" class = "btn btn-target mx-auto mb-4 px-5" onclick = "setor.validar()">Salvar</button>
                 </div>
             </form>
         </div>
