@@ -1,16 +1,3 @@
-import Pessoa from '../classes/JanelaDinamica.js';
-
-import {
-    RelatorioBilateral,
-    RelatorioItens,
-    RelatorioControle,
-    RelatorioRetiradas,
-    RelatorioRanking
-} from '../classes/Relatorios.js';
-
-import Atribuicoes from '../classes/Atribuicoes.js';
-import Excecoes from '../classes/Excecoes.js';
-
 let relatorio, atribuicao, excecao, colGlobal;
 let anteriores = new Array();
 let permissoes = new Array();

@@ -108,7 +108,7 @@ class SetoresController extends ControllerListavel {
                     "permissoes.solicitacoes",
                     DB::raw("
                         CASE
-                            WHEN pes.id IS NOT NULL THEN 1
+                            WHEN pes.id_setor IS NOT NULL THEN 1
                             ELSE 0
                         END AS pessoas
                     "),

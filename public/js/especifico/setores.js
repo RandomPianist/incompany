@@ -1,5 +1,3 @@
-import Setor from '../classes/JanelaDinamica.js';
-
 function listar(coluna) {
     $.get(URL + "/setores/listar", {
         filtro : $("#busca").val()

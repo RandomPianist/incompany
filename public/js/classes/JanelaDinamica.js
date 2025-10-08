@@ -19,7 +19,7 @@ class JanelaDinamica {
             setor ?
                 "Pessoas nesse " + titulo + (chave == "financeiro" ? "têm" : "podem") + ", por padrão,"
             :
-                "Esse " + titulo + (chave == "financeiro" ? "tem" : "pode")
+                "Esse " + titulo + " " + (chave == "financeiro" ? "tem" : "pode")
         ) + " "; 
         switch (chave) {
             case "financeiro":
@@ -33,7 +33,7 @@ class JanelaDinamica {
             case "solicitacoes":
                 return texto + "solicitar reposição de produtos.";
             default:
-                return texto + "criar, editar e excluir " + (x == "usuarios" ? "usuários, exceto administradores" : "funcionários") + ".";
+                return texto + "criar, editar e excluir " + (chave == "usuarios" ? "usuários, exceto administradores" : "funcionários") + ".";
         }
     }
 
@@ -45,12 +45,13 @@ class JanelaDinamica {
         for (let x in permissoes) {
             resultado += "<div class = 'row linha-permissao" + ((!usuario && x != "supervisor") ? " d-none" : "") + "'>" +
                 "<div class = 'col-12'>" +
-                "<div class = 'custom-control custom-switch'>" +
-                    "<input id = '" + prefixoCompleto + x + "' name = '" + x + "' type = 'hidden' />" +
-                    "<input id = '" + prefixoCompleto + x + "-chk' class = 'checkbox custom-control-input' type = 'checkbox' />" +
-                    "<label id = '" + prefixoCompleto + x + "-lbl' for = '" + prefixoCompleto + x + "-chk' class = 'custom-control-label lbl-permissao'>" +
-                        this._getLabelTexto(x, titulo) +
-                    "</label>" +
+                    "<div class = 'custom-control custom-switch'>" +
+                        "<input id = '" + prefixoCompleto + x + "' name = '" + x + "' type = 'hidden' />" +
+                        "<input id = '" + prefixoCompleto + x + "-chk' class = 'checkbox custom-control-input' type = 'checkbox' />" +
+                        "<label id = '" + prefixoCompleto + x + "-lbl' for = '" + prefixoCompleto + x + "-chk' class = 'custom-control-label lbl-permissao'>" +
+                            this._getLabelTexto(x, titulo) +
+                        "</label>" +
+                    "</div>" +
                 "</div>" +
             "</div>";
         }
@@ -118,8 +119,9 @@ class Pessoa extends JanelaDinamica {
             const concluir = () => {
                 this.mudou_empresa($("#pessoa-empresa-select").val(), () => {
                     if (this.#dados !== undefined) {
-                        $("#nome, #cpf, #email, #funcao, #admissao, #telefone").each(function() {
-                            $(this).val(this.#dados[$(this).attr("id")]).trigger("keyup");
+                        const that = this;
+                        $("#nome, #cpf, #email, #funcao, #admissao, #telefone").each(function() {   
+                            $(this).val(that.#dados[$(this).attr("id")]).trigger("keyup");
                         });
                         $($("#pessoasModal .user-pic").parent()).removeClass("d-none");
                         if (!this.#dados.foto) {

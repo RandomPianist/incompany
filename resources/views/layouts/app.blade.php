@@ -271,8 +271,12 @@
             url()->current() != route('produtos') && 
             url()->current() != route('categorias')
         ))
-            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/app.js')      }}"></script>
-            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/mascaras.js') }}"></script>
+            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Atribuicoes.js')    }}"></script>
+            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Excecoes.js')       }}"></script>
+            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/JanelaDinamica.js') }}"></script>
+            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Relatorios.js')     }}"></script>
+            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/app.js')              }}"></script>
+            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/mascaras.js')         }}"></script>
         @else
             <script type = "text/javascript" language = "JavaScript">
                 window.onload = function() {
