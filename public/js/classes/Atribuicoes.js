@@ -308,7 +308,7 @@ class Atribuicoes {
                 data.forEach((atribuicao) => {
                     let acoes = "";
                     if (this.#grade) acoes += "<i class = 'my-icon far fa-eye' title = 'Detalhar' onclick = 'atribuicao.detalhar(" + atribuicao.id + ")'></i>";
-                    if (_tipo2 == "P") acoes += "<i class = 'my-icon far fa-hand-holding-box' title = 'Retirar' onclick = 'atribuicao.retirar(" + atribuicao.id + ")'></i>";
+                    if (_tipo2 == "P" && permissoes.retiradas) acoes += "<i class = 'my-icon far fa-hand-holding-box' title = 'Retirar' onclick = 'atribuicao.retirar(" + atribuicao.id + ")'></i>";
                     if (["M", "S"].indexOf(_tipo2) > -1) {
                         acoes += "<i class = 'my-icon far fa-user" + (_tipo2 == "M" ? "s" : "") + "-slash' title = 'Exceções' onclick = 'excecao = new Excecoes(" + atribuicao.id + ")'></i>";
                     }

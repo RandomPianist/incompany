@@ -7,6 +7,7 @@ use Auth;
 use App\Models\Setores;
 use App\Models\Permissoes;
 use App\Models\Pessoas;
+use App\Models\Empresas;
 use Illuminate\Http\Request;
 
 class SetoresController extends ControllerListavel {
@@ -146,7 +147,12 @@ class SetoresController extends ControllerListavel {
     }
 
     public function salvar(Request $request) {
+        $emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
         if ($this->consultar_main($request)->msg) return 401;
+        if ($this->validar_permissoes($request) != 200) return 401; // App\Http\Controllers\Controller.php
+        $ok = true;
+        if ($emp) $ok = ($request->id_empresa == $emp || $request->id_empresa == Empresas::find($emp)->id_matriz);
+        if (!$ok) return 401;
         $cria_usuario = $request->cria_usuario;
         $supervisor = $request->supervisor;
         $cria_usuario_ant = null;

@@ -8,11 +8,9 @@ use App\Models\Pessoas;
 trait NomearTrait {
     public function nomear($id) {
         $pessoa = Pessoas::find($id);
-        $titulo = "";
-        if (!intval($pessoa->id_empresa)) $titulo = "administrador";
-        elseif (DB::table("users")->where("id_pessoa", $id)->exists()) $titulo = "usuário";
-        elseif ($pessoa->supervisor) $titulo = "supervisor";
-        else $titulo = "funcionário";
-        return $titulo;
+        if (!intval($pessoa->id_empresa)) return "administrador";
+        if (DB::table("users")->where("id_pessoa", $id)->exists()) return "usuário";
+        if ($pessoa->supervisor) return "supervisor";
+        return "funcionário";
     }
 }

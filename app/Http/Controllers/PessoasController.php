@@ -47,14 +47,19 @@ class PessoasController extends ControllerListavel {
         $resultado = $this->pode_abrir_main("pessoas", $id, "excluir"); // App\Http\Controllers\Controller.php
         if (!$resultado->permitir) return $resultado;
         $resultado = new \stdClass;
-        if ($id != Auth::user()->id_pessoa) {
-            $nome = Pessoas::find($id)->nome;
-            $resultado->permitir = 1;
-            $resultado->aviso = "Tem certeza que deseja excluir ".$nome."?";
+        if ($id == Auth::user()->id_pessoa) {
+            $resultado->permitir = 0;
+            $resultado->aviso = "Não é possível excluir a si mesmo";
             return $resultado;
         }
-        $resultado->permitir = 0;
-        $resultado->aviso = "Não é possível excluir a si mesmo";
+        if (substr($this->nomear($id), 0, 1) == "a" && substr($this->nomear(Auth::user()->id_pessoa), 0, 1) != "a") { // App\Http\Traits\NomearTrait.php
+            $resultado->permitir = 0;
+            $resultado->aviso = "Você não tem permissão para excluir esse administrador";
+            return $resultado;
+        }
+        $nome = Pessoas::find($id)->nome;
+        $resultado->permitir = 1;
+        $resultado->aviso = "Tem certeza que deseja excluir <b>".$nome."</b>?";
         return $resultado;
     }
 
@@ -182,24 +187,40 @@ class PessoasController extends ControllerListavel {
     }
 
     public function salvar(Request $request) {
-        if ($this->verifica_vazios($request, ["nome", "funcao", "admissao", "cpf", "telefone"])) return 400; // App\Http\Controllers\Controller.php
         $setor = $request->setor;
         $m_setor = Setores::find($setor);
+        $conferir_email = true;
         if ($m_setor !== null) {
-            if ($m_setor->cria_usuario) {
-                if (!trim($request->email)) return 400;
-                if (!filter_var($request->email, FILTER_VALIDATE_EMAIL)) return 400;
-            }
+            if (!$m_setor->cria_usuario) $conferir_email = false;
         }
-        $admissao = Carbon::createFromFormat('d/m/Y', $request->admissao)->startOfDay();
-        $hj = Carbon::today();
-        if ($admissao->greaterThan($hj)) return 400;
+        $nao_tem_usuario = DB::table("users")
+                                ->where("id_pessoa", $request->id)
+                                ->first() === null;
+        if (
+            !$request->id ||
+            $request->id == Auth::user()->id_pessoa ||
+            ($conferir_email && ($nao_tem_usuario || !$request->id))
+        ) {
+            if ($conferir_email) array_push($obrigatorios, "email");
+            if (!$request->id) array_push($obrigatorios, "senha");
+            if ($conferir_email && ($nao_tem_usuario || !$request->id)) array_push($obrigatorios, "password");
+        }
+        if ($conferir_email && !filter_var($request->email, FILTER_VALIDATE_EMAIL)) return 400;
+        if ($this->verifica_vazios($request, $obrigatorios)) return 400; // App\Http\Controllers\Controller.php
+
+        if ($request->admissao) {
+            $admissao = Carbon::createFromFormat('d/m/Y', $request->admissao)->startOfDay();
+            $hj = Carbon::today();
+            if ($admissao->greaterThan($hj)) return 400;
+        }
         if ($this->consultar_main($request)->tipo != "ok") return 401;
 
+        if ($this->validar_permissoes($request) != 200) return 401; // App\Http\Controllers\Controller.php
+
+        $empresas_possiveis_arr = array();
         if ($this->obter_empresa()) { // App\Http\Controllers\Controller.php
             $dados = $this->minhas_empresas(); // App\Http\Controllers\Controller.php
             $empresas_possiveis_obj = $dados->empresas;
-            $empresas_possiveis_arr = array();
             foreach ($empresas_possiveis_obj as $matriz) {
                 if ($dados->filial == "N") array_push($empresas_possiveis_arr, intval($matriz->id));
                 $filiais = $matriz->filiais;
@@ -208,11 +229,15 @@ class PessoasController extends ControllerListavel {
             if (!in_array(intval($request->id_empresa), $empresas_possiveis_arr)) return 401;
         }
 
+        if ($m_setor !== null) {
+            if (!in_array(intval($m_setor->id_empresa), $empresas_possiveis_arr)) return 401;
+        }
+
         $pessoa = Pessoas::firstOrNew(["id" => $request->id]);
         $pessoa->nome = mb_strtoupper($request->nome);
         $pessoa->cpf = $request->cpf;
         $pessoa->funcao = mb_strtoupper($request->funcao);
-        $pessoa->admissao = Carbon::createFromFormat('d/m/Y', $request->admissao)->format('Y-m-d');
+        $pessoa->admissao = $request->admissao ? Carbon::createFromFormat('d/m/Y', $request->admissao)->format('Y-m-d') : null;
         $pessoa->id_empresa = $request->id_empresa;
         $pessoa->id_setor = $setor;
         if (trim($request->senha)) $pessoa->senha = $request->senha;

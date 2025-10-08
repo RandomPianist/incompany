@@ -354,14 +354,14 @@ abstract class Controller extends BaseController {
 
     protected function atribuicao_listar($consulta) {
         $resultado = array();
-        $aux = DB::table("pessoas")
-                    ->select(
-                        DB::raw("IFNULL(empresas.id, 0) AS id_empresa"),
-                        DB::raw("IFNULL(empresas.id_matriz, 0) AS id_matriz")
-                    )
-                    ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
-                    ->where("pessoas.id", Auth::user()->id_pessoa)
-                    ->first();
+        // $aux = DB::table("pessoas")
+        //             ->select(
+        //                 DB::raw("IFNULL(empresas.id, 0) AS id_empresa"),
+        //                 DB::raw("IFNULL(empresas.id_matriz, 0) AS id_matriz")
+        //             )
+        //             ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
+        //             ->where("pessoas.id", Auth::user()->id_pessoa)
+        //             ->first();
         foreach ($consulta as $linha) {
             $linha->pode_editar = 1;
             $mostrar = true;
@@ -497,6 +497,20 @@ abstract class Controller extends BaseController {
                         if ($request->id_maquina) $sql->where("id_maquina", $request->id_maquina);
                     })
                     ->first();
+    }
+
+    protected function obter_lista_permissoes() {
+        return ["financeiro", "atribuicoes", "retiradas", "pessoas", "usuarios", "solicitacoes", "supervisor"];
+    }
+
+    protected function validar_permissoes(Request $request) {
+        $erro = false;
+        $permissoes = (array) Permissoes::where("id_usuario", Auth::user()->id);
+        $lista = $this->obter_lista_permissoes();
+        foreach ($lista as $permissao) {
+            if (!$permissoes[$permissao] && intval($request->input($permissao))) $erro = true;
+        }
+        return $erro ? 401 : 200;
     }
 
     protected function consultar_maquina(Request $request) {

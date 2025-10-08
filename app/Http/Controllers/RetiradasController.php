@@ -5,15 +5,28 @@ namespace App\Http\Controllers;
 use DB;
 use Carbon\Carbon;
 use App\Models\Pessoas;
+use App\Models\Empresas;
 use App\Models\Retiradas;
+use App\Models\Permissoes;
 use Illuminate\Http\Request;
 
 class RetiradasController extends Controller {
+    private function permitir(Request $request) {
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->retiradas) return 401;
+        $emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
+        $pessoa = Pessoas::find($request->id_pessoa);
+        $ok = true;
+        if ($emp) $ok = ($pessoa->id_empresa == $emp || $pessoa->id_empresa == Empresas::find($emp)->id_matriz);
+        if (!$ok) return 401;
+        return 200;
+    }
+
     public function consultar(Request $request) {
         return $this->retirada_consultar($request->atribuicao, $request->qtd, $request->pessoa); // App\Http\Controllers\Controller.php
     }
 
     public function salvar(Request $request) {
+        if ($this->permitir() == 401) return 401;
         $json = array(
             "id_pessoa" => $request->pessoa,
             "id_atribuicao" => $request->atribuicao,
@@ -30,6 +43,7 @@ class RetiradasController extends Controller {
 
     public function desfazer(Request $request) {
         if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
+        if ($this->permitir() == 401) return 401;
         $where = "id_pessoa = ".$request->id_pessoa;
         $this->log_inserir_lote("D", "retiradas", $where); // App\Http\Controllers\Controller.php
         Retiradas::whereRaw($where)->delete();

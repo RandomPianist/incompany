@@ -9,6 +9,7 @@ use App\Models\Atribuicoes;
 use App\Models\Pessoas;
 use App\Models\Setores;
 use App\Models\Maquinas;
+use App\Models\Permissoes;
 use App\Models\Log;
 use App\Models\Retiradas;
 
@@ -45,6 +46,7 @@ class AtribuicoesController extends Controller {
     }
 
     public function salvar(Request $request) {
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->atribuicoes) return 401;
         if (
             !DB::table("vprodaux")
                 ->where($request->pr_chave == "P" ? "descr" : "referencia", $request->pr_valor)
@@ -99,6 +101,7 @@ class AtribuicoesController extends Controller {
     }
 
     public function excluir(Request $request) {
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->atribuicoes) return 401;
         $linha = Atribuicoes::find($request->id);
         $linha->rascunho = 'R';
         $linha->id_usuario = Auth::user()->id;
@@ -240,6 +243,7 @@ class AtribuicoesController extends Controller {
     }
 
     public function recalcular() {
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->atribuicoes) return 401;
         $tabelas = ["atribuicoes", "excecoes"];
         $where = "id_usuario = ".Auth::user()->id;
         foreach ($tabelas as $tabela) {
@@ -338,6 +342,7 @@ class AtribuicoesController extends Controller {
     }
 
     public function descartar() {
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->atribuicoes) return 401;
         $id_usuario = Auth::user()->id;
         $tabelas = ["atribuicoes", "excecoes"];
         $lista = DB::table("retiradas")

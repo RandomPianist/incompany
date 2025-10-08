@@ -216,6 +216,7 @@ class ProdutosController extends ControllerListavel {
     }
 
     public function salvar(Request $request) {
+        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
         if ($this->verifica_vazios($request, ["cod_externo", "descr", "validade", "categoria"])) return 400; // App\Http\Controllers\Controller.php
         $validade_ca = Carbon::createFromFormat('d/m/Y', $request->validade_ca)->format('Y-m-d');
         if ($this->consultar($request)) return 401;
@@ -253,6 +254,7 @@ class ProdutosController extends ControllerListavel {
     }
 
     public function excluir(Request $request) {
+        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
         if (!$this->aviso_main($request->id)->permitir) return 401;
         $linha = Produtos::find($request->id);
         $ant = DB::table("vatbold")
@@ -305,6 +307,8 @@ class ProdutosController extends ControllerListavel {
     }
 
     public function maquina(Request $request) {
+        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
+
         if ($this->consultar_maquina_main(
             $request->id_produto,
             $request->id_maquina,

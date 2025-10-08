@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use DB;
 use Auth;
 use App\Models\Previas;
+use App\Models\Permissoes;
 use Illuminate\Http\Request;
 
 class PreviasController extends Controller {
     public function salvar(Request $request) {
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->solicitacoes) return 401;
         Previas::where("confirmado", 0)
                 ->where("id_usuario", Auth::user()->id)
                 ->where("id_comodato", $request->id_comodato)

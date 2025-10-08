@@ -95,8 +95,10 @@ class EmpresasController extends Controller {
     }
 
     public function salvar(Request $request) {
+        $emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
         if ($this->verifica_vazios($request, ["cnpj", "razao_social", "nome_fantasia", "cidade"])) return 400; // App\Http\Controllers\Controller.php
         if ($this->consultar($request) == "R") return 401;
+        if ($emp && $emp != $request->id_matriz && $emp != $request->id) return 401;
         $linha = Empresas::firstOrNew(["id" => $request->id]);
         if (
             $request->id &&
@@ -115,7 +117,7 @@ class EmpresasController extends Controller {
         $this->log_inserir($request->id ? "E" : "C", "empresas", $linha->id); // App\Http\Controllers\Controller.php
         if (!$request->id) {
             $setores = [
-                "ADMINISTRADORES" => ["financeiro", "atribuicoes", "retiradas", "pessoas", "usuarios", "solicitacoes", "supervisor"],
+                "ADMINISTRADORES" => $this->obter_lista_permissoes(), // App\Http\Controllers\Controller.php
                 "RECURSOS HUMANOS" => ["atribuicoes", "retiradas", "pessoas", "usuarios"],
                 "FINANCEIRO" => ["financeiro", "usuarios", "solicitacoes"],
                 "SEGURANÇA DO TRABALHO" => ["atribuicoes", "retiradas", "pessoas", "usuarios", "supervisor"]
@@ -133,7 +135,7 @@ class EmpresasController extends Controller {
             $this->log_inserir_lote("C", "setores", "", "SYS"); // App\Http\Controllers\Controller.php
             $this->log_inserir_lote("C", "permissoes", "", "SYS"); // App\Http\Controllers\Controller.php
         }
-        if ($request->maq_igual == "S") {
+        if ($request->maq_igual == "S" && !$emp) {
             $maquina = new Maquinas;
             $maquina->descr = $linha->nome_fantasia;
             $maquina->save();
@@ -144,8 +146,10 @@ class EmpresasController extends Controller {
     }
 
     public function excluir(Request $request) {
-        if (!$this->aviso_main($request->id)->permitir) return 401;
+        $emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
         $linha = Empresas::find($request->id);
+        if (!$this->aviso_main($request->id)->permitir) return 401;
+        if ($emp && $emp != $linha->id && $emp != $linha->id_matriz) return 401;
         $linha->lixeira = 1;
         $linha->save();
         $this->log_inserir("D", "empresas", $linha->id); // App\Http\Controllers\Controller.php
@@ -155,7 +159,7 @@ class EmpresasController extends Controller {
     public function setores($id) {
         $resultado = new \stdClass;
         $permissoes = array();
-        $lista = ["financeiro", "atribuicoes", "retiradas", "pessoas", "usuarios", "solicitacoes", "supervisor"];
+        $lista = $this->obter_lista_permissoes(); // App\Http\Controllers\Controller.php
         foreach ($lista as $permissao) array_push($permissoes, "(permissoes.".$permissao." = 1 AND minhas_permissoes.".$permissao." = 0)");
         return json_encode(
             DB::table("setores")

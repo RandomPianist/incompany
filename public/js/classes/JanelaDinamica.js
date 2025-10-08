@@ -200,18 +200,18 @@ class Pessoa extends JanelaDinamica {
         }
         $("#senha").attr("title", "Senha para retirar produtos " + (supervisor ? "e autorizar retiradas de produtos antes do vencimento" : ""));
 
-        this.#obrigatorios = ["nome", "telefone"];
+        this.#obrigatorios = ["nome", "telefone", "cpf"];
         if (titulo.charAt(0) != "a") this.#obrigatorios.push("funcao", "admissao");
-        if (!_usuario || !this.#id || this.#id == USUARIO || !id_usuario) {
+        if (!this.#id || this.#id == USUARIO || (!id_usuario && _usuario)) {
             $(".row-senha").removeClass("d-none");
             if (_usuario) this.#obrigatorios.push("email");
             if (!this.#id) this.#obrigatorios.push("senha");
-            if (!this.#id || _usuario) this.#obrigatorios.push("password");
+            if (_usuario && (!this.#id || !id_usuario)) this.#obrigatorios.push("password");
         } else $(".row-senha").addClass("d-none");
 
         $("#email-lbl").html(_usuario ? "Email: *" : "Email:");
         $("#senha-lbl").html(!this.#id ? "Senha numérica: *" : "Senha numérica: (deixe em branco para não alterar)");
-        $("#password-lbl").html(!this.#id || _usuario ? "Senha alfanumérica: *" : "Senha alfanumérica: (deixe em branco para não alterar)");
+        $("#password-lbl").html((_usuario && (!this.#id || !id_usuario)) ? "Senha alfanumérica: *" : "Senha alfanumérica: (deixe em branco para não alterar)");
 
         Array.from(document.querySelectorAll("#pessoasModal .row")).forEach((el) => {
             el.style.removeProperty("margin-top");

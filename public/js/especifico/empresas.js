@@ -155,7 +155,7 @@ async function validar() {
             id : $("#id").val(),
             descr : _descr
         });
-        if (!parseInt(ha_maq)) {
+        if (!parseInt(ha_maq) && !EMPRESA) {
             const resp = await s_alert({
                 html : "Deseja criar a máquina " + _descr + "?",
                 yn : true

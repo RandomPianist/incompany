@@ -10,6 +10,7 @@ use App\Models\ComodatosProdutos;
 use App\Models\Estoque;
 use App\Models\Produtos;
 use App\Models\Maquinas;
+use App\Models\Permissoes;
 
 class MaquinasController extends Controller {
     private function busca($where, $id_maquina) {
@@ -420,6 +421,7 @@ class MaquinasController extends Controller {
     }
 
     public function salvar(Request $request) {
+        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
         if (!trim($request->descr)) return 400;
         if (intval($this->consultar($request))) return 401;
         $linha = Maquinas::firstOrNew(["id" => $request->id]);
@@ -437,6 +439,7 @@ class MaquinasController extends Controller {
     }
 
     public function excluir(Request $request) {
+        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php        
         if (!$this->aviso_main($request->id)->permitir) return 401; // App\Http\Controllers\Controller.php
         $linha = Maquinas::find($request->id);
         $linha->lixeira = 1;
@@ -446,6 +449,8 @@ class MaquinasController extends Controller {
     }
     
     public function estoque(Request $request) {
+        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
+
         if ($this->consultar_estoque_main(
             $request->id_maquina,
             $request->id_produto,
@@ -528,6 +533,7 @@ class MaquinasController extends Controller {
     }
 
     public function criar_comodato(Request $request) {
+        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
         if ($this->consultar_comodato_main($request)->texto) return 401;
         $dtinicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
         $dtfim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
@@ -553,6 +559,7 @@ class MaquinasController extends Controller {
     }
 
     public function encerrar_comodato(Request $request) {
+        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
         $modelo = $this->obter_comodato($request->id_maquina); // App\Http\Controllers\Controller.php
         $modelo->fim = date('Y-m-d');
         $modelo->save();
@@ -586,6 +593,7 @@ class MaquinasController extends Controller {
     }
 
     public function editar_comodato(Request $request) {
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->atribuicoes) return 401;
         $obrigatorio = str_replace("opt-", "", $request->obrigatorio);
         $comodato = $this->obter_comodato($request->id_maquina); // App\Http\Controllers\Controller.php
         $atb_todos_ant = $comodato->atb_todos_ant;
@@ -596,7 +604,7 @@ class MaquinasController extends Controller {
         $comodato->obrigatorio = $obrigatorio;
         $comodato->validade = $request->validade;
         $comodato->save();
-        $this->log_inserir("C", "comodatos", $comodato->id); // App\Http\Controllers\Controller.php
+        $this->log_inserir("E", "comodatos", $comodato->id); // App\Http\Controllers\Controller.php
         if ($this->comparar_num($atb_todos_ant, $request->atb_todos)) { // App\Http\Controllers\Controller.php
             $this->gerar_atribuicoes($comodato); // App\Http\Controllers\Controller.php
             $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
@@ -605,6 +613,8 @@ class MaquinasController extends Controller {
     }
 
     public function produto(Request $request) {
+        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
+
         if ($this->consultar_produto_main(
             $request->id_maquina,
             $request->id_produto,

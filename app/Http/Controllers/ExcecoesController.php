@@ -7,6 +7,7 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Excecoes;
 use App\Models\Atribuicoes;
+use App\Models\Permissoes;
 use App\Models\Excbkp;
 
 class ExcecoesController extends Controller {
@@ -56,6 +57,7 @@ class ExcecoesController extends Controller {
     }
 
     public function salvar(Request $request) {
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->atribuicoes) return 401;
         $atb = Atribuicoes::find($request->id_atribuicao);
         if (
             !DB::table($request->ps_chave == "P" ? "pessoas" : "setores")
