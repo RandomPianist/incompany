@@ -32,5 +32,5 @@ const phoneMask = (value) => {
         else if (value.length == 12 || value.length == 13) value = value.replace(/(\d{2})(\d{2})(\d)/, "+$1 ($2) $3");
         value = value.replace(/(\d)(\d{4})$/, "$1-$2");
     }
-    return value.substring(0, 20);
+    return value.substring(0, value == apenasNumeros(value) ? 13 : 20);
 }
