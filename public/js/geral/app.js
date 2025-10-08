@@ -1547,14 +1547,13 @@ function Excecoes(_id_atribuicao) {
     }
 
     this.editar = function(id) {
-        if (idatb != id) {
+        if (idexc != id) {
             $.get(URL + "/atribuicoes/excecoes/mostrar/" + id, function(data) {
                 $("#estiloAux").html(".autocomplete-result{display:none}");
                 $("#exc-ps-chave, #exc-ps-valor").each(function() {
                     $(this).attr("disabled", true);
                 });
                 if (typeof data == "string") data = $.parseJSON(data);
-                $("#exc-ps-valor").val(data.descr).trigger("keyup");
                 setTimeout(function() {
                     $($(".autocomplete-line").first()).trigger("click");
                 }, 500);
