@@ -17,13 +17,15 @@ BEGIN
         atribuicoes.data = atbbkp.data,
         atribuicoes.validade = atbbkp.validade,
         atribuicoes.obrigatorio = atbbkp.obrigatorio,
-        atribuicoes.gerado = atbbkp.gerado;
+        atribuicoes.gerado = atbbkp.gerado,
+        atribuicoes.id_usuario = 0;
     UPDATE excecoes
     JOIN excbkp
         ON excbkp.id_excecao = excecoes.id
     SET
         excecoes.id_pessoa = excbkp.id_pessoa,
-        excecoes.id_setor = excbkp.id_setor;
+        excecoes.id_setor = excbkp.id_setor,
+        excecoes.id_usuario = 0;
     TRUNCATE TABLE excbkp;
     TRUNCATE TABLE atbbkp;
     CALL excluir_atribuicao_sem_retirada();
