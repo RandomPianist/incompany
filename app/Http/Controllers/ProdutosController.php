@@ -72,9 +72,9 @@ class ProdutosController extends ControllerListavel {
                     array_push($valores, $saldo);
                     $texto .= 
                         $texto ?
-                            "Esse valor de estoque máximo é superior ao saldo atual do produto.<br>O campo foi corrigido."
+                            "Esse valor de estoque máximo é inferior ao saldo atual do produto.<br>O campo foi corrigido."
                         :
-                            "Esses valores de estoque máximo são superiores ao saldo atual dos produtos.<br>Os campos foram corrigidos."
+                            "Esses valores de estoque máximo são inferiores ao saldo atual dos produtos.<br>Os campos foram corrigidos."
                     ;
                 }
             }
