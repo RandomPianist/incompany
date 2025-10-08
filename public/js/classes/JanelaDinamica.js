@@ -71,7 +71,7 @@ class JanelaDinamica {
 
             const permissao = this.permissoesRascunho[x] || false;
             $(prefixoCompleto + x + "-chk").prop("checked", permissao).attr("disabled", ehSetorSistema || !permissoes[x]);
-            $(prefixoCompleto + x).val(permissao ? 1 : 0);
+            $(prefixoCompleto + x).val(permissao ? "1" : "0");
 
             const labelSeletor = prefixoCompleto + x + "-lbl";
             if (ehSetorSistema) $(labelSeletor).attr("title", "Não é permitido alterar essa configuração em um centro de custo do sistema");
