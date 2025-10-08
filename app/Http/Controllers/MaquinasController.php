@@ -208,7 +208,7 @@ class MaquinasController extends Controller {
                 ) {
                     array_push($campos, "max-".($i + 1));
                     array_push($valores, $saldo);
-                    $texto .= 
+                    $texto = 
                         $texto ?
                             "Esse valor de estoque máximo é inferior ao saldo atual do produto.<br>O campo foi corrigido."
                         :
