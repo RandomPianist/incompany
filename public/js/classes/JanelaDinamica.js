@@ -200,6 +200,10 @@ class Pessoa extends JanelaDinamica {
 
         if (_usuario && this.#id && this.#id != USUARIO && id_usuario) $(".row-senha").addClass("d-none");
         else $(".row-senha").removeClass("d-none");
+        Array.from(document.querySelectorAll("#pessoasModal .row")).forEach((el) => {
+            el.style.removeProperty("margin-top");
+        });
+        dimensionar_linhas();
     }
 
     mudou_empresa(id_empresa, callback) {
