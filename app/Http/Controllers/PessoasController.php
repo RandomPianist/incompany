@@ -8,6 +8,7 @@ use Hash;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
+use App\Models\Setores;
 use App\Models\Permissoes;
 use App\Http\Traits\NomearTrait;
 
@@ -182,9 +183,13 @@ class PessoasController extends ControllerListavel {
 
     public function salvar(Request $request) {
         if ($this->verifica_vazios($request, ["nome", "funcao", "admissao", "cpf", "telefone"])) return 400; // App\Http\Controllers\Controller.php
-        if ($this->cria_usuario($request->id_setor)) {
-            if (!trim($request->email)) return 400;
-            if (!filter_var($request->email, FILTER_VALIDATE_EMAIL)) return 400;
+        $setor = $request->setor;
+        $m_setor = Setores::find($setor);
+        if ($m_setor !== null) {
+            if ($m_setor->cria_usuario) {
+                if (!trim($request->email)) return 400;
+                if (!filter_var($request->email, FILTER_VALIDATE_EMAIL)) return 400;
+            }
         }
         $admissao = Carbon::createFromFormat('d/m/Y', $request->admissao)->startOfDay();
         $hj = Carbon::today();
@@ -209,7 +214,7 @@ class PessoasController extends ControllerListavel {
         $pessoa->funcao = mb_strtoupper($request->funcao);
         $pessoa->admissao = Carbon::createFromFormat('d/m/Y', $request->admissao)->format('Y-m-d');
         $pessoa->id_empresa = $request->id_empresa;
-        $pessoa->id_setor = $request->id_setor;
+        $pessoa->id_setor = $setor;
         if (trim($request->senha)) $pessoa->senha = $request->senha;
         $pessoa->supervisor = $request->supervisor;
         if ($request->file("foto")) $pessoa->foto = $request->file("foto")->store("uploads", "public");
