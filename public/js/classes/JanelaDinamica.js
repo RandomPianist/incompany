@@ -71,6 +71,7 @@ class JanelaDinamica {
 
             const permissao = this.permissoesRascunho[x] || false;
             $(prefixoCompleto + x + "-chk").prop("checked", permissao).attr("disabled", ehSetorSistema || !permissoes[x]);
+            $(prefixoCompleto + x).val(permissao ? 1 : 0);
 
             const labelSeletor = prefixoCompleto + x + "-lbl";
             if (ehSetorSistema) $(labelSeletor).attr("title", "Não é permitido alterar essa configuração em um centro de custo do sistema");
@@ -309,7 +310,7 @@ class Pessoa extends JanelaDinamica {
             $("#cpf").addClass("invalido");
         }
 
-        let lista = ["nome", "funcao", "admissao", "supervisor", "telefone"];
+        let lista = ["nome", "funcao", "admissao", "telefone"];
         if (!this.#id) lista.push(this.#usuario ? "password" : "senha");
         const aux = verifica_vazios(lista, erro);
         erro = aux.erro;
