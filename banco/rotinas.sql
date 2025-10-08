@@ -740,6 +740,9 @@ BEGIN
     SET @sql = 'UPDATE users AS main JOIN pessoas2 AS aux ON aux.id_antigo = main.id_pessoa SET main.id_pessoa = aux.id';
     PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+    SET @sql = 'UPDATE usrbkp AS main JOIN pessoas2 AS aux ON aux.id_antigo = main.id_pessoa SET main.id_pessoa = aux.id';
+    PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
     -- ETAPA 3: Remover tabelas antigas e renomear as novas
     SET v_tabelas_restantes = v_lista_tabelas;
     WHILE v_tabelas_restantes IS NOT NULL AND v_tabelas_restantes != '' DO
