@@ -1,5 +1,5 @@
-CREATE DATABASE incompany__;
-USE incompany__;
+CREATE DATABASE incompany_;
+USE incompany_;
 
 CREATE TABLE empresas (
 	id INT AUTO_INCREMENT PRIMARY KEY,
@@ -26,14 +26,6 @@ CREATE TABLE setores (
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- nome, cpf, foto
--- função, admissão, setor (remover quando usuário)
--- empresa
--- email, telefone
--- senha, password (remover quando funcionário)
--- supervisor
--- permissões (remover quando funcionário)
-
 CREATE TABLE pessoas (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	nome VARCHAR(64),
@@ -54,9 +46,6 @@ CREATE TABLE pessoas (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
-CREATE INDEX idx_pessoas_id_empresa_lixeira ON pessoas(id_empresa, lixeira);
-CREATE INDEX idx_pessoas_id_setor_lixeira ON pessoas(id_setor, lixeira);
 
 CREATE TABLE users (
 	id INT AUTO_INCREMENT PRIMARY KEY,
@@ -80,8 +69,6 @@ CREATE TABLE maquinas (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
-CREATE INDEX idx_maquinas_lixeira ON maquinas(lixeira); 
 
 CREATE TABLE categorias (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -130,9 +117,6 @@ CREATE TABLE produtos (
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_produtos_cod_lixeira ON produtos(cod_externo, lixeira);
-CREATE INDEX idx_produtos_ref_lixeira ON produtos(referencia, lixeira);
-
 CREATE TABLE comodatos (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	inicio DATE,
@@ -150,9 +134,6 @@ CREATE TABLE comodatos (
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_comodatos_id_empresa_inicio_fim ON comodatos(id_empresa, inicio, fim);
-CREATE INDEX idx_comodatos_id_maquina ON comodatos(id_maquina);
-
 CREATE TABLE comodatos_produtos (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	minimo NUMERIC(10,5),
@@ -164,9 +145,6 @@ CREATE TABLE comodatos_produtos (
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
-CREATE INDEX idx_mp_id_comodato ON comodatos_produtos(id_comodato);
-CREATE INDEX idx_mp_id_produto ON comodatos_produtos(id_produto);
 
 CREATE TABLE estoque (
 	id INT AUTO_INCREMENT PRIMARY KEY,
@@ -180,8 +158,6 @@ CREATE TABLE estoque (
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
-CREATE INDEX idx_estoque_id_cp ON estoque(id_cp);
 
 CREATE TABLE atribuicoes (
 	id INT AUTO_INCREMENT PRIMARY KEY,
@@ -208,15 +184,6 @@ CREATE TABLE atribuicoes (
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
-CREATE INDEX idx_atr_created_date ON atribuicoes(data);
-CREATE INDEX idx_atr_id_pessoa_cod_lixeira ON atribuicoes(id_pessoa, cod_produto, lixeira);
-CREATE INDEX idx_atr_id_pessoa_ref_lixeira ON atribuicoes(id_pessoa, referencia, lixeira);
-CREATE INDEX idx_atr_id_setor_cod_lixeira ON atribuicoes(id_setor, cod_produto, lixeira);
-CREATE INDEX idx_atr_id_setor_ref_lixeira ON atribuicoes(id_setor, referencia, lixeira);
-CREATE INDEX idx_atr_id_maquina_cod_lixeira ON atribuicoes(id_maquina, cod_produto, lixeira);
-CREATE INDEX idx_atr_id_maquina_ref_lixeira ON atribuicoes(id_maquina, referencia, lixeira);
-CREATE INDEX idx_atr_cod_ref ON atribuicoes(cod_produto, referencia);
 
 CREATE TABLE atbbkp (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -276,9 +243,6 @@ CREATE TABLE retiradas (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
-CREATE INDEX idx_ret_atr_pessoa_empresa_data ON retiradas(id_atribuicao, id_pessoa, id_empresa, data);
-CREATE INDEX idx_ret_atr_pessoa_empresa_data_sup ON retiradas(id_atribuicao, id_pessoa, id_empresa, data, id_supervisor);
 
 CREATE TABLE solicitacoes (
     id INT AUTO_INCREMENT PRIMARY KEY,

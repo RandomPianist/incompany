@@ -7,6 +7,8 @@ STARTS TIMESTAMP(CURRENT_DATE, '02:00:00')
 DO
 BEGIN
     TRUNCATE TABLE mat_vultretirada;
+    CALL refazer_ids();
+    CALL reindexar();
     CALL limpar_usuario_editando();
     CALL excluir_atribuicao_sem_retirada();
     CALL atualizar_mat_vcomodatos(0);

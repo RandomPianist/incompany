@@ -606,4 +606,217 @@ BEGIN
     COMMIT;
 END $$
 
+CREATE PROCEDURE refazer_ids()
+BEGIN
+    -- ------------------------------------------------------------------------------
+    -- ETAPA DE DECLARAÇÕES: Todas as variáveis, cursores e handlers vêm primeiro.
+    -- ------------------------------------------------------------------------------
+    
+    -- Variáveis de configuração e controle de loops
+    DECLARE v_lista_tabelas TEXT DEFAULT 'atribuicoes,categorias,comodatos,comodatos_produtos,estoque,excecoes,log,maquinas,permissoes,pessoas,previas,produtos,retiradas,setores,solicitacoes,solicitacoes_produtos';
+    DECLARE v_tabela_atual VARCHAR(64);
+    DECLARE v_tabelas_restantes TEXT;
+    DECLARE v_delimitador_pos INT;
+    DECLARE v_colunas TEXT;
+    
+    -- Variáveis para o cursor de atualização de FKs
+    DECLARE v_done INT DEFAULT FALSE;
+    DECLARE v_main_table, v_fk_column, v_aux_table VARCHAR(64);
+    
+    -- Declaração do Cursor para ler a tabela de configuração de FKs
+    DECLARE cur_fk CURSOR FOR SELECT main_table, fk_column, aux_table FROM fk_configuracao_updates;
+    
+    -- Handler para o cursor saber quando chegou ao fim dos registros
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_done = TRUE;
+    
+    -- Handler de erro geral para garantir o ROLLBACK da transação
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL; -- Re-lança o erro para o usuário saber o que aconteceu
+    END;
+
+    -- ------------------------------------------------------------------------------
+    -- INÍCIO DOS COMANDOS EXECUTÁVEIS
+    -- ------------------------------------------------------------------------------
+
+    -- Inicia a transação
+    START TRANSACTION;
+
+    -- ETAPA 0: Criar e popular a "lista/vetor" de chaves estrangeiras
+    CREATE TEMPORARY TABLE IF NOT EXISTS fk_configuracao_updates (
+        main_table VARCHAR(64),
+        fk_column VARCHAR(64),
+        aux_table VARCHAR(64)
+    );
+    TRUNCATE TABLE fk_configuracao_updates;
+
+    INSERT INTO fk_configuracao_updates (main_table, fk_column, aux_table) VALUES
+        ('atribuicoes', 'id_pessoa', 'pessoas'),
+        ('atribuicoes', 'id_setor', 'setores'),
+        ('atribuicoes', 'id_maquina', 'maquinas'),
+        ('comodatos', 'id_maquina', 'maquinas'),
+        ('comodatos_produtos', 'id_comodato', 'comodatos'),
+        ('comodatos_produtos', 'id_produto', 'produtos'),
+        ('estoque', 'id_cp', 'comodatos_produtos'),
+        ('excecoes', 'id_atribuicao', 'atribuicoes'),
+        ('excecoes', 'id_pessoa', 'pessoas'),
+        ('excecoes', 'id_setor', 'setores'),
+        ('permissoes', 'id_setor', 'setores'),
+        ('pessoas', 'id_setor', 'setores'),
+        ('previas', 'id_comodato', 'comodatos'),
+        ('previas', 'id_produto', 'produtos'),
+        ('produtos', 'id_categoria', 'categorias'),
+        ('retiradas', 'id_atribuicao', 'atribuicoes'),
+        ('retiradas', 'id_comodato', 'comodatos'),
+        ('retiradas', 'id_pessoa', 'pessoas'),
+        ('retiradas', 'id_supervisor', 'pessoas'),
+        ('retiradas', 'id_produto', 'produtos'),
+        ('retiradas', 'id_setor', 'setores'),
+        ('solicitacoes', 'id_comodato', 'comodatos'),
+        ('solicitacoes_produtos', 'id_produto', 'produtos'),
+        ('solicitacoes_produtos', 'id_produto_orig', 'produtos'),
+        ('solicitacoes_produtos', 'id_solicitacao', 'solicitacoes');
+
+    -- ETAPA 1: Criar as novas tabelas (com sufixo '2')
+    SET v_tabelas_restantes = v_lista_tabelas;
+    WHILE v_tabelas_restantes IS NOT NULL AND v_tabelas_restantes != '' DO
+        SET v_delimitador_pos = INSTR(v_tabelas_restantes, ',');
+        IF v_delimitador_pos > 0 THEN
+            SET v_tabela_atual = SUBSTRING(v_tabelas_restantes, 1, v_delimitador_pos - 1);
+            SET v_tabelas_restantes = SUBSTRING(v_tabelas_restantes, v_delimitador_pos + 1);
+        ELSE
+            SET v_tabela_atual = v_tabelas_restantes;
+            SET v_tabelas_restantes = NULL;
+        END IF;
+
+        SELECT GROUP_CONCAT(CONCAT('`', column_name, '`')) INTO v_colunas
+        FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = v_tabela_atual AND column_name != 'id';
+        
+        SET @sql = CONCAT('CREATE TABLE ', v_tabela_atual, '2 AS SELECT (@row_number:=@row_number+1) AS id, `id` AS id_antigo, ', v_colunas, ' FROM `', v_tabela_atual, '`, (SELECT @row_number:=0) AS t');
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT('ALTER TABLE `', v_tabela_atual, '2` ADD PRIMARY KEY(id)');
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT('ALTER TABLE `', v_tabela_atual, '2` CHANGE id id INT NOT NULL AUTO_INCREMENT');
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END WHILE;
+
+    -- ETAPA 2.1: Atualizar chaves estrangeiras dinamicamente usando o cursor
+    OPEN cur_fk;
+    fk_update_loop: LOOP
+        FETCH cur_fk INTO v_main_table, v_fk_column, v_aux_table;
+        IF v_done THEN
+            LEAVE fk_update_loop;
+        END IF;
+        
+        SET @sql = CONCAT('UPDATE `', v_main_table, '2` AS main JOIN `', v_aux_table, '2` AS aux ON aux.id_antigo = main.`', v_fk_column, '` SET main.`', v_fk_column, '` = aux.id');
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END LOOP;
+    CLOSE cur_fk;
+
+    -- ETAPA 2.2: Tratar caso especial da tabela `log` (FK polimórfica)
+    SET v_tabelas_restantes = v_lista_tabelas;
+    WHILE v_tabelas_restantes IS NOT NULL AND v_tabelas_restantes != '' DO
+        SET v_delimitador_pos = INSTR(v_tabelas_restantes, ',');
+        IF v_delimitador_pos > 0 THEN
+            SET v_tabela_atual = SUBSTRING(v_tabelas_restantes, 1, v_delimitador_pos - 1);
+            SET v_tabelas_restantes = SUBSTRING(v_tabelas_restantes, v_delimitador_pos + 1);
+        ELSE
+            SET v_tabela_atual = v_tabelas_restantes;
+            SET v_tabelas_restantes = NULL;
+        END IF;
+
+        IF v_tabela_atual != 'log' THEN
+            SET @sql = CONCAT('UPDATE log2 AS main JOIN `', v_tabela_atual, '2` AS aux ON aux.id_antigo = main.fk SET main.fk = aux.id WHERE main.tabela = ''', v_tabela_atual, '''');
+            PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+        END IF;
+    END WHILE;
+
+    -- ETAPA 3: Remover tabelas antigas e renomear as novas
+    SET v_tabelas_restantes = v_lista_tabelas;
+    WHILE v_tabelas_restantes IS NOT NULL AND v_tabelas_restantes != '' DO
+        SET v_delimitador_pos = INSTR(v_tabelas_restantes, ',');
+        IF v_delimitador_pos > 0 THEN
+            SET v_tabela_atual = SUBSTRING(v_tabelas_restantes, 1, v_delimitador_pos - 1);
+            SET v_tabelas_restantes = SUBSTRING(v_tabelas_restantes, v_delimitador_pos + 1);
+        ELSE
+            SET v_tabela_atual = v_tabelas_restantes;
+            SET v_tabelas_restantes = NULL;
+        END IF;
+
+        SET @sql = CONCAT('DROP TABLE `', v_tabela_atual, '`');
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT('RENAME TABLE `', v_tabela_atual, '2` TO `', v_tabela_atual, '`');
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT('ALTER TABLE `', v_tabela_atual, '` DROP COLUMN `id_antigo`');
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END WHILE;
+    
+    COMMIT;
+
+END$$
+
+CREATE PROCEDURE reindexar()
+BEGIN
+    -- Handler para ignorar o erro "índice não existe" (código 1091) e continuar
+    DECLARE CONTINUE HANDLER FOR 1091 BEGIN END;
+    
+    -- Handler geral para reverter a transação em caso de outros erros graves
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Se precisar de transações, coloque START TRANSACTION no início e ROLLBACK aqui.
+        -- Como DROP/CREATE INDEX causam commits implícitos, a transação tem efeito limitado.
+        RESIGNAL;
+    END;
+
+    -- --- ETAPA 1: Removendo os índices existentes (com a sintaxe correta) ---
+    DROP INDEX idx_pessoas_id_empresa_lixeira ON pessoas;
+    DROP INDEX idx_pessoas_id_setor_lixeira ON pessoas;
+    DROP INDEX idx_maquinas_lixeira ON maquinas;
+    DROP INDEX idx_produtos_cod_lixeira ON produtos;
+    DROP INDEX idx_produtos_ref_lixeira ON produtos;
+    DROP INDEX idx_comodatos_id_empresa_inicio_fim ON comodatos;
+    DROP INDEX idx_comodatos_id_maquina ON comodatos;
+    DROP INDEX idx_mp_id_comodato ON comodatos_produtos;
+    DROP INDEX idx_mp_id_produto ON comodatos_produtos;
+    DROP INDEX idx_estoque_id_cp ON estoque;
+    DROP INDEX idx_atr_created_date ON atribuicoes;
+    DROP INDEX idx_atr_id_pessoa_cod_lixeira ON atribuicoes;
+    DROP INDEX idx_atr_id_pessoa_ref_lixeira ON atribuicoes;
+    DROP INDEX idx_atr_id_setor_cod_lixeira ON atribuicoes;
+    DROP INDEX idx_atr_id_setor_ref_lixeira ON atribuicoes;
+    DROP INDEX idx_atr_id_maquina_cod_lixeira ON atribuicoes;
+    DROP INDEX idx_atr_id_maquina_ref_lixeira ON atribuicoes;
+    DROP INDEX idx_atr_cod_ref ON atribuicoes;
+    DROP INDEX idx_ret_atr_pessoa_empresa_data ON retiradas;
+    DROP INDEX idx_ret_atr_pessoa_empresa_data_sup ON retiradas;
+
+    -- --- ETAPA 2: Criando os índices novamente ---
+    CREATE INDEX idx_pessoas_id_empresa_lixeira ON pessoas(id_empresa, lixeira);
+    CREATE INDEX idx_pessoas_id_setor_lixeira ON pessoas(id_setor, lixeira);
+    CREATE INDEX idx_maquinas_lixeira ON maquinas(lixeira);
+    CREATE INDEX idx_produtos_cod_lixeira ON produtos(cod_externo, lixeira);
+    CREATE INDEX idx_produtos_ref_lixeira ON produtos(referencia, lixeira);
+    CREATE INDEX idx_comodatos_id_empresa_inicio_fim ON comodatos(id_empresa, inicio, fim);
+    CREATE INDEX idx_comodatos_id_maquina ON comodatos(id_maquina);
+    CREATE INDEX idx_mp_id_comodato ON comodatos_produtos(id_comodato);
+    CREATE INDEX idx_mp_id_produto ON comodatos_produtos(id_produto);
+    CREATE INDEX idx_estoque_id_cp ON estoque(id_cp);
+    CREATE INDEX idx_atr_created_date ON atribuicoes(data);
+    CREATE INDEX idx_atr_id_pessoa_cod_lixeira ON atribuicoes(id_pessoa, cod_produto, lixeira);
+    CREATE INDEX idx_atr_id_pessoa_ref_lixeira ON atribuicoes(id_pessoa, referencia, lixeira);
+    CREATE INDEX idx_atr_id_setor_cod_lixeira ON atribuicoes(id_setor, cod_produto, lixeira);
+    CREATE INDEX idx_atr_id_setor_ref_lixeira ON atribuicoes(id_setor, referencia, lixeira);
+    CREATE INDEX idx_atr_id_maquina_cod_lixeira ON atribuicoes(id_maquina, cod_produto, lixeira);
+    CREATE INDEX idx_atr_id_maquina_ref_lixeira ON atribuicoes(id_maquina, referencia, lixeira);
+    CREATE INDEX idx_atr_cod_ref ON atribuicoes(cod_produto, referencia);
+    CREATE INDEX idx_ret_atr_pessoa_empresa_data ON retiradas(id_atribuicao, id_pessoa, id_empresa, data);
+    CREATE INDEX idx_ret_atr_pessoa_empresa_data_sup ON retiradas(id_atribuicao, id_pessoa, id_empresa, data, id_supervisor);
+
+END$$
+
 DELIMITER ;
