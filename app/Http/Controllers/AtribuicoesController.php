@@ -280,7 +280,9 @@ class AtribuicoesController extends Controller {
                         ->get();
         foreach ($consulta as $linha) {
             $id_excluir = $linha->id;
-            $id_restaurar = Atribuicoes::whereRaw("
+            $id_restaurar = Atribuicoes::where("rascunho", "<>", "S")
+                                ->where("lixeira", 1)
+                                ->whereRaw("
                                     (CASE
                                         WHEN cod_produto IS NOT NULL THEN 'P'
                                         ELSE 'R'
