@@ -1,10 +1,12 @@
 import Pessoa from '../classes/JanelaDinamica.js';
 
-import RelatorioBilateral from '../classes/Relatorios.js';
-import RelatorioItens from '../classes/Relatorios.js';
-import RelatorioControle from '../classes/Relatorios.js';
-import RelatorioRetiradas from '../classes/Relatorios.js';
-import RelatorioRanking from '../classes/Relatorios.js';
+import {
+    RelatorioBilateral,
+    RelatorioItens,
+    RelatorioControle,
+    RelatorioRetiradas,
+    RelatorioRanking
+} from '../classes/Relatorios.js';
 
 import Atribuicoes from '../classes/Atribuicoes.js';
 import Excecoes from '../classes/Excecoes.js';
