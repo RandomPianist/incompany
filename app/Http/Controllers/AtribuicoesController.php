@@ -365,7 +365,7 @@ class AtribuicoesController extends Controller {
                     atribuicoes.obrigatorio = atbbkp.obrigatorio,
                     atribuicoes.gerado = atbbkp.gerado,
                     atribuicoes.id_usuario = atbbkp.id_usuario
-                WHERE atribuices.id_usuario = ".$id_usuario
+                WHERE atribuicoes.id_usuario = ".$id_usuario
             : "
                 UPDATE excecoes
                 JOIN excbkp
