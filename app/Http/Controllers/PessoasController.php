@@ -276,6 +276,10 @@ class PessoasController extends ControllerListavel {
         $this->log_inserir("D", "pessoas", $linha->id); // App\Http\Controllers\Controller.php
     }
 
+    public function consultar(Request $request) {
+        return json_encode($this->consultar_main($request));
+    }
+
     public function alterar_empresa(Request $request) {
         if (!intval(Auth::user()->admin)) return 401;
         $pessoa = Pessoas::find(Auth::user()->id_pessoa);
