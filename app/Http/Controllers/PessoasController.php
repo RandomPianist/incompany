@@ -26,7 +26,7 @@ class PessoasController extends ControllerListavel {
         } elseif (!$request->id &&
             DB::table("pessoas")
                 ->leftjoin("users", "users.id_pessoa", "pessoas.id")
-                ->where(function($sql) {
+                ->where(function($sql) use($request) {
                     $sql->where("users.email", $request->email)
                         ->orWhere("pessoas.email", $request->email);
                 })
