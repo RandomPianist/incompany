@@ -201,6 +201,11 @@ class Pessoa extends JanelaDinamica {
 
         if (_usuario && this.#id && this.#id != USUARIO && id_usuario) $(".row-senha").addClass("d-none");
         else $(".row-senha").removeClass("d-none");
+
+        $("#email-lbl").html(_usuario ? "Email: *" : "Email:");
+        $("#senha-lbl").html(!this.#id ? "Senha numérica: *" : "Senha numérica: (deixe em branco para não alterar)");
+        $("#password-lbl").html(!this.#id ? "Senha alfanumérica: *" : "Senha alfanumérica: (deixe em branco para não alterar)");
+
         Array.from(document.querySelectorAll("#pessoasModal .row")).forEach((el) => {
             el.style.removeProperty("margin-top");
         });

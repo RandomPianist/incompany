@@ -230,7 +230,9 @@ class PessoasController extends ControllerListavel {
                             )
                             ->where("id_pessoa", $pessoa->id)
                             ->first();
-        if ($pessoa->setor->cria_usuario) {
+        $cria_usuario = true;
+        if ($pessoa->setor !== null) $cria_usuario = $pessoa->setor->cria_usuario;
+        if ($cria_usuario) {
             $json_usuario = array();
             $id_usuario = 0;
             $password = trim($request->password);
@@ -242,7 +244,10 @@ class PessoasController extends ControllerListavel {
             } elseif ($email) $json_usuario += ["email" => $email];
 
             if ($usuario === null) {
-                $json_usuario += ["id_pessoa" => $pessoa->id];
+                $json_usuario += [
+                    "id_pessoa" => $pessoa->id,
+                    "name" => $request->nome
+                ];
                 $id_usuario = DB::table("users")->insertGetId($json_usuario);
             } else {
                 DB::table("users")->where("id", $usuario->id)->update($json_usuario);

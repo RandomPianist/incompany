@@ -54,12 +54,12 @@
                         </div>
                         <div class = "row row-setor">
                             <div class = "col-4">
-                                <label for = "funcao" class = "custom-label-form">Função:</label>
+                                <label for = "funcao" class = "custom-label-form">Função: *</label>
                                 <input id = "funcao" name = "funcao" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 64)" />
                                 <span class = "custom-label-form tam-max"></span>
                             </div>
                             <div class = "col-4">
-                                <label for = "admissao" class = "custom-label-form">Admissão:</label>
+                                <label for = "admissao" class = "custom-label-form">Admissão: *</label>
                                 <input id = "admissao" name = "admissao" class = "form-control data" autocomplete = "off" type = "text" />
                             </div>
                             <div class = "col-3 pr-0">
@@ -78,7 +78,7 @@
                         </div>
                         <div class = "row">
                             <div class = "col-6">
-                                <label for = "email" class = "custom-label-form">E-mail: *</label>
+                                <label for = "email" id = "email-lbl" class = "custom-label-form">E-mail:</label>
                                 <input id = "email" name = "email" class = "form-control" autocomplete = "off" type = "text"/>
                             </div>
                             <div class = "col-6">
@@ -88,14 +88,14 @@
                         </div>
                         <div class = "row row-senha">
                             <div class = "col-5">
-                                <label for = "senha" class = "custom-label-form">Senha numérica: *</label>
+                                <label for = "senha" id = "senha-lbl" class = "custom-label-form">Senha numérica: *</label>
                                 <input id = "senha" name = "senha" class = "form-control" autocomplete = "off" type = "password" onkeyup = "numerico(this)" title = "Senha para retirar produtos" />
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
                                 <i id = "mostrar_senha" class = "fal fa-eye-slash" onclick = "pessoa.mostrar_senha()"></i>
                             </div>
                             <div class = "col-6">
-                                <label for = "password" class = "custom-label-form">Senha alfanumérica: *</label>
+                                <label for = "password" id = "password-lbl" class = "custom-label-form">Senha alfanumérica: *</label>
                                 <input id = "password" name = "password" class = "form-control" autocomplete = "off" type = "password" title = "Senha para acessar essa plataforma" />
                             </div>
                         </div>
