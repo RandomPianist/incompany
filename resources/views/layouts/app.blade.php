@@ -280,7 +280,6 @@
                 }
             </script>
         @endif
-        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/pessoa.js') }}"></script>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/alerta.js') }}"></script>
     </body>
 </html>
