@@ -13,7 +13,7 @@
         <link rel = "stylesheet"    href = "{{ asset('css/lib/fa.css')            }}" />
         <style type = "text/css">
             .form-search::after, .form-search-2::after {
-                background: url("{{ $root_url }}/img/keyboard.png") no-repeat;
+                background: url("{{ asset('img/keyboard.png') }}") no-repeat;
                 background-size: contain;
                 bottom: 4.5px;
                 content: " ";
@@ -34,12 +34,12 @@
             }
 
             .form-search.new::before {
-                background: url("{{ $root_url }}/img/new.png") no-repeat;
+                background: url("{{ asset('img/new.png') }}") no-repeat;
                 background-size: contain
             }
 
             .form-search.old::before {
-                background: url("{{ $root_url }}/img/old.png") no-repeat;
+                background: url("{{ asset('img/old.png') }}") no-repeat;
                 background-size: contain
             }
 
@@ -69,12 +69,12 @@
             }
 
             .linha-atb.new::before {
-                background: url("{{ $root_url }}/img/new.png") no-repeat;
+                background: url("{{ asset('img/new.png') }}") no-repeat;
                 background-size: contain
             }
 
             .linha-atb.old::before {
-                background: url("{{ $root_url }}/img/old.png") no-repeat;
+                background: url("{{ asset('img/old.png') }}") no-repeat;
                 background-size: contain
             }
         </style>
@@ -151,7 +151,7 @@
                             <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
                             <ul class = "dropdown-toolbar">
                                 <li>
-                                    <span>Pessoas & consumo<img class = "dropdown-icon" src = "/img/sort-down.png"></span>
+                                    <span>Pessoas & consumo<img class = "dropdown-icon" src = "{{ asset ('img/sort-down.png') }}"></span>
                                     <ul class = "subdropdown-toolbar">
                                         <li onclick = "relatorio = new RelatorioControle()">
                                             <span>Termo de retirada</span>
@@ -168,7 +168,7 @@
                                     </ul>
                                 </li>
                                 <li>
-                                    <span>Estoque<img class = "dropdown-icon" src = "/img/sort-down.png"></span>
+                                    <span>Estoque<img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}"></span>
                                     <ul class = "subdropdown-toolbar">
                                         <li onclick = "relatorio = new RelatorioItens('E')">
                                             <span>Extrato de itens</span>
@@ -182,7 +182,7 @@
                                     </ul>
                                 </li>
                                 <li>
-                                    <span>Outros<img class = "dropdown-icon" src = "/img/sort-down.png"></span>
+                                    <span>Outros<img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}"></span>
                                     <ul class = "subdropdown-toolbar">
                                         @if ($admin)
                                             <li onclick = "window.open('{{ $root_url }}/relatorios/comodatos', '_blank')">
