@@ -371,8 +371,8 @@ class AtribuicoesController extends Controller {
                 JOIN excbkp
                     ON excbkp.id_excecao = excecoes.id
                 SET
-                    excecoes.id_pessoa = excbkp.id_pessoa
-                    excecoes.id_setor = excbkp.id_setor
+                    excecoes.id_pessoa = excbkp.id_pessoa,
+                    excecoes.id_setor = excbkp.id_setor,
                     excecoes.id_usuario = excbkp.id_usuario
                 WHERE excecoes.id_usuario = ".$id_usuario
             );

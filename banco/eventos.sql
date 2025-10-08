@@ -22,7 +22,7 @@ BEGIN
     JOIN excbkp
         ON excbkp.id_excecao = excecoes.id
     SET
-        excecoes.id_pessoa = excbkp.id_pessoa
+        excecoes.id_pessoa = excbkp.id_pessoa,
         excecoes.id_setor = excbkp.id_setor;
     TRUNCATE TABLE excbkp;
     TRUNCATE TABLE atbbkp;
