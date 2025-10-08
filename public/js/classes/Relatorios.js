@@ -80,10 +80,7 @@ class RelatorioBilateral extends Relatorios {
         wrapper[0].innerHTML = null;
         wrapper[0].appendChild(elements);
 
-        Array.from(document.querySelectorAll(".modal-body .row:not(.sem-margem)")).forEach(el => {
-            el.style.removeProperty("margin-top");
-            if ($(el).prev().hasClass("row")) $(el).css("margin-top", $(el).prev().find(".tam-max").length ? "-14px" : "11px");
-        });
+        dimensionar_linhas();
     }
 }
 

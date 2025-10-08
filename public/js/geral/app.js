@@ -48,10 +48,6 @@ $(document).ready(function() {
             if (x.indexOf("_") == -1 && x != "id") permissoes[x] = resp[x];
         }
 
-        $(".modal-body .row:not(.sem-margem)").each(function() {
-            if ($(this).prev().hasClass("row")) $(this).css("margin-top", $(this).prev().find(".tam-max").length ? "-14px" : "11px");
-        });
-
         $(".modal-body button").each(function() {
             $($(this).parent()).css("padding-top", "1px");
         });
@@ -112,6 +108,8 @@ $(document).ready(function() {
                 colGlobal = thIndex;
             });
         });
+        
+        dimensionar_linhas();
 
         carrega_autocomplete();
 
@@ -449,6 +447,14 @@ async function cp_mp_pergunta_salvar(tipo) {
         }
     } else if (resp.isDenied) cp_mp_limpar_tudo(tipo);    
     else $("#" + tipo + "Modal").modal();
+}
+
+function dimensionar_linhas() {
+    $(".modal-body .row:not(.sem-margem)").each(function() {
+        let anterior = $($(this).prev());
+        while ($(anterior).hasClass("d-none")) anterior = $($(anterior).prev());
+        if ($(anterior).hasClass("row")) $(this).css("margin-top", $(anterior).find(".tam-max").length ? "-14px" : "11px");
+    });
 }
 
 function descartar(_tabela) {
