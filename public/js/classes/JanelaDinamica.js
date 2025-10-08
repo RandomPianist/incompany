@@ -91,6 +91,7 @@ class Pessoa extends JanelaDinamica {
     #usuario;
     #ant_id_setor;
     #ant_id_empresa;
+    #obrigatorios;
 
     #validar_email(__email) {
         if ((__email == null) || (__email.length < 4)) return false;
@@ -199,8 +200,14 @@ class Pessoa extends JanelaDinamica {
         }
         $("#senha").attr("title", "Senha para retirar produtos " + (supervisor ? "e autorizar retiradas de produtos antes do vencimento" : ""));
 
-        if (_usuario && this.#id && this.#id != USUARIO && id_usuario) $(".row-senha").addClass("d-none");
-        else $(".row-senha").removeClass("d-none");
+        this.#obrigatorios = ["nome", "telefone"];
+        if (titulo.charAt(0) != "a") this.#obrigatorios.push("funcao", "admissao");
+        if (!_usuario || !this.#id || this.#id == USUARIO || !id_usuario) {
+            $(".row-senha").removeClass("d-none");
+            if (_usuario) this.#obrigatorios.push("email");
+            if (!this.#id) this.#obrigatorios.push("senha");
+            if (!this.#id || _usuario) this.#obrigatorios.push("password");
+        } else $(".row-senha").addClass("d-none");
 
         $("#email-lbl").html(_usuario ? "Email: *" : "Email:");
         $("#senha-lbl").html(!this.#id ? "Senha numérica: *" : "Senha numérica: (deixe em branco para não alterar)");
@@ -315,9 +322,7 @@ class Pessoa extends JanelaDinamica {
             $("#cpf").addClass("invalido");
         }
 
-        let lista = ["nome", "funcao", "admissao", "telefone"];
-        if (!this.#id) lista.push(this.#usuario ? "password" : "senha");
-        const aux = verifica_vazios(lista, erro);
+        const aux = verifica_vazios(this.#obrigatorios, erro);
         erro = aux.erro;
         let alterou = aux.alterou;
 
