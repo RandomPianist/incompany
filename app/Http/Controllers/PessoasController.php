@@ -313,7 +313,7 @@ class PessoasController extends ControllerListavel {
         }
         if ($request->id || 
             !DB::table("vativos")
-                ->where("id", $linha->id)
+                ->where("id", $request->id)
                 ->where("atb_todos", ">", 0)
                 ->exists()
         ) {
