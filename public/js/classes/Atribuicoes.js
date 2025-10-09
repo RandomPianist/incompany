@@ -11,7 +11,7 @@ class Atribuicoes {
         $('a[data-toggle="tab"]').on('shown.bs.tab', (e) => {
             const abaAtivaId = $(e.target).attr("id");
             
-            this.#grade = (abaAtivaId === 'grade-tab');
+            this.#grade = (abaAtivaId == 'grade-tab');
             
             this.#mostrar();
         });
@@ -27,9 +27,15 @@ class Atribuicoes {
                     const _psm_chave = this.obter_psm();
                     let url = URL + "/";
                     switch (_psm_chave) {
-                        case "P": url += "colaboradores"; break;
-                        case "S": url += "setores"; break;
-                        case "M": url += "maquinas"; break;
+                        case "P":
+                            url += "colaboradores";
+                            break;
+                        case "S":
+                            url += "setores";
+                            break;
+                        case "M":
+                            url += "maquinas";
+                            break;
                     }
                     url += "/mostrar";
                     if (_psm_chave != "M") url += "2";
@@ -101,8 +107,12 @@ class Atribuicoes {
                         $("#id_produto_p, #id_produto_r, #produto, #referencia").val("");
                         this.#mostrar();
                         break;
-                    case 403: s_alert(pr_chave === 'R' ? "Referência inválida" : "Produto inválido"); break;
-                    case 404: s_alert(pr_chave === 'R' ? "Referência não encontrada" : "Produto não encontrado"); break;
+                    case 403:
+                        s_alert(pr_chave == 'R' ? "Referência inválida" : "Produto inválido");
+                        break;
+                    case 404:
+                        s_alert(pr_chave == 'R' ? "Referência não encontrada" : "Produto não encontrado");
+                        break;
                 }
             });
         }
