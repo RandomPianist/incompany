@@ -118,7 +118,7 @@ abstract class Controller extends BaseController {
                                         ->where("lixeira", 0)
                                         ->exists()
                                 ) $where .= " OR id_matriz = ".$id_emp;
-                                $sql->whereRaw($where);
+                                $sql->whereRaw("(".$where.")");
                             }
                             if ($m_emp) {
                                 $possiveis = [$m_emp];
