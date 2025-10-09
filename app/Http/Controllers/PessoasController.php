@@ -63,6 +63,12 @@ class PessoasController extends ControllerListavel {
         return $resultado;
     }
 
+    private function maquinas_da_pessoa($id_pessoa) {
+        return DB::table("vativos")
+                    ->where("id", $id_pessoa)
+                    ->value("maquinas");
+    }
+
     protected function busca($where, $tipo = "") {
         return DB::table("pessoas")
                     ->select(
@@ -305,6 +311,27 @@ class PessoasController extends ControllerListavel {
             $this->log_inserir("D", "users", $usuario->id); // App\Http\Controllers\Controller.php
             DB::table("users")->where("id", $usuario->id)->delete();
         }
+        if ($request->id || 
+            !DB::table("vativos")
+                ->where("id", $linha->id)
+                ->where("atb_todos", ">", 0)
+                ->exists()
+        ) {
+            $this->atualizar_atribuicoes(
+                DB::table("vatbold")
+                    ->select(
+                        "psm_chave",
+                        "psm_valor"
+                    )
+                    ->where("psm_chave", "S")
+                    ->whereIn("psm_valor", $setores)
+                    ->groupby(
+                        "psm_chave",
+                        "psm_valor"
+                    )
+                    ->get()
+            ); // App\Http\Controllers\Controller.php            
+        } else $this->atualizar_tudo($this->maquinas_da_pessoa($linha->id), "M", true);
         return redirect("/colaboradores/pagina/".substr(strtoupper($this->nomear($pessoa->id)), 0, 1)); // App\Http\Traits\NomearTrait.php
     }
 
@@ -348,10 +375,7 @@ class PessoasController extends ControllerListavel {
                 ->value("id")
         : 0;
         $pessoa->save();
-        $ativos = DB::table("vativos")
-                    ->where("id", $pessoa->id)
-                    ->value("maquinas");
-        $this->atualizar_tudo($ativos);
+        $this->atualizar_tudo($this->maquinas_da_pessoa($pessoa->id), "M", true);
     }
 
     public function senha(Request $request) {
