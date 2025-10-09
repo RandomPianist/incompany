@@ -72,7 +72,7 @@ class ProdutosController extends ControllerListavel {
                         ")
                     )
                     ->leftjoin("categorias", "categorias.id", "produtos.id_categoria")
-                    ->whereRaw(str_replace("?", "produtos.descr", $param))
+                    ->whereRaw(str_replace("?", "produtos.descr", $where))
                     ->where("produtos.lixeira", 0)
                     ->get();
     }
