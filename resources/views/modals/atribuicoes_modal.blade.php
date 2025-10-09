@@ -27,7 +27,7 @@
                             <div class = "tab-pane fade show active" id = "produto-pane" role = "tabpanel" aria-labelledby = "produto-tab">
                                 <div class = "row pt-2 align-items-end">
                                     <div class = "@if ($admin) col-4 @else col-5 @endif">
-                                        <label for = "produto" class = "custom-label-form">Produto: *</label>
+                                        <label for = "produto" class = "custom-label-form">Produto:</label>
                                         <input id = "produto" class = "form-control autocomplete" data-input = "#id_produto_p" data-table = "produtos" data-column = "descr" type = "text" autocomplete = "off" />
                                         <input id = "id_produto_p" type = "hidden" onchange = "atribuicao.preencherValidade(this.value, 'P')" />
                                     </div>
@@ -37,15 +37,15 @@
                                         </div>
                                     @endif
                                     <div class = "col-2">
-                                        <label for = "quantidade_p" class = "custom-label-form">Quantidade: *</label>
+                                        <label for = "quantidade_p" class = "custom-label-form">Quantidade:</label>
                                         <input id = "quantidade_p" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" />
                                     </div>
                                     <div class = "col-2">
-                                        <label for = "validade_p" class = "custom-label-form">Validade em dias: *</label>
+                                        <label for = "validade_p" class = "custom-label-form">Validade em dias:</label>
                                         <input id = "validade_p" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" />
                                     </div>
                                     <div class = "col-3">
-                                        <label for = "obrigatorio_p" class = "custom-label-form">Obrigatório: *</label>
+                                        <label for = "obrigatorio_p" class = "custom-label-form">Obrigatório:</label>
                                         <select class = "form-control" id = "obrigatorio_p">
                                             <option value = "opt-1">SIM</option>
                                             <option value = "opt-0" selected>NÃO</option>
@@ -57,7 +57,7 @@
                             <div class = "tab-pane fade" id = "grade-pane" role = "tabpanel" aria-labelledby = "grade-tab">
                                 <div class = "row pt-2 align-items-end">
                                     <div class = "@if ($admin) col-4 @else col-5 @endif">
-                                        <label for = "referencia" class = "custom-label-form">Referência: *</label>
+                                        <label for = "referencia" class = "custom-label-form">Referência:</label>
                                         <input id = "referencia" class = "form-control autocomplete" data-input = "#id_produto_r" data-table = "produtos" data-column = "referencia" type = "text" autocomplete = "off" />
                                         <input id = "id_produto_r" type = "hidden" onchange = "atribuicao.preencherValidade(this.value, 'R')" />
                                     </div>
@@ -67,15 +67,15 @@
                                     </div>
                                     @endif
                                     <div class = "col-2">
-                                        <label for = "quantidade_r" class = "custom-label-form">Quantidade: *</label>
+                                        <label for = "quantidade_r" class = "custom-label-form">Quantidade:</label>
                                         <input id = "quantidade_r" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" />
                                     </div>
                                     <div class = "col-2">
-                                        <label for = "validade_r" class = "custom-label-form">Validade em dias: *</label>
+                                        <label for = "validade_r" class = "custom-label-form">Validade em dias:</label>
                                         <input id = "validade_r" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" />
                                     </div>
                                     <div class = "col-3">
-                                        <label for = "obrigatorio_r" class = "custom-label-form">Obrigatório: *</label>
+                                        <label for = "obrigatorio_r" class = "custom-label-form">Obrigatório:</label>
                                         <select class = "form-control" id = "obrigatorio_r">
                                             <option value = "opt-1">SIM</option>
                                             <option value = "opt-0" selected>NÃO</option>

@@ -503,7 +503,8 @@ main {
     border: 1px solid #dee2e6;
     border-radius: 0rem 0.35rem 0.35rem 0.35rem;
     padding: 1rem;
-    margin-bottom: 2rem
+    padding-right: 1.8rem;
+    margin-bottom: 1.5rem
 }
 
 .custom-fab {
@@ -794,7 +795,7 @@ div.atribuicoes,
 }
 
 div.atribuicoes {
-    max-height: 300px
+    max-height: calc(100vh - 28.5rem)
 }
 
 .atalho {
