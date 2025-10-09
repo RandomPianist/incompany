@@ -484,6 +484,28 @@ main {
     color: #0416b4
 }
 
+.nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+    color: #004D9D;
+    background: #F7F7F7;
+    border-bottom: 1px solid #F7F7F7
+}
+
+.nav-tabs .nav-link {
+    color: gray
+}
+
+.nav-tabs {
+    border-bottom: none
+}
+
+.form-container-bordered {
+    background: #F7F7F7;
+    border: 1px solid #dee2e6;
+    border-radius: 0rem 0.35rem 0.35rem 0.35rem;
+    padding: 1rem;
+    margin-bottom: 2rem
+}
+
 .custom-fab {
     border-radius: 25rem;
     bottom: 30px;

@@ -331,7 +331,7 @@ class PessoasController extends ControllerListavel {
                     )
                     ->get()
             ); // App\Http\Controllers\Controller.php            
-        } else $this->atualizar_tudo($this->maquinas_da_pessoa($linha->id), "M", true);
+        } else $this->atualizar_tudo(explode(",", $this->maquinas_da_pessoa($linha->id)), "M", true); // App\Http\Controllers\Controller.php
         return redirect("/colaboradores/pagina/".substr(strtoupper($this->nomear($pessoa->id)), 0, 1)); // App\Http\Traits\NomearTrait.php
     }
 
@@ -375,7 +375,7 @@ class PessoasController extends ControllerListavel {
                 ->value("id")
         : 0;
         $pessoa->save();
-        $this->atualizar_tudo($this->maquinas_da_pessoa($pessoa->id), "M", true);
+        $this->atualizar_tudo(explode(",", $this->maquinas_da_pessoa($pessoa->id)), "M", true); // App\Http\Controllers\Controller.php
     }
 
     public function senha(Request $request) {

@@ -6,7 +6,8 @@ ON SCHEDULE EVERY 1 DAY
 STARTS TIMESTAMP(CURRENT_DATE, '02:00:00')
 DO
 BEGIN
-    TRUNCATE TABLE mat_vultretirada;
+    START TRANSACTION;
+    DELETE FROM mat_vultretirada;
     UPDATE atribuicoes SET rascunho = 'S' WHERE rascunho IN ('E', 'R');
     UPDATE excecoes SET rascunho = 'S' WHERE rascunho IN ('E', 'R');
     UPDATE atribuicoes
@@ -26,8 +27,6 @@ BEGIN
         excecoes.id_pessoa = excbkp.id_pessoa,
         excecoes.id_setor = excbkp.id_setor,
         excecoes.id_usuario = 0;
-    TRUNCATE TABLE excbkp;
-    TRUNCATE TABLE atbbkp;
     CALL excluir_atribuicao_sem_retirada();
     CALL refazer_ids();
     CALL reindexar();
@@ -37,6 +36,9 @@ BEGIN
     CALL atualizar_mat_vatribuicoes('T', '(0)', 'S');
     CALL atualizar_mat_vretiradas_vultretirada('T', '(0)', 'R', 'S');
     CALL atualizar_mat_vretiradas_vultretirada('T', '(0)', 'U', 'S');
+    COMMIT;
+    TRUNCATE TABLE excbkp;
+    TRUNCATE TABLE atbbkp;
 END$$
 
 DELIMITER ;

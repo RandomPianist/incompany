@@ -1,13 +1,20 @@
 class Atribuicoes {
     #idatb = 0;
     #hab = true;
-    #grade;
+    #grade; 
     #psm_valor;
 
     constructor(grade, _psm_valor) {
         this.#grade = grade;
         this.#psm_valor = _psm_valor;
-        this.psm_val = _psm_valor;
+
+        $('a[data-toggle="tab"]').on('shown.bs.tab', (e) => {
+            const abaAtivaId = $(e.target).attr("id");
+            
+            this.#grade = (abaAtivaId === 'grade-tab');
+            
+            this.#mostrar();
+        });
 
         $.get(URL + "/atribuicoes/permissao", {
             id: this.#psm_valor,
@@ -16,45 +23,34 @@ class Atribuicoes {
         }, (data) => {
             if (typeof data == "string") data = $.parseJSON(data);
             if (parseInt(data.code) == 200) {
-                $($("#table-atribuicoes").parent()).removeClass("pb-4");
-                $("#table-atribuicoes").html("");
                 modal("atribuicoesModal", 0, () => {
                     const _psm_chave = this.obter_psm();
                     let url = URL + "/";
-                    switch(_psm_chave) {
-                        case "P":
-                            url += "colaboradores";
-                            break;
-                        case "S":
-                            url += "setores";
-                            break;
-                        case "M":
-                            url += "maquinas";
-                            break;
+                    switch (_psm_chave) {
+                        case "P": url += "colaboradores"; break;
+                        case "S": url += "setores"; break;
+                        case "M": url += "maquinas"; break;
                     }
                     url += "/mostrar";
                     if (_psm_chave != "M") url += "2";
+                    
                     $.get(url + "/" + this.#psm_valor, (resp) => {
                         if (typeof resp == "string") resp = $.parseJSON(resp);
-                        $("#atribuicoesModalLabel").html(resp[_psm_chave == "P" ? "nome" : "descr"].toUpperCase() + " - Atribuindo " + (this.#grade ? "grades" : "produtos"));
+                        
+                        $("#atribuicoesModalLabel").html(resp[_psm_chave == "P" ? "nome" : "descr"].toUpperCase() + " - Atribuindo");
+                        
+                        $("#produto, #referencia").val("");
+                        $("#id_produto_p, #id_produto_r").val("");
+
+                        $("#quantidade_p, #quantidade_r").val(1);
+                        $("#validade_p, #validade_r").val(1);
+
                         if (this.#grade) {
+                            $('#atribuicoesTab a[href="#grade-pane"]').tab('show');
                             $("#referencia").attr("data-filter", _psm_chave + "|" + this.#psm_valor);
-                            $("#div-produto").addClass("d-none");
-                            $("#div-referencia").removeClass("d-none");
-                        } else {
-                            $("#div-produto").removeClass("d-none");
-                            $("#div-referencia").addClass("d-none");
-                        }
-                        $("#obrigatorio").val("opt-0");
+                        } else $('#atribuicoesTab a[href="#produto-pane"]').tab('show');
+                        
                         this.#mostrar();
-                        $("#atribuicoesModal input[type=number]").each(function() {
-                            $(this).off("change").on("change", function() {
-                                limitar($(this));
-                            }).off("keyup").on("keyup", (e) => {
-                                $(this).trigger("change");
-                                atribuicao.tentar(e);
-                            }).trigger("change");
-                        })
                     });
                 });
             } else s_alert("Não é possível listar as atribuições de <b>" + data.nome + "</b> porque elas estão sendo editadas por <b>" + data.usuario + "</b>");
@@ -70,35 +66,43 @@ class Atribuicoes {
     salvar() {
         if (this.#hab) {
             this.#hab = false;
+
+            let pr_chave, pr_valor, quantidade, validade, obrigatorio;
+
+            if ($('#produto-tab').hasClass('active')) {
+                pr_chave = "P";
+                pr_valor = $("#produto").val();
+                quantidade = $("#quantidade_p").val();
+                validade = $("#validade_p").val();
+                obrigatorio = $("#obrigatorio_p").val();
+            } else {
+                pr_chave = "R";
+                pr_valor = $("#referencia").val();
+                quantidade = $("#quantidade_r").val();
+                validade = $("#validade_r").val();
+                obrigatorio = $("#obrigatorio_r").val();
+            }
+
             $.post(URL + "/atribuicoes/salvar", {
                 _token: $("meta[name='csrf-token']").attr("content"),
                 id: this.#idatb,
                 psm_chave: this.obter_psm(),
                 psm_valor: this.#psm_valor,
-                pr_chave: this.#grade ? "R" : "P",
-                pr_valor: $("#" + (this.#grade ? "referencia" : "produto")).val(),
-                validade: $("#validade").val(),
-                qtd: $("#quantidade").val(),
-                obrigatorio: $("#obrigatorio").val().replace("opt-", "")
+                pr_chave: pr_chave,
+                pr_valor: pr_valor,
+                validade: validade,
+                qtd: quantidade,
+                obrigatorio: obrigatorio.replace("opt-", "")
             }, (ret) => {
                 ret = parseInt(ret);
                 if (ret != 201) this.#hab = true;
                 switch (ret) {
                     case 201:
-                        $("#id_produto").val("");
-                        $("#referencia").val("");
-                        $("#produto").val("");
-                        $("#quantidade").val(1);
-                        $("#validade").val(1);
-                        $("#obrigatorio").val("opt-0");
+                        $("#id_produto_p, #id_produto_r, #produto, #referencia").val("");
                         this.#mostrar();
                         break;
-                    case 403:
-                        s_alert(this.#grade ? "Referência inválida" : "Produto inválido");
-                        break;
-                    case 404:
-                        s_alert(this.#grade ? "Referência não encontrada" : "Produto não encontrado");
-                        break;
+                    case 403: s_alert(pr_chave === 'R' ? "Referência inválida" : "Produto inválido"); break;
+                    case 404: s_alert(pr_chave === 'R' ? "Referência não encontrada" : "Produto não encontrado"); break;
                 }
             });
         }
@@ -109,7 +113,8 @@ class Atribuicoes {
             const campo = this.#grade ? "referencia" : "produto";
             $.get(URL + "/atribuicoes/mostrar/" + id, (data) => {
                 $("#estiloAux").html(".autocomplete-result{display:none}");
-                $("#" + campo + ", #validade, #quantidade, #obrigatorio").each(function() {
+                let sufixo = this.#grade ? "_r" : "_p";
+                $("#" + campo + ", #validade" + sufixo + ", #quantidade" + sufixo + ", #obrigatorio" + sufixo).each(function() {
                     $(this).attr("disabled", true);
                 });
                 if (typeof data == "string") data = $.parseJSON(data);
@@ -118,11 +123,11 @@ class Atribuicoes {
                     $($(".autocomplete-line").first()).trigger("click");
                 }, 500);
                 setTimeout(() => {
-                    $("#validade").val(data.validade);
-                    $("#quantidade").val(parseInt(data.qtd));
-                    $("#obrigatorio").val("opt-" + data.obrigatorio);
+                    $("#validade" + sufixo).val(data.validade);
+                    $("#quantidade" + sufixo).val(parseInt(data.qtd));
+                    $("#obrigatorio" + sufixo).val("opt-" + data.obrigatorio);
                     $("#estiloAux").html("");
-                    $("#validade, #quantidade, #obrigatorio").each(function() {
+                    $("#validade" + sufixo + ", #quantidade" + sufixo + ", #obrigatorio" + sufixo).each(function() {
                         $(this).attr("disabled", false);
                     });
                     this.#mostrar(id);
@@ -167,13 +172,15 @@ class Atribuicoes {
         });
     }
 
-    preencherValidade(id_produto) {
-        $.get(URL + "/produtos/validade", {
-            id: id_produto,
-            tipo: this.#grade ? "R" : "P"
-        }, function(validade) {
-            $("#validade").val(parseInt(validade)).trigger("change");
-        })
+    preencherValidade(id_produto, tipo) {
+        if (id_produto) {
+            $.get(URL + "/produtos/validade", {
+                id: id_produto,
+                tipo: tipo
+            }, function(validade) {
+                $("#validade").val(parseInt(validade)).trigger("change");
+            })
+        }
     }
 
     atualizarQtd() {
@@ -343,7 +350,7 @@ class Atribuicoes {
                 });
                 resultado += "</tbody>";
                 $($("#table-atribuicoes").parent()).addClass("pb-4");
-                if (this.obter_psm() == "M") $($("#atribuicoesModal div.atribuicoes").parent()).addClass("mb-5");
+                if (this.obter_psm() == "M") $($("#atribuicoesModal div.atribuicoes").parent()).removeClass("mb-5");
                 else $($("#atribuicoesModal div.atribuicoes").parent()).removeClass("mb-5");
                 this.#hab = true;
             } else {

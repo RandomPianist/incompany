@@ -17,7 +17,6 @@ class AtribuicoesController extends Controller {
     private function apagar_backup($tabela) {
         $tab_bkp = $tabela == "atribuicoes" ? "atbbkp" : "excbkp";
         DB::table($tab_bkp)->where("id_usuario_editando", Auth::user()->id)->delete();
-        if (!DB::table($tab_bkp)->exists()) DB::table($tab_bkp)->truncate();
     }
 
     private function consulta_main($select) {
@@ -284,7 +283,7 @@ class AtribuicoesController extends Controller {
                         ->get();
         foreach ($consulta as $linha) {
             $id_excluir = $linha->id;
-            $id_restaurar = Atribuicoes::where("rascunho", "<>", "S")
+            $id_restaurar = Atribuicoes::where("rascunho", "S")
                                 ->where("lixeira", 1)
                                 ->whereRaw("
                                     (CASE

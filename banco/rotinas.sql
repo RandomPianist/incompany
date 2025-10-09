@@ -9,7 +9,6 @@ BEGIN
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Erro ao atualizar mat_vcomodatos';
     END;
 
@@ -45,8 +44,6 @@ BEGIN
         SET @query = CONCAT(@query, 'comodatos.id_maquina = ', p_id_maquina);
     END IF;
 
-    START TRANSACTION;
-
     IF p_id_maquina IS NULL OR p_id_maquina = 0 THEN
         SET @delete_sql = 'DELETE FROM mat_vcomodatos';
     ELSE
@@ -57,12 +54,16 @@ BEGIN
     EXECUTE st_del;
     DEALLOCATE PREPARE st_del;
 
-    SET @insert_sql = CONCAT('INSERT INTO mat_vcomodatos ', @query);
+    SET @insert_sql = CONCAT('INSERT INTO mat_vcomodatos ', @query, ' GROUP BY
+        comodatos.id,
+        minhas_empresas.id_pessoa,
+        comodatos.id_maquina,
+        comodatos.travar_estq,
+        comodatos.id_empresa
+    ');
     PREPARE st_ins FROM @insert_sql;
     EXECUTE st_ins;
     DEALLOCATE PREPARE st_ins;
-
-    COMMIT;
 END$$
 
 /* -----------------------------------------
@@ -74,7 +75,6 @@ BEGIN
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Erro ao atualizar mat_vatbaux';
     END;
 
@@ -218,8 +218,6 @@ BEGIN
 
     SET @query = CONCAT(@query, ' AND produtos.lixeira = 0 GROUP BY tab.id_pessoa, tab.id_atribuicao, tab.cod, tab.ref, tab.src, vatbreal.id_setor, vatbreal.lixeira');
 
-    START TRANSACTION;
-
     IF p_chave = 'M' THEN
         SET @delete_sql = CONCAT(
             'DELETE mat_vatbaux
@@ -270,8 +268,6 @@ BEGIN
     PREPARE st_del4 FROM @delete_sql3;
     EXECUTE st_del4;
     DEALLOCATE PREPARE st_del4;
-
-    COMMIT;
 END$$
 
 /* -----------------------------------------
@@ -289,7 +285,6 @@ BEGIN
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Erro ao atualizar mat_vatribuicoes';
     END;
 
@@ -391,8 +386,6 @@ BEGIN
     -- monta query final (distinct)
     SET @query = CONCAT('SELECT DISTINCT * FROM (', v_blocks, ') AS tab');
 
-    START TRANSACTION;
-
     -- deletar conforme p_chave (mantive a lógica original)
     IF p_chave = 'P' THEN
         SET @delete_sql = CONCAT('DELETE FROM mat_vatribuicoes WHERE id_pessoa IN (', p_valor, ')');
@@ -424,8 +417,6 @@ BEGIN
     PREPARE st_ins FROM @insert_sql;
     EXECUTE st_ins;
     DEALLOCATE PREPARE st_ins;
-
-    COMMIT;
 END$$
 
 /* -----------------------------------------
@@ -449,7 +440,6 @@ BEGIN
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Erro ao atualizar mat_vretiradas_vultretirada';
     END;
 
@@ -531,8 +521,6 @@ BEGIN
         v_group_by_part
     );
 
-    START TRANSACTION;
-
     IF p_chave = 'P' THEN
         SET @delete_sql = CONCAT('DELETE FROM ', v_target_table, ' WHERE id_pessoa IN (', p_valor, ')');
     ELSEIF p_chave = 'S' THEN
@@ -563,19 +551,15 @@ BEGIN
     PREPARE st_ins4 FROM @insert_sql;
     EXECUTE st_ins4;
     DEALLOCATE PREPARE st_ins4;
-
-    COMMIT;
 END$$
 
 CREATE PROCEDURE excluir_atribuicao_sem_retirada()
 BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
         RESIGNAL;
     END;
 
-    START TRANSACTION;
     DELETE a
     FROM atribuicoes a
     LEFT JOIN retiradas r ON r.id_atribuicao = a.id
@@ -586,24 +570,20 @@ BEGIN
     LEFT JOIN atribuicoes a2 ON a2.id = l.fk
     WHERE a2.id IS NULL
         AND l.tabela = 'atribuicoes';
-    COMMIT;
 END $$
 
 CREATE PROCEDURE limpar_usuario_editando()
 BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
         RESIGNAL;
     END;
 
-    START TRANSACTION;
     UPDATE categorias SET id_usuario_editando = 0;
     UPDATE empresas SET id_usuario_editando = 0;
     UPDATE pessoas SET id_usuario_editando = 0;
     UPDATE produtos SET id_usuario_editando = 0;
     UPDATE setores SET id_usuario_editando = 0;
-    COMMIT;
 END $$
 
 CREATE PROCEDURE refazer_ids()
@@ -632,16 +612,12 @@ BEGIN
     -- Handler de erro geral para garantir o ROLLBACK da transação
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
         RESIGNAL; -- Re-lança o erro para o usuário saber o que aconteceu
     END;
 
     -- ------------------------------------------------------------------------------
     -- INÍCIO DOS COMANDOS EXECUTÁVEIS
     -- ------------------------------------------------------------------------------
-
-    -- Inicia a transação
-    START TRANSACTION;
 
     -- ETAPA 0: Criar e popular a "lista/vetor" de chaves estrangeiras
     CREATE TEMPORARY TABLE IF NOT EXISTS fk_configuracao_updates (
@@ -764,8 +740,6 @@ BEGIN
         SET @sql = CONCAT('ALTER TABLE `', v_tabela_atual, '` DROP COLUMN `id_antigo`');
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
     END WHILE;
-    
-    COMMIT;
 
 END$$
 

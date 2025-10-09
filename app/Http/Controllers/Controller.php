@@ -303,7 +303,7 @@ abstract class Controller extends BaseController {
     protected function atualizar_tudo($valor, $chave = "M", $completo = false) {
         $valor_ant = $valor;
         if (is_iterable($valor)) $valor = implode(",", $valor);
-        $valor = "'(".$valor.")'";
+        $valor = "'".$valor."'";
         if ($completo) {
             if (is_iterable($valor_ant)) {
                 foreach ($valor_ant as $maq) DB::statement("CALL atualizar_mat_vcomodatos(".$maq.")");
