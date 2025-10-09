@@ -203,9 +203,9 @@ class RelatoriosController extends Controller {
         $erro = "";
         if ($request->prioridade == "empresas") {
             if ($this->consultar_empresa($request)) $erro = "empresa";
-            if (!$erro && $this->consultar_maquina($request)) $erro = "maquina";
+            if (!$erro && $this->maquina_consultar($request)) $erro = "maquina";
         } else {
-            if ($this->consultar_maquina($request)) $erro = "maquina";
+            if ($this->maquina_consultar($request)) $erro = "maquina";
             if (!$erro && $this->consultar_empresa($request)) $erro = "empresa";
         }
         return $erro;

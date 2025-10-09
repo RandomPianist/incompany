@@ -179,81 +179,6 @@ class MaquinasController extends Controller {
         );
     }
 
-    private function consultar_produto_main($id_maquina, $produtos_id, $produtos_descr, $precos, $maximos) {
-        $texto = "";
-        $campos = array();
-        $valores = array();
-
-        $comodato = $this->obter_comodato($id_maquina); // App\Http\Controllers\Controller.php
-
-        for ($i = 0; $i < sizeof($produtos_id); $i++) {
-            if (!DB::table("vprodaux")
-                    ->where("id", $produtos_id[$i])
-                    ->where("descr", $produtos_descr[$i])
-                    ->where("lixeira", 0)
-                    ->exists()
-            ) {
-                array_push($campos, "produto-".($i + 1));
-                array_push($valores, $produtos_descr[$i]);
-                $texto = !$texto ? "Produtos não encontrados" : "Produto não encontrado";
-            }
-        }
-
-        if (!$texto) {
-            for ($i = 0; $i < sizeof($produtos_id); $i++) {
-                $saldo = $this->retorna_saldo_cp($comodato->id, $produtos_id[$i]);
-                if (
-                    floatval($maximos[$i]) &&
-                    floatval($maximos[$i]) < $saldo
-                ) {
-                    array_push($campos, "max-".($i + 1));
-                    array_push($valores, $saldo);
-                    $texto = 
-                        $texto ?
-                            "Esse valor de estoque máximo é inferior ao saldo atual do produto.<br>O campo foi corrigido."
-                        :
-                            "Esses valores de estoque máximo são inferiores ao saldo atual dos produtos.<br>Os campos foram corrigidos."
-                    ;
-                }
-            }
-        }
-
-        if (!$texto) {
-            for ($i = 0; $i < sizeof($produtos_id); $i++) {
-                if (!ceil($precos[$i])) {
-                    $texto = $texto ? "Há preços zerados" : "Há um preço zerado";
-                    array_push($campos, "preco-".($i + 1));
-                    array_push($valores, "0");
-                }
-            }
-        }
-
-        if (!$texto) {
-            for ($i = 0; $i < sizeof($produtos_id); $i++) {
-                $prmin = floatval(
-                    DB::table("produtos")
-                        ->selectRaw("IFNULL(prmin, 0) AS prmin")
-                        ->where("id", $produtos_id[$i])
-                        ->value("prmin")
-                );
-                $preco = floatval($precos[$i]);
-                if ($prmin > 0 && $preco < $prmin) {
-                    $texto = $texto ? "Há itens com preço abaixo do mínimo.<br>Os campos foram corrigidos" : "Há um item com um preço abaixo do mínimo.<br>O campo foi corrigido";
-                    $texto .= " para o preço mínimo.<br>Por favor, verifique e tente novamente.";
-                    array_push($campos, "preco-".($i + 1));
-                    array_push($valores, $prmin);
-                }
-            }
-        }
-
-        $resultado = new \stdClass;
-        $resultado->texto = $texto;
-        $resultado->campos = $campos;
-        $resultado->valores = $valores;
-
-        return $resultado;
-    }
-
     private function consultar_estoque_main($id_maquina, $produtos_id, $produtos_descr, $quantidades, $precos, $es) {
         $texto = "";
         $campos = array();
@@ -502,7 +427,8 @@ class MaquinasController extends Controller {
     }
 
     public function consultar_produto(Request $request) {
-        return json_encode($this->consultar_produto_main(
+        return json_encode($this->consultar_comodatos_produtos( // App\Http\Controllers\Controller.php
+            "maquina",
             $request->id_maquina,
             explode("|!|", $request->produtos_id),
             explode("|!|", $request->produtos_descr),
@@ -615,7 +541,8 @@ class MaquinasController extends Controller {
     public function produto(Request $request) {
         if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
 
-        if ($this->consultar_produto_main(
+        if ($this->consultar_comodatos_produtos( // App\Http\Controllers\Controller.php
+            "maquina",
             $request->id_maquina,
             $request->id_produto,
             $request->produto,
@@ -623,36 +550,7 @@ class MaquinasController extends Controller {
             $request->maximo
         )->texto) return 401;
         
-        $comodato = $this->obter_comodato($request->id_maquina); // App\Http\Controllers\Controller.php
-        for ($i = 0; $i < sizeof($request->id_produto); $i++) {
-            $modelo = null;
-            $letra_log = "";
-            $id_cp = $comodato->cp($request->id_produto[$i])->value("id");
-            if ($id_cp !== null) {
-                $modelo = ComodatosProdutos::find($id_cp);
-                $lixeira = str_replace("opt-", "", $request->lixeira[$i]);
-                if (
-                    $this->comparar_num($modelo->lixeira, $lixeira) ||
-                    $this->comparar_num($modelo->preco, $request->preco[$i]) ||
-                    $this->comparar_num($modelo->maximo, $request->maximo[$i]) ||
-                    $this->comparar_num($modelo->minimo, $request->minimo[$i])
-                ) $letra_log = "E";
-            } else {
-                $modelo = new ComodatosProdutos;
-                $letra_log = "C";
-            }
-            if ($letra_log) {
-                $modelo->id_comodato = $comodato->id;
-                $modelo->id_produto = $request->id_produto[$i];
-                $modelo->preco = $request->preco[$i];
-                $modelo->maximo = $request->maximo[$i];
-                $modelo->minimo = $request->minimo[$i];
-                $modelo->lixeira = $lixeira;
-                $modelo->save();
-                $this->log_inserir($letra_log, "comodatos_produtos", $modelo->id);
-            }
-        }
-        if ($this->gerar_atribuicoes($comodato)) $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
+        $this->salvar_comodatos_produtos("maquina", $request); // App\Http\Controllers\Controller.php
         return redirect("/maquinas");
     }
 

@@ -513,7 +513,7 @@ abstract class Controller extends BaseController {
         return $erro ? 401 : 200;
     }
 
-    protected function consultar_maquina(Request $request) {
+    protected function maquina_consultar(Request $request) {
         return ((
             trim($request->maquina) &&
             !Maquinas::where("id", $request->id_maquina)->where("descr", $request->maquina)->where("lixeira", 0)->exists()
@@ -525,7 +525,7 @@ abstract class Controller extends BaseController {
     protected function extrato_consultar_main(Request $request) {
         $resultado = new \stdClass;
         if (isset($request->maquina)) {
-            if ($this->consultar_maquina($request)) {
+            if ($this->maquina_consultar($request)) {
                 $resultado->el = "maquina";
                 return $resultado;
             }
@@ -760,5 +760,121 @@ abstract class Controller extends BaseController {
 
     protected function view_mensagem($icon, $text) {
         return view("mensagem", compact("icon", "text"));
+    }
+
+    public function consultar_comodatos_produtos($contexto, $id_principal, $ids, $descricoes, $precos, $maximos) {
+        $texto = "";
+        $campos = [];
+        $valores = [];
+
+        for ($i = 0; $i < sizeof($ids); $i++) {;
+            if (
+                !DB::table($contexto == "maquina" ? "vprodaux" : "maquinas")
+                    ->where("id", $ids[$i])
+                    ->where("descr", $descricoes[$i])
+                    ->where("lixeira", 0)
+                    ->exists()
+            ) {
+                array_push($campos, ($contexto == "maquina" ? "produto-" : "maquina-")."-".($i + 1));
+                array_push($valores, $descricoes[$i]);
+                if ($contexto == "produto") $texto = !$texto ? "Máquina não encontrada" : "Máquinas não encontradas";
+                else $texto = !$texto ? "Produto não encontrado" : "Produtos não encontrados";
+            }
+        }
+        if ($texto) goto retornar;
+
+        for ($i = 0; $i < sizeof($ids); $i++) {
+            $id_maquina = $contexto == "maquina" ? $id_principal : $ids[$i];
+            $id_produto = $contexto == "maquina" ? $ids[$i] : $id_principal;
+            
+            $comodato = $this->obter_comodato($id_maquina);
+            if (!$comodato) continue;
+
+            $saldo = $this->retorna_saldo_cp($comodato->id, $id_produto);
+            if (floatval($maximos[$i]) && floatval($maximos[$i]) < $saldo) {
+                array_push($campos, "max-".($i + 1));
+                array_push($valores, $saldo);
+                $texto = 
+                    $texto ?
+                        "Esse valor de estoque máximo é inferior ao saldo atual do produto.<br>O campo foi corrigido."
+                    :
+                        "Esses valores de estoque máximo são inferiores ao saldo atual dos produtos.<br>Os campos foram corrigidos."
+                ;
+            }
+        }
+        if ($texto) goto retornar;
+
+        for ($i = 0; $i < sizeof($ids); $i++) {
+            if (!ceil(floatval($precos[$i]))) {
+                $texto = $texto ? "Há preços zerados" : "Há um preço zerado";
+                array_push($campos, "preco-" . ($i + 1));
+                array_push($valores, "0");
+            }
+        }
+        if ($texto) goto retornar;
+
+        for ($i = 0; $i < sizeof($ids); $i++) {
+            $id_produto = $contexto == "maquina" ? $ids[$i] : $id_principal;
+            $prmin = floatval(DB::table("produtos")->where("id", $id_produto)->value("prmin") ?? 0);
+            
+            if ($prmin > 0 && floatval($precos[$i]) < $prmin) {
+                $texto = $texto ? "Há itens com preço abaixo do mínimo.<br>Os campos foram corrigidos" : "Há um item com um preço abaixo do mínimo.<br>O campo foi corrigido";
+                $texto .= " para o preço mínimo.<br>Por favor, verifique e tente novamente.";
+                array_push($campos, "preco-".($i + 1));
+                array_push($valores, $prmin);
+            }
+        }
+
+        retornar:
+        $resultado = new \stdClass;
+        $resultado->texto = $texto;
+        $resultado->campos = $campos;
+        $resultado->valores = $valores;
+        return $resultado;
+    }
+
+    public function salvar_comodatos_produtos(Request $request, $contexto) {
+        $id_principal = $contexto == "maquina" ? $request->id_maquina : $request->id_produto;
+        $ids = $contexto == "maquina" ? $request->id_produto : $request->id_maquina;
+        
+        $maquinas_para_atualizar = [];
+
+        for ($i = 0; $i < count($ids); $i++) {
+            $id_maquina = $contexto == "maquina" ? $id_principal : $ids[$i];
+            $id_produto = $contexto == "maquina" ? $ids[$i] : $id_principal;
+            
+            $comodato = $this->obter_comodato($id_maquina);
+            if (!$comodato) continue;
+
+            $modelo = ComodatosProdutos::firstOrNew([
+                "id_comodato" => $comodato->id,
+                "id_produto" => $id_produto
+            ]);
+
+            $lixeira = str_replace("opt-", "", $request->lixeira[$i]);
+            $preco = $request->preco[$i];
+            $maximo = $request->maximo[$i];
+            $minimo = $request->minimo[$i];
+            
+            $houveAlteracao = !$modelo->exists ||
+                $this->comparar_num($modelo->lixeira, $lixeira) ||
+                $this->comparar_num($modelo->preco, $preco) ||
+                $this->comparar_num($modelo->maximo, $maximo) ||
+                $this->comparar_num($modelo->minimo, $minimo);
+
+            if ($houveAlteracao) {
+                $letra_log = $modelo->exists ? "E" : "C";
+                $modelo->preco = $preco;
+                $modelo->maximo = $maximo;
+                $modelo->minimo = $minimo;
+                $modelo->lixeira = $lixeira;
+                $modelo->save();
+                $this->log_inserir($letra_log, "comodatos_produtos", $modelo->id);
+            }
+            
+            if ($this->gerar_atribuicoes($comodato)) array_push($maquinas_para_atualizar, $id_maquina);
+        }
+
+        if (!empty($maquinas_para_atualizar)) $this->atualizar_tudo(array_unique($maquinas_para_atualizar), "M", true);
     }
 }
