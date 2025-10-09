@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Dedos extends Model
+{
+    protected $table = 'dedos';
+
+    protected $fillable = [
+        'dedo',
+        'hash',
+        'id_pessoa',
+        'created_at',
+        'updated_at'
+    ];
+
+    protected $casts = [
+        'id' => 'integer',
+        'dedo' => 'integer',
+        'hash' => 'string',
+        'id_pessoa' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
+    ];
+}

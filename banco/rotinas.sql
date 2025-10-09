@@ -593,7 +593,7 @@ BEGIN
     -- ------------------------------------------------------------------------------
     
     -- Variáveis de configuração e controle de loops
-    DECLARE v_lista_tabelas TEXT DEFAULT 'atribuicoes,categorias,comodatos,comodatos_produtos,estoque,excecoes,log,maquinas,permissoes,pessoas,previas,produtos,retiradas,setores,solicitacoes,solicitacoes_produtos';
+    DECLARE v_lista_tabelas TEXT DEFAULT 'atribuicoes,categorias,comodatos,comodatos_produtos,estoque,excecoes,log,maquinas,permissoes,pessoas,previas,produtos,retiradas,setores,solicitacoes,solicitacoes_produtos,dedos';
     DECLARE v_tabela_atual VARCHAR(64);
     DECLARE v_tabelas_restantes TEXT;
     DECLARE v_delimitador_pos INT;
@@ -652,7 +652,8 @@ BEGIN
         ('solicitacoes', 'id_comodato', 'comodatos'),
         ('solicitacoes_produtos', 'id_produto', 'produtos'),
         ('solicitacoes_produtos', 'id_produto_orig', 'produtos'),
-        ('solicitacoes_produtos', 'id_solicitacao', 'solicitacoes');
+        ('solicitacoes_produtos', 'id_solicitacao', 'solicitacoes'),
+        ('dedos', 'id_pessoa', 'pessoas');
 
     -- ETAPA 1: Criar as novas tabelas (com sufixo '2')
     SET v_tabelas_restantes = v_lista_tabelas;
