@@ -14,7 +14,6 @@ use App\Models\Maquinas;
 use App\Models\Retiradas;
 use App\Models\Empresas;
 use App\Models\Comodatos;
-use App\Models\Permissoes;
 use App\Models\ComodatosProdutos;
 use App\Models\Atribuicoes;
 use App\Services\GlobaisService;
