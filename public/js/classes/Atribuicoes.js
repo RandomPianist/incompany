@@ -20,9 +20,23 @@ class Atribuicoes {
                 $("#table-atribuicoes").html("");
                 modal("atribuicoesModal", 0, () => {
                     const _psm_chave = this.obter_psm();
-                    $.get(URL + "/" + (_psm_chave == "P" ? "colaboradores" : _psm_chave == "S" ? "setores" : "maquinas") + "/mostrar/" + this.#psm_valor, (data) => {
-                        if (typeof data == "string") data = $.parseJSON(data);
-                        $("#atribuicoesModalLabel").html(data[_psm_chave == "P" ? "nome" : "descr"].toUpperCase() + " - Atribuindo " + (this.#grade ? "grades" : "produtos"));
+                    let url = URL;
+                    switch(_psm_chave) {
+                        case "P":
+                            url += "colaboradores";
+                            break;
+                        case "S":
+                            url += "setores";
+                            break;
+                        case "M":
+                            url += "maquinas";
+                            break;
+                    }
+                    url += "/mostrar";
+                    if (_psm_chave != "M") url += "2";
+                    $.get(url + "/" + this.#psm_valor, (resp) => {
+                        if (typeof resp == "string") resp = $.parseJSON(resp);
+                        $("#atribuicoesModalLabel").html(resp[_psm_chave == "P" ? "nome" : "descr"].toUpperCase() + " - Atribuindo " + (this.#grade ? "grades" : "produtos"));
                         if (this.#grade) {
                             $("#referencia").attr("data-filter", _psm_chave + "|" + this.#psm_valor);
                             $("#div-produto").addClass("d-none");

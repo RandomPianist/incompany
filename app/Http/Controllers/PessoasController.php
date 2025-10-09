@@ -186,6 +186,10 @@ class PessoasController extends ControllerListavel {
         );
     }
 
+    public function mostrar2($id) {
+        return json_encode(Pessoas::find($id));
+    }
+
     public function salvar(Request $request) {
         $setor = $request->setor;
         $m_setor = Setores::find($setor);

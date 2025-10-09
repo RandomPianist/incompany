@@ -79,6 +79,7 @@ Route::middleware("auth")->group(function () {
         Route::get ("/usuarios/{id}",   [SetoresController::class, "usuarios"]);
         Route::get ("/pessoas/{id}",    [SetoresController::class, "pessoas"]);
         Route::get ("/mostrar/{id}",    [SetoresController::class, "mostrar"]);
+        Route::get ("/mostrar2/{id}",   [SetoresController::class, "mostrar"]);
         Route::get ("/aviso/{id}",      [SetoresController::class, "aviso"]);
         Route::post("/salvar",          [SetoresController::class, "salvar"]);
         Route::post("/excluir",         [SetoresController::class, "excluir"]);
@@ -102,6 +103,7 @@ Route::middleware("auth")->group(function () {
         Route::get ("/listar",          [PessoasController::class, "listar"]);
         Route::get ("/consultar",       [PessoasController::class, "consultar"]);
         Route::get ("/mostrar/{id}",    [PessoasController::class, "mostrar"]);
+        Route::get ("/mostrar2/{id}",   [PessoasController::class, "mostrar2"]);
         Route::get ("/aviso/{id}",      [PessoasController::class, "aviso"]);
         Route::post("/senha",           [PessoasController::class, "senha"]);
         Route::post("/salvar",          [PessoasController::class, "salvar"]);

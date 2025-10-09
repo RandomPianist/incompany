@@ -146,6 +146,10 @@ class SetoresController extends ControllerListavel {
         );
     }
 
+    public function mostrar2($id) {
+        return json_encode(Setores::find($id));
+    }
+
     public function salvar(Request $request) {
         $emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
         if ($this->consultar_main($request)->msg) return 401;
