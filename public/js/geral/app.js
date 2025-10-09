@@ -848,6 +848,11 @@ function validar_cpf(__cpf) {
 }
 
 function trocarEmpresa() {
+    Array.from(document.getElementsByClassName("btn-primary")).forEach((el) => {
+        el.style.zIndex = "0";
+    });
+    document.getElementById("loader").style.display = "flex";
+    document.getElementById("trocarEmpresaModal").style.zIndex = "0";
     $.post(URL + "/colaboradores/alterar-empresa", {
         _token : $("meta[name='csrf-token']").attr("content"),
         idEmpresa : $("#empresa-select").val()

@@ -348,6 +348,10 @@ class PessoasController extends ControllerListavel {
                 ->value("id")
         : 0;
         $pessoa->save();
+        $ativos = DB::table("vativos")
+                    ->where("id", $pessoa->id)
+                    ->value("maquinas");
+        $this->atualizar_tudo($ativos);
     }
 
     public function senha(Request $request) {
