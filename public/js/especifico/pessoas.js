@@ -9,7 +9,7 @@ function listar(coluna) {
         if (data.length) {
             esconderImagemErro();
             let permissao = permissoes.pessoas;
-            if (tipo == "U") permissao = permissoes.usuarios;
+            if (TIPO == "U") permissao = permissoes.usuarios;
             data.forEach((linha) => {
                 let biometria = "";
                 if (linha.possui_biometria.indexOf("possui") > -1) biometria = '<img src = "' + (linha.possui_biometria == "nao-possui" ? IMG_BIOMETRIA.replace("sim", "nao") : IMG_BIOMETRIA) + '" class = "imagem-biometria" />';
