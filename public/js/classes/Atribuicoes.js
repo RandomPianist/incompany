@@ -20,7 +20,7 @@ class Atribuicoes {
                 $("#table-atribuicoes").html("");
                 modal("atribuicoesModal", 0, () => {
                     const _psm_chave = this.obter_psm();
-                    let url = URL;
+                    let url = URL + "/";
                     switch(_psm_chave) {
                         case "P":
                             url += "colaboradores";
