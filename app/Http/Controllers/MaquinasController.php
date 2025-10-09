@@ -519,7 +519,7 @@ class MaquinasController extends Controller {
     }
 
     public function editar_comodato(Request $request) {
-        if (!Permissoes::where("id_usuario", Auth::user()->id)->atribuicoes) return 401;
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->first()->atribuicoes) return 401;
         $obrigatorio = str_replace("opt-", "", $request->obrigatorio);
         $comodato = $this->obter_comodato($request->id_maquina); // App\Http\Controllers\Controller.php
         $atb_todos_ant = $comodato->atb_todos_ant;

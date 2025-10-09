@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 
 class RetiradasController extends Controller {
     private function permitir(Request $request) {
-        if (!Permissoes::where("id_usuario", Auth::user()->id)->retiradas) return 401;
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->first()->retiradas) return 401;
         $emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
         $pessoa = Pessoas::find($request->id_pessoa);
         $ok = true;

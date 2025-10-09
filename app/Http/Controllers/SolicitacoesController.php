@@ -168,7 +168,7 @@ class SolicitacoesController extends Controller {
     }
     
     public function criar(Request $request) {
-        if (!Permissoes::where("id_usuario", Auth::user()->id)->solicitacoes) return 401;
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->first()->solicitacoes) return 401;
         if (!$this->consultar_main($request->id_comodato)->continuar) return 401;
         $solicitacao = new Solicitacoes;
         $solicitacao->status = "A";

@@ -57,7 +57,7 @@ class ExcecoesController extends Controller {
     }
 
     public function salvar(Request $request) {
-        if (!Permissoes::where("id_usuario", Auth::user()->id)->atribuicoes) return 401;
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->first()->atribuicoes) return 401;
         $atb = Atribuicoes::find($request->id_atribuicao);
         if (
             !DB::table($request->ps_chave == "P" ? "pessoas" : "setores")
