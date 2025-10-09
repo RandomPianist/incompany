@@ -14,6 +14,7 @@ use App\Models\Maquinas;
 use App\Models\Retiradas;
 use App\Models\Empresas;
 use App\Models\Comodatos;
+use App\Models\Permissoes;
 use App\Models\ComodatosProdutos;
 use App\Models\Atribuicoes;
 use App\Services\GlobaisService;
@@ -44,9 +45,9 @@ abstract class Controller extends BaseController {
     }
 
     protected function verifica_vazios(Request $request, $chaves) {
-        $erro = false;
+        $erro = "";
         foreach ($chaves as $chave) {
-            if (!trim($request->input($chave))) $erro = true;
+            if (!trim($request->input($chave))) $erro = $chave;
         }
         return $erro;
     }
@@ -505,7 +506,7 @@ abstract class Controller extends BaseController {
 
     protected function validar_permissoes(Request $request) {
         $erro = false;
-        $permissoes = (array) Permissoes::where("id_usuario", Auth::user()->id);
+        $permissoes = (array) DB::table("permissoes")->where("id_usuario", Auth::user()->id)->first();
         $lista = $this->obter_lista_permissoes();
         foreach ($lista as $permissao) {
             if (!$permissoes[$permissao] && intval($request->input($permissao))) $erro = true;
