@@ -8,6 +8,8 @@ function listar(coluna) {
         if (typeof data == "string") data = $.parseJSON(data);
         if (data.length) {
             esconderImagemErro();
+            let permissao = permissoes.pessoas;
+            if (tipo == "U") permissao = permissoes.usuarios;
             data.forEach((linha) => {
                 let biometria = "";
                 if (linha.possui_biometria.indexOf("possui") > -1) biometria = '<img src = "' + (linha.possui_biometria == "nao-possui" ? IMG_BIOMETRIA.replace("sim", "nao") : IMG_BIOMETRIA) + '" class = "imagem-biometria" />';
@@ -29,13 +31,16 @@ function listar(coluna) {
                     resultado += "<i class = 'my-icon far fa-box' title = 'Atribuir produto' onclick = 'atribuicao = new Atribuicoes(false, " + linha.id + ")'></i>" +
                         "<i class = 'my-icon far fa-tshirt'       title = 'Atribuir grade'   onclick = 'atribuicao = new Atribuicoes(true, " + linha.id + ")'></i>";
                 }
-                resultado += "<i class = 'my-icon far fa-edit' title = 'Editar'  onclick = 'pessoa = new Pessoa(" + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-trash-alt' title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/colaboradores"' + ")'></i>" +
-                    "</td>" +
-                "</tr>";
+                if (permissao) {
+                    resultado += "<i class = 'my-icon far fa-edit' title = 'Editar'  onclick = 'pessoa = new Pessoa(" + linha.id + ")'></i>" +
+                        "<i class = 'my-icon far fa-trash-alt'     title = 'Excluir' onclick = 'excluir(" + linha.id + ", " + '"/colaboradores"' + ")'></i>";
+                }
+                resultado += "</td></tr>";
             });
             $("#table-dados").html(resultado);
             ordenar(coluna);
+            if (permissao) $("#btn-add").removeClass("d-none");
+            else $("#btn-add").addClass("d-none");
         } else mostrarImagemErro();
         document.querySelector(".loader-container").classList.add("d-none");
     });

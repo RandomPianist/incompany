@@ -193,6 +193,11 @@ class PessoasController extends ControllerListavel {
         if ($m_setor !== null) {
             if (!$m_setor->cria_usuario) $conferir_email = false;
         }
+        $minhas_permissoes = Permissoes::where("id_usuario", Auth::user()->id);
+        $permissao = $minhas_permissoes->pessoas;
+        if ($conferir_email) $permissao = $minhas_permissoes->usuarios;
+        if (!$permissao) return 401;
+
         $nao_tem_usuario = DB::table("users")
                                 ->where("id_pessoa", $request->id)
                                 ->first() === null;

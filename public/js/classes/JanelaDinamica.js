@@ -252,7 +252,9 @@ class Pessoa extends JanelaDinamica {
     }
 
     mudou_setor(id_setor, callback) {
-        const concluir = () => {
+        const concluir = (_cria_usuario) => {
+            this.#htmlPermissoes = this._obterHtmlPermissoes(_cria_usuario);
+            this.#usuario = _cria_usuario;
             this.mudaTitulo();
             if (callback !== undefined) callback();
         }
@@ -265,16 +267,12 @@ class Pessoa extends JanelaDinamica {
                 if (!this.#carregando) {
                     for (let x in permissoes) this.permissoesRascunho[x] = data[x] && permissoes[x];
                 }
-                this.#htmlPermissoes = this._obterHtmlPermissoes(data.cria_usuario);
-                this.#usuario = data.cria_usuario;
                 concluir();
             });
         } else {
             if (!this.#carregando) {
                 for (let x in permissoes) this.permissoesRascunho[x] = permissoes[x];
             }
-            this.#htmlPermissoes = this._obterHtmlPermissoes(true);
-            this.#usuario = true;
             concluir();
         }
     }
