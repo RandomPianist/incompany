@@ -466,10 +466,11 @@ class Atribuicoes {
                 $($("#atribuicoesModal div.atribuicoes").parent()).removeClass("mb-5");
                 $('#table-container').addClass('d-none');
                 $('#no-results-container').removeClass('d-none');
-                $("#table-atribuicoes").html('');
             }
             this.#hab = true;
-            $("#table-atribuicoes").html(resultado);
+            $("#table-atribuicoes").animate({ opacity: 0.3 }, 400, function() {
+                $(this).html(resultado).animate({ opacity: 1 }, 400);
+            });
             $("#referencia").attr("disabled", false);
             $("#produto").attr("disabled", false);
             $.get(URL + "/atribuicoes/permissao", {
