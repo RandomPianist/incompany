@@ -217,12 +217,15 @@ class Atribuicoes {
     }
 
     retirar(id) {
+        const psm = this.obter_psm();
         let _id_pessoa;
-        if (this.obter_psm() == "P") _id_pessoa = this.#psm_valor;
+        if (psm == "P") _id_pessoa = this.#psm_valor;
         else _id_pessoa = this.#pessoa_selecionada;
         if (_id_pessoa === undefined) {
             modal("pessoaRetiradaModal", 0, function() {
                 $("#id_atribuicao").val(id);
+                $("#pessoa-retirando").attr("data-filter_col", psm == "S" ? "id_setor" : "v_maquina");
+                $("#pessoa-retirando").attr("data-filter", this.#psm_valor);
             });
             return;
         }
