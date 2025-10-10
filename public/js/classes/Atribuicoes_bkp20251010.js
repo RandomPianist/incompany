@@ -18,102 +18,50 @@ class Atribuicoes {
             this.#mostrar();
         });
 
-        $('#produto, #referencia').each((index, element) => {
-            const $element = $(element);
-            const tipo = $element.attr('id');
-            const campoIdOculto = $element.data('input');
-
-            $element.select2({
-                width: '100%',
-                placeholder: `Digite para buscar...`,
-                allowClear: true,
-                language: {
-                    noResults: () => "Nenhum resultado encontrado",
-                    searching: () => "Buscando..."
-                },
-                ajax: {
-                    url: `${URL}/autocomplete`,
-                    dataType: 'json',
-                    delay: 250,
-                    data: (params) => {
-                        let filtroDinamico = '';
-                        if (tipo === 'referencia') {
-                            const _psm_chave = this.obter_psm();
-                            const _psm_valor = this.#psm_valor;
-                            filtroDinamico = `${_psm_chave}|${_psm_valor}`;
-                        }
-                        return {
-                        table: $element.data('table'),
-                        column: $element.data('column'),
-                        filter_col: $element.data('filter_col') || '',
-                        filter: filtroDinamico, // Usa o filtro dinâmico
-                        search: params.term
-                    };
-                        // table: $element.data('table'),
-                        // column: $element.data('column'),
-                        // filter_col: $element.data('filter_col') || '',
-                        // filter: $element.data('filter') || '',
-                        // search: params.term
-                    },
-                    processResults: (data) => {
-                        const column = $element.data('column');
-                        return {
-                            results: data.map(item => ({
-                                id: item.id,
-                                text: item[column]
-                            }))
-                        };
-                    },
-                    cache: true
-                },
-                templateSelection: function (data) {
-                    return $('<span>').html(data.text).text();
-                },
-
-                escapeMarkup: function (markup) {
-                    return markup;
-                }
-            }).on('select2:select', (e) => {
-                const data = e.params.data;
-                if (data.id && typeof this.preencherValidade === 'function') {
-                    $(campoIdOculto).val(data.id);
-                    this.preencherValidade(data.id, tipo === 'produto' ? 'P' : 'R');
-                }
-            }).on('select2:unselect', () => {
-                $(campoIdOculto).val('');
-            });
-        });
-
-        $.get(`${URL}/atribuicoes/permissao`, {
+        $.get(URL + "/atribuicoes/permissao", {
             id: this.#psm_valor,
             tipo: this.#grade ? "R" : "P",
             tipo2: this.obter_psm()
         }, (data) => {
-            if (typeof data === "string") data = $.parseJSON(data);
-            if (parseInt(data.code) === 200) {
+            if (typeof data == "string") data = $.parseJSON(data);
+            if (parseInt(data.code) == 200) {
                 modal("atribuicoesModal", 0, () => {
                     const _psm_chave = this.obter_psm();
-                    const url = `${URL}/${_psm_chave === 'P' ? 'colaboradores' : (_psm_chave === 'S' ? 'setores' : 'maquinas')}/mostrar${_psm_chave !== 'M' ? '2' : ''}/${this.#psm_valor}`;
+                    let url = URL + "/";
+                    switch (_psm_chave) {
+                        case "P":
+                            url += "colaboradores";
+                            break;
+                        case "S":
+                            url += "setores";
+                            break;
+                        case "M":
+                            url += "maquinas";
+                            break;
+                    }
+                    url += "/mostrar";
+                    if (_psm_chave != "M") url += "2";
                     
-                    $.get(url, (resp) => {
-                        if (typeof resp === "string") resp = $.parseJSON(resp);
-                        $("#atribuicoesModalLabel").html(`${resp[_psm_chave === "P" ? "nome" : "descr"].toUpperCase()} - Atribuindo`);
+                    $.get(url + "/" + this.#psm_valor, (resp) => {
+                        if (typeof resp == "string") resp = $.parseJSON(resp);
                         
-                        $('#produto, #referencia').val(null).trigger('change');
-                        $("#quantidade_p, #quantidade_r, #validade_p, #validade_r").val(1);
+                        $("#atribuicoesModalLabel").html(resp[_psm_chave == "P" ? "nome" : "descr"].toUpperCase() + " - Atribuindo");
+                        
+                        $("#produto, #referencia").val("");
+                        $("#id_produto_p, #id_produto_r").val("");
+
+                        $("#quantidade_p, #quantidade_r").val(1);
+                        $("#validade_p, #validade_r").val(1);
 
                         if (this.#grade) {
                             $('#atribuicoesTab a[href="#grade-pane"]').tab('show');
-                        } else {
-                            $('#atribuicoesTab a[href="#produto-pane"]').tab('show');
-                        }
+                            $("#referencia").attr("data-filter", _psm_chave + "|" + this.#psm_valor);
+                        } else $('#atribuicoesTab a[href="#produto-pane"]').tab('show');
                         
                         this.#mostrar();
                     });
                 });
-            } else {
-                s_alert(`Não é possível listar as atribuições de <b>${data.nome}</b> porque elas estão sendo editadas por <b>${data.usuario}</b>`);
-            }
+            } else s_alert("Não é possível listar as atribuições de <b>" + data.nome + "</b> porque elas estão sendo editadas por <b>" + data.usuario + "</b>");
         });
     }
 
@@ -124,56 +72,52 @@ class Atribuicoes {
     }
 
     salvar() {
-        if (!this.#hab) return;
-        this.#hab = false;
+        if (this.#hab) {
+            this.#hab = false;
 
-        const isProduto = $('#produto-tab').hasClass('active');
-        const pr_chave = isProduto ? "P" : "R";
-        
-        const textoComHtml = $(isProduto ? "#produto option:selected" : "#referencia option:selected").text();
-        const pr_valor = $('<span>').html(textoComHtml).text();
-        
-        if (!pr_valor) {
-            s_alert(`Por favor, selecione ${isProduto ? 'um produto' : 'uma referência'} da lista.`);
-            this.#hab = true;
-            return;
-        }
-        
-        const quantidade = $(isProduto ? "#quantidade_p" : "#quantidade_r").val();
-        const validade = $(isProduto ? "#validade_p" : "#validade_r").val();
-        const obrigatorio = $(isProduto ? "#obrigatorio_p" : "#obrigatorio_r").val();
-        console.log(pr_valor)
+            let pr_chave, pr_valor, quantidade, validade, obrigatorio;
 
-        $.post(`${URL}/atribuicoes/salvar`, {
-            _token: $("meta[name='csrf-token']").attr("content"),
-            id: this.#idatb,
-            psm_chave: this.obter_psm(),
-            psm_valor: this.#psm_valor,
-            pr_chave,
-            pr_valor: pr_valor,
-            validade,
-            qtd: quantidade,
-            obrigatorio: obrigatorio.replace("opt-", "")
-        }, (ret) => {
-            this.#hab = true;
-            
-            switch (parseInt(ret)) {
-                case 201:
-                    // Limpa o Select2 da forma correta após o sucesso
-                    $('#produto, #referencia').val(null).trigger('change');
-                    this.#mostrar();
-                    break;
-                case 403:
-                    s_alert(pr_chave === 'R' ? "Referência inválida" : "Produto inválido");
-                    break;
-                case 404:
-                    s_alert(pr_chave === 'R' ? "Referência não encontrada" : "Produto não encontrado");
-                    break;
-                default:
-                    s_alert("Ocorreu um erro ao salvar a atribuição.");
-                    break;
+            if ($('#produto-tab').hasClass('active')) {
+                pr_chave = "P";
+                pr_valor = $("#produto").val();
+                quantidade = $("#quantidade_p").val();
+                validade = $("#validade_p").val();
+                obrigatorio = $("#obrigatorio_p").val();
+            } else {
+                pr_chave = "R";
+                pr_valor = $("#referencia").val();
+                quantidade = $("#quantidade_r").val();
+                validade = $("#validade_r").val();
+                obrigatorio = $("#obrigatorio_r").val();
             }
-        });
+
+            $.post(URL + "/atribuicoes/salvar", {
+                _token: $("meta[name='csrf-token']").attr("content"),
+                id: this.#idatb,
+                psm_chave: this.obter_psm(),
+                psm_valor: this.#psm_valor,
+                pr_chave: pr_chave,
+                pr_valor: pr_valor,
+                validade: validade,
+                qtd: quantidade,
+                obrigatorio: obrigatorio.replace("opt-", "")
+            }, (ret) => {
+                ret = parseInt(ret);
+                if (ret != 201) this.#hab = true;
+                switch (ret) {
+                    case 201:
+                        $("#id_produto_p, #id_produto_r, #produto, #referencia").val("");
+                        this.#mostrar();
+                        break;
+                    case 403:
+                        s_alert(pr_chave == 'R' ? "Referência inválida" : "Produto inválido");
+                        break;
+                    case 404:
+                        s_alert(pr_chave == 'R' ? "Referência não encontrada" : "Produto não encontrado");
+                        break;
+                }
+            });
+        }
     }
 
     editar(id) {
