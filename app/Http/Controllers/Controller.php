@@ -80,13 +80,30 @@ abstract class Controller extends BaseController {
                                 ON pessoas.id_empresa IN (empresas.id, empresas.id_matriz)
                             WHERE pessoas.lixeira = 0
                               AND empresas.lixeira = 0
+                            
+                            UNION ALL (
+                                SELECT
+                                    pessoas.id AS id_pessoa,
+                                    empresas.id AS id_empresa
+
+                                FROM pessoas
+
+                                CROSS JOIN empresas
+
+                                WHERE empresas.lixeira = 0
+                                  AND pessoas.id_empresa = 0
+                                  AND pessoas.lixeira = 0
+                            )
                         ) AS minhas_empresas"),
                         function ($join) {
                             $join->on("minhas_empresas.id_empresa", "comodatos.id_empresa");
                         }
                     )
                     ->whereRaw($where)
-                    ->where("minhas_empresas.id_empresa", $this->obter_empresa())                    
+                    ->where(function($sql) {
+                        $emp = $this->obter_empresa();
+                        if ($emp) $sql->where("minhas_empresas.id_empresa", $emp);
+                    })
                     ->pluck("id_maquina")
                     ->toArray();
     }
