@@ -137,7 +137,8 @@ class Pessoa extends JanelaDinamica {
         $('#pessoa-empresa-select').on('select2:select', (e) => this.mudou_empresa(e.params.data.id));
 
         $.get(URL + "/empresas/minhas", (minhasEmpresas) => {
-            const concluir = () => {
+            const concluir = (_id_empresa) => {
+                $("#pessoa-empresa-select").val(_id_empresa).trigger('change');
                 this.mudou_empresa($("#pessoa-empresa-select").val(), () => {
                     if (this.#dados !== undefined) {
                         const that = this;
@@ -171,9 +172,12 @@ class Pessoa extends JanelaDinamica {
 
             if (typeof minhasEmpresas == "string") minhasEmpresas = $.parseJSON(minhasEmpresas);
             let resultado = !EMPRESA ? "<option value = '0'>--</option>" : "";
+            let primeiro = 0;
             minhasEmpresas.empresas.forEach((empresa) => {
                 resultado += "<option value = '" + empresa.id + "'" + (minhasEmpresas.filial == "S" ? " disabled" : "") + ">" + empresa.nome_fantasia + "</option>";
+                if (!primeiro && minhasEmpresas.filial == "N") primeiro = empresa.id;
                 empresa.filiais.forEach((filial) => {
+                    if (!primeiro && minhasEmpresas.filial == "S") primeiro = filial.id;
                     resultado += "<option value = '" + filial.id + "'>- " + filial.nome_fantasia + "</option>";
                 });
             });
@@ -183,11 +187,16 @@ class Pessoa extends JanelaDinamica {
                 $.get(URL + "/colaboradores/mostrar/" + this.#id, (_dados) => {
                     if (typeof _dados == "string") _dados = $.parseJSON(_dados);
                     this.#dados = _dados;
-                    $("#pessoa-empresa-select").val(this.#dados.id_empresa).trigger('change');
-
-                    concluir();
+                    concluir(this.#dados.id_empresa);
                 });
-            } else concluir();
+            } else {
+                if (!EMPRESA) {
+                    try {
+                        if (TIPO == "A") primeiro = 0;
+                    } catch(err) {}
+                }
+                concluir(primeiro);
+            }
         });
     }
 

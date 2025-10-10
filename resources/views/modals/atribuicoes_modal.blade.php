@@ -26,13 +26,13 @@
                             
                             <div class = "tab-pane fade show active" id = "produto-pane" role = "tabpanel" aria-labelledby = "produto-tab">
                                 <div class = "row pt-2 align-items-end">
-                                    <!-- <div class = "@if ($admin) col-5 @else col-6 @endif">
+                                    <div class = "@if ($admin) col-5 @else col-6 @endif">
                                         <label for = "produto" class = "custom-label-form">Produto:</label>
                                         <input id = "produto" class = "form-control autocomplete" data-input = "#id_produto_p" data-table = "produtos" data-column = "descr" type = "text" autocomplete = "off" />
                                         <input id = "id_produto_p" type = "hidden" onchange = "atribuicao.preencherValidade(this.value, 'P')" />
-                                    </div> -->
+                                    </div>
 
-                                    <div class="@if ($admin) col-5 @else col-6 @endif">
+                                    <!-- <div class="@if ($admin) col-5 @else col-6 @endif">
                                         <label for="produto" class="custom-label-form">Produto:</label>
                                         <select id="produto" class="form-control"
                                                 data-table="produtos"
@@ -40,9 +40,9 @@
                                                 data-input="#id_produto_p">
                                         </select>
                                         <input id="id_produto_p" type="hidden" />
-                                    </div>
+                                    </div> -->
                                     @if ($admin)
-                                        <div class = "col-1 pb-2" style = "cursor: pointer;">
+                                        <div class = "col-1 pb-2">
                                             <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho" data-atalho = "produtos" data-campo_id = "id_produto_p" data-campo_descr = "produto"></i>
                                         </div>
                                     @endif
@@ -66,12 +66,12 @@
 
                             <div class = "tab-pane fade" id = "grade-pane" role = "tabpanel" aria-labelledby = "grade-tab">
                                 <div class = "row pt-2 align-items-end">
-                                    <!-- <div class = "@if ($admin) col-5 @else col-6 @endif">
+                                    <div class = "@if ($admin) col-5 @else col-6 @endif">
                                         <label for = "referencia" class = "custom-label-form">Referência:</label>
                                         <input id = "referencia" class = "form-control autocomplete" data-input = "#id_produto_r" data-table = "produtos" data-column = "referencia" type = "text" autocomplete = "off" />
                                         <input id = "id_produto_r" type = "hidden" onchange = "atribuicao.preencherValidade(this.value, 'R')" />
-                                    </div> -->
-                                    <div class="@if ($admin) col-5 @else col-6 @endif">
+                                    </div>
+                                    <!-- <div class="@if ($admin) col-5 @else col-6 @endif">
                                         <label for="referencia" class="custom-label-form">Referência:</label>
                                         <select id="referencia" class="form-control"
                                                 data-table="produtos"
@@ -80,11 +80,11 @@
                                                 data-input="#id_produto_r">
                                         </select>
                                         <input id="id_produto_r" type="hidden" />
-                                    </div>
+                                    </div> -->
                                     @if ($admin)
-                                    <div class = "col-1 pb-2" style = "cursor: pointer;">
-                                        <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho" data-atalho = "produtos" data-campo_id = "id_produto_p" data-campo_descr = "produto"></i>
-                                    </div>
+                                        <div class = "col-1 pb-2">
+                                            <i class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho" data-atalho = "produtos" data-campo_id = "id_produto_p" data-campo_descr = "produto"></i>
+                                        </div>
                                     @endif
                                     <div class = "col-2">
                                         <label for = "quantidade_r" class = "custom-label-form">Quantidade:</label>
