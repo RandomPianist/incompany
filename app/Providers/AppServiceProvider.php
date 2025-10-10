@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use DB;
 use Auth;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
@@ -36,10 +37,15 @@ class AppServiceProvider extends ServiceProvider
 
             View::composer('*', function ($view) use($servico) {
                 if (Auth::user() !== null) {
+                    $consulta = DB::table("atribuicoes")
+                        ->selectRaw("MAX(qtd) AS qtd")
+                        ->get();
+                    $max_atb = sizeof($consulta) ? $consulta[0]->qtd : 0;
                     $emp = Empresas::find($servico->srv_obter_empresa()); // App\Services\GlobaisService.php
                     $view->with([
                         'admin' => $emp === null,
-                        'empresa_descr' => $emp !== null ? $emp->nome_fantasia : "Todas"
+                        'empresa_descr' => $emp !== null ? $emp->nome_fantasia : "Todas",
+                        'max_atb' => $max_atb
                     ]);
                 }
             });

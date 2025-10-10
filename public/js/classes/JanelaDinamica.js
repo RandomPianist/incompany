@@ -229,15 +229,18 @@ class Pessoa extends JanelaDinamica {
                 data.forEach((setor) => {
                     resultado += "<option value = '" + setor.id + "'" + (!parseInt(setor.ativo) ? " disabled" : "") + ">" + setor.descr + "</option>";
                     try {
-                        if (parseInt(setor.cria_usuario) && ["A", "U"].indexOf(TIPO) > -1) primeiro = parseInt(setor.id);
+                        if (!primeiro && parseInt(setor.cria_usuario) && ["A", "U"].indexOf(TIPO) > -1) primeiro = parseInt(setor.id);
                     } catch (err) {}
                     try {
-                        if (parseInt(setor.supervisor) && TIPO == "S") primeiro = parseInt(setor.id);
+                        if (!primeiro && parseInt(setor.supervisor) && !parseInt(setor.cria_usuario) && TIPO == "S") primeiro = parseInt(setor.id);
+                    } catch (err) {}
+                    try {
+                        if (!primeiro && !parseInt(setor.supervisor) && !parseInt(setor.cria_usuario) && TIPO == "F") primeiro = parseInt(setor.id);
                     } catch (err) {}
                 });
                 $("#pessoa-setor-select").html(resultado);
                 $(".row-setor").removeClass("d-none");
-
+                
                 let setor = 0;
                 if (this.#dados === undefined) setor = primeiro;
                 else if (this.#dados.id_empresa == id_empresa) setor = parseInt(this.#dados.id_setor);

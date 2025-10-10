@@ -831,7 +831,7 @@ function formatar_cpf(el) {
 }
 
 function validar_cpf(__cpf) {
-    cpf = apenasNumeros(cpf);
+    cpf = apenasNumeros(__cpf);
     if (cpf == "00000000000") return false;
     if (cpf.length != 11) return false;
     let soma = 0;

@@ -3,6 +3,7 @@ class Atribuicoes {
     #hab = true;
     #grade; 
     #psm_valor;
+    #pessoa_selecionada;
 
     constructor(grade, _psm_valor) {
         this.#grade = grade;
@@ -197,7 +198,34 @@ class Atribuicoes {
         $("#quantidade2_label").html($("#quantidade2").val());
     }
 
+    setPessoaRetirando() {
+        if (!$("#pessoa-retirando").val()) {
+            $("#pessoa-retirando").addClass("invalido");
+            s_alert("Preencha o campo");
+            return;
+        }
+        $.get(URL + "/colaboradores/consultar2", {
+            pessoa : $("#pessoa-retirando").val(),
+            id_pessoa : $("#pessoa-retirando-id").val()
+        }, function(resp) {
+            if (resp == "ok") {
+                this.#pessoa_selecionada = $("#pessoa-retirando-id").val();
+                $("#pessoaRetiradaModal").modal("hide");
+                atribuicao.retirar($("#id_atribuicao").val());
+            } else s_alert("Colaborador não encontrado");
+        }.bind(this))
+    }
+
     retirar(id) {
+        let _id_pessoa;
+        if (this.obter_psm() == "P") _id_pessoa = this.#psm_valor;
+        else _id_pessoa = this.#pessoa_selecionada;
+        if (_id_pessoa === undefined) {
+            modal("pessoaRetiradaModal", 0, function() {
+                $("#id_atribuicao").val(id);
+            });
+            return;
+        }
         $("#quantidade2").val(1);
         this.atualizarQtd();
         $.get(URL + "/atribuicoes/produtos/" + id, (data) => {
@@ -223,8 +251,9 @@ class Atribuicoes {
                     $.get(URL + "/retiradas/consultar", {
                         atribuicao: id,
                         qtd: $("#quantidade2").val(),
-                        pessoa: this.#psm_valor
+                        pessoa: _id_pessoa
                     }, (ok) => {
+                        this.#pessoa_selecionada = _id_pessoa;
                         if (!parseInt(ok)) {
                             this.#idatb = id;
                             modal2("supervisorModal", ["cpf2", "senha2"]);
@@ -339,7 +368,7 @@ class Atribuicoes {
                 data.forEach((atribuicao) => {
                     let acoes = "";
                     if (this.#grade) acoes += "<i class = 'my-icon far fa-eye' title = 'Detalhar' onclick = 'atribuicao.detalhar(" + atribuicao.id + ")'></i>";
-                    if (_tipo2 == "P" && permissoes.retiradas) acoes += "<i class = 'my-icon far fa-hand-holding-box' title = 'Retirar' onclick = 'atribuicao.retirar(" + atribuicao.id + ")'></i>";
+                    if (permissoes.retiradas) acoes += "<i class = 'my-icon far fa-hand-holding-box' title = 'Retirar' onclick = 'atribuicao.retirar(" + atribuicao.id + ")'></i>";
                     if (["M", "S"].indexOf(_tipo2) > -1) {
                         acoes += "<i class = 'my-icon far fa-user" + (_tipo2 == "M" ? "s" : "") + "-slash' title = 'Exceções' onclick = 'excecao = new Excecoes(" + atribuicao.id + ")'></i>";
                     }
@@ -387,7 +416,7 @@ class Atribuicoes {
             _token: $("meta[name='csrf-token']").attr("content"),
             supervisor: _supervisor,
             atribuicao: id,
-            pessoa: this.#psm_valor,
+            pessoa: this.#pessoa_selecionada,
             produto: $("#variacao").val().replace("prod-", ""),
             data: $("#data-ret").val(),
             quantidade: $("#quantidade2").val()

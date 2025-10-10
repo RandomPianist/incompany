@@ -102,6 +102,7 @@ Route::middleware("auth")->group(function () {
         Route::get ("/pagina/{tipo}",   [PessoasController::class, "ver"])->name("pessoas");
         Route::get ("/listar",          [PessoasController::class, "listar"]);
         Route::get ("/consultar",       [PessoasController::class, "consultar"]);
+        Route::get ("/consultar2",      [PessoasController::class, "consultar2"]);
         Route::get ("/mostrar/{id}",    [PessoasController::class, "mostrar"]);
         Route::get ("/mostrar2/{id}",   [PessoasController::class, "mostrar2"]);
         Route::get ("/aviso/{id}",      [PessoasController::class, "aviso"]);

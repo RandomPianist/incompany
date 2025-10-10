@@ -106,4 +106,6 @@
 </div>
 
 @include("modals.excecoes_modal")
+@include("modals.pessoa_retirada_modal")
 @include("modals.detalhar_atb_modal")
+@include("modals.retiradas_modal")

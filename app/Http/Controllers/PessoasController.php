@@ -244,10 +244,9 @@ class PessoasController extends ControllerListavel {
                 foreach ($filiais as $filial) array_push($empresas_possiveis_arr, intval($filial->id));
             }
             if (!in_array(intval($request->id_empresa), $empresas_possiveis_arr)) return 401;
-        }
-
-        if ($m_setor !== null) {
-            if (!in_array(intval($m_setor->id_empresa), $empresas_possiveis_arr)) return 401;
+            if ($m_setor !== null) {
+                if (!in_array(intval($m_setor->id_empresa), $empresas_possiveis_arr)) return 401;
+            }
         }
 
         $pessoa = Pessoas::firstOrNew(["id" => $request->id]);
@@ -355,6 +354,12 @@ class PessoasController extends ControllerListavel {
 
     public function consultar(Request $request) {
         return json_encode($this->consultar_main($request));
+    }
+
+    public function consultar2(Request $request) {
+        return !Pessoas::where("id", $request->id_pessoa)
+                    ->where("nome", $request->pessoa)
+                    ->exists() ? "erro" : "ok";
     }
 
     public function alterar_empresa(Request $request) {
