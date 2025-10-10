@@ -91,6 +91,7 @@ class Atribuicoes {
         }, (data) => {
             if (typeof data === "string") data = $.parseJSON(data);
             if (parseInt(data.code) === 200) {
+                $("#table-atribuicoes").html("");
                 modal("atribuicoesModal", 0, () => {
                     const _psm_chave = this.obter_psm();
                     const url = `${URL}/${_psm_chave === 'P' ? 'colaboradores' : (_psm_chave === 'S' ? 'setores' : 'maquinas')}/mostrar${_psm_chave !== 'M' ? '2' : ''}/${this.#psm_valor}`;
