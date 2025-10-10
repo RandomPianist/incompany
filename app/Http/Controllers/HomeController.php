@@ -70,6 +70,17 @@ class HomeController extends Controller {
                     WHERE id_maquina = ".$request->filter."
                 )");
             }
+            if ($request->atribuicao) {
+                $where .= " AND id NOT IN (
+                    SELECT id_pessoa
+                    FROM excecoes
+                    WHERE id_atribuicao = ".$request->atribuicao."
+                ) AND id_setor NOT IN (
+                    SELECT id_setor
+                    FROM excecoes
+                    WHERE id_atribuicao = ".$request->atribuicao."
+                )";
+            }
         } elseif ($tabela == "produtos") {
             $tabela = "vprodaux";
             $where .= "id IN (

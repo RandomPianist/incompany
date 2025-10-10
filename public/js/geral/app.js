@@ -627,6 +627,7 @@ function autocomplete(_this) {
         _column = _this.data().column,
         _filter = _this.data().filter,
         _filter_col = _this.data().filter_col,
+        _id_atribuicao = _this.data().atribuicao,
         _search = _this.val(),
         input_id = _this.data().input,
         element = _this,
@@ -654,7 +655,8 @@ function autocomplete(_this) {
         column : _column,
         filter_col : _filter_col,
         filter : _filter,
-        search : _search
+        search : _search,
+        atribuicao : _id_atribuicao
     }, function (data) {
         if (typeof data == "string") data = $.parseJSON(data);
         div_result.empty();
