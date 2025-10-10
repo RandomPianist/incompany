@@ -226,7 +226,7 @@ class Atribuicoes {
                 $("#id_atribuicao").val(id);
                 $("#pessoa-retirando").attr("data-filter_col", psm == "S" ? "id_setor" : "v_maquina");
                 $("#pessoa-retirando").attr("data-filter", this.#psm_valor);
-            });
+            }.bind(this));
             return;
         }
         $("#quantidade2").val(1);
