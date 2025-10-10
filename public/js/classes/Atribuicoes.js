@@ -4,6 +4,7 @@ class Atribuicoes {
     #grade; 
     #psm_valor;
     #pessoa_selecionada;
+    #ajaxRequest = null;
 
     constructor(grade, _psm_valor) {
         this.#grade = grade;
@@ -351,14 +352,21 @@ class Atribuicoes {
     #mostrar = (_id = 0) => {
         this.#idatb = _id;
         const _tipo2 = this.obter_psm();
-        $.get(URL + "/atribuicoes/listar", {
+
+        if (this.#ajaxRequest) {
+            this.#ajaxRequest.abort();
+        }
+
+        this.#ajaxRequest = $.get(URL + "/atribuicoes/listar", {
             id: this.#psm_valor,
             tipo: this.#grade ? "R" : "P",
             tipo2: _tipo2
         }, (data) => {
             let resultado = "";
             if (typeof data == "string") data = $.parseJSON(data);
-            if (data.length) {
+            if (data && data.length > 0) {
+                $('#table-container').removeClass('d-none');
+                $('#no-results-container').addClass('d-none');
                 resultado += "<thead>" +
                     "<tr>" +
                         "<th>" + (this.#grade ? "Referência" : "Produto") + "</th>" +
@@ -395,11 +403,16 @@ class Atribuicoes {
                 $($("#table-atribuicoes").parent()).addClass("pb-4");
                 if (this.obter_psm() == "M") $($("#atribuicoesModal div.atribuicoes").parent()).removeClass("mb-5");
                 else $($("#atribuicoesModal div.atribuicoes").parent()).removeClass("mb-5");
-                this.#hab = true;
+                $('#table-container').removeClass('d-none');
+                $('#no-results-container').addClass('d-none');
             } else {
                 $($("#table-atribuicoes").parent()).removeClass("pb-4");
                 $($("#atribuicoesModal div.atribuicoes").parent()).removeClass("mb-5");
+                $('#table-container').addClass('d-none');
+                $('#no-results-container').removeClass('d-none');
+                $("#table-atribuicoes").html('');
             }
+            this.#hab = true;
             $("#table-atribuicoes").html(resultado);
             $("#referencia").attr("disabled", false);
             $("#produto").attr("disabled", false);

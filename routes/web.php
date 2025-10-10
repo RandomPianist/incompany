@@ -75,6 +75,7 @@ Route::middleware("auth")->group(function () {
         Route::get ("/",                [SetoresController::class, "ver"])->name("setores");
         Route::get ("/listar",          [SetoresController::class, "listar"]);
         Route::get ("/consultar",       [SetoresController::class, "consultar"]);
+        Route::get ("/consultar2",      [SetoresController::class, "consultar2"]);
         Route::get ("/permissoes/{id}", [SetoresController::class, "permissoes"]);
         Route::get ("/usuarios/{id}",   [SetoresController::class, "usuarios"]);
         Route::get ("/pessoas/{id}",    [SetoresController::class, "pessoas"]);
@@ -91,6 +92,7 @@ Route::middleware("auth")->group(function () {
         Route::get ("/todas",        [EmpresasController::class, "todas"]);
         Route::get ("/minhas",       [EmpresasController::class, "minhas"]);
         Route::get ("/consultar",    [EmpresasController::class, "consultar"]);
+        Route::get ("/consultar2",   [EmpresasController::class, "consultar2"]);
         Route::get ("/mostrar/{id}", [EmpresasController::class, "mostrar"]);
         Route::get ("/aviso/{id}",   [EmpresasController::class, "aviso"]);
         Route::get ("/setores/{id}", [EmpresasController::class, "setores"]);
@@ -185,6 +187,7 @@ Route::middleware("auth")->group(function () {
         Route::get("/comodatos",        [RelatoriosController::class, "comodatos"]);
         Route::get("/ranking",          [RelatoriosController::class, "ranking"]);
         Route::get("/sugestao",         [RelatoriosController::class, "sugestao"]);
+        Route::get("/pessoas",          [RelatoriosController::class, "pessoas"]);
         Route::get("/solicitacao/{id}", [RelatoriosController::class, "solicitacao"]);
         Route::group(["prefix" => "bilateral"], function() {
             Route::get("/",          [RelatoriosController::class, "bilateral"]);

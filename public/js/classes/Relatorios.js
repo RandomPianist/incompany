@@ -231,7 +231,7 @@ class RelatorioRetiradas extends Relatorios {
     constructor(quebra) {
         super();
         this.#quebra = quebra;
-        this.#elementos = this._relObterElementos(["inicio3", "fim3", "empresa2", "pessoa2", "setor", "consumo2", "tipo"]);
+        this.#elementos = this._relObterElementos(["inicio3", "fim3", "empresa2", "pessoa2", "setor1", "consumo2", "tipo"]);
 
         limpar_invalido();
         setTimeout(() => {
@@ -324,5 +324,77 @@ class RelatorioRanking extends Relatorios {
 
         if (!erro) $("#relatorioRankingModal form").submit();
         else s_alert(erro);
+    }
+}
+
+class RelatorioPessoas extends Relatorios {
+    constructor() {
+        super();
+    
+        limpar_invalido();
+        setTimeout(() => {
+            modal("relatorioPessoasModal", 0, () => {
+                $("#rel-biometria").val("todos");
+            });
+        }, 0);
+    }
+
+    async validar() {
+        limpar_invalido();
+
+        let erro = "";
+        let respEmp = await $.get(URL + "/empresas/consultar2", {
+            id_empresa : $("#rel-id_empresa3").val(),
+            empresa : $("#rel-empresa3").val()
+        });
+        if (respEmp != "ok") {
+            $("#rel-empresa3").addClass("invalido");
+            s_alert("Empresa não encontrada");
+            return;
+        }
+
+        let respSetor = await $.get(URL + "/setores/consultar2", {
+            id_empresa : $("#rel-id_setor2").val(),
+            empresa : $("#rel-setor2").val()
+        });
+        if (respSetor != "ok") {
+            $("#rel-setor2").addClass("invalido");
+            s_alert("Setor não encontrado");
+            return;
+        }
+
+        $("#relatorioPessoasModal form").submit();
+    }
+
+    mudou_empresa() {
+        $.get(URL + "/empresas/consultar2", {
+            id_empresa : $("#rel-id_empresa3").val(),
+            empresa : $("#rel-empresa3").val()
+        }, function(resp) {
+            if (resp == "ok") {
+                $("#rel-pessoa3, #rel-id_pessoa3, #rel-setor2, #rel-id_setor2").each(function() {
+                    $(this).val("");
+                });
+                $("#rel-pessoa3").attr("data-filter_col", "id_empresa");
+                $("#rel-pessoa3").attr("data-filter", $("#rel-id_empresa3").val());
+                $("#rel-setor2").attr("data-filter_col", "id_empresa");
+                $("#rel-setor2").attr("data-filter", $("#rel-id_empresa3").val());
+            }
+        });
+    }
+
+    mudou_setor() {
+        $.get(URL + "/setores/consultar2", {
+            id_empresa : $("#rel-id_setor2").val(),
+            empresa : $("#rel-setor2").val()
+        }, function(resp) {
+            if (resp == "ok") {
+                $("#rel-pessoa3, #rel-id_pessoa3").each(function() {
+                    $(this).val("");
+                });
+                $("#rel-pessoa3").attr("data-filter_col", "id_setor");
+                $("#rel-pessoa3").attr("data-filter", $("#rel-id_setor2").val());
+            }
+        });
     }
 }

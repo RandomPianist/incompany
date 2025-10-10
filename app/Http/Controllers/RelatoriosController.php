@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
 use App\Models\Empresas;
+use App\Models\Setores;
 use App\Models\Maquinas;
 use App\Models\Solicitacoes;
 use App\Models\SolicitacoesProdutos;
@@ -636,5 +637,74 @@ class RelatoriosController extends Controller {
             if (($aux[1] == config("app.msg_inexistente") && $solicitacao->status == "A") || $aux[1] != config("app.msg_inexistente")) array_push($resultado, $linha);
         }
         return view("reports.solicitacao", compact("resultado"));
+    }
+
+    public function pessoas(Request $request) {
+        $criterios = array();
+        $resultado = collect(
+            DB::table("pessoas")
+                ->select(
+                    // GRUPO 1
+                    "empresas.nome_fantasia AS empresa",
+                    
+                    // GRUPO 2
+                    "setores.descr AS setor",
+
+                    // DETALHES                    
+                    DB::raw("
+                        CASE
+                            WHEN pessoas.biometria IS NOT NULL THEN 'Sim'
+                            ELSE 'Não'
+                        END AS biometria
+                    "),
+                    "pessoas.nome",
+                    "pessoas.cpf",
+                    "pessoas.funcao",
+                    "pessoas.telefone",
+                    "pessoas.email"
+                )
+                ->join("setores", "setores.id", "pessoas.id_setor")
+                ->join("empresas", "empresas.id", "pessoas.id_empresa")
+                ->where(function($sql) use($request, &$criterios) {
+                    if ($request->id_empresa) {
+                        $empresa = Empresas::find($request->id_empresa);
+                        array_push($criterios, "Empresa: ".$empresa->nome_fantasia);
+                        $sql->where("empresas.id", $empresa->id);
+                    } else $sql->where("empresas.lixeira", 0);
+                    if ($request->id_setor) {
+                        $setor = Setores::find($request->id_setor);
+                        array_push($criterios, "Centro de custo: ".$setor->descr);
+                        $sql->where("setores.id", $setor->id);
+                    } else $sql->where("setores.lixeira", 0);
+                    switch($request->biometria) {
+                        case "sim":
+                            $sql->whereNotNull("pessoas.biometria");
+                            break;
+                        case "nao":
+                            $sql->whereNull("pessoas.biometria");
+                            break;
+                    }
+                })
+        )->groupBy("empresa")->map(function($itens1) {
+            return [
+                "empresa" => $itens1[0]->empresa,
+                "setor" => collect($itens1)->groupBy("setor")->map(function($itens2) {
+                    return [
+                        "descr" => $itens2[0]->setor,
+                        "pessoas" => $itens2->map(function($pessoa) {
+                            return [
+                                "nome" => $pessoa->nome,
+                                "cpf" => $pessoa->cpf,
+                                "funcao" => $pessoa->funcao,
+                                "telefone" => $pessoa->telefone,
+                                "email" => $pessoa->email
+                            ];
+                        })->sortBy("nome")->values()->all()
+                    ];
+                })->values()->all()
+            ];
+        })->values()->all();
+        $criterios = implode(" | ", $criterios);
+        return sizeof($resultado) ? view("reports/pessoas", compact("resultado", "criterios")) : $this->view_mensagem("warning", "Não há nada para exibir");
     }
 }

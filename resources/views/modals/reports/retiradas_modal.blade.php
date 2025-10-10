@@ -41,18 +41,18 @@
                                     data-column = "nome"
                                     data-filter_col = ""
                                     data-filter = ""
-                                    data-prox = "rel-setor"
+                                    data-prox = "rel-setor1"
                                     type = "text"
                                     autocomplete = "off"
                                 />
                                 <input id = "rel-id_pessoa2" name = "id_pessoa" type = "hidden" />
                             </div>
                             <div class = "col-6 form-search">
-                                <label for = "rel-setor" class = "custom-label-form">Centro de custo:</label>
-                                <input id = "rel-setor"
+                                <label for = "rel-setor1" class = "custom-label-form">Centro de custo:</label>
+                                <input id = "rel-setor1"
                                     name = "setor"
                                     class = "form-control autocomplete"
-                                    data-input = "#rel-id_setor"
+                                    data-input = "#rel-id_setor1"
                                     data-table = "setores"
                                     data-column = "descr"
                                     data-filter_col = ""
@@ -60,7 +60,7 @@
                                     type = "text"
                                     autocomplete = "off"
                                 />
-                                <input id = "rel-id_setor" name = "id_setor" type = "hidden" />
+                                <input id = "rel-id_setor1" name = "id_setor" type = "hidden" />
                             </div>
                         </div>
                         <div class = "row">

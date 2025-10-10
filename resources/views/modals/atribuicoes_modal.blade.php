@@ -26,7 +26,7 @@
                             
                             <div class = "tab-pane fade show active" id = "produto-pane" role = "tabpanel" aria-labelledby = "produto-tab">
                                 <div class = "row pt-2 align-items-end">
-                                    <div class = "@if ($admin) col-4 @else col-5 @endif">
+                                    <div class = "@if ($admin) col-5 @else col-6 @endif">
                                         <label for = "produto" class = "custom-label-form">Produto:</label>
                                         <input id = "produto" class = "form-control autocomplete" data-input = "#id_produto_p" data-table = "produtos" data-column = "descr" type = "text" autocomplete = "off" />
                                         <input id = "id_produto_p" type = "hidden" onchange = "atribuicao.preencherValidade(this.value, 'P')" />
@@ -44,7 +44,7 @@
                                         <label for = "validade_p" class = "custom-label-form">Validade em dias:</label>
                                         <input id = "validade_p" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" />
                                     </div>
-                                    <div class = "col-3">
+                                    <div class = "col-2">
                                         <label for = "obrigatorio_p" class = "custom-label-form">Obrigatório:</label>
                                         <select class = "form-control" id = "obrigatorio_p">
                                             <option value = "opt-1">SIM</option>
@@ -56,7 +56,7 @@
 
                             <div class = "tab-pane fade" id = "grade-pane" role = "tabpanel" aria-labelledby = "grade-tab">
                                 <div class = "row pt-2 align-items-end">
-                                    <div class = "@if ($admin) col-4 @else col-5 @endif">
+                                    <div class = "@if ($admin) col-5 @else col-6 @endif">
                                         <label for = "referencia" class = "custom-label-form">Referência:</label>
                                         <input id = "referencia" class = "form-control autocomplete" data-input = "#id_produto_r" data-table = "produtos" data-column = "referencia" type = "text" autocomplete = "off" />
                                         <input id = "id_produto_r" type = "hidden" onchange = "atribuicao.preencherValidade(this.value, 'R')" />
@@ -74,7 +74,7 @@
                                         <label for = "validade_r" class = "custom-label-form">Validade em dias:</label>
                                         <input id = "validade_r" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" />
                                     </div>
-                                    <div class = "col-3">
+                                    <div class = "col-2">
                                         <label for = "obrigatorio_r" class = "custom-label-form">Obrigatório:</label>
                                         <select class = "form-control" id = "obrigatorio_r">
                                             <option value = "opt-1">SIM</option>
@@ -89,9 +89,14 @@
                             <button type = "button" class = "btn btn-target mx-auto mb-4 px-5" onclick = "atribuicao.salvar()">Atribuir</button>
                         </div>
 
-                        <div class = "row">
-                            <div class = "col-12 atribuicoes">
-                                <table id = "table-atribuicoes" class = "w-100 atribuicoes" border = "1"></table>
+                        <div class="row">
+                            <div id="table-container" class="col-12 atribuicoes">
+                                <table id="table-atribuicoes" class="w-100 atribuicoes" border="1"></table>
+                            </div>
+
+                            <div id="no-results-container" class="col-12 text-center d-none" style="padding: 2rem 0;">
+                                <img src="{{ asset('img/not-found-error.png') }}" alt="Nenhum resultado encontrado" style="width: 180px; opacity: 0.7;">
+                                <h5 class="text-muted">Nenhuma atribuição encontrada</h5>
                             </div>
                         </div>
                     </div>

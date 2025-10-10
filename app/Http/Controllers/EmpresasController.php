@@ -86,6 +86,10 @@ class EmpresasController extends Controller {
         return "A";
     }
 
+    public function consultar2(Request $request) {
+        return $this->empresa_consultar($request) ? "ok" : "erro"; // App\Http\Controllers\Controller.php
+    }
+
     public function mostrar($id) {
         return json_encode($this->alterar_usuario_editando("empresas", $id)); // App\Http\Controllers\Controller.php
     }

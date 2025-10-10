@@ -154,6 +154,9 @@
                                 <li>
                                     <span>Pessoas & consumo<img class = "dropdown-icon" src = "{{ asset ('img/sort-down.png') }}"></span>
                                     <ul class = "subdropdown-toolbar">
+                                        <li onclick = "relatorio = new RelatorioPessoas()">
+                                            <span>Pessoas</span>
+                                        </li>
                                         <li onclick = "relatorio = new RelatorioControle()">
                                             <span>Termo de retirada</span>
                                         </li>
@@ -244,6 +247,7 @@
                 
                 @include("modals.pessoas_modal")
                 @include("modals.trocar_empresa_modal")
+                @include("modals.reports.pessoas_modal")
                 @include("modals.reports.bilateral_modal")
                 @include("modals.reports.itens_modal")
                 @include("modals.reports.retiradas_modal")
