@@ -342,7 +342,6 @@ class RelatorioPessoas extends Relatorios {
     async validar() {
         limpar_invalido();
 
-        let erro = "";
         let respEmp = await $.get(URL + "/empresas/consultar2", {
             id_empresa : $("#rel-id_empresa3").val(),
             empresa : $("#rel-empresa3").val()
