@@ -267,13 +267,13 @@ class Pessoa extends JanelaDinamica {
                 if (!this.#carregando) {
                     for (let x in permissoes) this.permissoesRascunho[x] = data[x] && permissoes[x];
                 }
-                concluir();
+                concluir(data.cria_usuario);
             });
         } else {
             if (!this.#carregando) {
                 for (let x in permissoes) this.permissoesRascunho[x] = permissoes[x];
             }
-            concluir();
+            concluir(true);
         }
     }
 
