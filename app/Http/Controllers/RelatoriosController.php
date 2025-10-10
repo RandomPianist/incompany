@@ -685,6 +685,7 @@ class RelatoriosController extends Controller {
                             break;
                     }
                 })
+                ->get()
         )->groupBy("empresa")->map(function($itens1) {
             return [
                 "empresa" => $itens1[0]->empresa,
