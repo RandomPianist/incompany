@@ -847,16 +847,16 @@ function validar_cpf(__cpf) {
     return true;
 }
 
-function iniciarCarregamento() {
+function iniciarCarregamento(_modal) {
     Array.from(document.getElementsByClassName("btn-primary")).forEach((el) => {
         el.style.zIndex = "0";
     });
     document.getElementById("loader").style.display = "flex";
-    document.getElementById("trocarEmpresaModal").style.zIndex = "0";
+    document.getElementById(_modal).style.zIndex = "0";
 }
 
 function trocarEmpresa() {
-    iniciarCarregamento();
+    iniciarCarregamento("trocarEmpresaModal");
     $.post(URL + "/colaboradores/alterar-empresa", {
         _token : $("meta[name='csrf-token']").attr("content"),
         idEmpresa : $("#empresa-select").val()

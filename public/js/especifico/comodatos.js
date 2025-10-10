@@ -59,7 +59,7 @@ function comodatar(id) {
                     erro = data.texto;
                 }
                 if (!erro) {
-                    iniciarCarregamento();
+                    iniciarCarregamento("comodatosModal");
                     $("#comodatosModal form").submit();
                 } else s_alert(erro);
             });
@@ -120,7 +120,7 @@ function configurar_comodato(id_maquina) {
             if (anteriores.validade != parseInt($("#com-validade").val())) erro = false;
             if (anteriores.obrigatorio != $("#com-obrigatorio").val()) erro = false;
             if (!erro) {
-                iniciarCarregamento();
+                iniciarCarregamento("comodatosModal");
                 $("#comodatosModal form").submit();
             } else s_alert("Altere pelo menos um campo para salvar");
         });
