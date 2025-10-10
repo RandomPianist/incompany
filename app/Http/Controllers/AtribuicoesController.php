@@ -133,7 +133,10 @@ class AtribuicoesController extends Controller {
                         })
                         ->get();
         if (!sizeof($consulta)) return json_encode($resultado);
-        if ($consulta[0]->id_usuario == Auth::user()->id) return json_encode($resultado);
+        if ($consulta[0]->id_usuario == Auth::user()->id) {
+            $resultado->sou_eu = 1;
+            return json_encode($resultado);
+        }
         
         switch($request->tipo2) {
             case "P":

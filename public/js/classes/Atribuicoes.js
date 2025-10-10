@@ -370,8 +370,15 @@ class Atribuicoes {
             $("#table-atribuicoes").html(resultado);
             $("#referencia").attr("disabled", false);
             $("#produto").attr("disabled", false);
-            if (document.querySelector("#atribuicoesModal .linha-atb.new") !== null) $("#col-btn-salvar").removeClass("d-none").addClass("d-flex");
-            else $("#col-btn-salvar").addClass("d-none").removeClass("d-flex");
+            $.get(URL + "/atribuicoes/permissao", {
+                id: this.#psm_valor,
+                tipo: this.#grade ? "R" : "P",
+                tipo2: this.obter_psm()
+            }, (resp) => {
+                if (typeof resp == "string") resp = $.parseJSON(resp);
+                if (resp.sou_eu !== undefined) $("#col-btn-salvar").removeClass("d-none").addClass("d-flex");
+                else $("#col-btn-salvar").addClass("d-none").removeClass("d-flex");
+            });
         });
     }
 
