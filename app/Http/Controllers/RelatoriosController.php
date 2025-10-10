@@ -685,6 +685,11 @@ class RelatoriosController extends Controller {
                             break;
                     }
                 })
+                ->orderby(DB::raw("
+                    empresas.nome_fantasia,
+                    setores.descr,
+                    pessoas.nome
+                "))
                 ->get()
         )->groupBy("empresa")->map(function($itens1) {
             return [
