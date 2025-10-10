@@ -226,7 +226,7 @@ class AtribuicoesController extends Controller {
                 ->select(
                     "vprodaux.referencia",
                     "vprodaux.descr",
-                    "vprodaux.tamanho"
+                    DB::raw("IFNULL(vprodaux.tamanho, 'UN') AS tamanho")
                 )
                 ->join("atribuicoes", "atribuicoes.referencia", "vprodaux.referencia")
                 ->where("atribuicoes.id", $id)
