@@ -36,9 +36,11 @@ class RetiradasController extends Controller {
             "data" => Carbon::createFromFormat('d/m/Y', $request->data)->format('Y-m-d')
         );
         if (intval($request->supervisor)) $json["id_supervisor"] = $request->supervisor;
+        $this->travar(); // App\Http\Controllers\Controller.php
         $this->retirada_salvar($json); // App\Http\Controllers\Controller.php
         DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request->pessoa.", 'R', 'N')");
         DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request->pessoa.", 'U', 'N')");
+        $this->destravar(); // App\Http\Controllers\Controller.php
     }
 
     public function desfazer(Request $request) {

@@ -437,6 +437,7 @@ class ApiController extends Controller {
         if ($resultado->msg) return json_encode($resultado);
 
         $cont = 0;
+        $this->travar(); // App\Http\Controllers\Controller.php
         while (isset($request[$cont]["id_atribuicao"])) {
             $retirada = $request[$cont];
             $salvar = array(
@@ -475,6 +476,7 @@ class ApiController extends Controller {
         }
         DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request[0]["id_pessoa"].", 'R', 'N')");
         DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request[0]["id_pessoa"].", 'U', 'N')");
+        $this->destravar(); // App\Http\Controllers\Controller.php
         $resultado->code = 201;
         $resultado->msg = "Sucesso";
 

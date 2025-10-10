@@ -680,7 +680,34 @@ abstract class Controller extends BaseController {
     // Métodos que disparam procedures para atualizar dados consolidados, melhorando a performance de consultas.
     //======================================================================
 
+    protected function travar() {
+        DB::statement("
+            LOCK TABLES
+                mat_vcomodatos WRITE,
+                mat_vatbaux WRITE,
+                mat_vatribuicoes WRITE,
+                mat_vretiradas WRITE,
+                mat_vultretirada WRITE,
+                pessoas WRITE,
+                atribuicoes WRITE,
+                comodatos WRITE,
+                categorias WRITE,
+                produtos WRITE,
+                retiradas WRITE,
+                excecoes WRITE,
+                atbbkp WRITE,
+                excbkp WRITE,
+                setores WRITE,
+                empresas WRITE
+        ");
+    }
+
+    protected function destravar() {
+        DB::statement("UNLOCK TABLES");
+    }
+
     protected function atualizar_tudo($valor, $chave = "M", $completo = false) {
+        $this->travar();
         $valor_ant = $valor;
         if (is_iterable($valor)) $valor = implode(",", $valor);
         $valor = "'".$valor."'";
@@ -694,11 +721,14 @@ abstract class Controller extends BaseController {
         DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'R', 'N')");
         DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'U', 'N')");
         if ($completo) DB::statement("CALL excluir_atribuicao_sem_retirada()");
+        $this->destravar();
     }
 
     protected function atualizar_atribuicoes($consulta) {
+        $this->travar();
         foreach ($consulta as $linha) $this->atualizar_tudo($linha->psm_valor, $linha->psm_chave);
         DB::statement("CALL excluir_atribuicao_sem_retirada()");
+        $this->destravar();
     }
     
     //======================================================================
