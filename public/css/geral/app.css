@@ -859,3 +859,28 @@ div.atribuicoes {
     font-size: 10pt;
     height: calc(1.5em + 0.75rem + 11px)
 }
+
+.select2-container--default .select2-selection--single {
+    border: 1px solid #ced4da !important;
+    border-radius: 0.25rem;
+    height: calc(1.5em + 0.75rem + 8px) !important;
+    display: flex;
+    align-items: center;
+    padding: .375rem .75rem;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #495057;
+    line-height: inherit;
+    padding: 0 !important; 
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100%;
+    position: absolute;
+    margin-top: 8px;
+    top: 0;
+    right: 0.5rem;
+    display: flex;
+    align-items: center;
+}

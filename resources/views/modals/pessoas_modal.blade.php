@@ -1,7 +1,7 @@
 
 <!-- Modal -->
 <div class = "modal fade" id = "pessoasModal" aria-labelledby = "pessoasModalLabel" aria-hidden = "true">
-    <div class = "modal-dialog modal-xl modal-xl-kx" role = "document">
+    <div class = "modal-dialog modal-xl" role = "document">
         <div class = "modal-content">
             <div class = "modal-header">
                 <h6 class = "modal-title header-color" id = "pessoasModalLabel"></h6>
@@ -24,6 +24,20 @@
                             </div>
                         </div>
                         <div class = "row">
+                            <div class = "col-11 pr-0">
+                                <label for = "pessoa-empresa-select" class = "custom-label-form">Empresa: *</label>
+                                <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control" onchange = "pessoa.mudou_empresa($(this).val())"></select>
+                            </div>
+                            <div class = "col-1 pt-4 d-flex align-items-center">
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "empresas"
+                                    data-campo_id = "pessoa-empresa-select"
+                                    data-campo_descr = ""
+                                ></i>
+                            </div>
+                        </div>
+                        <div class = "row">
                             <div class = "col-4">
                                 <label for = "nome" class = "custom-label-form">Nome: *</label>
                                 <input id = "nome" name = "nome" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 64)" />
@@ -36,20 +50,6 @@
                             <div class = "col-4">
                                 <button type = "button" class = "btn btn-target btn-target-black w-100 mt-4" onclick = "$(this).next().trigger('click')">Adicionar imagem</button>
                                 <input type = "file" name = "foto" class = "d-none" />
-                            </div>
-                        </div>
-                        <div class = "row">
-                            <div class = "col-11 pr-0">
-                                <label for = "pessoa-empresa-select" class = "custom-label-form">Empresa: *</label>
-                                <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control" onchange = "pessoa.mudou_empresa($(this).val())"></select>
-                            </div>
-                            <div class = "col-1 pt-4 d-flex align-items-center">
-                                <i
-                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
-                                    data-atalho = "empresas"
-                                    data-campo_id = "pessoa-empresa-select"
-                                    data-campo_descr = ""
-                                ></i>
                             </div>
                         </div>
                         <div class = "row row-setor">
