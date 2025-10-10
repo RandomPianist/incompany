@@ -11,6 +11,7 @@
         <link rel = "stylesheet"    href = "{{ asset('css/geral/app.css')         }}" />
         <link rel = "stylesheet"    href = "{{ asset('css/lib/jquery-ui.min.css') }}" />
         <link rel = "stylesheet"    href = "{{ asset('css/lib/fa.css')            }}" />
+        <link rel = "stylesheet"    href = "{{ asset('css/lib/select2.min.css')   }}" />
         <style type = "text/css">
             .form-search::after, .form-search-2::after {
                 background: url("{{ asset('img/keyboard.png') }}") no-repeat;
@@ -267,6 +268,7 @@
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/jquery.min.js')    }}"></script>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/jquery-ui.min.js') }}"></script>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/bootstrap.min.js') }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/select2.min.js')   }}"></script>
         @if ($admin || (
             url()->current() != route('produtos') && 
             url()->current() != route('categorias')
