@@ -91,10 +91,10 @@ class SetoresController extends ControllerListavel {
     }
 
     public function consultar2(Request $request) {
-        return Setores::where("id", $request->id_setor)
+        return !Setores::where("id", $request->id_setor)
                     ->where("descr", $request->setor)
                     ->where("lixeira", 0)
-                    ->exists() ? "ok" : "erro";
+                    ->exists() && $request->setor ? "erro" : "ok";
     }
 
     public function mostrar($id) {

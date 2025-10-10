@@ -354,8 +354,8 @@ class RelatorioPessoas extends Relatorios {
         }
 
         let respSetor = await $.get(URL + "/setores/consultar2", {
-            id_empresa : $("#rel-id_setor2").val(),
-            empresa : $("#rel-setor2").val()
+            id_setor : $("#rel-id_setor2").val(),
+            setor : $("#rel-setor2").val()
         });
         if (respSetor != "ok") {
             $("#rel-setor2").addClass("invalido");
@@ -385,8 +385,8 @@ class RelatorioPessoas extends Relatorios {
 
     mudou_setor() {
         $.get(URL + "/setores/consultar2", {
-            id_empresa : $("#rel-id_setor2").val(),
-            empresa : $("#rel-setor2").val()
+            id_setor : $("#rel-id_setor2").val(),
+            setor : $("#rel-setor2").val()
         }, function(resp) {
             if (resp == "ok") {
                 $("#rel-pessoa3, #rel-id_pessoa3").each(function() {

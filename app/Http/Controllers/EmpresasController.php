@@ -87,7 +87,7 @@ class EmpresasController extends Controller {
     }
 
     public function consultar2(Request $request) {
-        return $this->empresa_consultar($request) ? "ok" : "erro"; // App\Http\Controllers\Controller.php
+        return $this->empresa_consultar($request) && $request->empresa ? "erro" : "ok"; // App\Http\Controllers\Controller.php
     }
 
     public function mostrar($id) {
