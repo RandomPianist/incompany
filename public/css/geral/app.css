@@ -884,3 +884,7 @@ div.atribuicoes {
     display: flex;
     align-items: center;
 }
+
+.atalho {
+    cursor: pointer
+}
