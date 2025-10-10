@@ -167,15 +167,6 @@ class AtribuicoesController extends Controller {
         ";
         return json_encode($this->atribuicao_listar( // App\Http\Controllers\Controller.php
             $this->consulta_main($select)
-                ->leftjoin("pessoas", function($join) {
-                    $join->on(function($sql) {
-                        $sql->on("vatbold.psm_valor", "pessoas.id")
-                            ->where("vatbold.psm_chave", "P");
-                    })->orOn(function($sql) {
-                        $sql->on("vatbold.psm_valor", "pessoas.id_setor")
-                            ->where("vatbold.psm_chave", "S");
-                    });
-                })
                 ->where("vatbold.psm_valor", $request->id)
                 ->where("vatbold.pr_chave", $request->tipo)
                 ->where("vatbold.psm_chave", $request->tipo2)
