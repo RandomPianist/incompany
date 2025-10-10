@@ -679,9 +679,11 @@ class RelatoriosController extends Controller {
                     switch($request->biometria) {
                         case "sim":
                             $sql->whereNotNull("pessoas.biometria");
+                            array_push($criterios, "Apenas com biometria");
                             break;
                         case "nao":
                             $sql->whereNull("pessoas.biometria");
+                            array_push($criterios, "Apenas sem biometria");
                             break;
                     }
                 })
