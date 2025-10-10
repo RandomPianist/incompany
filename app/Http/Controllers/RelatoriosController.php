@@ -699,6 +699,7 @@ class RelatoriosController extends Controller {
                         "descr" => $itens2[0]->setor,
                         "pessoas" => $itens2->map(function($pessoa) {
                             return [
+                                "biometria" => $pessoa->biometria,
                                 "nome" => $pessoa->nome,
                                 "cpf" => $pessoa->cpf,
                                 "funcao" => $pessoa->funcao,

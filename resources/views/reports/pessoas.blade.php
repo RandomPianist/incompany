@@ -35,11 +35,12 @@
             <table class = "report-body table table-sm table-bordered table-striped px-5">
                 <thead>
                     <tr class = "report-row">
-                        <td width = "25%">Nome</td>
-                        <td width = "15%">CPF</td>
-                        <td width = "20%">Função</td>
-                        <td width = "20%">Telefone</td>
-                        <td width = "20%">E-mail</td>
+                        <td width = "10%">Biometria</td>
+                        <td width = "23%">Nome</td>
+                        <td width = "13%">CPF</td>
+                        <td width = "18%">Função</td>
+                        <td width = "18%">Telefone</td>
+                        <td width = "18%">E-mail</td>
                     </tr>
                 </thead>
             </table>
@@ -48,11 +49,12 @@
                     <tbody>
                         @foreach ($setor["pessoas"] as $pessoa)
                             <tr class = "report-row">
-                                <td width = "25%">{{ $pessoa["nome"] }}</td>
-                                <td width = "15%">{{ $pessoa["cpf"] }}</td>
-                                <td width = "20%">{{ $pessoa["funcao"] }}</td>
-                                <td width = "20%">{{ $pessoa["telefone"] }}</td>
-                                <td width = "20%">{{ $pessoa["email"] }}</td>
+                                <td width = "10%">{{ $pessoa["biometria"] }}</td>
+                                <td width = "23%">{{ $pessoa["nome"] }}</td>
+                                <td width = "13%">{{ $pessoa["cpf"] }}</td>
+                                <td width = "18%">{{ $pessoa["funcao"] }}</td>
+                                <td width = "18%">{{ $pessoa["telefone"] }}</td>
+                                <td width = "18%">{{ $pessoa["email"] }}</td>
                             </tr>
                         @endforeach
                     </tbody>
