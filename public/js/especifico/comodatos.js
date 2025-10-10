@@ -58,8 +58,10 @@ function comodatar(id) {
                     } else $("#comodato-empresa").addClass("invalido");
                     erro = data.texto;
                 }
-                if (!erro) $("#comodatosModal form").submit();
-                else s_alert(erro);
+                if (!erro) {
+                    iniciarCarregamento();
+                    $("#comodatosModal form").submit();
+                } else s_alert(erro);
             });
         });
         mostrarComAtb();
@@ -117,8 +119,10 @@ function configurar_comodato(id_maquina) {
             if (anteriores.quantidade != parseInt($("#com-quantidade").val())) erro = false;
             if (anteriores.validade != parseInt($("#com-validade").val())) erro = false;
             if (anteriores.obrigatorio != $("#com-obrigatorio").val()) erro = false;
-            if (!erro) $("#comodatosModal form").submit();
-            else s_alert("Altere pelo menos um campo para salvar");
+            if (!erro) {
+                iniciarCarregamento();
+                $("#comodatosModal form").submit();
+            } else s_alert("Altere pelo menos um campo para salvar");
         });
         mostrarComAtb();
         comodatoListeners();
