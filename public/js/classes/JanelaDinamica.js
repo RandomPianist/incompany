@@ -117,24 +117,6 @@ class Pessoa extends JanelaDinamica {
         });
         this.#id = _id;
 
-        $('#pessoa-empresa-select, #pessoa-setor-select').select2({
-            width: '100%',
-            language: {
-                noResults: function () {
-                    return "Nenhum resultado encontrado";
-                }
-            }
-        });
-
-        $($("#pessoa-empresa-select").next()).off("click").on("click", function() {
-            Array.from(document.querySelectorAll(".select2-container--default .select2-results>.select2-results__options")).forEach((el) => {
-                el.scrollTo(0,0);
-            });
-        })
-
-        $('#pessoa-setor-select').on('select2:select', (e) => this.mudou_setor(e.params.data.id));
-        $('#pessoa-empresa-select').on('select2:select', (e) => this.mudou_empresa(e.params.data.id));
-
         $.get(URL + "/empresas/minhas", (minhasEmpresas) => {
             const concluir = () => {
                 this.mudou_empresa($("#pessoa-empresa-select").val(), () => {
@@ -181,8 +163,7 @@ class Pessoa extends JanelaDinamica {
                 $.get(URL + "/colaboradores/mostrar/" + this.#id, (_dados) => {
                     if (typeof _dados == "string") _dados = $.parseJSON(_dados);
                     this.#dados = _dados;
-                    $("#pessoa-empresa-select").val(this.#dados.id_empresa).trigger('change');
-
+                    $("#pessoa-empresa-select").val(this.#dados.id_empresa);
                     concluir();
                 });
             } else concluir();
@@ -221,9 +202,12 @@ class Pessoa extends JanelaDinamica {
 
         this.#obrigatorios = ["nome", "telefone", "cpf"];
         if (titulo.charAt(0) != "a") this.#obrigatorios.push("funcao", "admissao");
-        if (_usuario) this.#obrigatorios.push("email");
-        if (!this.#id) this.#obrigatorios.push("senha");
-        if (_usuario && (!this.#id || !id_usuario)) this.#obrigatorios.push("password");
+        if (!this.#id || this.#id == USUARIO || (!id_usuario && _usuario)) {
+            $(".row-senha").removeClass("d-none");
+            if (_usuario) this.#obrigatorios.push("email");
+            if (!this.#id) this.#obrigatorios.push("senha");
+            if (_usuario && (!this.#id || !id_usuario)) this.#obrigatorios.push("password");
+        } else $(".row-senha").addClass("d-none");
 
         $("#email-lbl").html(_usuario ? "Email: *" : "Email:");
         $("#senha-lbl").html(!this.#id ? "Senha numérica: *" : "Senha numérica: (deixe em branco para não alterar)");
@@ -256,11 +240,11 @@ class Pessoa extends JanelaDinamica {
                 });
                 $("#pessoa-setor-select").html(resultado);
                 $(".row-setor").removeClass("d-none");
-
+                
                 let setor = 0;
                 if (this.#dados === undefined) setor = primeiro;
                 else if (this.#dados.id_empresa == id_empresa) setor = parseInt(this.#dados.id_setor);
-                
+
                 if (setor) $("#pessoa-setor-select").val(setor);
                 this.mudou_setor($("#pessoa-setor-select").val(), callback);
             });
@@ -301,11 +285,17 @@ class Pessoa extends JanelaDinamica {
             this.#impedirMostrarSenha = true;
             setTimeout(() => {
                 this.#mostrandoSenha = !this.#mostrandoSenha;
-                const concluir = (senha) => {
+                const concluir = (senha, voltar) => {
                     $("#senha").attr("type", this.#mostrandoSenha ? "text" : "password");
                     $("#senha").val(senha);
                     $("#mostrar_senha").removeClass(this.#mostrandoSenha ? "fa-eye-slash" : "fa-eye").addClass(this.#mostrandoSenha ? "fa-eye" : "fa-eye-slash");
                     if (!this.#mostrandoSenha) this.#impedirMostrarSenha = false;
+                    if (voltar) {
+                        setTimeout(() => {
+                            this.#impedirMostrarSenha = false;
+                            this.mostrar_senha();
+                        }, 2000);
+                    }
                 }
                 if (this.#mostrandoSenha) {
                     if (this.#id) {
@@ -313,14 +303,10 @@ class Pessoa extends JanelaDinamica {
                             _token: $("meta[name='csrf-token']").attr("content"),
                             id: this.#id
                         }, (data) => {
-                            concluir(data);
-                            setTimeout(() => {
-                                this.#impedirMostrarSenha = false;
-                                this.mostrar_senha();
-                            }, 2000);
+                            concluir(data, true);
                         });
-                    } else concluir($("#senha").val());
-                } else concluir("");
+                    } else concluir($("#senha").val(), true);
+                } else concluir(this.#id ? "" : $("#senha").val(), false);
             }, 10);
         }
     }
