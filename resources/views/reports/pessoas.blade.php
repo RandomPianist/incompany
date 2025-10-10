@@ -48,11 +48,11 @@
                     <tbody>
                         @foreach ($setor["pessoas"] as $pessoa)
                             <tr class = "report-row">
-                                <td width = "25%">$pessoa["nome"]</td>
-                                <td width = "15%">$pessoa["cpf"]</td>
-                                <td width = "20%">$pessoa["funcao"]</td>
-                                <td width = "20%">$pessoa["telefone"]</td>
-                                <td width = "20%">$pessoa["email"]</td>
+                                <td width = "25%">{{ $pessoa["nome"] }}</td>
+                                <td width = "15%">{{ $pessoa["cpf"] }}</td>
+                                <td width = "20%">{{ $pessoa["funcao"] }}</td>
+                                <td width = "20%">{{ $pessoa["telefone"] }}</td>
+                                <td width = "20%">{{ $pessoa["email"] }}</td>
                             </tr>
                         @endforeach
                     </tbody>
