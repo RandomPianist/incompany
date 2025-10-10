@@ -198,10 +198,12 @@ class PessoasController extends ControllerListavel {
 
     public function salvar(Request $request) {
         $setor = $request->id_setor;
+        $setores = array();
         $m_setor = Setores::find($setor);
         $conferir_email = true;
         if ($m_setor !== null) {
             if (!$m_setor->cria_usuario) $conferir_email = false;
+            array_push($setores, $m_setor->id);
         }
         $minhas_permissoes = Permissoes::where("id_usuario", Auth::user()->id)->first();
         $permissao = $minhas_permissoes->pessoas;
@@ -249,6 +251,10 @@ class PessoasController extends ControllerListavel {
         }
 
         $pessoa = Pessoas::firstOrNew(["id" => $request->id]);
+        if ($pessoa !== null) {
+            $m_setor = Setores::find($pessoa->id_setor);
+            if ($m_setor !== null) array_push($setores, $m_setor->id);
+        }
         $pessoa->nome = mb_strtoupper($request->nome);
         $pessoa->cpf = $request->cpf;
         $pessoa->funcao = mb_strtoupper($request->funcao);
