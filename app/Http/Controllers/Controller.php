@@ -450,8 +450,8 @@ abstract class Controller extends BaseController {
                 $modelo->id_empresa = $comodato->id_empresa;
                 $modelo->referencia = $item->referencia ? $item->referencia : null;
                 $modelo->cod_produto = $item->referencia ? null : $item->cod_externo;
-                $linha->id_empresa_autor = $this->obter_empresa();
-                $linha->data = date("Y-m-d");
+                $modelo->id_empresa_autor = $this->obter_empresa();
+                $modelo->data = date("Y-m-d");
                 $modelo->save();
                 $this->log_inserir($letra_log, "atribuicoes", $modelo->id);
                 if ($letra_log == "C") $ret = true;
