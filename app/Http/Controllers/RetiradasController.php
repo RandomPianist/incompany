@@ -47,8 +47,8 @@ class RetiradasController extends Controller {
         $connection->beginTransaction();
         try {
             $this->retirada_salvar($json); // App\Http\Controllers\Controller.php
-            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request->pessoa.", 'R', 'N')");
-            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request->pessoa.", 'U', 'N')");
+            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request->pessoa.", 'R', 'N', 0)");
+            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request->pessoa.", 'U', 'N', 0)");
             $connection->commit();
         } catch (\Exception $e) {
             $connection->rollBack();

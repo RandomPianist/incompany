@@ -6,6 +6,7 @@ use DB;
 use Auth;
 use Illuminate\Http\Request;
 use App\Models\Categorias;
+use App\Models\Comodatos;
 use App\Models\Maquinas;
 use App\Models\Produtos;
 use App\Models\Estoque;
@@ -494,12 +495,12 @@ class ApiController extends Controller {
         
                 $cont++;
             }
-            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request[0]["id_pessoa"].", 'R', 'N')");
-            DB::statement("CALL atalizar_mat_vretiradas_vultretirada('P', ".$request[0]["id_pessoa"].", 'U', 'N')");
+            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request[0]["id_pessoa"].", 'R', 'N', 0)");
+            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request[0]["id_pessoa"].", 'U', 'N', 0)");
             $resultado->code = 201;
             $resultado->msg = "Sucesso";
             $connection->commit();
-        } catch (\Exception $e) {            
+        } catch (\Exception $e) {
             $connection->rollBack();
             $resultado->code = 500;
             $resultado->msg = $e->getMessage();
