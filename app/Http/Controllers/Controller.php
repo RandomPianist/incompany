@@ -520,7 +520,7 @@ abstract class Controller extends BaseController {
         $ret = false;
         $where = "lixeira = 0 AND id_maquina = ".$comodato->id_maquina." AND id_empresa = ".$comodato->id_empresa;
         $where_g = $where." AND gerado = 1";
-        if (!intval($comodato->atb_todos)) {
+        if (!$comodato->atb_todos) {
             $ret = Atribuicoes::whereRaw($where_g)->exists();
             if ($ret) {
                 $this->log_inserir_lote("D", "atribuicoes", $where_g);
