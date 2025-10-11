@@ -63,12 +63,6 @@ class PessoasController extends ControllerListavel {
         return $resultado;
     }
 
-    private function maquinas_da_pessoa($id_pessoa) {
-        return DB::table("vativos")
-                    ->where("id", $id_pessoa)
-                    ->value("maquinas");
-    }
-
     protected function busca($where, $tipo = "") {
         return DB::table("pessoas")
                     ->select(

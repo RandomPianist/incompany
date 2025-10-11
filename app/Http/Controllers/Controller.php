@@ -283,6 +283,12 @@ abstract class Controller extends BaseController {
     // Funções relacionadas à consulta e manipulação de comodatos e máquinas.
     //======================================================================
 
+    protected function maquinas_da_pessoa($id_pessoa) {
+        return DB::table("vativos")
+                    ->where("id", $id_pessoa)
+                    ->value("maquinas");
+    }
+
     protected function obter_comodato($id_maquina) {
         return Comodatos::find(
             DB::table("comodatos")
@@ -701,9 +707,17 @@ abstract class Controller extends BaseController {
         if (is_iterable($valor)) $valor = implode(",", $valor);
         $valor = "'".$valor."'";
         if ($completo) {
-            if (is_iterable($valor_ant)) {
-                foreach ($valor_ant as $maq) DB::statement("CALL atualizar_mat_vcomodatos(".$maq.")");
-            } else DB::statement("CALL atualizar_mat_vcomodatos(".$valor_ant.")");
+            switch($chave) {
+                case "P":
+                    $minhas_maquinas = explode(",", $this->maquinas_da_pessoa($valor_ant));
+                    foreach ($minhas_maquinas as $maq) DB::statement("CALL atualizar_mat_vcomodatos(".$maq.")");
+                    break;
+                case "M":
+                    if (is_iterable($valor_ant)) {
+                        foreach ($valor_ant as $maq) DB::statement("CALL atualizar_mat_vcomodatos(".$maq.")");
+                    } else DB::statement("CALL atualizar_mat_vcomodatos(".$valor_ant.")");
+                    break;
+            }
         }
         DB::statement("CALL atualizar_mat_vatbaux('".$chave."', ".$valor.", 'N')");
         DB::statement("CALL atualizar_mat_vatribuicoes('".$chave."', ".$valor.", 'N')");
