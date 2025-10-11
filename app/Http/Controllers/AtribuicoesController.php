@@ -349,6 +349,7 @@ class AtribuicoesController extends Controller {
             $resultado->icon = "error";
             $resultado->msg = $e->getMessage();
         }
+        return json_encode($resultado);
     }
 
     public function descartar() {
