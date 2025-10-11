@@ -514,7 +514,7 @@ BEGIN
 END$$
 
 -- =================================================================================
---  4) ATUALIZAR_MAT_VRETIRADAS_VULTRETIRADA (UNIFICADA)
+--  4) ATUALIZAR_MAT_VRETIRADAS_VULTRETIRADA
 --  Atualiza as materializadas de retiradas (soma e última data).
 -- =================================================================================
 CREATE PROCEDURE atualizar_mat_vretiradas_vultretirada(
