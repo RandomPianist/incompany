@@ -406,7 +406,7 @@ class PessoasController extends ControllerListavel {
                     ->value("id")
             : 0;
             $pessoa->save();
-            $this->atualizar_tudo(explode(",", $this->maquinas_da_pessoa($pessoa->id)), "M", true); // App\Http\Controllers\Controller.php
+            $this->atualizar_tudo($pessoa->id, "P", true); // App\Http\Controllers\Controller.php
             $connection->commit();
             $resultado->icon = "success";
         } catch (\Exception $e) {    
