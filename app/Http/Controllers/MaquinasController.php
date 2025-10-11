@@ -548,7 +548,7 @@ class MaquinasController extends Controller {
         $connection->beginTransaction();
         try {
             $comodato = $this->obter_comodato($request->id_maquina); // App\Http\Controllers\Controller.php
-            $atb_todos_ant = $comodato->atb_todos_ant ? 1 : 0;
+            $atb_todos_ant = $comodato->atb_todos ? 1 : 0;
             $comodato->travar_ret = $request->travar_ret;
             $comodato->travar_estq = $request->travar_estq;
             $comodato->atb_todos = $request->atb_todos;
