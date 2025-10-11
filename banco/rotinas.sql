@@ -1,8 +1,9 @@
 DELIMITER $$
 
-/* -----------------------------------------
-   1) atualizar_mat_vcomodatos
------------------------------------------- */
+-- =================================================================================
+--  1) ATUALIZAR_MAT_VCOMODATOS
+--  Atualiza a visão materializada de comodatos ativos por pessoa.
+-- =================================================================================
 CREATE PROCEDURE atualizar_mat_vcomodatos(IN p_id_maquina INT)
 BEGIN
     DECLARE v_tab_p TEXT DEFAULT 'pessoas';
@@ -12,8 +13,8 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Erro ao atualizar mat_vcomodatos';
     END;
 
-    SET @query =
-        'SELECT
+    SET @query = '
+        SELECT
             comodatos.id,
             minhas_empresas.id_pessoa,
             comodatos.id_maquina,
@@ -30,8 +31,10 @@ BEGIN
             WHERE p.lixeira = 0
               AND empresas.lixeira = 0
         ) AS minhas_empresas
+        
         JOIN comodatos
-            ON comodatos.id_empresa = minhas_empresas.id_empresa';
+            ON comodatos.id_empresa = minhas_empresas.id_empresa
+    ';
 
     IF p_id_maquina IS NULL OR p_id_maquina = 0 THEN
         SET @query = CONCAT(@query, ' JOIN maquinas ON maquinas.id = comodatos.id_maquina');
@@ -66,9 +69,10 @@ BEGIN
     DEALLOCATE PREPARE st_ins;
 END$$
 
-/* -----------------------------------------
-   2) atualizar_mat_vatbaux
------------------------------------------- */
+-- =================================================================================
+--  2) ATUALIZAR_MAT_VATBAUX
+--  Atualiza a visão materializada auxiliar de atribuições.
+-- =================================================================================
 CREATE PROCEDURE atualizar_mat_vatbaux(IN p_chave CHAR(1), IN p_valor TEXT, IN apenas_ativos CHAR(1), IN id_pessoa INT)
 BEGIN
     DECLARE v_tab_p TEXT DEFAULT 'pessoas';
@@ -82,124 +86,169 @@ BEGIN
         SET v_tab_p = 'vativos';
     END IF;
 
-    SET @query = CONCAT(
-    'SELECT
-        tab.*,
-        vatbreal.id_setor,
-        vatbreal.lixeira
-    FROM (
-        SELECT 
-            p.id AS id_pessoa, 
-            vatbreal.id AS id_atribuicao, 
-            vatbreal.cod_produto AS cod, 
-            IFNULL(produtos.referencia, '''') AS ref,
-            ''PP'' AS src 
-        FROM vatbreal 
-        JOIN ', v_tab_p, ' AS p
-            ON p.id = vatbreal.id_pessoa 
-        JOIN produtos
-            ON produtos.cod_externo = vatbreal.cod_produto 
-        JOIN mat_vcomodatos
-            ON mat_vcomodatos.id_pessoa = p.id
-        JOIN comodatos_produtos AS cp
-            ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
-        WHERE cp.lixeira = 0
+    SET @query = CONCAT('
+        SELECT
+            tab.*,
+            vatbreal.id_setor,
+            vatbreal.lixeira
 
-        UNION ALL 
-        SELECT 
-            p.id AS id_pessoa, 
-            vatbreal.id AS id_atribuicao, 
-            IFNULL(produtos.cod_externo, '''') AS cod, 
-            vatbreal.referencia AS ref,
-            ''PR'' AS src 
-        FROM vatbreal 
-        JOIN ', v_tab_p, ' AS p
-            ON p.id = vatbreal.id_pessoa 
-        JOIN produtos
-            ON produtos.referencia = vatbreal.referencia
-        JOIN mat_vcomodatos
-            ON mat_vcomodatos.id_pessoa = p.id
-        JOIN comodatos_produtos AS cp
-            ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
-        WHERE cp.lixeira = 0
+        FROM (
+            SELECT 
+                p.id AS id_pessoa, 
+                vatbreal.id AS id_atribuicao, 
+                vatbreal.cod_produto AS cod, 
+                IFNULL(produtos.referencia, '''') AS ref,
+                ''PP'' AS src 
 
-        UNION ALL 
-        SELECT 
-            p.id AS id_pessoa, 
-            vatbreal.id AS id_atribuicao, 
-            vatbreal.cod_produto AS cod, 
-            IFNULL(produtos.referencia, '''') AS ref,
-            ''SP'' AS src 
-        FROM vatbreal 
-        JOIN ', v_tab_p, ' AS p
-            ON p.id_setor = vatbreal.id_setor
-        JOIN produtos
-            ON produtos.cod_externo = vatbreal.cod_produto
-        JOIN mat_vcomodatos
-            ON mat_vcomodatos.id_pessoa = p.id
-        JOIN comodatos_produtos AS cp
-            ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
-        WHERE cp.lixeira = 0
+            FROM vatbreal 
+            
+            JOIN ', v_tab_p, ' AS p
+                ON p.id = vatbreal.id_pessoa 
+            
+            JOIN produtos
+                ON produtos.cod_externo = vatbreal.cod_produto 
+            
+            JOIN mat_vcomodatos
+                ON mat_vcomodatos.id_pessoa = p.id
+            
+            JOIN comodatos_produtos AS cp
+                ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
+            
+            WHERE cp.lixeira = 0
 
-        UNION ALL 
-        SELECT 
-            p.id AS id_pessoa, 
-            vatbreal.id AS id_atribuicao, 
-            IFNULL(produtos.cod_externo, '''') AS cod, 
-            vatbreal.referencia AS ref,
-            ''SR'' AS src 
-        FROM vatbreal 
-        JOIN ', v_tab_p, ' AS p
-            ON p.id_setor = vatbreal.id_setor 
-        JOIN produtos
-            ON produtos.referencia = vatbreal.referencia
-        JOIN mat_vcomodatos
-            ON mat_vcomodatos.id_pessoa = p.id
-        JOIN comodatos_produtos AS cp
-            ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
-        WHERE cp.lixeira = 0
+            UNION ALL (
+                SELECT 
+                    p.id AS id_pessoa, 
+                    vatbreal.id AS id_atribuicao, 
+                    IFNULL(produtos.cod_externo, '''') AS cod, 
+                    vatbreal.referencia AS ref,
+                    ''PR'' AS src
 
-        UNION ALL 
-        SELECT 
-            p.id AS id_pessoa, 
-            vatbreal.id AS id_atribuicao, 
-            vatbreal.cod_produto AS cod, 
-            IFNULL(produtos.referencia, '''') AS ref,
-            ''MP'' AS src
-        FROM vatbreal 
-        JOIN mat_vcomodatos
-            ON mat_vcomodatos.id_maquina = vatbreal.id_maquina
-        JOIN ', v_tab_p, ' AS p
-            ON p.id = mat_vcomodatos.id_pessoa 
-        JOIN produtos
-            ON produtos.cod_externo = vatbreal.cod_produto
-        JOIN comodatos_produtos AS cp
-            ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
-        WHERE cp.lixeira = 0
+                FROM vatbreal
 
-        UNION ALL 
-        SELECT 
-            p.id AS id_pessoa, 
-            vatbreal.id AS id_atribuicao, 
-            IFNULL(produtos.cod_externo, '''') AS cod, 
-            vatbreal.referencia AS ref,
-            ''MR'' AS src 
-        FROM vatbreal 
-        JOIN mat_vcomodatos
-            ON mat_vcomodatos.id_maquina = vatbreal.id_maquina 
-        JOIN ', v_tab_p, ' AS p
-            ON p.id = mat_vcomodatos.id_pessoa 
+                JOIN ', v_tab_p, ' AS p
+                    ON p.id = vatbreal.id_pessoa
+
+                JOIN produtos
+                    ON produtos.referencia = vatbreal.referencia
+
+                JOIN mat_vcomodatos
+                    ON mat_vcomodatos.id_pessoa = p.id
+
+                JOIN comodatos_produtos AS cp
+                    ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
+
+                WHERE cp.lixeira = 0
+            )
+
+            UNION ALL (
+                SELECT 
+                    p.id AS id_pessoa, 
+                    vatbreal.id AS id_atribuicao, 
+                    vatbreal.cod_produto AS cod, 
+                    IFNULL(produtos.referencia, '''') AS ref,
+                    ''SP'' AS src 
+
+                FROM vatbreal 
+
+                JOIN ', v_tab_p, ' AS p
+                    ON p.id_setor = vatbreal.id_setor
+
+                JOIN produtos
+                    ON produtos.cod_externo = vatbreal.cod_produto
+
+                JOIN mat_vcomodatos
+                    ON mat_vcomodatos.id_pessoa = p.id
+
+                JOIN comodatos_produtos AS cp
+                    ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
+
+                WHERE cp.lixeira = 0
+            )
+
+            UNION ALL (
+                SELECT 
+                    p.id AS id_pessoa, 
+                    vatbreal.id AS id_atribuicao, 
+                    IFNULL(produtos.cod_externo, '''') AS cod, 
+                    vatbreal.referencia AS ref,
+                    ''SR'' AS src 
+
+                FROM vatbreal 
+
+                JOIN ', v_tab_p, ' AS p
+                    ON p.id_setor = vatbreal.id_setor 
+
+                JOIN produtos
+                    ON produtos.referencia = vatbreal.referencia
+
+                JOIN mat_vcomodatos
+                    ON mat_vcomodatos.id_pessoa = p.id
+
+                JOIN comodatos_produtos AS cp
+                    ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
+
+                WHERE cp.lixeira = 0
+            )
+
+            UNION ALL (
+                SELECT 
+                    p.id AS id_pessoa, 
+                    vatbreal.id AS id_atribuicao, 
+                    vatbreal.cod_produto AS cod, 
+                    IFNULL(produtos.referencia, '''') AS ref,
+                    ''MP'' AS src
+
+                FROM vatbreal 
+                
+                JOIN mat_vcomodatos
+                    ON mat_vcomodatos.id_maquina = vatbreal.id_maquina
+
+                JOIN ', v_tab_p, ' AS p
+                    ON p.id = mat_vcomodatos.id_pessoa 
+
+                JOIN produtos
+                    ON produtos.cod_externo = vatbreal.cod_produto
+
+                JOIN comodatos_produtos AS cp
+                    ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
+
+                WHERE cp.lixeira = 0
+            )
+
+            UNION ALL (
+                SELECT 
+                    p.id AS id_pessoa, 
+                    vatbreal.id AS id_atribuicao, 
+                    IFNULL(produtos.cod_externo, '''') AS cod, 
+                    vatbreal.referencia AS ref,
+                    ''MR'' AS src 
+                FROM vatbreal 
+
+                JOIN mat_vcomodatos
+                    ON mat_vcomodatos.id_maquina = vatbreal.id_maquina 
+
+                JOIN ', v_tab_p, ' AS p
+                    ON p.id = mat_vcomodatos.id_pessoa 
+
+                JOIN produtos
+                    ON produtos.referencia = vatbreal.referencia
+                    
+                JOIN comodatos_produtos AS cp
+                    ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
+
+                WHERE cp.lixeira = 0
+            )
+            
+        ) AS tab
+
         JOIN produtos
-            ON produtos.referencia = vatbreal.referencia
-        JOIN comodatos_produtos AS cp
-            ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
-        WHERE cp.lixeira = 0
-    ) AS tab
-    JOIN produtos
-        ON (produtos.cod_externo = tab.cod AND tab.src LIKE ''%P'')
-            OR (produtos.referencia = tab.ref AND tab.src LIKE ''%R'') 
-    JOIN vatbreal
-        ON vatbreal.id = tab.id_atribuicao');
+            ON (produtos.cod_externo = tab.cod AND tab.src LIKE ''%P'')
+                OR (produtos.referencia = tab.ref AND tab.src LIKE ''%R'') 
+
+        JOIN vatbreal
+            ON vatbreal.id = tab.id_atribuicao
+    ');
 
     IF p_chave <> 'M' AND p_chave <> 'P' THEN
         SET @query = CONCAT(@query, ' JOIN ', v_tab_p, ' AS p ON p.id = tab.id_pessoa WHERE ');
@@ -211,23 +260,43 @@ BEGIN
             SET @query = CONCAT(@query, ' 1=1');
         END IF;
     ELSEIF p_chave = 'M' THEN
-        SET @query = CONCAT(@query, ' JOIN mat_vcomodatos ON mat_vcomodatos.id_pessoa = tab.id_pessoa WHERE mat_vcomodatos.id_maquina IN (', p_valor, ')');
+        SET @query = CONCAT(@query, '
+            JOIN mat_vcomodatos
+                ON mat_vcomodatos.id_pessoa = tab.id_pessoa
+            WHERE mat_vcomodatos.id_maquina IN (', p_valor, ')
+        ');
     ELSE
         SET @query = CONCAT(@query, ' WHERE tab.id_pessoa IN (', p_valor, ')');
     END IF;
 
-    SET @query = CONCAT(@query, ' AND (tab.id_pessoa = ', id_pessoa,' OR ', id_pessoa,' = 0) AND produtos.lixeira = 0 GROUP BY tab.id_pessoa, tab.id_atribuicao, tab.cod, tab.ref, tab.src, vatbreal.id_setor, vatbreal.lixeira');
+    SET @query = CONCAT(@query, '
+            AND (tab.id_pessoa = ', id_pessoa,' OR ', id_pessoa,' = 0)
+            AND produtos.lixeira = 0
+
+        GROUP BY
+            tab.id_pessoa,
+            tab.id_atribuicao,
+            tab.cod,
+            tab.ref,
+            tab.src,
+            vatbreal.id_setor,
+            vatbreal.lixeira
+    ');
 
     IF p_chave = 'M' THEN
-        SET @delete_sql = CONCAT(
-            'DELETE mat_vatbaux
-             FROM mat_vatbaux
-             JOIN mat_vcomodatos
+        SET @delete_sql = CONCAT('
+            DELETE mat_vatbaux
+            FROM mat_vatbaux
+            JOIN mat_vcomodatos
                 ON mat_vcomodatos.id_pessoa = mat_vatbaux.id_pessoa
-             WHERE mat_vcomodatos.id_maquina IN (', p_valor, ') AND (mat_vcomodatos.id_pessoa = ', id_pessoa,' OR ', id_pessoa,' = 0)'
-        );
+            WHERE mat_vcomodatos.id_maquina IN (', p_valor, ')
+              AND (mat_vcomodatos.id_pessoa = ', id_pessoa,' OR ', id_pessoa,' = 0)
+        ');
     ELSEIF p_chave = 'S' OR p_chave = 'P' THEN
-        SET @delete_sql = CONCAT('DELETE FROM mat_vatbaux WHERE ', IF(p_chave = 'S', 'id_setor', 'id_pessoa'), ' IN (', p_valor, ') AND (mat_vatbaux.id_pessoa = ', id_pessoa,' OR ', id_pessoa,' = 0)');
+        SET @delete_sql = CONCAT('
+            DELETE FROM mat_vatbaux WHERE ', IF(p_chave = 'S', 'id_setor', 'id_pessoa'), ' IN (', p_valor, ')
+              AND (mat_vatbaux.id_pessoa = ', id_pessoa,' OR ', id_pessoa,' = 0)
+        ');
     ELSE
         SET @delete_sql = 'DELETE FROM mat_vatbaux';
     END IF;
@@ -270,9 +339,10 @@ BEGIN
     DEALLOCATE PREPARE st_del4;
 END$$
 
-/* -----------------------------------------
-   3) atualizar_mat_vatribuicoes
------------------------------------------- */
+-- =================================================================================
+--  3) ATUALIZAR_MAT_VATRIBUICOES
+--  Processa a hierarquia de atribuições a partir da mat_vatbaux.
+-- =================================================================================
 CREATE PROCEDURE atualizar_mat_vatribuicoes(IN p_chave CHAR(1), IN p_valor TEXT, IN apenas_ativos CHAR(1), IN id_pessoa INT)
 BEGIN
     DECLARE v_join TEXT DEFAULT '';
@@ -304,80 +374,102 @@ BEGIN
     END IF;
 
     -- parte comum do SELECT (x, join, left join, e filtro base x.lixeira = 0)
-    SET v_base_select = CONCAT(
-        'SELECT x.id_pessoa, x.id_atribuicao, filho.id_atribuicao AS id_associado
-         FROM mat_vatbaux AS x ',
-         v_join,
-        ' LEFT JOIN mat_vatbaux AS filho
-             ON ((x.ref = filho.ref AND x.ref <> '''') OR x.cod = filho.cod)
+    SET v_base_select = CONCAT('
+        SELECT
+            x.id_pessoa,
+            x.id_atribuicao,
+            filho.id_atribuicao AS id_associado
+        
+        FROM mat_vatbaux AS x 
+        
+        ', v_join, '
+        
+        LEFT JOIN mat_vatbaux AS filho
+            ON ((x.ref = filho.ref AND x.ref <> '''') OR x.cod = filho.cod)
                 AND x.id_pessoa = filho.id_pessoa
-         WHERE x.lixeira = 0 AND '
-    );
+        
+        WHERE x.lixeira = 0 AND
+    ');
 
     -- PP: sem condições NOT EXISTS adicionais
     SET v_blocks = CONCAT(v_base_select, 'x.src = ''PP'' AND ', v_where);
 
     -- PR: acrescenta NOT EXISTS(pp)
-    SET v_prev_notexists = CONCAT(
-        'NOT EXISTS (SELECT 1 FROM mat_vatbaux mv FORCE INDEX (idx_mat_vatbaux_pp)
-                      WHERE mv.id_pessoa = x.id_pessoa
-                        AND mv.cod = x.cod
-                        AND mv.lixeira = 0
-                        AND mv.src = ''PP'')'
+    SET v_prev_notexists = CONCAT('NOT EXISTS (
+        SELECT 1
+        FROM mat_vatbaux mv FORCE INDEX (idx_mat_vatbaux_pp)
+        WHERE mv.id_pessoa = x.id_pessoa
+          AND mv.cod = x.cod
+          AND mv.lixeira = 0
+          AND mv.src = ''PP''
+    )');
+    SET v_blocks = CONCAT(
+        v_blocks,
+        ' UNION ALL ',
+        v_base_select,
+        v_prev_notexists,
+        ' AND x.src = ''PR'' AND ',
+        v_where
     );
-    SET v_blocks = CONCAT(v_blocks,
-                          ' UNION ALL ',
-                          v_base_select, v_prev_notexists, ' AND x.src = ''PR'' AND ', v_where);
 
     -- SP: acumula NOT EXISTS(pp) + NOT EXISTS(pr)
-    SET v_prev_notexists = CONCAT(
+    SET v_prev_notexists = CONCAT(v_prev_notexists, ' AND NOT EXISTS (
+        SELECT 1
+        FROM mat_vatbaux mv FORCE INDEX (idx_mat_vatbaux_pr)
+        WHERE mv.id_pessoa = x.id_pessoa
+          AND mv.ref = x.ref
+          AND mv.lixeira = 0
+          AND mv.src = ''PR''
+    )');
+    SET v_blocks = CONCAT(
+        v_blocks,
+        ' UNION ALL ',
+        v_base_select,
         v_prev_notexists,
-        ' AND NOT EXISTS (SELECT 1 FROM mat_vatbaux mv FORCE INDEX (idx_mat_vatbaux_pr)
-                           WHERE mv.id_pessoa = x.id_pessoa
-                             AND mv.ref = x.ref
-                             AND mv.lixeira = 0
-                             AND mv.src = ''PR'')'
+        ' AND x.src = ''SP'' AND ',
+        v_where
     );
-    SET v_blocks = CONCAT(v_blocks,
-                          ' UNION ALL ',
-                          v_base_select, v_prev_notexists, ' AND x.src = ''SP'' AND ', v_where);
 
     -- SR: adiciona NOT EXISTS(sp) (note que idx_mat_vatbaux_sp usa id_setor + cod)
-    SET v_prev_notexists = CONCAT(
+    SET v_prev_notexists = CONCAT(v_prev_notexists, ' AND NOT EXISTS (
+        SELECT 1
+        FROM mat_vatbaux mv FORCE INDEX (idx_mat_vatbaux_sp)
+        WHERE mv.id_setor = x.id_setor
+          AND mv.cod = x.cod
+          AND mv.lixeira = 0
+          AND mv.src = ''SP''
+    )');
+    SET v_blocks = CONCAT(
+        v_blocks,
+        ' UNION ALL ',
+        v_base_select,
         v_prev_notexists,
-        ' AND NOT EXISTS (SELECT 1 FROM mat_vatbaux mv FORCE INDEX (idx_mat_vatbaux_sp)
-                           WHERE mv.id_setor = x.id_setor
-                             AND mv.cod = x.cod
-                             AND mv.lixeira = 0
-                             AND mv.src = ''SP'')'
+        ' AND x.src = ''SR'' AND ',
+        v_where
     );
-    SET v_blocks = CONCAT(v_blocks,
-                          ' UNION ALL ',
-                          v_base_select, v_prev_notexists, ' AND x.src = ''SR'' AND ', v_where);
 
     -- MR: acrescenta NOT EXISTS(sr) e o NOT EXISTS com vatbreal / mat_vcomodatos / produtos
-    SET v_prev_notexists = CONCAT(
-        v_prev_notexists,
-        ' AND NOT EXISTS (SELECT 1 FROM mat_vatbaux mv FORCE INDEX (idx_mat_vatbaux_sr)
-                           WHERE mv.id_setor = x.id_setor
-                             AND mv.ref = x.ref
-                             AND mv.lixeira = 0
-                             AND mv.src = ''SR'')'
-    );
+    SET v_prev_notexists = CONCAT(v_prev_notexists, ' AND NOT EXISTS (
+        SELECT 1
+        FROM mat_vatbaux mv FORCE INDEX (idx_mat_vatbaux_sr)
+        WHERE mv.id_setor = x.id_setor
+          AND mv.ref = x.ref
+          AND mv.lixeira = 0
+          AND mv.src = ''SR''
+    )');
 
-    SET v_prev_for_mr = CONCAT(
-        v_prev_notexists,
-        ' AND NOT EXISTS (
-             SELECT 1
-             FROM vatbreal a2
-             JOIN mat_vcomodatos v ON v.id_maquina = a2.id_maquina
-             JOIN produtos p2 ON p2.cod_externo = a2.cod_produto
-             WHERE v.id_pessoa = x.id_pessoa
-               AND p2.cod_externo = x.cod
-               AND a2.lixeira = 0
-               AND p2.lixeira = 0
-           )'
-    );
+    SET v_prev_for_mr = CONCAT(v_prev_notexists, ' AND NOT EXISTS (
+        SELECT 1
+        FROM vatbreal a2
+        JOIN mat_vcomodatos v
+            ON v.id_maquina = a2.id_maquina
+        JOIN produtos p2
+            ON p2.cod_externo = a2.cod_produto
+        WHERE v.id_pessoa = x.id_pessoa
+          AND p2.cod_externo = x.cod
+          AND a2.lixeira = 0
+          AND p2.lixeira = 0
+    )');
 
     SET v_blocks = CONCAT(v_blocks,
                           ' UNION ALL ',
@@ -390,21 +482,23 @@ BEGIN
     IF p_chave = 'P' THEN
         SET @delete_sql = CONCAT('DELETE FROM mat_vatribuicoes WHERE id_pessoa IN (', p_valor, ')');
     ELSEIF p_chave = 'S' THEN
-        SET @delete_sql = CONCAT(
-            'DELETE mat_vatribuicoes
-             FROM mat_vatribuicoes
-             JOIN pessoas
+        SET @delete_sql = CONCAT('
+            DELETE mat_vatribuicoes
+            FROM mat_vatribuicoes
+            JOIN pessoas
                 ON pessoas.id = mat_vatribuicoes.id_pessoa
-             WHERE pessoas.id_setor IN (', p_valor, ') AND (mat_vatribuicoes.id_pessoa =', id_pessoa,' OR ', id_pessoa,' = 0)'
-        );
+            WHERE pessoas.id_setor IN (', p_valor, ')
+              AND (mat_vatribuicoes.id_pessoa =', id_pessoa,' OR ', id_pessoa,' = 0)
+        ');
     ELSEIF p_chave = 'M' THEN
-        SET @delete_sql = CONCAT(
-            'DELETE mat_vatribuicoes
-             FROM mat_vatribuicoes
-             JOIN mat_vcomodatos
+        SET @delete_sql = CONCAT('
+            DELETE mat_vatribuicoes
+            FROM mat_vatribuicoes
+            JOIN mat_vcomodatos
                 ON mat_vcomodatos.id_pessoa = mat_vatribuicoes.id_pessoa
-             WHERE mat_vcomodatos.id_maquina IN (', p_valor, ') AND (mat_vatribuicoes.id_pessoa =', id_pessoa,' OR ', id_pessoa,' = 0)'
-        );
+            WHERE mat_vcomodatos.id_maquina IN (', p_valor, ')
+              AND (mat_vatribuicoes.id_pessoa =', id_pessoa,' OR ', id_pessoa,' = 0)
+        ');
     ELSE
         SET @delete_sql = 'DELETE FROM mat_vatribuicoes';
     END IF;
@@ -419,9 +513,10 @@ BEGIN
     DEALLOCATE PREPARE st_ins;
 END$$
 
-/* -----------------------------------------
-   4) atualizar_mat_vretiradas_vultretirada (unificada)
------------------------------------------- */
+-- =================================================================================
+--  4) ATUALIZAR_MAT_VRETIRADAS_VULTRETIRADA (UNIFICADA)
+--  Atualiza as materializadas de retiradas (soma e última data).
+-- =================================================================================
 CREATE PROCEDURE atualizar_mat_vretiradas_vultretirada(
     IN p_chave CHAR(1),
     IN p_valor TEXT,
@@ -484,7 +579,6 @@ BEGIN
                     AND retiradas.data > DATE_SUB(CURDATE(), INTERVAL vatbreal.validade DAY)
                     AND retiradas.id_supervisor IS NULL
         ';
-        SET v_group_by_part = 'GROUP BY mat_vatribuicoes.id_pessoa, mat_vatribuicoes.id_atribuicao, p.id_setor';
     ELSE
         SET v_target_table = 'mat_vultretirada';
         SET v_select_part = '
@@ -510,8 +604,13 @@ BEGIN
                     AND p.id_empresa IN (0, retiradas.id_empresa)
                     AND retiradas.id_supervisor IS NULL
         ';
-        SET v_group_by_part = 'GROUP BY mat_vatribuicoes.id_pessoa, mat_vatribuicoes.id_atribuicao, p.id_setor';
     END IF;
+    SET v_group_by_part = '
+        GROUP BY
+            mat_vatribuicoes.id_pessoa,
+            mat_vatribuicoes.id_atribuicao,
+            p.id_setor
+    ';
 
     SET @query = CONCAT(
         v_select_part,
@@ -525,21 +624,23 @@ BEGIN
     IF p_chave = 'P' THEN
         SET @delete_sql = CONCAT('DELETE FROM ', v_target_table, ' WHERE id_pessoa IN (', p_valor, ')');
     ELSEIF p_chave = 'S' THEN
-        SET @delete_sql = CONCAT(
-            'DELETE ', v_target_table, '
-             FROM ', v_target_table, '
-             JOIN pessoas
+        SET @delete_sql = CONCAT('
+            DELETE ', v_target_table, '
+            FROM ', v_target_table, '
+            JOIN pessoas
                 ON pessoas.id = ', v_target_table, '.id_pessoa
-             WHERE pessoas.id_setor IN (', p_valor, ') AND (pessoas.id =', id_pessoa,' OR ', id_pessoa,' = 0)'
-        );
+            WHERE pessoas.id_setor IN (', p_valor, ')
+              AND (pessoas.id =', id_pessoa,' OR ', id_pessoa,' = 0)
+        ');
     ELSEIF p_chave = 'M' THEN
-        SET @delete_sql = CONCAT(
-            'DELETE ', v_target_table, '
-             FROM ', v_target_table, '
-             JOIN mat_vcomodatos
+        SET @delete_sql = CONCAT('
+            DELETE ', v_target_table, '
+            FROM ', v_target_table, '
+            JOIN mat_vcomodatos
                 ON mat_vcomodatos.id_pessoa = ', v_target_table, '.id_pessoa
-             WHERE mat_vcomodatos.id_maquina IN (', p_valor, ') AND (mat_vcomodatos.id_pessoa =', id_pessoa,' OR ', id_pessoa,' = 0)'
-        );
+            WHERE mat_vcomodatos.id_maquina IN (', p_valor, ')
+              AND (mat_vcomodatos.id_pessoa =', id_pessoa,' OR ', id_pessoa,' = 0)
+        ');
     ELSE
         SET @delete_sql = CONCAT('DELETE FROM ', v_target_table);
     END IF;
@@ -554,6 +655,10 @@ BEGIN
     DEALLOCATE PREPARE st_ins4;
 END$$
 
+-- =================================================================================
+--  5) EXCLUIR_ATRIBUICAO_SEM_RETIRADA
+--  Limpa atribuições marcadas como lixeira que não possuem retiradas.
+-- =================================================================================
 CREATE PROCEDURE excluir_atribuicao_sem_retirada()
 BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -573,6 +678,10 @@ BEGIN
         AND l.tabela = 'atribuicoes';
 END $$
 
+-- =================================================================================
+--  6) LIMPAR_USUARIO_EDITANDO
+--  Reseta o campo 'id_usuario_editando' em várias tabelas.
+-- =================================================================================
 CREATE PROCEDURE limpar_usuario_editando()
 BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -587,6 +696,10 @@ BEGIN
     UPDATE setores SET id_usuario_editando = 0;
 END $$
 
+-- =================================================================================
+--  7) REFAZER_IDS
+--  Recria os IDs de várias tabelas para remover gaps e atualiza as FKs.
+-- =================================================================================
 CREATE PROCEDURE refazer_ids()
 BEGIN
     -- ------------------------------------------------------------------------------
@@ -689,7 +802,12 @@ BEGIN
             LEAVE fk_update_loop;
         END IF;
         
-        SET @sql = CONCAT('UPDATE `', v_main_table, '2` AS main JOIN `', v_aux_table, '2` AS aux ON aux.id_antigo = main.`', v_fk_column, '` SET main.`', v_fk_column, '` = aux.id');
+        SET @sql = CONCAT('
+            UPDATE `', v_main_table, '2` AS main
+            JOIN `', v_aux_table, '2` AS aux
+                ON aux.id_antigo = main.`', v_fk_column, '`
+            SET main.`', v_fk_column, '` = aux.id
+        ');
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
     END LOOP;
     CLOSE cur_fk;
@@ -707,18 +825,39 @@ BEGIN
         END IF;
 
         IF v_tabela_atual != 'log' THEN
-            SET @sql = CONCAT('UPDATE log2 AS main JOIN `', v_tabela_atual, '2` AS aux ON aux.id_antigo = main.fk SET main.fk = aux.id WHERE main.tabela = ''', v_tabela_atual, '''');
+            SET @sql = CONCAT('
+                UPDATE log2 AS main
+                JOIN `', v_tabela_atual, '2` AS aux
+                    ON aux.id_antigo = main.fk
+                SET main.fk = aux.id
+                WHERE main.tabela = ''', v_tabela_atual, '''
+            ');
             PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
         END IF;
     END WHILE;
 
-    SET @sql = 'UPDATE log2 AS main JOIN pessoas2 AS aux ON aux.id_antigo = main.id_pessoa SET main.id_pessoa = aux.id';
+    SET @sql = '
+        UPDATE log2 AS main
+        JOIN pessoas2 AS aux
+            ON aux.id_antigo = main.id_pessoa
+        SET main.id_pessoa = aux.id
+    ';
     PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-    SET @sql = 'UPDATE users AS main JOIN pessoas2 AS aux ON aux.id_antigo = main.id_pessoa SET main.id_pessoa = aux.id';
+    SET @sql = '
+        UPDATE users AS main
+        JOIN pessoas2 AS aux
+            ON aux.id_antigo = main.id_pessoa
+        SET main.id_pessoa = aux.id
+    ';
     PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-    SET @sql = 'UPDATE usrbkp AS main JOIN pessoas2 AS aux ON aux.id_antigo = main.id_pessoa SET main.id_pessoa = aux.id';
+    SET @sql = '
+        UPDATE usrbkp AS main
+        JOIN pessoas2 AS aux
+            ON aux.id_antigo = main.id_pessoa
+        SET main.id_pessoa = aux.id
+    ';
     PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
     -- ETAPA 3: Remover tabelas antigas e renomear as novas
@@ -745,6 +884,10 @@ BEGIN
 
 END$$
 
+-- =================================================================================
+--  8) REINDEXAR
+--  Remove e recria os índices do banco de dados para otimização.
+-- =================================================================================
 CREATE PROCEDURE reindexar()
 BEGIN
     -- Handler para ignorar o erro "índice não existe" (código 1091) e continuar
