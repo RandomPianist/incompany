@@ -471,9 +471,14 @@ BEGIN
           AND p2.lixeira = 0
     )');
 
-    SET v_blocks = CONCAT(v_blocks,
-                          ' UNION ALL ',
-                          v_base_select, v_prev_for_mr, ' AND x.src = ''MR'' AND ', v_where);
+    SET v_blocks = CONCAT(
+        v_blocks,
+        ' UNION ALL ',
+        v_base_select,
+        v_prev_for_mr,
+        ' AND x.src = ''MR'' AND ',
+        v_where
+    );
 
     -- monta query final (distinct)
     SET @query = CONCAT('SELECT DISTINCT * FROM (', v_blocks, ') AS tab');
