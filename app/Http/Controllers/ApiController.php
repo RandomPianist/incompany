@@ -273,38 +273,55 @@ class ApiController extends Controller {
 
     public function movimentar_estoque(Request $request) {
         $comodato = $this->obter_comodato($request->id_maquina); // App\Http\Controllers\Controller.php
-        for ($i = 0; $i < sizeof($request->idProduto); $i++) {
-            $saldo_ant = $this->retorna_saldo_cp($comodato->id, $request->idProduto[$i]); // App\Http\Controllers\Controller.php
-            $cp = ComodatosProdutos::find($comodato->cp($request->idProduto[$i])->value("id"));
-            $linha = new Estoque;
-            $linha->data = date("Y-m-d");
-            $linha->hms = date("H:i:s");
-            $linha->es = $request->es[$i];
-            $linha->descr = $request->descr[$i];
-            $linha->qtd = $request->qtd[$i];
-            $linha->id_cp = $cp->id;
-            $linha->preco = $cp->preco;
-            $linha->save();
-            $nome = "";
-            if (isset($request->usu)) $nome = $request->usu;
-            $this->log_inserir("C", "estoque", $linha->id, "ERP", $nome); // App\Http\Controllers\Controller.php
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            for ($i = 0; $i < sizeof($request->idProduto); $i++) {
+                $saldo_ant = $this->retorna_saldo_cp($comodato->id, $request->idProduto[$i]); // App\Http\Controllers\Controller.php
+                $cp = ComodatosProdutos::find($comodato->cp($request->idProduto[$i])->value("id"));
+                $linha = new Estoque;
+                $linha->data = date("Y-m-d");
+                $linha->hms = date("H:i:s");
+                $linha->es = $request->es[$i];
+                $linha->descr = $request->descr[$i];
+                $linha->qtd = $request->qtd[$i];
+                $linha->id_cp = $cp->id;
+                $linha->preco = $cp->preco;
+                $linha->save();
+                $nome = "";
+                if (isset($request->usu)) $nome = $request->usu;
+                $this->log_inserir("C", "estoque", $linha->id, "ERP", $nome); // App\Http\Controllers\Controller.php
+            }
+            $connection->commit();
+            return 200;
+        } catch (\Exception $e) {    
+            $connection->rollBack();
+            return 500;
         }
-        return 200;
     }
 
     public function gerenciar_estoque(Request $request) {
-        $cp = ComodatosProdutos::find($this->obter_comodato($request->idMaquina)->cp($request->idProduto)->value("id")); // App\Http\Controllers\Controller.php
-        $precoProd = floatval($cp->preco);
-        if (isset($request->preco)) {
-            if (floatval($request->preco) > 0) $precoProd = floatval($request->preco);
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            $cp = ComodatosProdutos::find($this->obter_comodato($request->idMaquina)->cp($request->idProduto)->value("id")); // App\Http\Controllers\Controller.php
+            $precoProd = floatval($cp->preco);
+            if (isset($request->preco)) {
+                if (floatval($request->preco) > 0) $precoProd = floatval($request->preco);
+            }
+            $cp->minimo = $request->minimo;
+            $cp->maximo = $request->maximo;
+            $cp->preco = $request->preco;
+            $cp->save();
+            $nome = "";
+            if (isset($request->usu)) $nome = $request->usu;
+            $this->log_inserir("E", "comodatos_produtos", $cp->id, "ERP", $nome); // App\Http\Controllers\Controller.php
+        } catch (\Exception $e) {    
+            $connection->rollBack();
+            throw $e;
         }
-        $cp->minimo = $request->minimo;
-        $cp->maximo = $request->maximo;
-        $cp->preco = $request->preco;
-        $cp->save();
-        $nome = "";
-        if (isset($request->usu)) $nome = $request->usu;
-        $this->log_inserir("E", "comodatos_produtos", $cp->id, "ERP", $nome); // App\Http\Controllers\Controller.php
     }
 
     public function validar_app(Request $request) {
@@ -437,49 +454,56 @@ class ApiController extends Controller {
         if ($resultado->msg) return json_encode($resultado);
 
         $cont = 0;
-        $this->travar(); // App\Http\Controllers\Controller.php
-        while (isset($request[$cont]["id_atribuicao"])) {
-            $retirada = $request[$cont];
-            $salvar = array(
-                "id_pessoa" => $retirada["id_pessoa"],
-                "id_produto" => $retirada["id_produto"],
-                "id_atribuicao" => $retirada["id_atribuicao"],
-                "id_comodato" => $comodato->id,
-                "qtd" => $retirada["qtd"],
-                "data" => date("Y-m-d"),
-                "hora" => date("H:i:s")
-            );
-            if (isset($retirada["id_supervisor"])) {
-                $salvar += [
-                    "id_supervisor" => $retirada["id_supervisor"],
-                    "obs" => $retirada["obs"]
-                ];
-            }    
-            if (isset($retirada["biometria"])) $salvar += ["biometria" => $retirada["biometria"]];
-            
-            $this->retirada_salvar($salvar); // App\Http\Controllers\Controller.php
-            
-            $linha = new Estoque;
-            $linha->es = "S";
-            $linha->descr = "RETIRADA";
-            $linha->qtd = $retirada["qtd"];
-            $linha->data = date("Y-m-d");
-            $linha->hms = date("H:i:s");
-            $linha->id_cp = $comodato->cp($retirada["id_produto"])->value("id");
-            $linha->save();
-            $reg_log = $this->log_inserir("C", "estoque", $linha->id, "APP"); // App\Http\Controllers\Controller.php
-            $reg_log->id_pessoa = $retirada["id_pessoa"];
-            $reg_log->nome = Pessoas::find($retirada["id_pessoa"])->nome;
-            $reg_log->save();
-    
-            $cont++;
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            while (isset($request[$cont]["id_atribuicao"])) {
+                $retirada = $request[$cont];
+                $salvar = array(
+                    "id_pessoa" => $retirada["id_pessoa"],
+                    "id_produto" => $retirada["id_produto"],
+                    "id_atribuicao" => $retirada["id_atribuicao"],
+                    "id_comodato" => $comodato->id,
+                    "qtd" => $retirada["qtd"],
+                    "data" => date("Y-m-d"),
+                    "hora" => date("H:i:s")
+                );
+                if (isset($retirada["id_supervisor"])) {
+                    $salvar += [
+                        "id_supervisor" => $retirada["id_supervisor"],
+                        "obs" => $retirada["obs"]
+                    ];
+                }    
+                if (isset($retirada["biometria"])) $salvar += ["biometria" => $retirada["biometria"]];
+                
+                $this->retirada_salvar($salvar); // App\Http\Controllers\Controller.php
+                
+                $linha = new Estoque;
+                $linha->es = "S";
+                $linha->descr = "RETIRADA";
+                $linha->qtd = $retirada["qtd"];
+                $linha->data = date("Y-m-d");
+                $linha->hms = date("H:i:s");
+                $linha->id_cp = $comodato->cp($retirada["id_produto"])->value("id");
+                $linha->save();
+                $reg_log = $this->log_inserir("C", "estoque", $linha->id, "APP"); // App\Http\Controllers\Controller.php
+                $reg_log->id_pessoa = $retirada["id_pessoa"];
+                $reg_log->nome = Pessoas::find($retirada["id_pessoa"])->nome;
+                $reg_log->save();
+        
+                $cont++;
+            }
+            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request[0]["id_pessoa"].", 'R', 'N')");
+            DB::statement("CALL atalizar_mat_vretiradas_vultretirada('P', ".$request[0]["id_pessoa"].", 'U', 'N')");
+            $resultado->code = 201;
+            $resultado->msg = "Sucesso";
+            $connection->commit();
+        } catch (\Exception $e) {            
+            $connection->rollBack();
+            $resultado->code = 500;
+            $resultado->msg = $e->getMessage();
         }
-        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request[0]["id_pessoa"].", 'R', 'N')");
-        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request[0]["id_pessoa"].", 'U', 'N')");
-        $this->destravar(); // App\Http\Controllers\Controller.php
-        $resultado->code = 201;
-        $resultado->msg = "Sucesso";
-
         return json_encode($resultado);
     }
 

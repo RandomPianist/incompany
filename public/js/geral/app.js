@@ -862,8 +862,14 @@ function trocarEmpresa() {
     $.post(URL + "/colaboradores/alterar-empresa", {
         _token : $("meta[name='csrf-token']").attr("content"),
         idEmpresa : $("#empresa-select").val()
-    }, function() {
-        location.reload();
+    }, function(data) {
+        data = $.parseJSON(data);
+        if (data.icon == "error") {
+            s_alert({
+                icon : "error",
+                html : data.msg
+            });
+        } else location.reload();
     });
 }
 

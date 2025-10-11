@@ -454,45 +454,55 @@ abstract class Controller extends BaseController {
         $id_principal = $contexto == "maquina" ? $request->id_maquina : $request->id_produto;
         $ids = $contexto == "maquina" ? $request->id_produto : $request->id_maquina;
         
-        $maquinas_para_atualizar = [];
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            $maquinas_para_atualizar = [];
 
-        for ($i = 0; $i < count($ids); $i++) {
-            $id_maquina = $contexto == "maquina" ? $id_principal : $ids[$i];
-            $id_produto = $contexto == "maquina" ? $ids[$i] : $id_principal;
-            
-            $comodato = $this->obter_comodato($id_maquina);
-            if (!$comodato) continue;
+            for ($i = 0; $i < count($ids); $i++) {
+                $id_maquina = $contexto == "maquina" ? $id_principal : $ids[$i];
+                $id_produto = $contexto == "maquina" ? $ids[$i] : $id_principal;
+                
+                $comodato = $this->obter_comodato($id_maquina);
+                if (!$comodato) continue;
 
-            $modelo = ComodatosProdutos::firstOrNew([
-                "id_comodato" => $comodato->id,
-                "id_produto" => $id_produto
-            ]);
+                $modelo = ComodatosProdutos::firstOrNew([
+                    "id_comodato" => $comodato->id,
+                    "id_produto" => $id_produto
+                ]);
 
-            $lixeira = str_replace("opt-", "", $request->lixeira[$i]);
-            $preco = $request->preco[$i];
-            $maximo = $request->maximo[$i];
-            $minimo = $request->minimo[$i];
-            
-            $houveAlteracao = !$modelo->exists ||
-                $this->comparar_num($modelo->lixeira, $lixeira) ||
-                $this->comparar_num($modelo->preco, $preco) ||
-                $this->comparar_num($modelo->maximo, $maximo) ||
-                $this->comparar_num($modelo->minimo, $minimo);
+                $lixeira = str_replace("opt-", "", $request->lixeira[$i]);
+                $preco = $request->preco[$i];
+                $maximo = $request->maximo[$i];
+                $minimo = $request->minimo[$i];
+                
+                $houveAlteracao = !$modelo->exists ||
+                    $this->comparar_num($modelo->lixeira, $lixeira) ||
+                    $this->comparar_num($modelo->preco, $preco) ||
+                    $this->comparar_num($modelo->maximo, $maximo) ||
+                    $this->comparar_num($modelo->minimo, $minimo);
 
-            if ($houveAlteracao) {
-                $letra_log = $modelo->exists ? "E" : "C";
-                $modelo->preco = $preco;
-                $modelo->maximo = $maximo;
-                $modelo->minimo = $minimo;
-                $modelo->lixeira = $lixeira;
-                $modelo->save();
-                $this->log_inserir($letra_log, "comodatos_produtos", $modelo->id);
+                if ($houveAlteracao) {
+                    $letra_log = $modelo->exists ? "E" : "C";
+                    $modelo->preco = $preco;
+                    $modelo->maximo = $maximo;
+                    $modelo->minimo = $minimo;
+                    $modelo->lixeira = $lixeira;
+                    $modelo->save();
+                    $this->log_inserir($letra_log, "comodatos_produtos", $modelo->id);
+                }
+                
+                if ($this->gerar_atribuicoes($comodato)) array_push($maquinas_para_atualizar, $id_maquina);
             }
-            
-            if ($this->gerar_atribuicoes($comodato)) array_push($maquinas_para_atualizar, $id_maquina);
-        }
 
-        if (!empty($maquinas_para_atualizar)) $this->atualizar_tudo(array_unique($maquinas_para_atualizar), "M", true);
+            if (!empty($maquinas_para_atualizar)) $this->atualizar_tudo(array_unique($maquinas_para_atualizar), "M", true);
+            $connection->commit();
+            return "/".($contexto == "maquina" ? "maquinas" : "produtos");
+        } catch (\Exception $e) {    
+            $connection->rollBack();
+            return $e->getMessage();
+        }
     }
 
     //======================================================================
@@ -568,22 +578,28 @@ abstract class Controller extends BaseController {
 
     protected function atribuicao_atualiza_ref($id, $antigo, $novo, $nome = "", $api = false) {
         if ($id && $this->comparar_texto($antigo, $novo)) {
-            $novo = trim($novo);
-            $where = "referencia = '".$antigo."'";
-            $lista = DB::table("vatbold")
-                ->select(
-                    "psm_chave",
-                    "psm_valor"
-                )
-                ->whereRaw($where)
-                ->groupby(
-                    "psm_chave",
-                    "psm_valor"
-                )
-                ->get();
-            $this->log_inserir_lote($novo ? "E" : "D", "atribuicoes", $where, $api ? "ERP" : "WEB", $nome);
-            Atribuicoes::whereRaw($where)->update($novo ? ["referencia" => $novo] : ["lixeira" => 1]);
-            $this->atualizar_atribuicoes($lista);
+            try {
+                $novo = trim($novo);
+                $where = "referencia = '".$antigo."'";
+                $lista = DB::table("vatbold")
+                    ->select(
+                        "psm_chave",
+                        "psm_valor"
+                    )
+                    ->whereRaw($where)
+                    ->groupby(
+                        "psm_chave",
+                        "psm_valor"
+                    )
+                    ->get();
+                $this->log_inserir_lote($novo ? "E" : "D", "atribuicoes", $where, $api ? "ERP" : "WEB", $nome);
+                Atribuicoes::whereRaw($where)->update($novo ? ["referencia" => $novo] : ["lixeira" => 1]);
+                $this->atualizar_atribuicoes($lista);
+                $connection->commit();
+            } catch (\Exception $e) {
+                $connection->rollBack();
+                throw $e;
+            }
         }
     }
 
@@ -680,34 +696,7 @@ abstract class Controller extends BaseController {
     // Métodos que disparam procedures para atualizar dados consolidados, melhorando a performance de consultas.
     //======================================================================
 
-    protected function travar() {
-        DB::statement("
-            LOCK TABLES
-                mat_vcomodatos WRITE,
-                mat_vatbaux WRITE,
-                mat_vatribuicoes WRITE,
-                mat_vretiradas WRITE,
-                mat_vultretirada WRITE,
-                pessoas WRITE,
-                atribuicoes WRITE,
-                comodatos WRITE,
-                categorias WRITE,
-                produtos WRITE,
-                retiradas WRITE,
-                excecoes WRITE,
-                atbbkp WRITE,
-                excbkp WRITE,
-                setores WRITE,
-                empresas WRITE
-        ");
-    }
-
-    protected function destravar() {
-        DB::statement("UNLOCK TABLES");
-    }
-
     protected function atualizar_tudo($valor, $chave = "M", $completo = false) {
-        $this->travar();
         $valor_ant = $valor;
         if (is_iterable($valor)) $valor = implode(",", $valor);
         $valor = "'".$valor."'";
@@ -721,14 +710,11 @@ abstract class Controller extends BaseController {
         DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'R', 'N')");
         DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'U', 'N')");
         if ($completo) DB::statement("CALL excluir_atribuicao_sem_retirada()");
-        $this->destravar();
     }
 
     protected function atualizar_atribuicoes($consulta) {
-        $this->travar();
         foreach ($consulta as $linha) $this->atualizar_tudo($linha->psm_valor, $linha->psm_chave);
         DB::statement("CALL excluir_atribuicao_sem_retirada()");
-        $this->destravar();
     }
     
     //======================================================================

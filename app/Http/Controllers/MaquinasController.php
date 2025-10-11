@@ -460,39 +460,60 @@ class MaquinasController extends Controller {
     }
 
     public function criar_comodato(Request $request) {
-        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
-        if ($this->consultar_comodato_main($request)->texto) return 401;
+        if ($this->obter_empresa()) return $this->view_mensagem("error", "Operação não permitida"); // App\Http\Controllers\Controller.php
+        $erro = $this->consultar_comodato_main($request)->texto;
+        if ($erro) return $this->view_mensagem("error", $erro); // App\Http\Controllers\Controller.php
+                
         $dtinicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
         $dtfim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
         
-        $linha = new Comodatos;
-        $linha->id_maquina = $request->id_maquina;
-        $linha->id_empresa = $request->id_empresa;
-        $linha->inicio = $dtinicio;
-        $linha->fim = $dtfim;
-        $linha->fim_orig = $dtfim;
-        $linha->travar_ret = $request->travar_ret;
-        $linha->travar_estq = $request->travar_estq;
-        $linha->atb_todos = $request->atb_todos;
-        $linha->qtd = $request->qtd;
-        $linha->obrigatorio = str_replace("opt-", "", $request->obrigatorio);
-        $linha->validade = $request->validade;
-        $linha->save();
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            $linha = new Comodatos;
+            $linha->id_maquina = $request->id_maquina;
+            $linha->id_empresa = $request->id_empresa;
+            $linha->inicio = $dtinicio;
+            $linha->fim = $dtfim;
+            $linha->fim_orig = $dtfim;
+            $linha->travar_ret = $request->travar_ret;
+            $linha->travar_estq = $request->travar_estq;
+            $linha->atb_todos = $request->atb_todos;
+            $linha->qtd = $request->qtd;
+            $linha->obrigatorio = str_replace("opt-", "", $request->obrigatorio);
+            $linha->validade = $request->validade;
+            $linha->save();
 
-        if ($this->gerar_atribuicoes($comodato)) $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
+            if ($this->gerar_atribuicoes($linha)) $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
 
-        $this->log_inserir("C", "comodatos", $comodato->id); // App\Http\Controllers\Controller.php
-        return redirect("/maquinas");
+            $this->log_inserir("C", "comodatos", $linha->id); // App\Http\Controllers\Controller.php
+            
+            $connection->commit();
+            return redirect("/maquinas");
+        } catch (\Exception $e) {    
+            $connection->rollBack();
+            return $this->view_mensagem("error", $e->getMessage()); // App\Http\Controllers\Controller.php
+        }
     }
 
     public function encerrar_comodato(Request $request) {
-        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
-        $modelo = $this->obter_comodato($request->id_maquina); // App\Http\Controllers\Controller.php
-        $modelo->fim = date('Y-m-d');
-        $modelo->save();
-        $this->log_inserir("E", "comodatos", $modelo->id); // App\Http\Controllers\Controller.php
-        if ($this->gerar_atribuicoes($modelo)) $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
-        return redirect("/maquinas");
+        if ($this->obter_empresa()) return $this->view_mensagem("error", "Operação não permitida"); // App\Http\Controllers\Controller.php
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            $modelo = $this->obter_comodato($request->id_maquina); // App\Http\Controllers\Controller.php
+            $modelo->fim = date('Y-m-d');
+            $modelo->save();
+            $this->log_inserir("E", "comodatos", $modelo->id); // App\Http\Controllers\Controller.php
+            if ($this->gerar_atribuicoes($modelo)) $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
+            $connection->commit();
+            return redirect("/maquinas");
+        } catch (\Exception $e) {    
+            $connection->rollBack();
+            return $this->view_mensagem("error", $e->getMessage()); // App\Http\Controllers\Controller.php
+        }
     }
 
     public function mostrar_comodato($id_maquina) {
@@ -520,23 +541,32 @@ class MaquinasController extends Controller {
     }
 
     public function editar_comodato(Request $request) {
-        if (!Permissoes::where("id_usuario", Auth::user()->id)->first()->atribuicoes) return 401;
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->first()->atribuicoes) return $this->view_mensagem("error", "Operação não permitida"); // App\Http\Controllers\Controller.php
         $obrigatorio = str_replace("opt-", "", $request->obrigatorio);
-        $comodato = $this->obter_comodato($request->id_maquina); // App\Http\Controllers\Controller.php
-        $atb_todos_ant = $comodato->atb_todos_ant;
-        $comodato->travar_ret = $request->travar_ret;
-        $comodato->travar_estq = $request->travar_estq;
-        $comodato->atb_todos = $request->atb_todos;
-        $comodato->qtd = $request->qtd;
-        $comodato->obrigatorio = $obrigatorio;
-        $comodato->validade = $request->validade;
-        $comodato->save();
-        $this->log_inserir("E", "comodatos", $comodato->id); // App\Http\Controllers\Controller.php
-        if ($this->comparar_num($atb_todos_ant, $request->atb_todos)) { // App\Http\Controllers\Controller.php
-            $this->gerar_atribuicoes($comodato); // App\Http\Controllers\Controller.php
-            $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            $comodato = $this->obter_comodato($request->id_maquina); // App\Http\Controllers\Controller.php
+            $atb_todos_ant = $comodato->atb_todos_ant;
+            $comodato->travar_ret = $request->travar_ret;
+            $comodato->travar_estq = $request->travar_estq;
+            $comodato->atb_todos = $request->atb_todos;
+            $comodato->qtd = $request->qtd;
+            $comodato->obrigatorio = $obrigatorio;
+            $comodato->validade = $request->validade;
+            $comodato->save();
+            $this->log_inserir("E", "comodatos", $comodato->id); // App\Http\Controllers\Controller.php
+            if ($this->comparar_num($atb_todos_ant, $request->atb_todos)) { // App\Http\Controllers\Controller.php
+                $this->gerar_atribuicoes($comodato); // App\Http\Controllers\Controller.php
+                $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
+            }
+            $connection->commit();
+            return redirect("/maquinas");
+        } catch (\Exception $e) {    
+            $connection->rollBack();
+            return $this->view_mensagem("error", $e->getMessage()); // App\Http\Controllers\Controller.php
         }
-        return redirect("/maquinas");
     }
 
     public function produto(Request $request) {
@@ -551,8 +581,9 @@ class MaquinasController extends Controller {
             $request->maximo
         )->texto) return 401;
         
-        $this->salvar_comodatos_produtos("maquina", $request); // App\Http\Controllers\Controller.php
-        return redirect("/maquinas");
+        $salvamento = $this->salvar_comodatos_produtos("maquina", $request); // App\Http\Controllers\Controller.php
+        if ($salvamento == "/maquinas") return redirect($salvamento);
+        return $this->view_mensagem("error", $salvamento); // App\Http\Controllers\Controller.php
     }
 
     public function verificar_novo_cp(Request $request) {

@@ -26,7 +26,13 @@ class RetiradasController extends Controller {
     }
 
     public function salvar(Request $request) {
-        if ($this->permitir() == 401) return 401;
+        $resultado = new \stdClass;
+        $resultado->icon = "success";
+        if ($this->permitir() == 401) {
+            $resultado->icon = "error";
+            $resultado->msg = "Operação não autorizada";
+            return json_encode($resultado);
+        }
         $json = array(
             "id_pessoa" => $request->pessoa,
             "id_atribuicao" => $request->atribuicao,
@@ -36,11 +42,20 @@ class RetiradasController extends Controller {
             "data" => Carbon::createFromFormat('d/m/Y', $request->data)->format('Y-m-d')
         );
         if (intval($request->supervisor)) $json["id_supervisor"] = $request->supervisor;
-        $this->travar(); // App\Http\Controllers\Controller.php
-        $this->retirada_salvar($json); // App\Http\Controllers\Controller.php
-        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request->pessoa.", 'R', 'N')");
-        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request->pessoa.", 'U', 'N')");
-        $this->destravar(); // App\Http\Controllers\Controller.php
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            $this->retirada_salvar($json); // App\Http\Controllers\Controller.php
+            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request->pessoa.", 'R', 'N')");
+            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request->pessoa.", 'U', 'N')");
+            $connection->commit();
+        } catch (\Exception $e) {
+            $connection->rollBack();
+            $resultado->icon = "error";
+            $resultado->msg = $e->getMessage();
+        }
+        return json_encode($resultado);
     }
 
     public function desfazer(Request $request) {

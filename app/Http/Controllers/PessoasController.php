@@ -208,7 +208,7 @@ class PessoasController extends ControllerListavel {
         $minhas_permissoes = Permissoes::where("id_usuario", Auth::user()->id)->first();
         $permissao = $minhas_permissoes->pessoas;
         if ($conferir_email) $permissao = $minhas_permissoes->usuarios;
-        if (!$permissao) return 401;
+        if (!$permissao) return $this->view_mensagem("error", "Operação não permitida"); // App\Http\Controllers\Controller.php
         $obrigatorios = array();
         $nao_tem_usuario = DB::table("users")
                                 ->where("id_pessoa", $request->id)
@@ -222,17 +222,19 @@ class PessoasController extends ControllerListavel {
             if (!$request->id) array_push($obrigatorios, "senha");
             if ($conferir_email && ($nao_tem_usuario || !$request->id)) array_push($obrigatorios, "password");
         }
-        if ($conferir_email && !filter_var($request->email, FILTER_VALIDATE_EMAIL)) return 400;
-        if ($this->verifica_vazios($request, $obrigatorios)) return 400; // App\Http\Controllers\Controller.php
+        if ($conferir_email && !filter_var($request->email, FILTER_VALIDATE_EMAIL)) return $this->view_mensagem("warning", "E-mail inválido"); // App\Http\Controllers\Controller.php
+        $vazio = $this->verifica_vazios($request, $obrigatorios);
+        if ($vazio) return $this->view_mensagem("warning", "Campo obrigatório vazio: ".$vazio); // App\Http\Controllers\Controller.php
 
         if ($request->admissao) {
             $admissao = Carbon::createFromFormat('d/m/Y', $request->admissao)->startOfDay();
             $hj = Carbon::today();
-            if ($admissao->greaterThan($hj)) return 400;
+            if ($admissao->greaterThan($hj)) return $this->view_mensagem("warning", "A admissão não pode ser no futuro"); // App\Http\Controllers\Controller.php
         }
-        if ($this->consultar_main($request)->tipo != "ok") return 401;
+        $consulta = $this->consultar_main($request);
+        if ($consulta->tipo != "ok") return $this->view_mensagem("warning", "Já existe um registro com esse ".$consulta->dado); // App\Http\Controllers\Controller.php
 
-        if ($this->validar_permissoes($request) != 200) return 401; // App\Http\Controllers\Controller.php
+        if ($this->validar_permissoes($request) != 200) return $this->view_mensagem("warning", "Não se pode atribuir a uma pessoa uma permissão que seu usuário não tem"); // App\Http\Controllers\Controller.php
 
         $empresas_possiveis_arr = array();
         if ($this->obter_empresa()) { // App\Http\Controllers\Controller.php
@@ -243,101 +245,110 @@ class PessoasController extends ControllerListavel {
                 $filiais = $matriz->filiais;
                 foreach ($filiais as $filial) array_push($empresas_possiveis_arr, intval($filial->id));
             }
-            if (!in_array(intval($request->id_empresa), $empresas_possiveis_arr)) return 401;
+            if (!in_array(intval($request->id_empresa), $empresas_possiveis_arr)) return $this->view_mensagem("warning", "A empresa da pessoa não é permitida"); // App\Http\Controllers\Controller.php
             if ($m_setor !== null) {
-                if (!in_array(intval($m_setor->id_empresa), $empresas_possiveis_arr)) return 401;
+                if (!in_array(intval($m_setor->id_empresa), $empresas_possiveis_arr)) return $this->view_mensagem("warning", "A empresa do setor não é permitida"); // App\Http\Controllers\Controller.php
             }
         }
 
-        $pessoa = Pessoas::firstOrNew(["id" => $request->id]);
-        if ($pessoa !== null) {
-            $m_setor = Setores::find($pessoa->id_setor);
-            if ($m_setor !== null) array_push($setores, $m_setor->id);
-        }
-        $pessoa->nome = mb_strtoupper($request->nome);
-        $pessoa->cpf = $request->cpf;
-        $pessoa->funcao = mb_strtoupper($request->funcao);
-        $pessoa->admissao = $request->admissao ? Carbon::createFromFormat('d/m/Y', $request->admissao)->format('Y-m-d') : null;
-        $pessoa->id_empresa = $request->id_empresa;
-        $pessoa->id_setor = $setor;
-        if (trim($request->senha)) $pessoa->senha = $request->senha;
-        $pessoa->supervisor = $request->supervisor;
-        if ($request->file("foto")) $pessoa->foto = $request->file("foto")->store("uploads", "public");
-        $pessoa->telefone = $request->telefone;
-        $pessoa->email = $request->email;
-        $pessoa->save();
-        $this->log_inserir($request->id ? "E" : "C", "pessoas", $pessoa->id); // App\Http\Controllers\Controller.php
-
-        $usuario = DB::table("users")
-                            ->select(
-                                "id",
-                                "email"
-                            )
-                            ->where("id_pessoa", $pessoa->id)
-                            ->first();
-        $cria_usuario = true;
-        if ($pessoa->setor !== null) $cria_usuario = $pessoa->setor->cria_usuario;
-        if ($cria_usuario) {
-            $json_usuario = array();
-            $id_usuario = 0;
-            $password = trim($request->password);
-            $email = trim($request->email);
-            if ($password) $json_usuario += ["password" => Hash::make($password)];
-
-            if ($usuario !== null) {
-                if ($email != $usuario->email && $email) $json_usuario += ["email" => $email];
-            } elseif ($email) $json_usuario += ["email" => $email];
-
-            if ($usuario === null) {
-                $json_usuario += [
-                    "id_pessoa" => $pessoa->id,
-                    "name" => $request->nome
-                ];
-                $id_usuario = DB::table("users")->insertGetId($json_usuario);
-            } else {
-                DB::table("users")->where("id", $usuario->id)->update($json_usuario);
-                $id_usuario = $usuario->id;
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            $pessoa = Pessoas::firstOrNew(["id" => $request->id]);
+            if ($pessoa !== null) {
+                $m_setor = Setores::find($pessoa->id_setor);
+                if ($m_setor !== null) array_push($setores, $m_setor->id);
             }
-            $this->log_inserir($usuario === null ? "C" : "E", "users", $id_usuario); // App\Http\Controllers\Controller.php
-            $permissao = Permissoes::updateOrCreate(
-                ["id_usuario" => $id_usuario],
-                [
-                    "financeiro" => $request->financeiro,
-                    "atribuicoes" => $request->atribuicoes,
-                    "retiradas" => $request->retiradas,
-                    "pessoas" => $request->pessoas,
-                    "usuarios" => $request->usuarios,
-                    "solicitacoes" => $request->solicitacoes,
-                    "supervisor" => $request->supervisor
-                ]
-            );
-            $this->log_inserir($usuario === null ? "C" : "E", "permissoes", $permissao->id); // App\Http\Controllers\Controller.php
-        } elseif ($usuario !== null) {
-            $this->log_inserir("D", "users", $usuario->id); // App\Http\Controllers\Controller.php
-            DB::table("users")->where("id", $usuario->id)->delete();
+            $pessoa->nome = mb_strtoupper($request->nome);
+            $pessoa->cpf = $request->cpf;
+            $pessoa->funcao = mb_strtoupper($request->funcao);
+            $pessoa->admissao = $request->admissao ? Carbon::createFromFormat('d/m/Y', $request->admissao)->format('Y-m-d') : null;
+            $pessoa->id_empresa = $request->id_empresa;
+            $pessoa->id_setor = $setor;
+            if (trim($request->senha)) $pessoa->senha = $request->senha;
+            $pessoa->supervisor = $request->supervisor;
+            if ($request->file("foto")) $pessoa->foto = $request->file("foto")->store("uploads", "public");
+            $pessoa->telefone = $request->telefone;
+            $pessoa->email = $request->email;
+            $pessoa->save();
+            $this->log_inserir($request->id ? "E" : "C", "pessoas", $pessoa->id); // App\Http\Controllers\Controller.php
+
+            $usuario = DB::table("users")
+                                ->select(
+                                    "id",
+                                    "email"
+                                )
+                                ->where("id_pessoa", $pessoa->id)
+                                ->first();
+            $cria_usuario = true;
+            if ($pessoa->setor !== null) $cria_usuario = $pessoa->setor->cria_usuario;
+            if ($cria_usuario) {
+                $json_usuario = array();
+                $id_usuario = 0;
+                $password = trim($request->password);
+                $email = trim($request->email);
+                if ($password) $json_usuario += ["password" => Hash::make($password)];
+
+                if ($usuario !== null) {
+                    if ($email != $usuario->email && $email) $json_usuario += ["email" => $email];
+                } elseif ($email) $json_usuario += ["email" => $email];
+
+                if ($usuario === null) {
+                    $json_usuario += [
+                        "id_pessoa" => $pessoa->id,
+                        "name" => $request->nome
+                    ];
+                    $id_usuario = DB::table("users")->insertGetId($json_usuario);
+                } else {
+                    DB::table("users")->where("id", $usuario->id)->update($json_usuario);
+                    $id_usuario = $usuario->id;
+                }
+                $this->log_inserir($usuario === null ? "C" : "E", "users", $id_usuario); // App\Http\Controllers\Controller.php
+                $permissao = Permissoes::updateOrCreate(
+                    ["id_usuario" => $id_usuario],
+                    [
+                        "financeiro" => $request->financeiro,
+                        "atribuicoes" => $request->atribuicoes,
+                        "retiradas" => $request->retiradas,
+                        "pessoas" => $request->pessoas,
+                        "usuarios" => $request->usuarios,
+                        "solicitacoes" => $request->solicitacoes,
+                        "supervisor" => $request->supervisor
+                    ]
+                );
+                $this->log_inserir($usuario === null ? "C" : "E", "permissoes", $permissao->id); // App\Http\Controllers\Controller.php
+            } elseif ($usuario !== null) {
+                $this->log_inserir("D", "users", $usuario->id); // App\Http\Controllers\Controller.php
+                DB::table("users")->where("id", $usuario->id)->delete();
+            }
+            if ($request->id || 
+                !DB::table("vativos")
+                    ->where("id", $request->id)
+                    ->where("atb_todos", ">", 0)
+                    ->exists()
+            ) {
+                $this->atualizar_atribuicoes(
+                    DB::table("vatbold")
+                        ->select(
+                            "psm_chave",
+                            "psm_valor"
+                        )
+                        ->where("psm_chave", "S")
+                        ->whereIn("psm_valor", $setores)
+                        ->groupby(
+                            "psm_chave",
+                            "psm_valor"
+                        )
+                        ->get()
+                ); // App\Http\Controllers\Controller.php
+            } else $this->atualizar_tudo(explode(",", $this->maquinas_da_pessoa($linha->id)), "M", true); // App\Http\Controllers\Controller.php
+            $connection->commit();
+            return redirect("/colaboradores/pagina/".substr(strtoupper($this->nomear($pessoa->id)), 0, 1)); // App\Http\Traits\NomearTrait.php
+        } catch (\Exception $e) {    
+            $connection->rollBack();
+            return $this->view_mensagem("error", $e->getMessage()); // App\Http\Controllers\Controller.php
         }
-        if ($request->id || 
-            !DB::table("vativos")
-                ->where("id", $request->id)
-                ->where("atb_todos", ">", 0)
-                ->exists()
-        ) {
-            $this->atualizar_atribuicoes(
-                DB::table("vatbold")
-                    ->select(
-                        "psm_chave",
-                        "psm_valor"
-                    )
-                    ->where("psm_chave", "S")
-                    ->whereIn("psm_valor", $setores)
-                    ->groupby(
-                        "psm_chave",
-                        "psm_valor"
-                    )
-                    ->get()
-            ); // App\Http\Controllers\Controller.php
-        } else $this->atualizar_tudo(explode(",", $this->maquinas_da_pessoa($linha->id)), "M", true); // App\Http\Controllers\Controller.php
-        return redirect("/colaboradores/pagina/".substr(strtoupper($this->nomear($pessoa->id)), 0, 1)); // App\Http\Traits\NomearTrait.php
     }
 
     public function aviso($id) {
@@ -363,30 +374,47 @@ class PessoasController extends ControllerListavel {
     }
 
     public function alterar_empresa(Request $request) {
-        if (!intval(Auth::user()->admin)) return 401;
-        $pessoa = Pessoas::find(Auth::user()->id_pessoa);
-        $pessoa->id_empresa = $request->idEmpresa;
-        $pessoa->id_setor = intval($request->idEmpresa) ? 
-            DB::table("setores")
-                ->select("setores.id")
-                ->join("log", function($join) {
-                    $join->on("log.fk", "setores.id")
-                        ->where("log.tabela", "setores");
-                })
-                ->join("permissoes", "permissoes.id_setor", "setores.id")
-                ->where("log.origem", "SYS")
-                ->where("permissoes.financeiro", 1)
-                ->where("permissoes.atribuicoes", 1)
-                ->where("permissoes.retiradas", 1)
-                ->where("permissoes.pessoas", 1)
-                ->where("permissoes.usuarios", 1)
-                ->where("permissoes.solicitacoes", 1)
-                ->where("permissoes.supervisor", 1)
-                ->where("setores.id_empresa", $request->idEmpresa)
-                ->value("id")
-        : 0;
-        $pessoa->save();
-        $this->atualizar_tudo(explode(",", $this->maquinas_da_pessoa($pessoa->id)), "M", true); // App\Http\Controllers\Controller.php
+        $resultado = new \stdClass;
+        if (!intval(Auth::user()->admin)) {
+            $resultado->icon = "error";
+            $resultado->msg = "Operação não permitida";
+            return json_encode($resultado);
+        }
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            $pessoa = Pessoas::find(Auth::user()->id_pessoa);
+            $pessoa->id_empresa = $request->idEmpresa;
+            $pessoa->id_setor = intval($request->idEmpresa) ? 
+                DB::table("setores")
+                    ->select("setores.id")
+                    ->join("log", function($join) {
+                        $join->on("log.fk", "setores.id")
+                            ->where("log.tabela", "setores");
+                    })
+                    ->join("permissoes", "permissoes.id_setor", "setores.id")
+                    ->where("log.origem", "SYS")
+                    ->where("permissoes.financeiro", 1)
+                    ->where("permissoes.atribuicoes", 1)
+                    ->where("permissoes.retiradas", 1)
+                    ->where("permissoes.pessoas", 1)
+                    ->where("permissoes.usuarios", 1)
+                    ->where("permissoes.solicitacoes", 1)
+                    ->where("permissoes.supervisor", 1)
+                    ->where("setores.id_empresa", $request->idEmpresa)
+                    ->value("id")
+            : 0;
+            $pessoa->save();
+            $this->atualizar_tudo(explode(",", $this->maquinas_da_pessoa($pessoa->id)), "M", true); // App\Http\Controllers\Controller.php
+            $connection->commit();
+            $resultado->icon = "success";
+        } catch (\Exception $e) {    
+            $connection->rollBack();
+            $resultado->icon = "error";
+            $resultado->msg = $e->getMessage();
+        }
+        return json_encode($resultado);
     }
 
     public function senha(Request $request) {

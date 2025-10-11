@@ -236,102 +236,119 @@ class AtribuicoesController extends Controller {
     }
 
     public function recalcular() {
-        if (!Permissoes::where("id_usuario", Auth::user()->id)->first()->atribuicoes) return 401;
+        $resultado = new \stdClass;
+        if (!Permissoes::where("id_usuario", Auth::user()->id)->first()->atribuicoes) {
+            $resultado->icon = "error";
+            $resultado->msg = "Operação não permitida";
+            return json_encode($resultado);
+        }
         $tabelas = ["atribuicoes", "excecoes"];
         $where = "id_usuario = ".Auth::user()->id;
-        foreach ($tabelas as $tabela) {
-            DB::table($tabela)
-                ->whereRaw($where)
-                ->where("rascunho", "R")
-                ->update(["rascunho" => "T"]);
-            $this->apagar_backup($tabela);
-        }
-        $lista = DB::table("vatbold")
-                    ->select(
-                        "psm_chave",
-                        "psm_valor"
-                    )
-                    ->joinSub(
-                        DB::table("atribuicoes")
-                            ->select("id")
-                            ->whereRaw($where)
-                            ->where("rascunho", "<>", "S")
-                            ->unionAll(
-                                DB::table("excecoes")
-                                    ->select("id_atribuicao")
-                                    ->whereRaw($where)
-                                    ->where("rascunho", "<>", "S")
-                            ),
-                        "lim",
-                        "lim.id",
-                        "vatbold.id"
-                    )
-                    ->groupby(
-                        "psm_chave",
-                        "psm_valor"
-                    )
-                    ->get();
-        $consulta = DB::table("vatbold")
-                        ->whereRaw($where)
-                        ->where("rascunho", "C")
-                        ->get();
-        foreach ($consulta as $linha) {
-            $id_excluir = $linha->id;
-            $id_restaurar = Atribuicoes::where("rascunho", "S")
-                                ->where("lixeira", 1)
-                                ->whereRaw("
-                                    (CASE
-                                        WHEN cod_produto IS NOT NULL THEN 'P'
-                                        ELSE 'R'
-                                    END) = '".$linha->pr_chave."'"
-                                )
-                                ->whereRaw("
-                                    (CASE
-                                        WHEN cod_produto IS NOT NULL THEN cod_produto
-                                        ELSE referencia
-                                    END) = '".$linha->pr_valor."'"
-                                )
-                                ->whereRaw("
-                                    (CASE
-                                        WHEN id_pessoa IS NOT NULL THEN 'P'
-                                        WHEN id_setor IS NOT NULL THEN 'S'
-                                        ELSE 'M'
-                                    END) = '".$linha->psm_chave."'"
-                                )
-                                ->whereRaw("
-                                    (CASE
-                                        WHEN id_pessoa IS NOT NULL THEN id_pessoa
-                                        WHEN id_setor IS NOT NULL THEN id_setor
-                                        ELSE id_maquina
-                                    END) = '".$linha->psm_valor."'"
-                                )
-                                ->value("id");
-            if ($id_restaurar !== null) {
-                $modelo = Atribuicoes::find($id_excluir);
-                $modelo->delete();
-                $modelo = Atribuicoes::find($id_restaurar);
-                $modelo->lixeira = 0;
-                $modelo->rascunho = "S";
-                $this->salvar_main($modelo, $linha->qtd, $linha->validade, $linha->obrigatorio);
-                $this->log_inserir("E", "atribuicoes", $modelo->id);
-                Log::where("fk", $id_excluir)
-                    ->where("acao", "D")
-                    ->where("tabela", "atribuicoes")
-                    ->delete();
+
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            foreach ($tabelas as $tabela) {
+                DB::table($tabela)
+                    ->whereRaw($where)
+                    ->where("rascunho", "R")
+                    ->update(["rascunho" => "T"]);
+                $this->apagar_backup($tabela);
             }
+            $lista = DB::table("vatbold")
+                        ->select(
+                            "psm_chave",
+                            "psm_valor"
+                        )
+                        ->joinSub(
+                            DB::table("atribuicoes")
+                                ->select("id")
+                                ->whereRaw($where)
+                                ->where("rascunho", "<>", "S")
+                                ->unionAll(
+                                    DB::table("excecoes")
+                                        ->select("id_atribuicao")
+                                        ->whereRaw($where)
+                                        ->where("rascunho", "<>", "S")
+                                ),
+                            "lim",
+                            "lim.id",
+                            "vatbold.id"
+                        )
+                        ->groupby(
+                            "psm_chave",
+                            "psm_valor"
+                        )
+                        ->get();
+            $consulta = DB::table("vatbold")
+                            ->whereRaw($where)
+                            ->where("rascunho", "C")
+                            ->get();
+            foreach ($consulta as $linha) {
+                $id_excluir = $linha->id;
+                $id_restaurar = Atribuicoes::where("rascunho", "S")
+                                    ->where("lixeira", 1)
+                                    ->whereRaw("
+                                        (CASE
+                                            WHEN cod_produto IS NOT NULL THEN 'P'
+                                            ELSE 'R'
+                                        END) = '".$linha->pr_chave."'"
+                                    )
+                                    ->whereRaw("
+                                        (CASE
+                                            WHEN cod_produto IS NOT NULL THEN cod_produto
+                                            ELSE referencia
+                                        END) = '".$linha->pr_valor."'"
+                                    )
+                                    ->whereRaw("
+                                        (CASE
+                                            WHEN id_pessoa IS NOT NULL THEN 'P'
+                                            WHEN id_setor IS NOT NULL THEN 'S'
+                                            ELSE 'M'
+                                        END) = '".$linha->psm_chave."'"
+                                    )
+                                    ->whereRaw("
+                                        (CASE
+                                            WHEN id_pessoa IS NOT NULL THEN id_pessoa
+                                            WHEN id_setor IS NOT NULL THEN id_setor
+                                            ELSE id_maquina
+                                        END) = '".$linha->psm_valor."'"
+                                    )
+                                    ->value("id");
+                if ($id_restaurar !== null) {
+                    $modelo = Atribuicoes::find($id_excluir);
+                    $modelo->delete();
+                    $modelo = Atribuicoes::find($id_restaurar);
+                    $modelo->lixeira = 0;
+                    $modelo->rascunho = "S";
+                    $this->salvar_main($modelo, $linha->qtd, $linha->validade, $linha->obrigatorio);
+                    $this->log_inserir("E", "atribuicoes", $modelo->id);
+                    Log::where("fk", $id_excluir)
+                        ->where("acao", "D")
+                        ->where("tabela", "atribuicoes")
+                        ->delete();
+                }
+            }
+            foreach ($tabelas as $tabela) {
+                $acoes = ["C", "E", "D"];
+                foreach ($acoes as $acao) $this->log_inserir_lote($acao, $tabela, $where." AND rascunho = '".($acao != "D" ? $acao : "T")."'"); // App\Http\Controllers\Controller.php
+                DB::table($tabela)
+                    ->whereRaw($where)
+                    ->where("rascunho", "<>", "S")
+                    ->update([
+                        'lixeira' => DB::raw("CASE WHEN (rascunho = 'T') THEN 1 ELSE 0 END"),
+                        'rascunho' => 'S'
+                ]);
+            }
+            $this->atualizar_atribuicoes($lista); // App\Http\Controllers\Controller.php
+            $connection->commit();
+            $resultado->icon = "success";
+        } catch (\Exception $e) {
+            $connection->rollBack();
+            $resultado->icon = "error";
+            $resultado->msg = $e->getMessage();
         }
-        foreach ($tabelas as $tabela) {
-            $acoes = ["C", "E", "D"];
-            foreach ($acoes as $acao) $this->log_inserir_lote($acao, $tabela, $where." AND rascunho = '".($acao != "D" ? $acao : "T")."'"); // App\Http\Controllers\Controller.php
-            DB::table($tabela)
-                ->whereRaw($where)
-                ->where("rascunho", "<>", "S")
-                ->update([
-                    'lixeira' => DB::raw("CASE WHEN (rascunho = 'T') THEN 1 ELSE 0 END"),
-                    'rascunho' => 'S'
-               ]);
-        }
-        $this->atualizar_atribuicoes($lista); // App\Http\Controllers\Controller.php
     }
 
     public function descartar() {

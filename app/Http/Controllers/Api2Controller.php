@@ -182,14 +182,23 @@ class Api2Controller extends Controller {
 
     private function alterar_solicitacao(Request $request, $status) {
         if ($request->token != config("app.key")) return 401;
-        $solicitacao = Solicitacoes::find($request->id);
-        $solicitacao->data = $status == "E" ? Carbon::createFromFormat('d-m-Y', $request->prazo)->format('Y-m-d') : date("Y-m-d");
-        $solicitacao->status = $status;
-        $solicitacao->avisou = 0;
-        $solicitacao->usuario_erp = $request->usu;
-        $solicitacao->save();
-        $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
-        return 200;
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            $solicitacao = Solicitacoes::find($request->id);
+            $solicitacao->data = $status == "E" ? Carbon::createFromFormat('d-m-Y', $request->prazo)->format('Y-m-d') : date("Y-m-d");
+            $solicitacao->status = $status;
+            $solicitacao->avisou = 0;
+            $solicitacao->usuario_erp = $request->usu;
+            $solicitacao->save();
+            $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
+            $connection->commit();
+            return 200;
+        } catch (\Exception $e) {    
+            $connection->rollBack();
+            return 500;
+        }
     }
 
     public function maquinas_por_cliente(Request $request) {
@@ -234,6 +243,7 @@ class Api2Controller extends Controller {
         $id_empresa = Empresas::where("cnpj", $cnpj)->orWhere("cod_externo", $request->emp_cod)->value("id");
         $continua = false;
         $empresa = null;
+                
         if ($id_empresa !== null) {
             $empresa = Empresas::find($id_empresa);
             if (intval($empresa->lixeira)) return "EXCLUIDO";
@@ -256,8 +266,18 @@ class Api2Controller extends Controller {
         $maquina->descr = mb_strtoupper($request->maq);
         $maquina->save();
         $this->log_inserir("C", "maquinas", $maquina->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
-        $comodato = $this->criar_comodato_main($maquina->id, $empresa->id, str_replace("-", "/", $request->ini), str_replace("-", "/", $request->fim)); // App\Http\Controllers\Controller.php
+
+        $dtinicio = Carbon::createFromFormat('d-m-Y', $request->inicio)->format('Y-m-d');
+        $dtfim = Carbon::createFromFormat('d-m-Y', $request->fim)->format('Y-m-d');
+        $comodato = new Comodatos;
+        $comodato->id_maquina = $maquina->id;
+        $comodato->id_empresa = $empresa->id;
+        $comodato->inicio = $dtinicio;
+        $comodato->fim = $dtfim;
+        $comodato->fim_orig = $dtfim;
+        $comodato->save();
         $this->log_inserir("C", "comodatos", $comodato->id, "ERP", $request->usu);
+
         return $empresa->id;
     }
 
@@ -365,39 +385,57 @@ class Api2Controller extends Controller {
 
     public function gravar_solicitacao(Request $request) {
         if ($request->token != config("app.key")) return 401;
-        foreach($request->solicitacoes as $req_solicitacao) {
-            $solicitacao = Solicitacoes::find($req_solicitacao["id"]);
-            $solicitacao->id_externo = $req_solicitacao["recntf"];
-            $solicitacao->save();
-            $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            foreach($request->solicitacoes as $req_solicitacao) {
+                $solicitacao = Solicitacoes::find($req_solicitacao["id"]);
+                $solicitacao->id_externo = $req_solicitacao["recntf"];
+                $solicitacao->save();
+                $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
+            }
+            $connection->commit();
+            return 200;
+        } catch (\Exception $e) {    
+            $connection->rollBack();
+            return 500;
         }
-        return 200;
     }
 
     public function gravar_inexistentes(Request $request) {
         if ($request->token != config("app.key")) return 401;
-        foreach($request->produtos as $req_sp) {
-            $consulta = DB::table("solicitacoes_produtos AS sp")
-                ->select(
-                    "sp.id",
-                    "produtos.descr"
-                )
-                ->join("produtos", "produtos.id", "sp.id_produto_orig")
-                ->where("produtos.cod_externo", $req_sp["cod"])
-                ->where("sp.id_solicitacao", $req_sp["id_solicitacao"])
-                ->get();
-            $sp = SolicitacoesProdutos::find($consulta[0]->id);
-            $sp->obs = "Item removido: ".$req_sp["cod"]." - ".$consulta[0]->descr."|".config("app.msg_inexistente");
-            $sp->save();
-            $this->log_inserir("E", "solicitacoes_produtos", $sp->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
-            $solicitacao = Solicitacoes::find($req_sp["id_solicitacao"]);
-            if (intval($solicitacao->avisou)) {
-                $solicitacao->avisou = 0;
-                $solicitacao->save();
-                $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            foreach($request->produtos as $req_sp) {
+                $consulta = DB::table("solicitacoes_produtos AS sp")
+                    ->select(
+                        "sp.id",
+                        "produtos.descr"
+                    )
+                    ->join("produtos", "produtos.id", "sp.id_produto_orig")
+                    ->where("produtos.cod_externo", $req_sp["cod"])
+                    ->where("sp.id_solicitacao", $req_sp["id_solicitacao"])
+                    ->get();
+                $sp = SolicitacoesProdutos::find($consulta[0]->id);
+                $sp->obs = "Item removido: ".$req_sp["cod"]." - ".$consulta[0]->descr."|".config("app.msg_inexistente");
+                $sp->save();
+                $this->log_inserir("E", "solicitacoes_produtos", $sp->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
+                $solicitacao = Solicitacoes::find($req_sp["id_solicitacao"]);
+                if (intval($solicitacao->avisou)) {
+                    $solicitacao->avisou = 0;
+                    $solicitacao->save();
+                    $this->log_inserir("E", "solicitacoes", $solicitacao->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
+                }
             }
+            $connection->commit();
+            return 200;
+        } catch (\Exception $e) {    
+            $connection->rollBack();
+            return 500;
         }
-        return 200;
     }
 
     public function aceitar_solicitacao(Request $request) {
@@ -501,13 +539,22 @@ class Api2Controller extends Controller {
 
     public function salvar_retirada(Request $request) {
         if ($request->token != config("app.key")) return 401;
-        foreach($request->retiradas as $req_retirada_arr) {
-            $req_retirada = (object) $req_retirada_arr;
-            $retirada = Retiradas::find($req_retirada->id);
-            $retirada->numero_ped = $req_retirada->cod_ods;
-            $retirada->save();
-            $this->log_inserir("E", "retiradas", $retirada->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            foreach($request->retiradas as $req_retirada_arr) {
+                $req_retirada = (object) $req_retirada_arr;
+                $retirada = Retiradas::find($req_retirada->id);
+                $retirada->numero_ped = $req_retirada->cod_ods;
+                $retirada->save();
+                $this->log_inserir("E", "retiradas", $retirada->id, "ERP", $request->usu); // App\Http\Controllers\Controller.php
+            }
+            $connection->commit();
+            return 200;
+        } catch (\Exception $e) {    
+            $connection->rollBack();
+            return 500;
         }
-        return 200;
     }
 }

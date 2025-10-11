@@ -368,7 +368,7 @@ class Atribuicoes {
         } else s_alert(erro);
     }
 
-    recalcular() {
+    async recalcular() {
         let lista = Array.from(document.getElementsByClassName("btn-primary"));
         let loader = document.getElementById("loader").style;
         let modal1 = document.getElementById("atribuicoesModal").style;
@@ -380,17 +380,23 @@ class Atribuicoes {
         loader.display = "flex";
         modal1.zIndex = "0";
         modal2.zIndex = "0";
-        $.post(URL + "/atribuicoes/recalcular", {
+        let data = await $.post(URL + "/atribuicoes/recalcular", {
             _token: $("meta[name='csrf-token']").attr("content")
-        }, () => {
-            lista.forEach((el) => {
-                el.style.removeProperty("z-index");
-            });
-            modal1.removeProperty("z-index");
-            modal2.removeProperty("z-index");
-            loader.removeProperty("display");
-            this.#mostrar();
         });
+        if (typeof data == "string") data = $.parseJSON(data);
+        lista.forEach((el) => {
+            el.style.removeProperty("z-index");
+        });
+        modal1.removeProperty("z-index");
+        modal2.removeProperty("z-index");
+        loader.removeProperty("display");
+        if (data.icon == "error") {
+            await s_alert({
+                icon: "error",
+                html: data.msg
+            })
+        }
+        this.#mostrar();
     }
 
     async pergunta_salvar() {
@@ -489,7 +495,7 @@ class Atribuicoes {
     }
 
     #retirarMain = async (id, _supervisor = 0) => {
-        await $.post(URL + "/retiradas/salvar", {
+        let data = await $.post(URL + "/retiradas/salvar", {
             _token: $("meta[name='csrf-token']").attr("content"),
             supervisor: _supervisor,
             atribuicao: id,
@@ -498,11 +504,19 @@ class Atribuicoes {
             data: $("#data-ret").val(),
             quantidade: $("#quantidade2").val()
         });
+        if (typeof data == "string") data = $.parseJSON(data);
         $("#supervisorModal").modal("hide");
         $("#retiradasModal").modal("hide");
-        await s_alert({
-            icon: "success"
-        });
+        if (data.icon == "success") {
+            await s_alert({
+                icon: data.icon
+            });
+        } else {
+            await s_alert({
+                icon: "error",
+                html: data.msg
+            })
+        }
         listar();
     }
 }

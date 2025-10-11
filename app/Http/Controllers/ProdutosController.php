@@ -180,7 +180,6 @@ class ProdutosController extends ControllerListavel {
     public function excluir(Request $request) {
         if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
         if (!$this->aviso_main($request->id)->permitir) return 401;
-        $linha = Produtos::find($request->id);
         $ant = DB::table("vatbold")
                     ->select(
                         "psm_chave",
@@ -190,16 +189,26 @@ class ProdutosController extends ControllerListavel {
                         $join->on("produtos.cod_externo", "vatbold.cod_produto")
                             ->orOn("produtos.referencia", "vatbold.referencia");
                     })
-                    ->where("produtos.id", $linha->id)
+                    ->where("produtos.id", $request->id)
                     ->groupby(
                         "psm_chave",
                         "psm_valor"
                     )
                     ->get();
-        $linha->lixeira = 1;
-        $linha->save();
-        $this->log_inserir("D", "produtos", $linha->id); // App\Http\Controllers\Controller.php
-        $this->atualizar_atribuicoes($ant); // App\Http\Controllers\Controller.php
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            $linha = Produtos::find($request->id);
+            $linha->lixeira = 1;
+            $linha->save();
+            $this->log_inserir("D", "produtos", $linha->id); // App\Http\Controllers\Controller.php
+            $this->atualizar_atribuicoes($ant); // App\Http\Controllers\Controller.php
+            $connection->commit();
+        } catch (\Exception $e) {
+            $connection->rollBack();
+            throw $e;
+        }
     }
 
     public function listar_maquina(Request $request) {
@@ -243,7 +252,8 @@ class ProdutosController extends ControllerListavel {
             $request->maximo
         )->texto) return 401;
         
-        $this->salvar_comodatos_produtos("produto", $request); // App\Http\Controllers\Controller.php
-        return redirect("/produtos");
+        $salvamento = $this->salvar_comodatos_produtos("produto", $request); // App\Http\Controllers\Controller.php
+        if ($salvamento == "/produtos") return redirect($salvamento);
+        return $this->view_mensagem("error", $salvamento); // App\Http\Controllers\Controller.php
     }
 }
