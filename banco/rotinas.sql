@@ -69,7 +69,7 @@ END$$
 /* -----------------------------------------
    2) atualizar_mat_vatbaux
 ------------------------------------------ */
-CREATE PROCEDURE atualizar_mat_vatbaux(IN p_chave CHAR(1), IN p_valor TEXT, IN apenas_ativos CHAR(1))
+CREATE PROCEDURE atualizar_mat_vatbaux(IN p_chave CHAR(1), IN p_valor TEXT, IN apenas_ativos CHAR(1), IN id_pessoa INT)
 BEGIN
     DECLARE v_tab_p TEXT DEFAULT 'pessoas';
 
@@ -216,7 +216,7 @@ BEGIN
         SET @query = CONCAT(@query, ' WHERE tab.id_pessoa IN (', p_valor, ')');
     END IF;
 
-    SET @query = CONCAT(@query, ' AND produtos.lixeira = 0 GROUP BY tab.id_pessoa, tab.id_atribuicao, tab.cod, tab.ref, tab.src, vatbreal.id_setor, vatbreal.lixeira');
+    SET @query = CONCAT(@query, ' AND (tab.id_pessoa = ', id_pessoa,' OR ', id_pessoa,' = 0) AND produtos.lixeira = 0 GROUP BY tab.id_pessoa, tab.id_atribuicao, tab.cod, tab.ref, tab.src, vatbreal.id_setor, vatbreal.lixeira');
 
     IF p_chave = 'M' THEN
         SET @delete_sql = CONCAT(
@@ -224,10 +224,10 @@ BEGIN
              FROM mat_vatbaux
              JOIN mat_vcomodatos
                 ON mat_vcomodatos.id_pessoa = mat_vatbaux.id_pessoa
-             WHERE mat_vcomodatos.id_maquina IN (', p_valor, ')'
+             WHERE mat_vcomodatos.id_maquina IN (', p_valor, ') AND (mat_vcomodatos.id_pessoa = ', id_pessoa,' OR ', id_pessoa,' = 0)'
         );
     ELSEIF p_chave = 'S' OR p_chave = 'P' THEN
-        SET @delete_sql = CONCAT('DELETE FROM mat_vatbaux WHERE ', IF(p_chave = 'S', 'id_setor', 'id_pessoa'), ' IN (', p_valor, ')');
+        SET @delete_sql = CONCAT('DELETE FROM mat_vatbaux WHERE ', IF(p_chave = 'S', 'id_setor', 'id_pessoa'), ' IN (', p_valor, ') AND (mat_vatbaux.id_pessoa = ', id_pessoa,' OR ', id_pessoa,' = 0)');
     ELSE
         SET @delete_sql = 'DELETE FROM mat_vatbaux';
     END IF;
@@ -273,7 +273,7 @@ END$$
 /* -----------------------------------------
    3) atualizar_mat_vatribuicoes
 ------------------------------------------ */
-CREATE PROCEDURE atualizar_mat_vatribuicoes(IN p_chave CHAR(1), IN p_valor TEXT, IN apenas_ativos CHAR(1))
+CREATE PROCEDURE atualizar_mat_vatribuicoes(IN p_chave CHAR(1), IN p_valor TEXT, IN apenas_ativos CHAR(1), IN id_pessoa INT)
 BEGIN
     DECLARE v_join TEXT DEFAULT '';
     DECLARE v_where TEXT DEFAULT '1';
@@ -295,10 +295,10 @@ BEGIN
     -- join / filtro por chave
     IF p_chave = 'M' THEN
         SET v_join = 'JOIN mat_vcomodatos ON mat_vcomodatos.id_pessoa = x.id_pessoa';
-        SET v_where = CONCAT('mat_vcomodatos.id_maquina IN (', p_valor, ')');
+        SET v_where = CONCAT('mat_vcomodatos.id_maquina IN (', p_valor, ') AND (x.id_pessoa =', id_pessoa,' OR ', id_pessoa,' = 0) ');
     ELSEIF p_chave = 'S' THEN
         SET v_join = CONCAT('JOIN ', v_tab_p, ' AS p ON p.id = x.id_pessoa');
-        SET v_where = CONCAT('p.id_setor IN (', p_valor, ')');
+        SET v_where = CONCAT('p.id_setor IN (', p_valor, ') AND (x.id_pessoa =', id_pessoa,' OR ', id_pessoa,' = 0) ');
     ELSEIF p_chave = 'P' THEN
         SET v_where = CONCAT('x.id_pessoa IN (', p_valor, ')');
     END IF;
@@ -395,7 +395,7 @@ BEGIN
              FROM mat_vatribuicoes
              JOIN pessoas
                 ON pessoas.id = mat_vatribuicoes.id_pessoa
-             WHERE pessoas.id_setor IN (', p_valor, ')'
+             WHERE pessoas.id_setor IN (', p_valor, ') AND (mat_vatribuicoes.id_pessoa =', id_pessoa,' OR ', id_pessoa,' = 0)'
         );
     ELSEIF p_chave = 'M' THEN
         SET @delete_sql = CONCAT(
@@ -403,7 +403,7 @@ BEGIN
              FROM mat_vatribuicoes
              JOIN mat_vcomodatos
                 ON mat_vcomodatos.id_pessoa = mat_vatribuicoes.id_pessoa
-             WHERE mat_vcomodatos.id_maquina IN (', p_valor, ')'
+             WHERE mat_vcomodatos.id_maquina IN (', p_valor, ') AND (mat_vatribuicoes.id_pessoa =', id_pessoa,' OR ', id_pessoa,' = 0)'
         );
     ELSE
         SET @delete_sql = 'DELETE FROM mat_vatribuicoes';
@@ -426,7 +426,8 @@ CREATE PROCEDURE atualizar_mat_vretiradas_vultretirada(
     IN p_chave CHAR(1),
     IN p_valor TEXT,
     IN p_tipo CHAR(1), -- 'R' = mat_vretiradas ; 'U' = mat_vultretirada
-    IN apenas_ativos CHAR(1)
+    IN apenas_ativos CHAR(1),
+    IN id_pessoa INT
 )
 BEGIN
     DECLARE v_tab_p TEXT DEFAULT 'pessoas';
@@ -450,7 +451,7 @@ BEGIN
     IF p_chave = 'P' THEN
         SET v_where = CONCAT('p.id IN (', p_valor, ')');
     ELSEIF p_chave = 'S' THEN
-        SET v_where = CONCAT('p.id_setor IN (', p_valor, ')');
+        SET v_where = CONCAT('p.id_setor IN (', p_valor, ') AND (p.id =', id_pessoa,' OR ', id_pessoa,' = 0)');
     ELSEIF p_chave = 'M' THEN
         SET v_where = CONCAT('mat_vcomodatos.id_maquina IN (', p_valor, ')');
         SET v_join_mat_vcomodatos = ' JOIN mat_vcomodatos ON mat_vcomodatos.id_pessoa = p.id ';
@@ -529,7 +530,7 @@ BEGIN
              FROM ', v_target_table, '
              JOIN pessoas
                 ON pessoas.id = ', v_target_table, '.id_pessoa
-             WHERE pessoas.id_setor IN (', p_valor, ')'
+             WHERE pessoas.id_setor IN (', p_valor, ') AND (pessoas.id =', id_pessoa,' OR ', id_pessoa,' = 0)'
         );
     ELSEIF p_chave = 'M' THEN
         SET @delete_sql = CONCAT(
@@ -537,7 +538,7 @@ BEGIN
              FROM ', v_target_table, '
              JOIN mat_vcomodatos
                 ON mat_vcomodatos.id_pessoa = ', v_target_table, '.id_pessoa
-             WHERE mat_vcomodatos.id_maquina IN (', p_valor, ')'
+             WHERE mat_vcomodatos.id_maquina IN (', p_valor, ') AND (mat_vcomodatos.id_pessoa =', id_pessoa,' OR ', id_pessoa,' = 0)'
         );
     ELSE
         SET @delete_sql = CONCAT('DELETE FROM ', v_target_table);

@@ -702,7 +702,7 @@ abstract class Controller extends BaseController {
     // Métodos que disparam procedures para atualizar dados consolidados, melhorando a performance de consultas.
     //======================================================================
 
-    protected function atualizar_tudo($valor, $chave = "M", $completo = false) {
+    protected function atualizar_tudo($valor, $chave = "M", $completo = false, $id_pessoa = "0") {
         $valor_ant = $valor;
         if (is_iterable($valor)) $valor = implode(",", $valor);
         $valor = "'".$valor."'";
@@ -719,10 +719,10 @@ abstract class Controller extends BaseController {
                     break;
             }
         }
-        DB::statement("CALL atualizar_mat_vatbaux('".$chave."', ".$valor.", 'N')");
-        DB::statement("CALL atualizar_mat_vatribuicoes('".$chave."', ".$valor.", 'N')");
-        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'R', 'N')");
-        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'U', 'N')");
+        DB::statement("CALL atualizar_mat_vatbaux('".$chave."', ".$valor.", 'N', ".$id_pessoa.")");
+        DB::statement("CALL atualizar_mat_vatribuicoes('".$chave."', ".$valor.", 'N', ".$id_pessoa.")");
+        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'R', 'N', ".$id_pessoa.")");
+        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'U', 'N', ".$id_pessoa.")");
         if ($completo) DB::statement("CALL excluir_atribuicao_sem_retirada()");
     }
 

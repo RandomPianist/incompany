@@ -32,10 +32,10 @@ BEGIN
     CALL reindexar();
     CALL limpar_usuario_editando();
     CALL atualizar_mat_vcomodatos(0);
-    CALL atualizar_mat_vatbaux('T', '(0)', 'S');
-    CALL atualizar_mat_vatribuicoes('T', '(0)', 'S');
-    CALL atualizar_mat_vretiradas_vultretirada('T', '(0)', 'R', 'S');
-    CALL atualizar_mat_vretiradas_vultretirada('T', '(0)', 'U', 'S');
+    CALL atualizar_mat_vatbaux('T', '(0)', 'S', 0);
+    CALL atualizar_mat_vatribuicoes('T', '(0)', 'S', 0);
+    CALL atualizar_mat_vretiradas_vultretirada('T', '(0)', 'R', 'S', 0);
+    CALL atualizar_mat_vretiradas_vultretirada('T', '(0)', 'U', 'S', 0);
     COMMIT;
     TRUNCATE TABLE excbkp;
     TRUNCATE TABLE atbbkp;
