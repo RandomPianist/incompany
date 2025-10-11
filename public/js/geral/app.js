@@ -855,6 +855,9 @@ function iniciarCarregamento(_modal) {
     });
     document.getElementById("loader").style.display = "flex";
     document.getElementById(_modal).style.zIndex = "0";
+    Array.from(document.getElementsByClassName("header-card-dashboard")).forEach((el) => {
+        el.style.zIndex = "0";
+    });
 }
 
 function trocarEmpresa() {
