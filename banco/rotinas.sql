@@ -792,9 +792,15 @@ BEGIN
         SET @sql = CONCAT('DROP TABLE IF EXISTS `', v_tabela_atual, '2`');
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-        SET @sql = CONCAT('CREATE TABLE `', v_tabela_atual, '2` AS SELECT (@row_number:=@row_number+1) AS id, `id` AS id_antigo',
-                          IF(v_colunas IS NULL OR v_colunas = '', '', CONCAT(', ', v_colunas)),
-                          ' FROM `', v_tabela_atual, '`, (SELECT @row_number:=0) AS t');
+        SET @sql = CONCAT('
+            CREATE TABLE `', v_tabela_atual, '2` AS 
+                SELECT
+                    (@row_number:=@row_number+1) AS id,
+                    `id` AS id_antigo',
+                    IF(v_colunas IS NULL OR v_colunas = '', '', CONCAT(', ', v_colunas)),
+                ' FROM `', v_tabela_atual, '`,
+                    (SELECT @row_number:=0) AS t
+        ');
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
         SET @sql = CONCAT('ALTER TABLE `', v_tabela_atual, '2` ADD PRIMARY KEY(id)');
@@ -815,36 +821,32 @@ BEGIN
         END IF;
 
         -- OBS: concatenar com backticks corretamente para formar `tablename2`.`column`
-        SET @sql = CONCAT(
-            'DELETE `', v_main_table, '2`',
-            ' FROM `', v_main_table, '2`',
-            ' LEFT JOIN `', v_aux_table, '2` AS aux',
-            ' ON aux.id_antigo = `', v_main_table, '2`.', '`', v_fk_column, '`',
-            ' WHERE IFNULL(`', v_main_table, '2`.', '`', v_fk_column, '`, 0) <> 0',
-            ' AND aux.id IS NULL'
-        );
-        -- Nota: versão alternativa mais legível abaixo (mais segura):
-        -- SET @sql = CONCAT(
-        --   'DELETE `', v_main_table, '2` FROM `', v_main_table, '2` LEFT JOIN `', v_aux_table, '2` AS aux ON aux.id_antigo = `', v_main_table, '2`.`', v_fk_column, '` WHERE IFNULL(`', v_main_table, '2`.`', v_fk_column, '`,0) <> 0 AND aux.id IS NULL'
-        -- );
+        SET @sql = CONCAT('
+            DELETE `', v_main_table, '2`
+            FROM `', v_main_table, '2`
+            LEFT JOIN `', v_aux_table, '2` AS aux
+                ON aux.id_antigo = `', v_main_table, '2`.`', v_fk_column, '`
+            WHERE IFNULL(`', v_main_table, '2`.`', v_fk_column, '`,0) <> 0
+              AND aux.id IS NULL
+        ');
 
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-        SET @sql = CONCAT(
-            'DELETE log2',
-            ' FROM log2',
-            ' LEFT JOIN `', v_main_table, '2` AS aux',
-            ' ON log2.fk = aux.id_antigo',
-            ' WHERE log2.tabela = ''', v_main_table, ''''
-        );
+        SET @sql = CONCAT('
+            DELETE log2
+            FROM log2
+            LEFT JOIN `', v_main_table, '2` AS aux
+                ON log2.fk = aux.id_antigo
+            WHERE log2.tabela = ''', v_main_table, '''
+        ');
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-        SET @sql = CONCAT(
-            'UPDATE `', v_main_table, '2` AS main',
-            ' JOIN `', v_aux_table, '2` AS aux',
-            ' ON aux.id_antigo = main.`', v_fk_column, '`',
-            ' SET main.`', v_fk_column, '` = aux.id'
-        );
+        SET @sql = CONCAT('
+            UPDATE `', v_main_table, '2` AS main
+            JOIN `', v_aux_table, '2` AS aux
+                ON aux.id_antigo = main.`', v_fk_column, '`
+            SET main.`', v_fk_column, '` = aux.id
+        ');
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
     END LOOP;
     CLOSE cur_fk;
@@ -864,13 +866,13 @@ BEGIN
         END IF;
 
         IF v_tabela_atual != 'log' THEN
-            SET @sql = CONCAT(
-                'UPDATE log2 AS main',
-                ' JOIN `', v_tabela_atual, '2` AS aux',
-                ' ON aux.id_antigo = main.fk',
-                ' SET main.fk = aux.id',
-                ' WHERE main.tabela = ''', v_tabela_atual, ''''
-            );
+            SET @sql = CONCAT('
+                UPDATE log2 AS main
+                JOIN `', v_tabela_atual, '2` AS aux
+                    ON aux.id_antigo = main.fk
+                SET main.fk = aux.id
+                WHERE main.tabela = ''', v_tabela_atual, '''
+            ');
             PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
         END IF;
     END WHILE;
