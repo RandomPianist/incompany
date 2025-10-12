@@ -6,6 +6,7 @@ ON SCHEDULE EVERY 1 DAY
 STARTS TIMESTAMP(CURRENT_DATE, '02:00:00')
 DO
 BEGIN
+    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
     START TRANSACTION;
     DELETE FROM mat_vultretirada;
     UPDATE atribuicoes SET rascunho = 'S' WHERE rascunho IN ('E', 'R');
@@ -28,8 +29,8 @@ BEGIN
         excecoes.id_setor = excbkp.id_setor,
         excecoes.id_usuario = 0;
     CALL excluir_atribuicao_sem_retirada();
-    CALL refazer_ids();
-    CALL reindexar();
+    -- CALL refazer_ids();
+    -- CALL reindexar();
     CALL limpar_usuario_editando();
     CALL atualizar_mat_vcomodatos(0);
     CALL atualizar_mat_vatbaux('T', '(0)', 'S', 0);

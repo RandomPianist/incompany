@@ -707,38 +707,31 @@ END $$
 -- =================================================================================
 CREATE PROCEDURE refazer_ids()
 BEGIN
-    -- ------------------------------------------------------------------------------
-    -- ETAPA DE DECLARAÇÕES: Todas as variáveis, cursores e handlers vêm primeiro.
-    -- ------------------------------------------------------------------------------
-    
-    -- Variáveis de configuração e controle de loops
+    -- ------------------------------------------------------------------
+    -- DECLARAÇÕES
+    -- ------------------------------------------------------------------
     DECLARE v_lista_tabelas TEXT DEFAULT 'atribuicoes,categorias,comodatos,comodatos_produtos,estoque,excecoes,log,maquinas,permissoes,pessoas,previas,produtos,retiradas,setores,solicitacoes,solicitacoes_produtos,dedos';
     DECLARE v_tabela_atual VARCHAR(64);
     DECLARE v_tabelas_restantes TEXT;
     DECLARE v_delimitador_pos INT;
     DECLARE v_colunas TEXT;
-    
-    -- Variáveis para o cursor de atualização de FKs
+
     DECLARE v_done INT DEFAULT FALSE;
-    DECLARE v_main_table, v_fk_column, v_aux_table VARCHAR(64);
-    
-    -- Declaração do Cursor para ler a tabela de configuração de FKs
+    DECLARE v_main_table VARCHAR(64);
+    DECLARE v_fk_column VARCHAR(64);
+    DECLARE v_aux_table VARCHAR(64);
+
     DECLARE cur_fk CURSOR FOR SELECT main_table, fk_column, aux_table FROM fk_configuracao_updates;
-    
-    -- Handler para o cursor saber quando chegou ao fim dos registros
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_done = TRUE;
-    
-    -- Handler de erro geral para garantir o ROLLBACK da transação
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        RESIGNAL; -- Re-lança o erro para o usuário saber o que aconteceu
+        RESIGNAL;
     END;
 
-    -- ------------------------------------------------------------------------------
-    -- INÍCIO DOS COMANDOS EXECUTÁVEIS
-    -- ------------------------------------------------------------------------------
-
-    -- ETAPA 0: Criar e popular a "lista/vetor" de chaves estrangeiras
+    -- ------------------------------------------------------------------
+    -- ETAPA 0: Criar e popular fk_configuracao_updates (temporária)
+    -- ------------------------------------------------------------------
     CREATE TEMPORARY TABLE IF NOT EXISTS fk_configuracao_updates (
         main_table VARCHAR(64),
         fk_column VARCHAR(64),
@@ -774,7 +767,9 @@ BEGIN
         ('solicitacoes_produtos', 'id_solicitacao', 'solicitacoes'),
         ('dedos', 'id_pessoa', 'pessoas');
 
-    -- ETAPA 1: Criar as novas tabelas (com sufixo '2')
+    -- ------------------------------------------------------------------
+    -- ETAPA 1: Criar as novas tabelas (sufixo '2')
+    -- ------------------------------------------------------------------
     SET v_tabelas_restantes = v_lista_tabelas;
     WHILE v_tabelas_restantes IS NOT NULL AND v_tabelas_restantes != '' DO
         SET v_delimitador_pos = INSTR(v_tabelas_restantes, ',');
@@ -786,10 +781,20 @@ BEGIN
             SET v_tabelas_restantes = NULL;
         END IF;
 
-        SELECT GROUP_CONCAT(CONCAT('`', column_name, '`')) INTO v_colunas
-        FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = v_tabela_atual AND column_name != 'id';
-        
-        SET @sql = CONCAT('CREATE TABLE ', v_tabela_atual, '2 AS SELECT (@row_number:=@row_number+1) AS id, `id` AS id_antigo, ', v_colunas, ' FROM `', v_tabela_atual, '`, (SELECT @row_number:=0) AS t');
+        SELECT GROUP_CONCAT(CONCAT('`', column_name, '`') ORDER BY ordinal_position)
+            INTO v_colunas
+        FROM information_schema.columns
+        WHERE table_schema = DATABASE()
+          AND table_name = v_tabela_atual
+          AND column_name != 'id';
+
+        -- DROP se existir (sua versão mais recente adicionou isso)
+        SET @sql = CONCAT('DROP TABLE IF EXISTS `', v_tabela_atual, '2`');
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT('CREATE TABLE `', v_tabela_atual, '2` AS SELECT (@row_number:=@row_number+1) AS id, `id` AS id_antigo',
+                          IF(v_colunas IS NULL OR v_colunas = '', '', CONCAT(', ', v_colunas)),
+                          ' FROM `', v_tabela_atual, '`, (SELECT @row_number:=0) AS t');
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
         SET @sql = CONCAT('ALTER TABLE `', v_tabela_atual, '2` ADD PRIMARY KEY(id)');
@@ -799,25 +804,54 @@ BEGIN
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
     END WHILE;
 
-    -- ETAPA 2.1: Atualizar chaves estrangeiras dinamicamente usando o cursor
+    -- ------------------------------------------------------------------
+    -- ETAPA 2.1: Atualizar chaves estrangeiras dinamicamente usando cursor
+    -- ------------------------------------------------------------------
     OPEN cur_fk;
     fk_update_loop: LOOP
         FETCH cur_fk INTO v_main_table, v_fk_column, v_aux_table;
         IF v_done THEN
             LEAVE fk_update_loop;
         END IF;
-        
-        SET @sql = CONCAT('
-            UPDATE `', v_main_table, '2` AS main
-            JOIN `', v_aux_table, '2` AS aux
-                ON aux.id_antigo = main.`', v_fk_column, '`
-            SET main.`', v_fk_column, '` = aux.id
-        ');
+
+        -- OBS: concatenar com backticks corretamente para formar `tablename2`.`column`
+        SET @sql = CONCAT(
+            'DELETE `', v_main_table, '2`',
+            ' FROM `', v_main_table, '2`',
+            ' LEFT JOIN `', v_aux_table, '2` AS aux',
+            ' ON aux.id_antigo = `', v_main_table, '2`.', '`', v_fk_column, '`',
+            ' WHERE IFNULL(`', v_main_table, '2`.', '`', v_fk_column, '`, 0) <> 0',
+            ' AND aux.id IS NULL'
+        );
+        -- Nota: versão alternativa mais legível abaixo (mais segura):
+        -- SET @sql = CONCAT(
+        --   'DELETE `', v_main_table, '2` FROM `', v_main_table, '2` LEFT JOIN `', v_aux_table, '2` AS aux ON aux.id_antigo = `', v_main_table, '2`.`', v_fk_column, '` WHERE IFNULL(`', v_main_table, '2`.`', v_fk_column, '`,0) <> 0 AND aux.id IS NULL'
+        -- );
+
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT(
+            'DELETE log2',
+            ' FROM log2',
+            ' LEFT JOIN `', v_main_table, '2` AS aux',
+            ' ON log2.fk = aux.id_antigo',
+            ' WHERE log2.tabela = ''', v_main_table, ''''
+        );
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT(
+            'UPDATE `', v_main_table, '2` AS main',
+            ' JOIN `', v_aux_table, '2` AS aux',
+            ' ON aux.id_antigo = main.`', v_fk_column, '`',
+            ' SET main.`', v_fk_column, '` = aux.id'
+        );
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
     END LOOP;
     CLOSE cur_fk;
 
-    -- ETAPA 2.2: Tratar caso especial da tabela `log` (FK polimórfica)
+    -- ------------------------------------------------------------------
+    -- ETAPA 2.2: Tratar caso especial da tabela `log`
+    -- ------------------------------------------------------------------
     SET v_tabelas_restantes = v_lista_tabelas;
     WHILE v_tabelas_restantes IS NOT NULL AND v_tabelas_restantes != '' DO
         SET v_delimitador_pos = INSTR(v_tabelas_restantes, ',');
@@ -830,13 +864,13 @@ BEGIN
         END IF;
 
         IF v_tabela_atual != 'log' THEN
-            SET @sql = CONCAT('
-                UPDATE log2 AS main
-                JOIN `', v_tabela_atual, '2` AS aux
-                    ON aux.id_antigo = main.fk
-                SET main.fk = aux.id
-                WHERE main.tabela = ''', v_tabela_atual, '''
-            ');
+            SET @sql = CONCAT(
+                'UPDATE log2 AS main',
+                ' JOIN `', v_tabela_atual, '2` AS aux',
+                ' ON aux.id_antigo = main.fk',
+                ' SET main.fk = aux.id',
+                ' WHERE main.tabela = ''', v_tabela_atual, ''''
+            );
             PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
         END IF;
     END WHILE;
@@ -865,7 +899,9 @@ BEGIN
     ';
     PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+    -- ------------------------------------------------------------------
     -- ETAPA 3: Remover tabelas antigas e renomear as novas
+    -- ------------------------------------------------------------------
     SET v_tabelas_restantes = v_lista_tabelas;
     WHILE v_tabelas_restantes IS NOT NULL AND v_tabelas_restantes != '' DO
         SET v_delimitador_pos = INSTR(v_tabelas_restantes, ',');
