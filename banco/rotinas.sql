@@ -822,7 +822,7 @@ BEGIN
 
         SET @sql = CONCAT('
             CREATE TABLE `', v_main_table, '_temp` AS 
-                SELECT `', v_main_table, '.id`
+                SELECT `', v_main_table, '2.id`
                 FROM `', v_main_table, '2`
                 LEFT JOIN `', v_aux_table, '2` AS aux
                     ON aux.id_antigo = `', v_main_table, '2`.`', v_fk_column, '`
