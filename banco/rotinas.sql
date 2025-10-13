@@ -820,24 +820,32 @@ BEGIN
             LEAVE fk_update_loop;
         END IF;
 
-        -- OBS: concatenar com backticks corretamente para formar `tablename2`.`column`
+        SET @sql = CONCAT('
+            CREATE TABLE `', v_main_table, '_temp` AS 
+                SELECT `', v_main_table, '.id`
+                FROM `', v_main_table, '2`
+                LEFT JOIN `', v_aux_table, '2` AS aux
+                    ON aux.id_antigo = `', v_main_table, '2`.`', v_fk_column, '`
+                WHERE IFNULL(`', v_main_table, '2`.`', v_fk_column, '`,0) <> 0
+                  AND aux.id IS NULL
+        ');
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+        
         SET @sql = CONCAT('
             DELETE `', v_main_table, '2`
             FROM `', v_main_table, '2`
-            LEFT JOIN `', v_aux_table, '2` AS aux
-                ON aux.id_antigo = `', v_main_table, '2`.`', v_fk_column, '`
-            WHERE IFNULL(`', v_main_table, '2`.`', v_fk_column, '`,0) <> 0
-              AND aux.id IS NULL
+            JOIN `', v_main_table, '_temp`
+                ON `', v_main_table, '_temp`.id = `', v_main_table, '2`.id
         ');
 
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
         SET @sql = CONCAT('
-            DELETE log2
-            FROM log2
-            LEFT JOIN `', v_main_table, '2` AS aux
-                ON log2.fk = aux.id_antigo
-            WHERE log2.tabela = ''', v_main_table, ''' AND log2.acao <> ''D''
+            DELETE FROM log2
+            WHERE log2.tabela = ''', v_main_table, ''' AND log2.fk IN (
+                SELECT id
+                FROM `', v_main_table, '_temp`
+            )
         ');
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
@@ -848,6 +856,8 @@ BEGIN
             SET main.`', v_fk_column, '` = aux.id
         ');
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT('DROP TABLE `', v_main_table, '_temp`');
     END LOOP;
     CLOSE cur_fk;
 

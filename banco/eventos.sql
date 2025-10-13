@@ -31,6 +31,7 @@ BEGIN
     CALL excluir_atribuicao_sem_retirada();
     -- CALL refazer_ids();
     -- CALL reindexar();
+    -- CALL reindexar();
     CALL limpar_usuario_editando();
     CALL atualizar_mat_vcomodatos(0);
     CALL atualizar_mat_vatbaux('T', '(0)', 'S', 0);
