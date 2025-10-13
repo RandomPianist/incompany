@@ -822,7 +822,7 @@ BEGIN
 
         SET @sql = CONCAT('
             CREATE TABLE `', v_main_table, '_temp` AS 
-                SELECT `', v_main_table, '2.id`
+                SELECT `', v_main_table, '2.id_antigo`
                 FROM `', v_main_table, '2`
                 LEFT JOIN `', v_aux_table, '2` AS aux
                     ON aux.id_antigo = `', v_main_table, '2`.`', v_fk_column, '`
@@ -835,7 +835,7 @@ BEGIN
             DELETE `', v_main_table, '2`
             FROM `', v_main_table, '2`
             JOIN `', v_main_table, '_temp`
-                ON `', v_main_table, '_temp`.id = `', v_main_table, '2`.id
+                ON `', v_main_table, '_temp`.id_antigo = `', v_main_table, '2`.id_antigo
         ');
 
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
