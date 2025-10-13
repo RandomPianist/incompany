@@ -917,23 +917,22 @@ BEGIN
         END IF;
 
         SET @sql = CONCAT('
-            CREATE TABLE `', v_main_table, '_temp` AS 
-                SELECT `', v_main_table, '.id`
+            CREATE TABLE `', v_main_table, '_temp` AS
+                SELECT `', v_main_table, '`.`id`
                 FROM `', v_main_table, '`
                 LEFT JOIN `', v_aux_table, '` AS aux
                     ON aux.id = `', v_main_table, '`.`', v_fk_column, '`
                 WHERE IFNULL(`', v_main_table, '`.`', v_fk_column, '`,0) <> 0
-                  AND aux.id IS NULL
+                AND aux.id IS NULL
         ');
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-        
+
         SET @sql = CONCAT('
             DELETE `', v_main_table, '`
             FROM `', v_main_table, '`
             JOIN `', v_main_table, '_temp`
                 ON `', v_main_table, '_temp`.id = `', v_main_table, '`.id
         ');
-
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
         SET @sql = CONCAT('
