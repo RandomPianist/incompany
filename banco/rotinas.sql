@@ -837,7 +837,7 @@ BEGIN
             FROM log2
             LEFT JOIN `', v_main_table, '2` AS aux
                 ON log2.fk = aux.id_antigo
-            WHERE log2.tabela = ''', v_main_table, '''
+            WHERE log2.tabela = ''', v_main_table, ''' AND log2.acao <> ''D''
         ');
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
