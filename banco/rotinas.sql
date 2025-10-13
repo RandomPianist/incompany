@@ -929,7 +929,7 @@ BEGIN
             DELETE `', v_main_table, '`
             FROM `', v_main_table, '`
             JOIN `', v_main_table, '_temp`
-                ON `', v_main_table, '_temp`.id = `', v_main_table, '2`.id
+                ON `', v_main_table, '_temp`.id = `', v_main_table, '`.id
         ');
 
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
