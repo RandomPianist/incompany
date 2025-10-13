@@ -821,43 +821,11 @@ BEGIN
         END IF;
 
         SET @sql = CONCAT('
-            CREATE TABLE `', v_main_table, '_temp` AS 
-                SELECT `', v_main_table, '2.id_antigo`
-                FROM `', v_main_table, '2`
-                LEFT JOIN `', v_aux_table, '2` AS aux
-                    ON aux.id_antigo = `', v_main_table, '2`.`', v_fk_column, '`
-                WHERE IFNULL(`', v_main_table, '2`.`', v_fk_column, '`,0) <> 0
-                  AND aux.id IS NULL
-        ');
-        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-        
-        SET @sql = CONCAT('
-            DELETE `', v_main_table, '2`
-            FROM `', v_main_table, '2`
-            JOIN `', v_main_table, '_temp`
-                ON `', v_main_table, '_temp`.id_antigo = `', v_main_table, '2`.id_antigo
-        ');
-
-        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-        SET @sql = CONCAT('
-            DELETE FROM log2
-            WHERE log2.tabela = ''', v_main_table, ''' AND log2.fk IN (
-                SELECT id_antigo
-                FROM `', v_main_table, '_temp`
-            )
-        ');
-        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-        SET @sql = CONCAT('
             UPDATE `', v_main_table, '2` AS main
             JOIN `', v_aux_table, '2` AS aux
                 ON aux.id_antigo = main.`', v_fk_column, '`
             SET main.`', v_fk_column, '` = aux.id
         ');
-        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-        SET @sql = CONCAT('DROP TABLE `', v_main_table, '_temp`');
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
     END LOOP;
     CLOSE cur_fk;
@@ -935,6 +903,50 @@ BEGIN
         SET @sql = CONCAT('ALTER TABLE `', v_tabela_atual, '` DROP COLUMN `id_antigo`');
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
     END WHILE;
+
+    -- ------------------------------------------------------------------
+    -- ETAPA 4: Remover registros órfãos
+    -- ------------------------------------------------------------------
+    OPEN cur_fk;
+    fk_update_loop: LOOP
+        FETCH cur_fk INTO v_main_table, v_fk_column, v_aux_table;
+        IF v_done THEN
+            LEAVE fk_update_loop;
+        END IF;
+
+        SET @sql = CONCAT('
+            CREATE TABLE `', v_main_table, '_temp` AS 
+                SELECT `', v_main_table, '.id`
+                FROM `', v_main_table, '`
+                LEFT JOIN `', v_aux_table, '` AS aux
+                    ON aux.id = `', v_main_table, '`.`', v_fk_column, '`
+                WHERE IFNULL(`', v_main_table, '`.`', v_fk_column, '`,0) <> 0
+                  AND aux.id IS NULL
+        ');
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+        
+        SET @sql = CONCAT('
+            DELETE `', v_main_table, '`
+            FROM `', v_main_table, '`
+            JOIN `', v_main_table, '_temp`
+                ON `', v_main_table, '_temp`.id = `', v_main_table, '2`.id
+        ');
+
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT('
+            DELETE FROM log
+            WHERE log.tabela = ''', v_main_table, ''' AND log.fk IN (
+                SELECT id
+                FROM `', v_main_table, '_temp`
+            )
+        ');
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT('DROP TABLE `', v_main_table, '_temp`');
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END LOOP;
+    CLOSE cur_fk;
 
 END$$
 
