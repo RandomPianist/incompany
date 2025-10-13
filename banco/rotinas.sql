@@ -843,7 +843,7 @@ BEGIN
         SET @sql = CONCAT('
             DELETE FROM log2
             WHERE log2.tabela = ''', v_main_table, ''' AND log2.fk IN (
-                SELECT id
+                SELECT id_antigo
                 FROM `', v_main_table, '_temp`
             )
         ');
