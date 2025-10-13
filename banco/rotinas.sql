@@ -858,6 +858,7 @@ BEGIN
         PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
         SET @sql = CONCAT('DROP TABLE `', v_main_table, '_temp`');
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
     END LOOP;
     CLOSE cur_fk;
 
