@@ -813,6 +813,7 @@ BEGIN
     -- ------------------------------------------------------------------
     -- ETAPA 2.1: Atualizar chaves estrangeiras dinamicamente usando cursor
     -- ------------------------------------------------------------------
+    SET v_done = FALSE;
     OPEN cur_fk;
     fk_update_loop: LOOP
         FETCH cur_fk INTO v_main_table, v_fk_column, v_aux_table;
@@ -907,6 +908,7 @@ BEGIN
     -- ------------------------------------------------------------------
     -- ETAPA 4: Remover registros órfãos
     -- ------------------------------------------------------------------
+    SET v_done = FALSE;
     OPEN cur_fk;
     fk_update_loop: LOOP
         FETCH cur_fk INTO v_main_table, v_fk_column, v_aux_table;
