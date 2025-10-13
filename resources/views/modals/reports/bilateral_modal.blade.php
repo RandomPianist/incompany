@@ -15,7 +15,7 @@
                 <div class = "modal-body">
                     <div class = "container">
                         <div class = "row">
-                            <div class = "col-12 form-search">
+                            <div class = "col-11 form-search">
                                 <label for = "rel-empresa1" class = "custom-label-form">Empresa:</label>
                                 <input id = "rel-empresa1"
                                     name = "empresa"
@@ -30,9 +30,17 @@
                                 />
                                 <input id = "rel-id_empresa1" name = "id_empresa" type = "hidden" />
                             </div>
+                            <div class = "col-1 pt-4 d-flex align-items-center">
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "empresas"
+                                    data-campo_id = "rel-id_empresa1"
+                                    data-campo_descr = "rel-empresa1"
+                                ></i>
+                            </div>
                         </div>
                         <div class = "row">
-                            <div class = "col-12 form-search">
+                            <div class = "col-11 form-search">
                                 <label for = "rel-maquina1" class = "custom-label-form">Máquina:</label>
                                 <input id = "rel-maquina1"
                                     name = "maquina"
@@ -46,6 +54,14 @@
                                     autocomplete = "off"
                                 />
                                 <input id = "rel-id_maquina1" name = "id_maquina" type = "hidden" />
+                            </div>
+                            <div class = "col-1 pt-4 d-flex align-items-center">
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "maquinas"
+                                    data-campo_id = "rel-id_maquina1"
+                                    data-campo_descr = "rel-maquina1"
+                                ></i>
                             </div>
                         </div>
                     </div>

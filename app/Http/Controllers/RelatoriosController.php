@@ -8,6 +8,7 @@ use Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Pessoas;
+use App\Models\Categorias;
 use App\Models\Empresas;
 use App\Models\Setores;
 use App\Models\Maquinas;
@@ -715,5 +716,111 @@ class RelatoriosController extends Controller {
         })->values()->all();
         $criterios = implode(" | ", $criterios);
         return sizeof($resultado) ? view("reports/pessoas", compact("resultado", "criterios")) : $this->view_mensagem("warning", "Não há nada para exibir");
+    }
+
+    public function produtos(Request $request) {
+        $criterios = "";
+        $periodo = "";
+        $categoria = "";
+        if ($request->id_categoria) $categoria = Categorias::find($id_categoria)->descr;
+
+        $ordenacao = $request->ordenacao;
+        switch($ordenacao) {
+            case "cod":
+                $ordenacao = "produtos.cod_externo";
+                break;
+            case "descr":
+                $ordenacao = "produtos.descr";
+                break;
+            case "ranking":
+                $ordenacao = "ret.qtd DESC";
+                break;
+        }
+
+        $resultado = collect(
+            DB::table("produtos")
+                ->select(
+                    // GRUPO
+                    DB::raw("IFNULL(categorias.id, 0) AS id_categoria"),
+                    DB::raw("IFNULL(categorias.descr, 'A CLASSIFICAR') AS descr_categoria"),
+                    
+                    // DETALHES                    
+                    "produtos.cod_externo AS cod",
+                    "produtos.descr",
+                    "produtos.ca",
+                    "produtos.referencia",
+                    "produtos.validade",
+                    DB::raw("DATE_FORMAT(produtos.validade_ca, '%d/%m%Y') AS validade_ca"),
+                    DB::raw("UPPER(produtos.tamanho) AS tamanho"),
+                    DB::raw("IFNULL(ret.qtd, 0) AS retiradas")
+                )
+                ->leftjoin("categorias", "categorias.id", "produtos.id_categoria")
+                ->leftjoinSub(
+                    DB::table("retiradas")
+                        ->select(
+                            "id_produto",
+                            DB::raw("SUM(qtd) AS qtd")
+                        )
+                        ->leftjoin("empresas", "empresas.id", "retiradas.id_empresa")
+                        ->where(function($sql) use($request, &$periodo) {
+                            if ($request->inicio || $request->fim) {
+                                $periodo = "Período";
+                                if ($request->inicio) {
+                                    $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
+                                    $sql->whereRaw("retiradas.data >= '".$inicio."'");
+                                    $periodo .= " de ".$request->inicio;
+                                }
+                                if ($request->fim) {
+                                    $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
+                                    $sql->whereRaw("retiradas.data <= '".$fim."'");
+                                    $periodo .= " até ".$request->fim;
+                                }
+                            }
+                            $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
+                            if ($id_emp) {
+                                $sql->where(function($query) use($id_emp) {
+                                    $query->where("empresas.id_matriz", $id_emp)
+                                        ->orWhere("empresas.id", $id_emp);
+                                });
+                            }
+                        })
+                        ->groupby("id_produto"),
+                    "ret",
+                    "ret.id_produto",
+                    "produtos.id"
+                )
+                ->where("produtos.lixeira", 0)
+                ->where(function($sql) {
+                    $sql->whereNull("categorias.id")
+                        ->orWhere("categorias.lixeira", 0);
+                })
+                ->where(function($sql) use($request) {
+                    if ($request->id_categoria) $sql->where("produtos.id_categoria", $request->id_categoria);
+                })
+                ->orderby(DB::raw($ordenacao))
+                ->get()
+        )->groupBy("id_categoria")->map(function($itens1) {
+            return [
+                "categoria" => $itens1[0]->descr_categoria,
+                "produtos" => $itens1->map(function($itens2) {
+                    return [
+                        "cod" => $itens2->cod,
+                        "descr" => $itens2->descr,
+                        "ca" => $itens2->ca,
+                        "validade" => $itens2->validade,
+                        "referencia" => $itens2->referencia,
+                        "validade_ca" => $itens2->validade_ca,
+                        "tamanho" => $itens2->tamanho,
+                        "retiradas" => intval($itens2->retiradas)
+                    ];
+                })->values()->all()
+            ];
+        })->sortBy("categoria")->values()->all();
+        if ($categoria) $criterios .= $categoria;
+        if ($periodo) {
+            if ($criterios) $criterios .= " | ";
+            $criterios .= $periodo;
+        }
+        return sizeof($resultado) ? view("reports/produtos", compact("resultado", "criterios")) : $this->view_mensagem("warning", "Não há nada para exibir");
     }
 }

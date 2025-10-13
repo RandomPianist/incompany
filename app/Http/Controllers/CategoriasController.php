@@ -41,6 +41,13 @@ class CategoriasController extends ControllerListavel {
         return (!$request->id && Categorias::where("lixeira", 0)->where("descr", $request->descr)->exists()) ? "1" : "0";
     }
 
+    public function consultar2(Request $request) {
+        return !Categorias::where("id", $request->id_categoria)
+                    ->where("descr", $request->categoria)
+                    ->where("lixeira", 0)
+                    ->exists() && $request->categoria ? "erro" : "ok";
+    }
+
     public function mostrar($id) {
         return $this->alterar_usuario_editando("categorias", $id)->descr; // App\Http\Controllers\Controller.php
     }

@@ -26,7 +26,7 @@
                             </div>
                         </div>
                         <div class = "row">
-                            <div class = "col-12 form-search">
+                            <div class = "col-11 form-search">
                                 <label for = "rel-maquina2" class = "custom-label-form">Máquina:</label>
                                 <input id = "rel-maquina2"
                                     name = "maquina"
@@ -42,9 +42,17 @@
                                 />
                                 <input id = "rel-id_maquina2" name = "id_maquina" type = "hidden" />
                             </div>
+                            <div class = "col-1 pt-4 d-flex align-items-center">
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "maquinas"
+                                    data-campo_id = "rel-id_maquina2"
+                                    data-campo_descr = "rel-maquina2"
+                                ></i>
+                            </div>
                         </div>
                         <div class = "row">
-                            <div class = "col-12 form-search">
+                            <div class = "col-11 form-search">
                                 <label for = "rel-produto" class = "custom-label-form">Produto:</label>
                                 <input id = "rel-produto"
                                     name = "produto"
@@ -60,8 +68,16 @@
                                 />
                                 <input id = "rel-id_produto" name = "id_produto" type = "hidden" />
                             </div>
+                            <div class = "col-1 pt-4 d-flex align-items-center">
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "produtos"
+                                    data-campo_id = "rel-id_produto"
+                                    data-campo_descr = "rel-produto"
+                                ></i>
+                            </div>
                         </div>
-                        <div class = "row" id = "rel-datas">
+                        <div class = "row" id = "rel-datas1">
                             <div class = "col-6">
                                 <label for = "rel-inicio1" class = "custom-label-form">Início:</label>
                                 <input id = "rel-inicio1" name = "inicio" class = "form-control data" autocomplete = "off" type = "text" data-prox = "rel-fim1" />

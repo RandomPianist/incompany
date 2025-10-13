@@ -193,6 +193,9 @@
                                                 <span>Contratos</span>
                                             </li>
                                         @endif
+                                        <li onclick = "relatorio = new RelatorioProdutos()">
+                                            <span>Produtos</span>
+                                        </li>
                                         <li onclick = "relatorio = new RelatorioBilateral('empresas-por-maquina')">
                                             <span>Empresas por máquina</span>
                                         </li>
@@ -253,6 +256,7 @@
                 @include("modals.reports.retiradas_modal")
                 @include("modals.reports.controle_modal")
                 @include("modals.reports.ranking_modal")
+                @include("modals.reports.produtos_modal")
             </main>
         </div>
         <div id = "loader">

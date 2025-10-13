@@ -49,6 +49,7 @@ Route::middleware("auth")->group(function () {
         Route::get ("/",             [CategoriasController::class, "ver"])->name("categorias");
         Route::get ("/listar",       [CategoriasController::class, "listar"]);
         Route::get ("/consultar",    [CategoriasController::class, "consultar"]);
+        Route::get ("/consultar2",   [CategoriasController::class, "consultar2"]);
         Route::get ("/mostrar/{id}", [CategoriasController::class, "mostrar"]);
         Route::get ("/aviso/{id}",   [CategoriasController::class, "aviso"]);
         Route::post("/salvar",       [CategoriasController::class, "salvar"]);
@@ -188,6 +189,7 @@ Route::middleware("auth")->group(function () {
         Route::get("/ranking",          [RelatoriosController::class, "ranking"]);
         Route::get("/sugestao",         [RelatoriosController::class, "sugestao"]);
         Route::get("/pessoas",          [RelatoriosController::class, "pessoas"]);
+        Route::get("/produtos",         [RelatoriosController::class, "produtos"]);
         Route::get("/solicitacao/{id}", [RelatoriosController::class, "solicitacao"]);
         Route::group(["prefix" => "bilateral"], function() {
             Route::get("/",          [RelatoriosController::class, "bilateral"]);

@@ -15,7 +15,7 @@
                 <div class = "modal-body">
                     <div class = "container">
                         <div class = "row">
-                            <div class = "col-6 form-search">
+                            <div class = "col-5 form-search">
                                 <label for = "rel-empresa2" class = "custom-label-form">Empresa:</label>
                                 <input id = "rel-empresa2"
                                     name = "empresa"
@@ -31,7 +31,15 @@
                                 />
                                 <input id = "rel-id_empresa2" name = "id_empresa" type = "hidden" />
                             </div>
-                            <div class = "col-6 form-search">
+                            <div class = "col-1 pt-4 d-flex align-items-center">
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "empresas"
+                                    data-campo_descr = "rel-empresa2"
+                                    data-campo_id = "rel-id_empresa2"
+                                ></i>
+                            </div>
+                            <div class = "col-5 form-search">
                                 <label for = "rel-pessoa2" class = "custom-label-form">Colaborador:</label>
                                 <input id = "rel-pessoa2"
                                     name = "pessoa"
@@ -47,7 +55,15 @@
                                 />
                                 <input id = "rel-id_pessoa2" name = "id_pessoa" type = "hidden" />
                             </div>
-                            <div class = "col-6 form-search">
+                            <div class = "col-1 pt-4 d-flex align-items-center">
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "pessoas"
+                                    data-campo_descr = "rel-pessoa2"
+                                    data-campo_id = "rel-id_pessoa2"
+                                ></i>
+                            </div>
+                            <div class = "col-5 form-search">
                                 <label for = "rel-setor1" class = "custom-label-form">Centro de custo:</label>
                                 <input id = "rel-setor1"
                                     name = "setor"
@@ -61,6 +77,14 @@
                                     autocomplete = "off"
                                 />
                                 <input id = "rel-id_setor1" name = "id_setor" type = "hidden" />
+                            </div>
+                            <div class = "col-1 pt-4 d-flex align-items-center">
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "setores"
+                                    data-campo_descr = "rel-setor1"
+                                    data-campo_id = "rel-id_setor1"
+                                ></i>
                             </div>
                         </div>
                         <div class = "row">

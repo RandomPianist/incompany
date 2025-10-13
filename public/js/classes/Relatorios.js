@@ -135,8 +135,8 @@ class RelatorioItens extends Relatorios {
                 if (this.#resumido) $("#rel-modo-resumo").removeClass("d-none");
                 else $("#rel-modo-resumo").addClass("d-none");
 
-                if (this.#tipo == "P") $("#rel-datas").addClass("d-none");
-                else $("#rel-datas").removeClass("d-none");
+                if (this.#tipo == "P") $("#rel-datas1").addClass("d-none");
+                else $("#rel-datas1").removeClass("d-none");
             });
         }, 0);
     }
@@ -395,5 +395,44 @@ class RelatorioPessoas extends Relatorios {
                 $("#rel-pessoa3").attr("data-filter", $("#rel-id_setor2").val());
             }
         });
+    }
+}
+
+class RelatorioProdutos extends Relatorios {
+    constructor() {
+        super();
+    
+        limpar_invalido();
+        setTimeout(() => {
+            modal("relatorioProdutosModal", 0, () => {
+                $("#rel-ordenacao").val("cod").trigger("change");
+            });
+        }, 0);
+    }
+
+    validar() {
+        limpar_invalido();
+        $.get(URL + "/categorias/consultar2", {
+            id_categoria : $("#rel-id_categoria").val(),
+            categoria : $("#rel-categoria").val()
+        }, function(resp) {
+            if (resp == "erro") {
+                $("#rel-categoria").addClass("invalido");
+                s_alert("Categoria não encontrada");
+            } else $("#relatorioProdutosModal form").submit();
+        });
+    }
+
+    mudaTipo() {
+        if ($("#rel-ordenacao").val() == "ranking") {
+            $("#rel-datas2").removeClass("d-none");
+            setTimeout(function() {
+                $("#rel-inicio5").focus();
+            }, 100);
+        } else {
+            $("#rel-datas2").addClass("d-none");
+            $("#rel-inicio5").val("");
+            $("#rel-fim5").val("");
+        }
     }
 }

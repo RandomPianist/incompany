@@ -13,7 +13,7 @@
                 <div class = "modal-body">
                     <div class = "container">
                         <div class = "row">
-                            <div class = "col-6 form-search">
+                            <div class = "col-5 form-search">
                                 <label for = "rel-empresa3" class = "custom-label-form">Empresa:</label>
                                 <input id = "rel-empresa3"
                                     name = "empresa"
@@ -29,7 +29,15 @@
                                 />
                                 <input id = "rel-id_empresa3" name = "id_empresa" type = "hidden" onchange = "relatorio.mudou_empresa()" />
                             </div>
-                            <div class = "col-6 form-search">
+                            <div class = "col-1 pt-4 d-flex align-items-center">
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "empresas"
+                                    data-campo_id = "rel-id_empresa3"
+                                    data-campo_descr = "rel-empresa3"
+                                ></i>
+                            </div>
+                            <div class = "col-5 form-search">
                                 <label for = "rel-setor2" class = "custom-label-form">Centro de custo:</label>
                                 <input id = "rel-setor2"
                                     name = "setor"
@@ -45,9 +53,17 @@
                                 />
                                 <input id = "rel-id_setor2" name = "id_setor" type = "hidden" onchange = "relatorio.mudou_setor()" />
                             </div>
+                            <div class = "col-1 pt-4 d-flex align-items-center">
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "setores"
+                                    data-campo_id = "rel-id_setor3"
+                                    data-campo_descr = "rel-setor3"
+                                ></i>
+                            </div>
                         </div>
                         <div class = "row">
-                            <div class = "col-6 form-search">
+                            <div class = "col-5 form-search">
                                 <label for = "rel-pessoa3" class = "custom-label-form">Colaborador:</label>
                                 <input id = "rel-pessoa3"
                                     name = "pessoa"
@@ -61,6 +77,14 @@
                                     autocomplete = "off"
                                 />
                                 <input id = "rel-id_pessoa3" name = "id_pessoa" type = "hidden" />
+                            </div>
+                            <div class = "col-1 pt-4 d-flex align-items-center">
+                                <i
+                                    class = "fa-sharp fa-regular fa-arrow-up-right-from-square atalho"
+                                    data-atalho = "pessoas"
+                                    data-campo_id = "rel-id_pessoa3"
+                                    data-campo_descr = "rel-pessoa3"
+                                ></i>
                             </div>
                             <div class = "col-6">
                                 <label for = "rel-biometria" class = "custom-label-form">Biometria:</label>
