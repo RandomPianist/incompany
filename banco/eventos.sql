@@ -30,7 +30,7 @@ BEGIN
         excecoes.id_usuario = 0;
     CALL excluir_atribuicao_sem_retirada();
     -- CALL refazer_ids();
-    -- CALL reindexar();
+    -- CALL refazer_ids();
     -- CALL reindexar();
     CALL limpar_usuario_editando();
     CALL atualizar_mat_vcomodatos(0);
