@@ -45,7 +45,7 @@ class HomeController extends Controller {
 
     public function iniciar() {
         if ($this->obter_permissao()->financeiro) return view("dashboard");
-        if (Pessoas::find(Auth::user()->id_pessoa)) return redirect("/colaboradores/pagina/A");
+        if (!$this->obter_empresa()) return redirect("/colaboradores/pagina/A"); // App\Http\Controllers\Controller.php
         return redirect("/colaboradores/pagina/F");
     }
 
