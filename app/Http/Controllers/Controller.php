@@ -55,6 +55,24 @@ abstract class Controller extends BaseController {
         return view("mensagem", compact("icon", "text"));
     }
 
+    protected function consultar_geral_main($tabela, $id, $filtro) {
+        $coluna = "descr";
+        switch ($tabela) {
+            case "empresas":
+                $coluna = "nome_fantasia";
+                break;
+            case "pessoas":
+                $coluna = "nome";
+                break;
+        }
+        if ($tabela == "produtos") $tabela = "vprodaux";
+        return DB::table($tabela)
+                    ->where("id", $id)
+                    ->where($coluna, $filtro)
+                    ->where("lixeira", 0)
+                    ->exists() ? "1" : "0";
+    }
+
     //======================================================================
     // BLOCO: CONTEXTO DE EMPRESA E USUÁRIO
     // Métodos para identificar a empresa do usuário logado e filtrar dados com base nela.
@@ -144,12 +162,7 @@ abstract class Controller extends BaseController {
     }
     
     protected function empresa_consultar(Request $request) {
-        return (
-            !Empresas::where("id", $request->id_empresa)
-                ->where("nome_fantasia", $request->empresa)
-                ->where("lixeira", 0)
-                ->exists()
-        );
+        return $this->consultar_geral_main("empresas", $request->id_empresa, $request->empresa) == "0";
     }
     
     protected function supervisor_consultar(Request $request) {

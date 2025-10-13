@@ -342,9 +342,10 @@ class RelatorioPessoas extends Relatorios {
     async validar() {
         limpar_invalido();
 
-        let respEmp = await $.get(URL + "/empresas/consultar2", {
-            id_empresa : $("#rel-id_empresa3").val(),
-            empresa : $("#rel-empresa3").val()
+        let respEmp = await $.get(URL + "/consultar-simples", {
+            tabela : "empresas",
+            id : $("#rel-id_empresa3").val(),
+            filtro : $("#rel-empresa3").val()
         });
         if (respEmp != "ok") {
             $("#rel-empresa3").addClass("invalido");
@@ -352,9 +353,10 @@ class RelatorioPessoas extends Relatorios {
             return;
         }
 
-        let respSetor = await $.get(URL + "/setores/consultar2", {
-            id_setor : $("#rel-id_setor2").val(),
-            setor : $("#rel-setor2").val()
+        let respSetor = await $.get(URL + "/consultar-simples", {
+            tabela : "setores",
+            id : $("#rel-id_setor2").val(),
+            filtro : $("#rel-setor2").val()
         });
         if (respSetor != "ok") {
             $("#rel-setor2").addClass("invalido");
@@ -366,9 +368,10 @@ class RelatorioPessoas extends Relatorios {
     }
 
     mudou_empresa() {
-        $.get(URL + "/empresas/consultar2", {
-            id_empresa : $("#rel-id_empresa3").val(),
-            empresa : $("#rel-empresa3").val()
+        $.get(URL + "/consultar-simples", {
+            tabela : "empresas",
+            id : $("#rel-id_empresa3").val(),
+            filtro : $("#rel-empresa3").val()
         }, function(resp) {
             if (resp == "ok") {
                 $("#rel-pessoa3, #rel-id_pessoa3, #rel-setor2, #rel-id_setor2").each(function() {
@@ -383,9 +386,10 @@ class RelatorioPessoas extends Relatorios {
     }
 
     mudou_setor() {
-        $.get(URL + "/setores/consultar2", {
-            id_setor : $("#rel-id_setor2").val(),
-            setor : $("#rel-setor2").val()
+        $.get(URL + "/consultar-simples", {
+            tabela : "setores",
+            id : $("#rel-id_setor2").val(),
+            filtro : $("#rel-setor2").val()
         }, function(resp) {
             if (resp == "ok") {
                 $("#rel-pessoa3, #rel-id_pessoa3").each(function() {
@@ -412,9 +416,10 @@ class RelatorioProdutos extends Relatorios {
 
     validar() {
         limpar_invalido();
-        $.get(URL + "/categorias/consultar2", {
-            id_categoria : $("#rel-id_categoria").val(),
-            categoria : $("#rel-categoria").val()
+        $.get(URL + "/consultar-simples", {
+            tabela : "categorias",
+            id : $("#rel-id_categoria").val(),
+            filtro : $("#rel-categoria").val()
         }, function(resp) {
             if (resp == "erro") {
                 $("#rel-categoria").addClass("invalido");

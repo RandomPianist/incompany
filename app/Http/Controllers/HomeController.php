@@ -156,22 +156,11 @@ class HomeController extends Controller {
     }
 
     public function consultar_geral(Request $request) {
-        $coluna = "descr";
-        switch ($request->tabela) {
-            case "empresas":
-                $coluna = "nome_fantasia";
-                break;
-            case "pessoas":
-                $coluna = "nome";
-                break;
-        }
-        $tabela = $request->tabela;
-        if ($tabela == "produtos") $tabela = "vprodaux";
-        return DB::table($tabela)
-                    ->where("id", $request->id)
-                    ->where($coluna, $request->filtro)
-                    ->where("lixeira", 0)
-                    ->exists() ? "1" : "0";
+        return $this->consultar_geral_main($request->tabela, $request->id, $request->filtro); // App\Http\Controllers\Controller.php
+    }
+
+    public function consultar_simples(Request $request) {
+        return !intval($this->consultar_geral($request)) && $request->filtro ? "erro" : "ok";
     }
 
     public function permissoes() {

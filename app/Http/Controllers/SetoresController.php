@@ -90,13 +90,6 @@ class SetoresController extends ControllerListavel {
         return json_encode($this->consultar_main($request));
     }
 
-    public function consultar2(Request $request) {
-        return !Setores::where("id", $request->id_setor)
-                    ->where("descr", $request->setor)
-                    ->where("lixeira", 0)
-                    ->exists() && $request->setor ? "erro" : "ok";
-    }
-
     public function mostrar($id) {
         $this->alterar_usuario_editando("setores", $id); // App\Http\Controllers\Controller.php
         return json_encode(
