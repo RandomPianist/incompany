@@ -438,13 +438,13 @@ class Setor extends JanelaDinamica {
         const setorDoSistema = parseInt(this.#dados.sistema);
         const pessoas = parseInt(this.#dados.pessoas);
         const meuSetor = parseInt(this.#dados.meu_setor);
-
-        $("#setor-empresa").attr("disabled", setorDoSistema || pessoas);
+        
+        $("#setor-empresa").attr("disabled", (setorDoSistema || pessoas) ? true : false);
         if (setorDoSistema) $("#setor-empresa").attr("title", "Não é possível alterar a empresa de um centro de custo do sistema");
         else if (pessoas) $("#setor-empresa").attr("title", "Não é possível alterar a empresa desse centro de custo porque existem pessoas vinculadas a ele");
         else $("#setor-empresa").removeAttr("title");
 
-        $("#cria_usuario-chk").attr("disabled", !permissoes.usuarios || setorDoSistema || meuSetor);
+        $("#cria_usuario-chk").attr("disabled", (!permissoes.usuarios || setorDoSistema || meuSetor) ? true : false);
         if (meuSetor) $("#cria_usuario-lbl").attr("title", "Alterar essa opção apagaria seu usuário");
         else if (setorDoSistema) $("#cria_usuario-lbl").attr("title", "Não é permitido alterar essa configuração em um setor do sistema");
         else if (!permissoes.usuarios) $("#cria_usuario-lbl").attr("title", "Não é possível atribuir a esse centro de custo permissões que seu usuário não tem");
