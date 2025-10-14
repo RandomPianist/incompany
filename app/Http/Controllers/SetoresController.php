@@ -183,7 +183,7 @@ class SetoresController extends ControllerListavel {
         $setor->cria_usuario = $cria_usuario;
         $setor->save();
         $this->log_inserir($request->id ? "E" : "C", "setores", $setor->id); // App\Http\Controllers\Controller.php
-        $setor->permissao->updateOrCreate(
+        $setor->permissao()->updateOrCreate(
             ["id_setor" => $setor->id],
             [
                 "financeiro" => $request->financeiro,
