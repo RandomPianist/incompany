@@ -80,7 +80,7 @@ Route::group(["prefix" => "app"], function() {
 
     Route::group(["prefix" => "v2"], function() {
         Route::group(["prefix" => "previas"], function() {
-            Route::get ("/",       [Api2Controller::class, "enviar_previas"]);
+            Route::post("/",       [Api2Controller::class, "enviar_previas"]);
             Route::post("/enviar", [Api2Controller::class, "receber_previa"]);
             Route::post("/limpar", [Api2Controller::class, "limpar_previas"]);
         });
