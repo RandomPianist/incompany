@@ -92,7 +92,7 @@ class Api2Controller extends Controller {
                         "id" => $tamanho[0]->id,
                         "id_pessoa" => $id_pessoa,
                         "id_atribuicao" => $tamanho[0]->id_atribuicao,
-                        "selecionado" => false,
+                        "selecionado" => true,
                         "codbar" => $tamanho[0]->codbar,
                         "numero" => $tamanho[0]->tamanho ? $tamanho[0]->tamanho : "UN"
                     ];
