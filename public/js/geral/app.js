@@ -509,7 +509,7 @@ function modal(nome, id, callback) {
     const concluir = function() {
         limpar_invalido();
         if (callback === undefined) callback = function() {}
-        if (id) $("#" + (nome == "pessoasModal" ? "pessoa-id" : "id")).val(id);
+        if (id) $("#" + nome + " #" + (nome == "pessoasModal" ? "pessoa-id" : "id")).val(id);
         $("#" + nome + " input[type=text], #" + nome + " input[type=number], #" + nome + " input[type=hidden], #" + nome + " textarea").each(function() {
             if (!id && $(this).attr("name") != "_token" && (!(nome == "pessoasModal" && $(this).attr("name") == "tipo"))) $(this).val("");
             if (!$(this).hasClass("autocomplete")) $(this).trigger("keyup");
