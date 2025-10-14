@@ -37,7 +37,7 @@ class Api2Controller extends Controller {
             vpendentesgeral.qtd,
             vpendentesgeral.ultima_retirada,
             vpendentesgeral.proxima_retirada,
-            pre_retiradas.seq
+            pr.seq
         ";
         $campos_select = $campos;
         $campos_select = str_replace("vpendentesgeral.id_produto", "vpendentesgeral.id_produto AS id", $campos_select);
