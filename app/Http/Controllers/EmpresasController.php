@@ -130,7 +130,7 @@ class EmpresasController extends Controller {
                 $m_setor->save();
                 $lista_permissoes = array();
                 foreach ($permissoes as $permissao) $lista_permissoes += [$permissao => 1];
-                $m_setor->permissoes()->create($lista_permissoes);
+                $m_setor->permissao()->create($lista_permissoes);
             }
             $this->log_inserir_lote("C", "setores", "", "SYS"); // App\Http\Controllers\Controller.php
             $this->log_inserir_lote("C", "permissoes", "", "SYS"); // App\Http\Controllers\Controller.php
