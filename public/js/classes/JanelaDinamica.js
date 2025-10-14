@@ -543,9 +543,9 @@ class Setor extends JanelaDinamica {
                         "<input type = 'hidden' name = 'id_pessoa[]' value = '" + pessoa.id + "' />";
 
                     resultado += "<div class = 'row linha-usuario mb-2'>" +
-                        "<input type = 'hidden' name = 'id_pessoa[]' value = '" + data.consulta[i - 1].id + "' />";
-                    let campo_email = "<input type = 'text' name = 'email[]' class = 'validar form-control' id = 'email-" + i + "' placeholder = 'Email de " + nome + "' value = '" + data.consulta[i - 1].email + "' />";
-                    let campo_fone = "<input type = 'text' name = 'phone[]' class = 'validar telefone form-control' id = 'phone-" + i + "' placeholder = 'Telefone de " + nome + "' value = '" + data.consulta[i - 1].telefone + "' onkeyup = 'this.value=phoneMask(this.value)' />";
+                        "<input type = 'hidden' name = 'id_pessoa[]' value = '" + pessoa.id + "' />";
+                    let campo_email = "<input type = 'text' name = 'email[]' class = 'validar form-control' id = 'email-" + i + "' placeholder = 'Email de " + nome + "' value = '" + pessoa.email + "' />";
+                    let campo_fone = "<input type = 'text' name = 'phone[]' class = 'validar telefone form-control' id = 'phone-" + i + "' placeholder = 'Telefone de " + nome + "' value = '" + pessoa.telefone + "' onkeyup = 'this.value=phoneMask(this.value)' />";
                     if (mostrar_email && mostrar_fone) {
                         resultado += "<div class = 'col-4 pr-1'>" +
                             campo_email +
@@ -587,7 +587,7 @@ class Setor extends JanelaDinamica {
                     resultado += "<div class = 'row linha-usuario mb-2'>" +
                         "<input type = 'hidden' name = 'id_pessoa[]' value = '" + data[i - 1].id + "' />" +
                         "<div class = 'col-12'>" +
-                            obter_campo_senha(i, data.nome[i - 1]) +
+                            obter_campo_senha(i, data[i - 1].nome) +
                         "</div>" +
                     "</div>";
                 }
