@@ -849,9 +849,12 @@ class Api2Controller extends Controller {
     public function dedos(Request $request) {
         if ($request->token != config("app.key")) return 401;
         $id_pessoa = Pessoas::where("cpf", $request->cpf)->value("id");
+        $letra_log = Dedos::where("id_pessoa", $id_pessoa)
+                            ->where("dedo", $request->dedo)
+                            ->exists() ? "E" : "C";
         Dedos::updateOrCreate(
             [
-                "id_pessoa" => $request->id_pessoa,
+                "id_pessoa" => $id_pessoa,
                 "dedo" => $request->dedo
             ],
             [
@@ -859,5 +862,9 @@ class Api2Controller extends Controller {
                 "hash" => $request->hash
             ]
         );
+        $reg_log = $this->log_inserir($letra_log, "dedos", $linha->id, "APP"); // App\Http\Controllers\Controller.php
+        $reg_log->id_pessoa = $id_pessoa;
+        $reg_log->nome = Pessoas::find($id_pessoa)->nome;
+        $reg_log->save();
     }
 }
