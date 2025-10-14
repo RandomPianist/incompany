@@ -256,8 +256,9 @@ abstract class Controller extends BaseController {
             $id_pessoa = Auth::user()->id_pessoa;
             $nome = Pessoas::find($id_pessoa)->nome;
         }
+        $query = $tabela;
         if (!$where) {
-            $tabela .= " LEFT JOIN log ON log.fk = ".$tabela.".id AND log.tabela = '".$tabela."' ";
+            $query .= " LEFT JOIN log ON log.fk = ".$tabela.".id AND log.tabela = '".$tabela."' ";
             $where = " log.id IS NULL ";
         }
         DB::statement("
@@ -272,7 +273,7 @@ abstract class Controller extends BaseController {
                     '".date("Y-m-d")."',
                     '".date("H:i:s")."'
                 
-                FROM ".$tabela."
+                FROM ".$query."
 
                 WHERE ".$where."
             )
