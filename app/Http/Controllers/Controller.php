@@ -388,15 +388,14 @@ abstract class Controller extends BaseController {
     //======================================================================
 
     protected function retorna_saldo_cp($id_comodato, $id_produto) {
-        return floatval(
-            DB::table("comodatos_produtos AS cp")
-                ->selectRaw("IFNULL(vestoque.qtd, 0) AS saldo")
-                ->leftjoin("vestoque", "vestoque.id_cp", "cp.id")
-                ->where("cp.id_comodato", $id_comodato)
-                ->where("cp.id_produto", $id_produto)
-                ->first()
-                ->saldo
-        );
+        $consulta = DB::table("comodatos_produtos AS cp")
+                        ->selectRaw("IFNULL(vestoque.qtd, 0) AS saldo")
+                        ->leftjoin("vestoque", "vestoque.id_cp", "cp.id")
+                        ->where("cp.id_comodato", $id_comodato)
+                        ->where("cp.id_produto", $id_produto)
+                        ->first();
+        if ($consulta === null) return 0;
+        return floatval($consulta->saldo);
     }
     
     public function consultar_comodatos_produtos($contexto, $id_principal, $ids, $descricoes, $precos, $maximos) {
