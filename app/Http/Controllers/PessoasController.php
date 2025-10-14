@@ -24,7 +24,7 @@ class PessoasController extends ControllerListavel {
         ) {
             $resultado->tipo = "duplicado";
             $resultado->dado = "CPF";
-        } elseif (!$request->id &&
+        } elseif (!$request->id && trim($request->email) &&
             DB::table("pessoas")
                 ->leftjoin("users", "users.id_pessoa", "pessoas.id")
                 ->where(function($sql) use($request) {
