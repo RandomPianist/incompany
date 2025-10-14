@@ -154,7 +154,7 @@ class MaquinasController extends Controller {
                                 DB::raw("IFNULL(SUM(qtd), 0) AS saldo"),
                                 "cp.id_comodato"
                             )
-                            ->join("comodatos_produtos AS cp", "cp.id", "estq.id_cp")
+                            ->join("comodatos_produtos AS cp", "cp.id", "vestoque.id_cp")
                             ->groupby("id_comodato"),
                         "tab_estoque",
                         "tab_estoque.id_comodato",
