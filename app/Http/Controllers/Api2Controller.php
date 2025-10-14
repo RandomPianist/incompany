@@ -22,14 +22,14 @@ class Api2Controller extends Controller {
     private function info_atb($id_pessoa, $obrigatorios, $grade) {
         $campos = $obrigatorios ? "
             produto_ou_referencia_chave,
-            chave_produto AS chave,
-            nome_produto AS nome
+            chave_produto,
+            nome_produto
         " : "
             vpendentesgeral.id_atribuicao,
             vpendentesgeral.obrigatorio,
-            vpendentesgeral.id_produto AS id,
+            vpendentesgeral.id_produto,
             vpendentesgeral.referencia,
-            vpendentesgeral.descr AS nome,
+            vpendentesgeral.descr,
             vpendentesgeral.detalhes,
             vpendentesgeral.codbar,
             vpendentesgeral.tamanho,
