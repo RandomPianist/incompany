@@ -200,7 +200,7 @@ CREATE VIEW vpendentesgeral AS (
         ), '%d/%m/%Y') AS proxima_retirada,
         IFNULL(DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY), vatbold.data) AS proxima_retirada_real,
         CASE
-            WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN 1
+            WHEN (((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) AND ((vatbold.qtd - (mat_vretiradas.valor + IFNULL(prev.qtd, 0))) > 0)) THEN 1
             ELSE 0
         END AS esta_pendente
         
@@ -212,6 +212,19 @@ CREATE VIEW vpendentesgeral AS (
     JOIN produtos
         ON produtos.cod_externo = vatbold.cod_produto
             OR produtos.referencia = vatbold.referencia
+
+    LEFT JOIN (
+        SELECT
+            id_produto,
+            id_pessoa,
+            COUNT(id) AS qtd
+
+        FROM pre_retiradas
+
+        GROUP BY
+            id_produto,
+            id_pessoa
+    ) AS prev ON prev.id_produto = produtos.id AND prev.id_pessoa = mat_vatribuicoes.id_pessoa
 
     JOIN vprodutosgeral AS vprodutos
         ON vprodutos.id_pessoa = mat_vatribuicoes.id_pessoa
@@ -247,6 +260,7 @@ CREATE VIEW vpendentesgeral AS (
         vprodutos.qtd,
         vprodutos.travar_estq,
         mat_vretiradas.valor,
+        prev.qtd,
         CASE
             WHEN (vatbold.pr_chave = 'R') THEN produtos.referencia
             ELSE produtos.id
@@ -280,10 +294,10 @@ CREATE VIEW vpendentesmaq AS (
                 ROUND(CASE
                     WHEN (vprodutos.travar_estq = 1) THEN
                         CASE
-                            WHEN (vprodutos.qtd >= (vatbold.qtd - mat_vretiradas.valor)) THEN (vatbold.qtd - mat_vretiradas.valor)
+                            WHEN (vprodutos.qtd >= (vatbold.qtd - (mat_vretiradas.valor + IFNULL(prev.qtd, 0)))) THEN (vatbold.qtd - (mat_vretiradas.valor + IFNULL(prev.qtd, 0)))
                             ELSE vprodutos.qtd
                         END
-                    ELSE (vatbold.qtd - mat_vretiradas.valor)
+                    ELSE (vatbold.qtd - (mat_vretiradas.valor + IFNULL(prev.qtd, 0)))
                 END)
             ELSE 0
         END AS qtd,
@@ -296,7 +310,7 @@ CREATE VIEW vpendentesmaq AS (
         ), '%d/%m/%Y') AS proxima_retirada,
         IFNULL(DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY), vatbold.data) AS proxima_retirada_real,
         CASE
-            WHEN ((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) THEN 1
+            WHEN (((DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY) <= CURDATE()) OR (mat_vultretirada.data IS NULL)) AND ((vatbold.qtd - (mat_vretiradas.valor + IFNULL(prev.qtd, 0))) > 0)) THEN 1
             ELSE 0
         END AS esta_pendente,
         vprodutos.id_maquina
@@ -309,6 +323,19 @@ CREATE VIEW vpendentesmaq AS (
     JOIN produtos
         ON produtos.cod_externo = vatbold.cod_produto
             OR produtos.referencia = vatbold.referencia
+
+    LEFT JOIN (
+        SELECT
+            id_produto,
+            id_pessoa,
+            COUNT(id) AS qtd
+
+        FROM pre_retiradas
+
+        GROUP BY
+            id_produto,
+            id_pessoa
+    ) AS prev ON prev.id_produto = produtos.id AND prev.id_pessoa = mat_vatribuicoes.id_pessoa
 
     JOIN vprodutosmaq AS vprodutos
         ON vprodutos.id_pessoa = mat_vatribuicoes.id_pessoa
@@ -345,6 +372,7 @@ CREATE VIEW vpendentesmaq AS (
         vprodutos.travar_estq,
         vprodutos.id_maquina,
         mat_vretiradas.valor,
+        prev.qtd,
         CASE
             WHEN (vatbold.pr_chave = 'R') THEN produtos.referencia
             ELSE produtos.id

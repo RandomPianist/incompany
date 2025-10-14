@@ -77,4 +77,13 @@ Route::group(["prefix" => "app"], function() {
         Route::get("/ultimas-retiradas/{id_pessoa}",    [DashboardController::class, "ultimas_retiradas"]);
         Route::get("/produtos-em-atraso/{id_pessoa}",   [DashboardController::class, "produtos_em_atraso"]);
     });
+
+    Route::group(["prefix" => "v2"], function() {
+        Route::group(["prefix" => "previas"], function() {
+            Route::get ("/",       [Api2Controller::class, "enviar_previas"]);
+            Route::post("/enviar", [Api2Controller::class, "receber_previa"]);
+            Route::post("/limpar", [Api2Controller::class, "limpar_previas"]);
+        });
+        Route::post("/retirar", [Api2Controller::class, "retirar"]);
+    });
 });

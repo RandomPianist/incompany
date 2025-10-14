@@ -14,9 +14,87 @@ use App\Models\SolicitacoesProdutos;
 use App\Models\Comodatos;
 use App\Models\ComodatosProdutos;
 use App\Models\Retiradas;
+use App\Models\PreRetiradas;
+use App\Models\Pessoas;
 use Illuminate\Http\Request;
 
 class Api2Controller extends Controller {
+    private function info_atb($id_pessoa, $obrigatorios, $grade) {
+        $campos = $obrigatorios ? "
+            produto_ou_referencia_chave,
+            chave_produto AS chave,
+            nome_produto AS nome
+        " : "
+            vpendentesgeral.id_atribuicao,
+            vpendentesgeral.obrigatorio,
+            vpendentesgeral.id_produto AS id,
+            vpendentesgeral.referencia,
+            vpendentesgeral.descr AS nome,
+            vpendentesgeral.detalhes,
+            vpendentesgeral.codbar,
+            vpendentesgeral.tamanho,
+            vpendentesgeral.foto,
+            vpendentesgeral.qtd,
+            vpendentesgeral.ultima_retirada,
+            vpendentesgeral.proxima_retirada,
+            pre_retiradas.seq
+        ";
+        $query = "SELECT ".$campos." FROM vpendentesgeral ";
+        if (!$obrigatorios) {
+            $query .= "
+                JOIN pre_retiradas AS pr
+                    ON pr.id_pessoa = vpendentesgeral.id_pessoa AND pr.id_produto = vpendentesgeral.id_produto
+            ";
+        }
+        $query .= " WHERE vpendentesgeral.id_pessoa = ".$id_pessoa;
+        $query .= $obrigatorios ? "
+            AND obrigatorios = 1
+            AND esta_pendente = 1
+        " : "
+            vpendentesgeral.referencia ".($grade ? "IS NOT" : "IS")." NULL
+        ";
+        $query .= " GROUP BY ".$campos;
+        return DB::select(DB::raw($query));
+    }
+
+    private function produtos_por_pessoa($id_pessoa, $grade) {
+        $consulta = $this->info_atb($id_pessoa, false, $grade);
+
+        $resultado = array();
+        foreach ($consulta as $linha) {
+            if ($linha->foto) {
+                $foto = explode("/", $linha->foto);
+                $linha->foto = $foto[sizeof($foto) - 1];
+            }
+            array_push($resultado, $linha);
+        }
+
+        return collect($resultado)->groupBy($grade ? "referencia" : "id")->map(function($itens) use($id_pessoa) {
+            return [
+                "id_pessoa" => $id_pessoa,
+                "nome" => $itens[0]->nome,
+                "foto" => $itens[0]->foto,
+                "referencia" => $itens[0]->referencia,
+                "qtd" => $itens[0]->qtd,
+                "detalhes" => $itens[0]->detalhes,
+                "ultima_retirada" => $itens[0]->ultima_retirada,
+                "proxima_retirada" => $itens[0]->proxima_retirada,
+                "obrigatorio" => $itens[0]->obrigatorio,
+                "seq" => intval($itens[0]->seq),
+                "tamanhos" => $itens->groupBy("id")->map(function($tamanho) use($id_pessoa) {
+                    return [
+                        "id" => $tamanho[0]->id,
+                        "id_pessoa" => $id_pessoa,
+                        "id_atribuicao" => $tamanho[0]->id_atribuicao,
+                        "selecionado" => false,
+                        "codbar" => $tamanho[0]->codbar,
+                        "numero" => $tamanho[0]->tamanho ? $tamanho[0]->tamanho : "UN"
+                    ];
+                })->values()->all()
+            ];
+        })->values()->all();
+    }
+
     private function maquinas($cft) {
         return DB::table("maquinas")
                     ->select(
@@ -556,5 +634,209 @@ class Api2Controller extends Controller {
             $connection->rollBack();
             return 500;
         }
+    }
+
+    public function enviar_previas(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        $id_pessoa = Pessoas::where("cpf", $request->cpf)->value("id");
+        return json_encode(collect(
+            array_merge(
+                $this->produtos_por_pessoa($id_pessoa, true),
+                $this->produtos_por_pessoa($id_pessoa, false)
+            )
+        )->sortBy([
+            ["seq", "desc"],
+            ["obrigatorio", "desc"],
+            ["nome", "asc"]
+        ])->values()->all());
+    }
+
+    public function receber_previa(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        $id_produto = Produtos::where("cod_externo", $request->codbar)->value("id");
+        $id_pessoa = Pessoas::where("cpf", $request->cpf)->value("id");
+        if (
+            !DB::table("vpendentesgeral")
+                ->where("id_pessoa", $id_pessoa)
+                ->where("id_produto", $id_produto)
+                ->where("esta_pendente", 1)
+                ->exists()
+        ) return 403;
+        $previa = new PreRetiradas;
+        $previa->id_pessoa = $id_pessoa;
+        $previa->id_produto = $id_produto;
+        $previa->save();
+        return 201;
+    }
+
+    public function limpar_previas(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        PreRetiradas::whereIn(
+            "id_pessoa",
+            Pessoas::where("cpf", $request->cpf)
+                    ->pluck("id")
+                    ->toArray()
+        )->delete();
+        return 200;
+    }
+
+    public function retirar(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        $resultado = new \stdClass;
+        $resultado->msg = "";
+        $cont = 0;
+        $comodato = null;
+        $produtos_ids = array();
+        $produtos_refer = array();
+
+        if (!DB::table("mat_vultretirada")->exists()) {
+            $resultado->code = 500;
+            $resultado->msg = "O sistema está em automanutenção. Tente novamente em alguns minutos.";
+        }
+		
+		$req_retiradas = $request->retiradas;
+        while (isset($req_retiradas[$cont]["id_atribuicao"]) && !$resultado->msg) {
+            $retirada = $req_retiradas[$cont];
+            $atribuicao = Atribuicoes::find($retirada["id_atribuicao"]);
+            $maquinas = array();
+            $cns_comodato = array();
+
+            if (!$resultado->msg && $atribuicao === null) {
+                $resultado->code = 404;
+                $resultado->msg = "Atribuição não encontrada";
+            }
+
+            if (!$resultado->msg) {
+                $maquinas = DB::table("maquinas")
+                                ->whereRaw("(
+                                    CASE
+                                        WHEN id_ant IS NOT NULL THEN id_ant
+                                        ELSE id
+                                    END
+                                ) = ".$retirada["id_maquina"])
+                                ->get();
+                if (!sizeof($maquinas)) {
+                    $resultado->code = 404;
+                    $resultado->msg = "Máquina não encontrada";
+                }
+            }
+
+            if (!$resultado->msg) {
+                $cns_comodato = DB::table("comodatos")
+                                    ->select("id")
+                                    ->where("id_maquina", $maquinas[0]->id)
+                                    ->whereRaw("inicio <= CURDATE()")
+                                    ->whereRaw("fim >= CURDATE()")
+                                    ->get();
+                if (!sizeof($cns_comodato)) {
+                    $resultado->code = 404;
+                    $resultado->msg = "Máquina não comodatada para nenhuma empresa";
+                }
+            }
+            
+            if (!$resultado->msg) {
+                $comodato = Comodatos::find($cns_comodato[0]->id);
+                if (
+                    intval($comodato->travar_ret) &&
+                    !isset($retirada["id_supervisor"]) &&
+                    !$this->retirada_consultar($retirada["id_atribuicao"], $retirada["qtd"], $retirada["id_pessoa"]) // App\Http\Controllers\Controller.php
+                ) {
+                    $resultado->code = 401;
+                    $resultado->msg = "Essa quantidade de produtos não é permitida para essa pessoa";
+                }
+
+                if (!$resultado->msg) {
+                    if (
+                        intval($comodato->travar_estq) &&
+                        floatval($retirada["qtd"]) > $this->retorna_saldo_cp($comodato->id, $retirada["id_produto"]) // App\Http\Controllers\Controller.php
+                    ) {
+                        $resultado->code = 500;
+                        $resultado->msg = "Essa quantidade de produtos não está disponível em estoque";
+                    }
+                }
+            }
+
+            if (!$resultado->msg) {
+                array_push($produtos_ids, intval($retirada["id_produto"]));
+                array_push($produtos_refer, strval(
+                    DB::table("produtos")
+                        ->selectRaw("IFNULL(referencia, '') AS referencia")
+                        ->where("id", $retirada["id_produto"])
+                        ->value("referencia")
+                ));
+            }
+            $cont++;
+        }
+
+        if ($resultado->msg) return json_encode($resultado);
+
+        $consulta = $this->info_atb($req_retiradas[0]["id_pessoa"], true, false);
+        foreach ($consulta as $linha) {
+            if (!$resultado->msg && (
+                ($linha->produto_ou_referencia_chave == "R" && !in_array($linha->chave_produto, $produtos_refer)) ||
+                ($linha->produto_ou_referencia_chave == "P" && !in_array(intval($linha->chave_produto), $produtos_ids))
+            )) {
+                $msg = "Há um produto obrigatório que não foi retirado: ";
+                if ($linha->produto_ou_referencia_chave == "R") $msg .= "referência ";
+                $msg .= $linha->nome;
+                $resultado->code = 400;
+                $resultado->msg = $msg; 
+            }
+        }
+
+        if ($resultado->msg) return json_encode($resultado);
+
+        $cont = 0;
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            while (isset($req_retiradas[$cont]["id_atribuicao"])) {
+                $retirada = $req_retiradas[$cont];
+                $salvar = array(
+                    "id_pessoa" => $retirada["id_pessoa"],
+                    "id_produto" => $retirada["id_produto"],
+                    "id_atribuicao" => $retirada["id_atribuicao"],
+                    "id_comodato" => $comodato->id,
+                    "qtd" => $retirada["qtd"],
+                    "data" => date("Y-m-d"),
+                    "hora" => date("H:i:s")
+                );
+                if (isset($retirada["id_supervisor"])) {
+                    $salvar += [
+                        "id_supervisor" => $retirada["id_supervisor"],
+                        "obs" => $retirada["obs"]
+                    ];
+                }    
+                if (isset($retirada["biometria"])) $salvar += ["biometria" => $retirada["biometria"]];
+                
+                $this->retirada_salvar($salvar); // App\Http\Controllers\Controller.php
+                
+                $linha = new Estoque;
+                $linha->es = "S";
+                $linha->descr = "RETIRADA";
+                $linha->qtd = $retirada["qtd"];
+                $linha->data = date("Y-m-d");
+                $linha->hms = date("H:i:s");
+                $linha->id_cp = $comodato->cp($retirada["id_produto"])->value("id");
+                $linha->save();
+                $reg_log = $this->log_inserir("C", "estoque", $linha->id, "APP"); // App\Http\Controllers\Controller.php
+                $reg_log->id_pessoa = $retirada["id_pessoa"];
+                $reg_log->nome = Pessoas::find($retirada["id_pessoa"])->nome;
+                $reg_log->save();
+        
+                $cont++;
+            }
+            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$req_retiradas[0]["id_pessoa"].", 'R', 'N', 0)");
+            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$req_retiradas[0]["id_pessoa"].", 'U', 'N', 0)");
+            $resultado->code = 201;
+            $resultado->msg = "Sucesso";
+            $connection->commit();
+        } catch (\Exception $e) {
+            $connection->rollBack();
+            $resultado->code = 500;
+            $resultado->msg = $e->getMessage();
+        }
+        return json_encode($resultado);
     }
 }

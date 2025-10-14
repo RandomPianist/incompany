@@ -100,7 +100,7 @@ class ApiController extends Controller {
                     ];
                 })->values()->all()
             ];
-        })->sortBy("nome")->values()->all();
+        })->values()->all();
     }
 
     //GETS

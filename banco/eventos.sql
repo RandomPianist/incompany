@@ -41,6 +41,7 @@ BEGIN
     COMMIT;
     TRUNCATE TABLE excbkp;
     TRUNCATE TABLE atbbkp;
+    TRUNCATE TABLE pre_retiradas;
 END$$
 
 DELIMITER ;
