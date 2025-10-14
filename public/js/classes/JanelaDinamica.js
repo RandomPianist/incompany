@@ -17,7 +17,7 @@ class JanelaDinamica {
         if (setor) titulo = "centro de custo";
         const texto = (
             setor ?
-                "Pessoas nesse " + titulo + (chave == "financeiro" ? "têm" : "podem") + ", por padrão,"
+                "Pessoas nesse " + titulo + " " + (chave == "financeiro" ? "têm" : "podem") + ", por padrão,"
             :
                 "Esse " + titulo + " " + (chave == "financeiro" ? "tem" : "pode")
         ) + " "; 
