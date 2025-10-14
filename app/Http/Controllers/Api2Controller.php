@@ -848,6 +848,7 @@ class Api2Controller extends Controller {
 
     public function dedos(Request $request) {
         if ($request->token != config("app.key")) return 401;
+        $id_pessoa = Pessoas::where("cpf", $request->cpf)->value("id");
         Dedos::updateOrCreate(
             [
                 "id_pessoa" => $request->id_pessoa,
