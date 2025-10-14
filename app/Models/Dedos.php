@@ -11,6 +11,7 @@ class Dedos extends Model
     protected $fillable = [
         'dedo',
         'hash',
+        'imagem',
         'id_pessoa',
         'created_at',
         'updated_at'
@@ -20,6 +21,7 @@ class Dedos extends Model
         'id' => 'integer',
         'dedo' => 'integer',
         'hash' => 'string',
+        'imagem' => 'string',
         'id_pessoa' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'

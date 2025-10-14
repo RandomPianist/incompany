@@ -85,5 +85,6 @@ Route::group(["prefix" => "app"], function() {
             Route::post("/limpar", [Api2Controller::class, "limpar_previas"]);
         });
         Route::post("/retirar", [Api2Controller::class, "retirar"]);
+        Route::post("/dedos",   [Api2Controller::class, "dedos"]);
     });
 });

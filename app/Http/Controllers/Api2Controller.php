@@ -16,6 +16,7 @@ use App\Models\ComodatosProdutos;
 use App\Models\Retiradas;
 use App\Models\PreRetiradas;
 use App\Models\Pessoas;
+use App\Models\Dedos;
 use Illuminate\Http\Request;
 
 class Api2Controller extends Controller {
@@ -843,5 +844,19 @@ class Api2Controller extends Controller {
             $resultado->msg = $e->getMessage();
         }
         return json_encode($resultado);
+    }
+
+    public function dedos(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        Dedos::updateOrCreate(
+            [
+                "id_pessoa" => $request->id_pessoa,
+                "dedo" => $request->dedo
+            ],
+            [
+                "imagem" => $request->imagem,
+                "hash" => $request->hash
+            ]
+        );
     }
 }
