@@ -39,7 +39,11 @@ class Api2Controller extends Controller {
             vpendentesgeral.proxima_retirada,
             pre_retiradas.seq
         ";
-        $query = "SELECT ".$campos." FROM vpendentesgeral ";
+        $campos_select = $campos;
+        $campos_select = str_replace("vpendentesgeral.id_produto", "vpendentesgeral.id_produto AS id", $campos_select);
+        $campos_select = str_replace("chave_produto", "chave_produto AS chave", $campos_select);
+        $campos_select = str_replace("nome_produto", "nome_produto AS nome", $campos_select);
+        $query = "SELECT ".$campos_select." FROM vpendentesgeral ";
         if (!$obrigatorios) {
             $query .= "
                 JOIN pre_retiradas AS pr
@@ -51,7 +55,7 @@ class Api2Controller extends Controller {
             AND obrigatorios = 1
             AND esta_pendente = 1
         " : "
-            vpendentesgeral.referencia ".($grade ? "IS NOT" : "IS")." NULL
+            AND vpendentesgeral.referencia ".($grade ? "IS NOT" : "IS")." NULL
         ";
         $query .= " GROUP BY ".$campos;
         return DB::select(DB::raw($query));
