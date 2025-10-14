@@ -165,7 +165,7 @@ class MaquinasController extends Controller {
         $vinculo = $aviso != "";
         $resultado = new \stdClass;
         $nome = "<b>".Maquinas::find($id)->descr."</b>";
-        $resultado->permitir = !$vinculo;
+        $resultado->permitir = !$vinculo ? 1 : 0;
         $resultado->aviso = $vinculo ? "Não é possível excluir ".$nome." porque essa máquina ".$aviso : "Tem certeza que deseja excluir ".$nome."?";
         return $resultado;
     }
