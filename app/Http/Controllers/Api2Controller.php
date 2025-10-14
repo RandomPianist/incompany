@@ -41,6 +41,7 @@ class Api2Controller extends Controller {
         ";
         $campos_select = $campos;
         $campos_select = str_replace("vpendentesgeral.id_produto", "vpendentesgeral.id_produto AS id", $campos_select);
+        $campos_select = str_replace("vpendentesgeral.descr", "vpendentesgeral.descr AS nome", $campos_select);
         $campos_select = str_replace("chave_produto", "chave_produto AS chave", $campos_select);
         $campos_select = str_replace("nome_produto", "nome_produto AS nome", $campos_select);
         $query = "SELECT ".$campos_select." FROM vpendentesgeral ";
