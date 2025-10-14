@@ -339,7 +339,7 @@ main {
     max-height: 180px;
     overflow-y: auto;
     width: 100%;
-    z-index: 3
+    z-index: 9999
 }
 
 .autocomplete-result:empty {

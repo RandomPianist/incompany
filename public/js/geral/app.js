@@ -7,6 +7,18 @@ let pessoa = null;
 let setor = null;
 let grupo_emp2 = 0;
 
+function debounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+        // Se a função for chamada novamente, cancela o timer anterior
+        clearTimeout(timeoutId);
+        // E cria um novo timer
+        timeoutId = setTimeout(() => {
+            func.apply(this, args);
+        }, delay);
+    };
+}
+
 jQuery.fn.sortElements = (function() {
     var sort = [].sort;
 
@@ -627,105 +639,163 @@ function autocomplete(_this) {
         _column = _this.data().column,
         _filter = _this.data().filter,
         _filter_col = _this.data().filter_col,
-        _id_atribuicao = _this.data().atribuicao,
         _search = _this.val(),
         input_id = _this.data().input,
-        element = _this,
-        div_result;
+        element = _this;
 
-    $(document).click(function (e) {
-        if (e.target.id != element.prop("id")) {
+    // Remove qualquer resultado de autocomplete anterior
+    $(".autocomplete-result").remove();
+
+    if (!_search.trim()) {
+        $(input_id).val("").trigger("change");
+        return;
+    }
+
+    var div_result = $("<div class='autocomplete-result'>");
+
+    // --- LÓGICA FINAL DE POSICIONAMENTO ---
+
+    // 1. O alvo para anexar o resultado é SEMPRE o <body>.
+    // Isso o liberta das restrições de 'overflow' do modal.
+    $('body').append(div_result);
+
+    // 2. Usamos .offset() para pegar a posição absoluta do input na PÁGINA INTEIRA.
+    const inputOffset = element.offset();
+
+    // 3. As coordenadas são aplicadas diretamente. A posição é calculada
+    // com base na distância do input até o topo/esquerda da janela.
+    div_result.css({
+        top: inputOffset.top + element.outerHeight(), // Posição do input + sua altura
+        left: inputOffset.left, // Posição do input
+        width: element.outerWidth() // Mesma largura do input
+    });
+    
+    // Listener para fechar ao clicar fora.
+    $(document).one("click", function (e) {
+        if (!element.is(e.target) && div_result.has(e.target).length === 0) {
             div_result.remove();
         }
     });
 
-    if (!element.parent().find(".autocomplete-result").length) {
-        div_result = $("<div class = 'autocomplete-result' style = 'width:" + document.querySelector(
-            $(element).data("input").indexOf(" ") == -1 ? ("#" + $(element).attr("id")) : $(element).data("input").replace("id_", "")
-        ).offsetWidth + "px'>");
-        element.after(div_result);
-    } else {
-        div_result = element.parent().find(".autocomplete-result");
-        div_result.empty();
-    }
-
-    if (!_search) $(input_id).val($(this).data().id).trigger("change");
+    // O restante da função (chamada AJAX) continua igual...
     $.get(URL + "/autocomplete", {
-        table : _table,
-        column : _column,
-        filter_col : _filter_col,
-        filter : _filter,
-        search : _search,
-        atribuicao : _id_atribuicao
+        table: _table,
+        column: _column,
+        filter_col: _filter_col,
+        filter: _filter,
+        search: _search
     }, function (data) {
         if (typeof data == "string") data = $.parseJSON(data);
         div_result.empty();
+
+        if (data.length === 0) {
+            div_result.append("<div class='autocomplete-line' style='color:#888; cursor:default;'>Nenhum resultado</div>");
+            return;
+        }
+
         data.forEach((item) => {
-            div_result.append("<div class = 'autocomplete-line' data-id = '" + item.id + "'>" + item[_column] + "</div>");
+            div_result.append("<div class='autocomplete-line' data-id='" + item.id + "'>" + item[_column] + "</div>");
         });
-        element.parent().find(".autocomplete-line").each(function () {
+
+        div_result.find(".autocomplete-line[data-id]").each(function () {
             $(this).click(function () {
                 $(input_id).val($(this).data().id).trigger("change");
                 element.val($(this).text());
                 div_result.remove();
-                const el = document.getElementById(element.data().prox);
-                if (el !== null) el.focus();
             });
 
             $(this).mouseover(function () {
-                $(input_id).val($(this).data().id).trigger("change");
-                element.val($(this).text());
                 $(this).parent().find(".hovered").removeClass("hovered");
                 $(this).addClass("hovered");
             });
         });
+        
+        div_result.find('.autocomplete-line[data-id]').first().addClass('hovered');
     });
 }
 
 function carrega_autocomplete() {
-    $(".autocomplete").each(function() {
-        $(this).keyup(function(e) {
-            $(this).removeClass("invalido");
-            if (e.keyCode == 13) validacao_bloqueada = true;
-            if ([9, 13, 17, 38, 40].indexOf(e.keyCode) == -1 && $(this).val().trim()) autocomplete($(this));
-            if (!$(this).val().trim()) $($(this).data().input).val("");
-            setTimeout(function() {
-                validacao_bloqueada = false;
-            }, 50);
-        });
+    // A função de busca com um "debounce" de 350ms.
+    // A requisição AJAX só será feita após o usuário parar de digitar por 350ms.
+    const debouncedAutocomplete = debounce(function(element) {
+        autocomplete(element);
+    }, 350);
 
-        $(this).keydown(function(e) {
-            if ([9, 13, 38, 40].indexOf(e.keyCode) > -1) {
-                if (e.keyCode == 13) {
-                    e.preventDefault();
-                    validacao_bloqueada = true;
-                }
-                seta_autocomplete(e.keyCode, $(this));
-            }
-        });
+    // Usando DELEGAÇÃO DE EVENTOS para funcionar em campos adicionados dinamicamente
+    $(document).on('keyup', '.autocomplete', function(e) {
+        const element = $(this);
+        element.removeClass("invalido");
+
+        if (e.keyCode == 13) validacao_bloqueada = true;
+        
+        // Ignora teclas de navegação (Setas, Enter, Tab, etc.)
+        if ([9, 13, 17, 38, 40].indexOf(e.keyCode) > -1) {
+            return;
+        }
+
+        if (!element.val().trim()) {
+            $($(this).data().input).val("");
+            $(".autocomplete-result").remove(); // Remove a caixa se o campo for limpo
+        } else {
+            // Em vez de chamar autocomplete() diretamente, chamamos nossa versão com debounce
+            debouncedAutocomplete(element);
+        }
+
+        setTimeout(function() {
+            validacao_bloqueada = false;
+        }, 50);
     });
+
+    $(document).on('keydown', '.autocomplete', function(e) {
+        if ([9, 13, 38, 40].indexOf(e.keyCode) > -1) {
+            e.preventDefault();
+            if (e.keyCode == 13) {
+                validacao_bloqueada = true;
+            }
+            seta_autocomplete(e.keyCode, $(this));
+        }
+    });
+
     carrega_atalhos();
 }
 
 function seta_autocomplete(direcao, _this) {
-    _this = _this.parent();
-    var el = _this.find(".autocomplete-result .autocomplete-line");
-    var el_hovered = _this.find(".autocomplete-result .autocomplete-line.hovered");
-    var target = el.first();
-    if (el_hovered.length) {
+    // A busca agora é feita no '.autocomplete-result' que está no body
+    var container = $('.autocomplete-result');
+    if (!container.length) return;
+
+    var el = container.find(".autocomplete-line[data-id]"); // Seleciona apenas itens com data-id
+    var el_hovered = container.find(".autocomplete-line.hovered");
+    var target;
+
+    if (!el_hovered.length) {
+        // Se nenhum estiver selecionado, seleciona o primeiro
+        target = el.first();
+    } else {
         switch(direcao) {
-            case 38:
-                target = el_hovered.prev();
+            case 38: // Seta para cima
+                target = el_hovered.prevAll('[data-id]').first();
                 break;
-            case 40:
-                target = el_hovered.next();
+            case 40: // Seta para baixo
+                target = el_hovered.nextAll('[data-id]').first();
                 break;
-            default:
+            default: // Enter ou Tab
                 target = el_hovered;
                 break;
         }
     }
-    target.trigger(([38, 40].indexOf(direcao) > -1) ? "mouseover" : "click");
+    
+    // Se o target existir, dispara o evento
+    if(target && target.length) {
+        // Dispara mouseover para navegação e click para seleção
+        if ([38, 40].indexOf(direcao) > -1) {
+            _this.val(target.text()); // Atualiza o texto do input ao navegar com as setas
+            el_hovered.removeClass('hovered');
+            target.addClass('hovered');
+        } else {
+            target.trigger("click");
+        }
+    }
 }
 
 function carrega_dinheiro() {
