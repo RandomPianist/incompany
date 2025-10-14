@@ -469,7 +469,7 @@ abstract class Controller extends BaseController {
         return $resultado;
     }
 
-    public function salvar_comodatos_produtos(Request $request, $contexto) {
+    public function salvar_comodatos_produtos($contexto, Request $request) {
         $id_principal = $contexto == "maquina" ? $request->id_maquina : $request->id_produto;
         $ids = $contexto == "maquina" ? $request->id_produto : $request->id_maquina;
         
