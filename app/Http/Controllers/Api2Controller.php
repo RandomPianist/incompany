@@ -849,6 +849,11 @@ class Api2Controller extends Controller {
 
     public function dedos(Request $request) {
         if ($request->token != config("app.key")) return 401;
+        return json_encode(Dedos::get());
+    }
+
+    public function salvar_dedos(Request $request) {
+        if ($request->token != config("app.key")) return 401;
         $id_pessoa = Pessoas::where("cpf", $request->cpf)->value("id");
         $letra_log = Dedos::where("id_pessoa", $id_pessoa)
                             ->where("dedo", $request->dedo)
