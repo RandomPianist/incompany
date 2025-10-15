@@ -498,8 +498,8 @@ class ApiController extends Controller {
         
                 $cont++;
             }
-            $this->atualizar_mat_vretiradas_vultretirada("P", $req_retiradas[0]["id_pessoa"], "R", false); // App\Http\Traits\RotinasTrait.php
-            $this->atualizar_mat_vretiradas_vultretirada("P", $req_retiradas[0]["id_pessoa"], "U", false); // App\Http\Traits\RotinasTrait.php
+            $this->atualizar_mat_vretiradas_vultretirada("P", $request[0]["id_pessoa"], "R", false); // App\Http\Traits\RotinasTrait.php
+            $this->atualizar_mat_vretiradas_vultretirada("P", $request[0]["id_pessoa"], "U", false); // App\Http\Traits\RotinasTrait.php
             $resultado->code = 201;
             $resultado->msg = "Sucesso";
             $connection->commit();
