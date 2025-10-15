@@ -235,7 +235,7 @@ $(document).ready(function() {
                         cont++;
                     } while ($($(el).parent()).hasClass("d-none") || $(el).attr("disabled"))
                 } else focar = true;
-                carrega_autocomplete();
+                // carrega_autocomplete();
             })
         });
 
@@ -1041,7 +1041,7 @@ function cp_mp_adicionar_campo(tipo) {
     $("#" + tipo + "Modal .modal-tudo").append($(linha));
 
     cp_mp_listeners(tipo);
-    carrega_autocomplete();
+    // carrega_autocomplete();
     carrega_dinheiro();
 
     $(".form-control").keydown(function() {

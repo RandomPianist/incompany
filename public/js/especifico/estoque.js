@@ -95,7 +95,7 @@ function adicionar_campo_estoque() {
 
     $("#estoqueModal .modal-tudo").append($(linha));
 
-    carrega_autocomplete();
+    // carrega_autocomplete();
     carrega_dinheiro();
     $($(linha).find(".obs")[0]).trigger("keyup");
     $($(linha).find(".qtd")[0]).trigger("keyup");
