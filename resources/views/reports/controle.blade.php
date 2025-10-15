@@ -89,7 +89,7 @@
             <p>Sob pena de ser punido conforme Lei n. 6.514, de 22/12/77, artigo 158</p>
             <p>Declaro, ainda que recebi treinamento e orientação referente ao uso do E.P.I e as Normas de Segurança do Trabalho.</p>
             <div class = "data-extenso">
-                <span class = "traduzir">{{ $item[0]["cidade"] }}, {{ $data_extenso }}</span>
+                <span class = "traduzir">{{ $item["cidade"] }}, {{ $data_extenso }}</span>
             </div>
             <div class = "assinatura">
                 <div class = "asn_1">
