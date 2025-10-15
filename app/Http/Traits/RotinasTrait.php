@@ -59,7 +59,7 @@ trait RotinasTrait {
                     ->where(function($sql) use($chave, $valor, $id_pessoa) {
                         if (in_array($chave, ["P", "S"])) {
                             if ($id_pessoa) $sql->where("id_pessoa", $id_pessoa);
-                            else $sql->whereIn($chave == "P" ? "id_pessoa" : "id_setor", explode(",", $valor));
+                            else $sql->whereRaw(($chave == "P" ? "id_pessoa" : "id_setor")." IN (".$valor.")");
                         }
                     })
                     ->delete();
@@ -292,7 +292,7 @@ trait RotinasTrait {
         } else {
             DB::table("mat_vatribuicoes")
                 ->where(function($sql) use($chave, $valor) {
-                    if ($chave == "P") $sql->whereIn("id_pessoa", explode(",", $valor));
+                    if ($chave == "P") $sql->whereRaw("id_pessoa IN (".$valor.")");
                 })
                 ->delete();
         }
@@ -382,7 +382,7 @@ trait RotinasTrait {
         $blocks .= " UNION ALL ".$base_select.$prev_notexists." AND x.src = 'MR' AND ".$where;
         DB::statement("
             INSERT INTO mat_vatribuicoes (
-                SELECT DISTINCT * FROM (".$blocks.")
+                SELECT DISTINCT * FROM (".$blocks.") AS tab
             )
         ");
     }
@@ -459,7 +459,7 @@ trait RotinasTrait {
             default:
                 DB::table($tabela)
                     ->where(function($sql) use($chave, $valor) {
-                        if ($chave == "P") $sql->whereIn("id_pessoa", explode(",", $valor));
+                        if ($chave == "P") $sql->whereRaw("id_pessoa IN (".$valor.")");
                     })
                     ->delete();
         }

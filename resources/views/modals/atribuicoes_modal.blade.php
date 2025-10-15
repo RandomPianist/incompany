@@ -48,11 +48,11 @@
                                     @endif
                                     <div class = "col-2">
                                         <label for = "quantidade_p" class = "custom-label-form">Quantidade:</label>
-                                        <input id = "quantidade_p" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" />
+                                        <input id = "quantidade_p" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" onchange = "limitar(this)" onkeyup = "limitar(this);atribuicao.tentar(event)" />
                                     </div>
                                     <div class = "col-2">
                                         <label for = "validade_p" class = "custom-label-form">Validade em dias:</label>
-                                        <input id = "validade_p" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" />
+                                        <input id = "validade_p" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" onchange = "limitar(this)" onkeyup = "limitar(this);atribuicao.tentar(event)" />
                                     </div>
                                     <div class = "col-2">
                                         <label for = "obrigatorio_p" class = "custom-label-form">Obrigatório:</label>
@@ -88,11 +88,11 @@
                                     @endif
                                     <div class = "col-2">
                                         <label for = "quantidade_r" class = "custom-label-form">Quantidade:</label>
-                                        <input id = "quantidade_r" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" />
+                                        <input id = "quantidade_r" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" onchange = "limitar(this)" onkeyup = "limitar(this);atribuicao.tentar(event)" />
                                     </div>
                                     <div class = "col-2">
                                         <label for = "validade_r" class = "custom-label-form">Validade em dias:</label>
-                                        <input id = "validade_r" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" />
+                                        <input id = "validade_r" class = "form-control text-right" autocomplete = "off" type = "number" value = "1" onchange = "limitar(this)" onkeyup = "limitar(this);atribuicao.tentar(event)" />
                                     </div>
                                     <div class = "col-2">
                                         <label for = "obrigatorio_r" class = "custom-label-form">Obrigatório:</label>
