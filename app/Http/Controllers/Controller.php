@@ -18,13 +18,14 @@ use App\Models\ComodatosProdutos;
 use App\Models\Atribuicoes;
 use App\Services\GlobaisService;
 use App\Services\ConcorrenciaService;
+use App\Http\Traits\RotinasTrait;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 
 abstract class Controller extends BaseController {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, RotinasTrait;
 
     //======================================================================
     // BLOCO: UTILITÁRIOS E HELPERS GERAIS
@@ -538,7 +539,7 @@ abstract class Controller extends BaseController {
             if ($ret) {
                 $this->log_inserir_lote("D", "atribuicoes", $where_g);
                 Atribuicoes::whereRaw($where_g)->update(["lixeira" => 1]);
-                DB::statement("CALL excluir_atribuicao_sem_retirada()");
+                $this->excluir_atribuicao_sem_retirada(); // App\Http\Traits\RotinasTrait.php
             }
             return $ret;
         }
@@ -723,25 +724,25 @@ abstract class Controller extends BaseController {
             switch($chave) {
                 case "P":
                     $minhas_maquinas = explode(",", $this->maquinas_da_pessoa($valor_ant));
-                    foreach ($minhas_maquinas as $maq) DB::statement("CALL atualizar_mat_vcomodatos(".$maq.")");
+                    foreach ($minhas_maquinas as $maq) $this->atualizar_mat_vcomodatos($maq); // App\Http\Traits\RotinasTrait.php
                     break;
                 case "M":
                     if (is_iterable($valor_ant)) {
-                        foreach ($valor_ant as $maq) DB::statement("CALL atualizar_mat_vcomodatos(".$maq.")");
-                    } else DB::statement("CALL atualizar_mat_vcomodatos(".$valor_ant.")");
+                        foreach ($valor_ant as $maq) $this->atualizar_mat_vcomodatos($maq); // App\Http\Traits\RotinasTrait.php
+                    } else $this->atualizar_mat_vcomodatos($valor_ant); // App\Http\Traits\RotinasTrait.php
                     break;
             }
         }
-        DB::statement("CALL atualizar_mat_vatbaux('".$chave."', ".$valor.", 'N', ".$id_pessoa.")");
-        DB::statement("CALL atualizar_mat_vatribuicoes('".$chave."', ".$valor.", 'N', ".$id_pessoa.")");
-        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'R', 'N', ".$id_pessoa.")");
-        DB::statement("CALL atualizar_mat_vretiradas_vultretirada('".$chave."', ".$valor.", 'U', 'N', ".$id_pessoa.")");
-        if ($completo) DB::statement("CALL excluir_atribuicao_sem_retirada()");
+        $this->atualizar_mat_vatbaux($chave, $valor, false, intval($id_pessoa)); // App\Http\Traits\RotinasTrait.php
+        $this->atualizar_mat_vatribuicoes($chave, $valor, false, intval($id_pessoa)); // App\Http\Traits\RotinasTrait.php
+        $this->atualizar_mat_vretiradas_vultretirada($chave, $valor, "R", false); // App\Http\Traits\RotinasTrait.php
+        $this->atualizar_mat_vretiradas_vultretirada($chave, $valor, "U", false); // App\Http\Traits\RotinasTrait.php
+        if ($completo) $this->excluir_atribuicao_sem_retirada(); // App\Http\Traits\RotinasTrait.php
     }
 
     protected function atualizar_atribuicoes($consulta) {
         foreach ($consulta as $linha) $this->atualizar_tudo($linha->psm_valor, $linha->psm_chave);
-        DB::statement("CALL excluir_atribuicao_sem_retirada()");
+        $this->excluir_atribuicao_sem_retirada(); // App\Http\Traits\RotinasTrait.php
     }
     
     //======================================================================

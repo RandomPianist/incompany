@@ -9,8 +9,11 @@ use App\Models\Empresas;
 use App\Models\Retiradas;
 use App\Models\Permissoes;
 use Illuminate\Http\Request;
+use App\Http\Traits\RotinasTrait;
 
 class RetiradasController extends Controller {
+    use RotinasTrait;
+
     private function permitir(Request $request) {
         if (!Permissoes::where("id_usuario", Auth::user()->id)->first()->retiradas) return 401;
         $emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
@@ -47,8 +50,8 @@ class RetiradasController extends Controller {
         $connection->beginTransaction();
         try {
             $this->retirada_salvar($json); // App\Http\Controllers\Controller.php
-            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request->pessoa.", 'R', 'N', 0)");
-            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request->pessoa.", 'U', 'N', 0)");
+            $this->atualizar_mat_vretiradas_vultretirada("P", $request->pessoa, "R", false); // App\Http\Traits\RotinasTrait.php
+            $this->atualizar_mat_vretiradas_vultretirada("P", $request->pessoa, "U", false); // App\Http\Traits\RotinasTrait.php
             $connection->commit();
         } catch (\Exception $e) {
             $connection->rollBack();

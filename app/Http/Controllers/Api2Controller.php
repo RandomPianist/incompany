@@ -18,8 +18,11 @@ use App\Models\PreRetiradas;
 use App\Models\Pessoas;
 use App\Models\Dedos;
 use Illuminate\Http\Request;
+use App\Http\Traits\RotinasTrait;
 
 class Api2Controller extends Controller {
+    use RotinasTrait;
+
     private function info_atb($id_pessoa, $obrigatorios, $grade) {
         $campos = $obrigatorios ? "
             produto_ou_referencia_chave,
@@ -834,8 +837,8 @@ class Api2Controller extends Controller {
         
                 $cont++;
             }
-            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$req_retiradas[0]["id_pessoa"].", 'R', 'N', 0)");
-            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$req_retiradas[0]["id_pessoa"].", 'U', 'N', 0)");
+            $this->atualizar_mat_vretiradas_vultretirada("P", $req_retiradas[0]["id_pessoa"], "R", false); // App\Http\Traits\RotinasTrait.php
+            $this->atualizar_mat_vretiradas_vultretirada("P", $req_retiradas[0]["id_pessoa"], "U", false); // App\Http\Traits\RotinasTrait.php
             $resultado->code = 201;
             $resultado->msg = "Sucesso";
             $connection->commit();

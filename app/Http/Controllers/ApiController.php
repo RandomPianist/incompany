@@ -15,8 +15,11 @@ use App\Models\Atribuicoes;
 use App\Models\ComodatosProdutos;
 use App\Models\Empresas;
 use App\Models\Pessoas;
+use App\Http\Traits\RotinasTrait;
 
 class ApiController extends Controller {
+    use RotinasTrait;
+    
     private function info_atb($id_pessoa, $obrigatorios, $grade) {
         return DB::table("vpendentesgeral")
                     ->select(DB::raw($obrigatorios ? "
@@ -495,8 +498,8 @@ class ApiController extends Controller {
         
                 $cont++;
             }
-            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request[0]["id_pessoa"].", 'R', 'N', 0)");
-            DB::statement("CALL atualizar_mat_vretiradas_vultretirada('P', ".$request[0]["id_pessoa"].", 'U', 'N', 0)");
+            $this->atualizar_mat_vretiradas_vultretirada("P", $req_retiradas[0]["id_pessoa"], "R", false); // App\Http\Traits\RotinasTrait.php
+            $this->atualizar_mat_vretiradas_vultretirada("P", $req_retiradas[0]["id_pessoa"], "U", false); // App\Http\Traits\RotinasTrait.php
             $resultado->code = 201;
             $resultado->msg = "Sucesso";
             $connection->commit();
