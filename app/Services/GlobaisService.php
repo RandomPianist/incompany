@@ -39,6 +39,7 @@ class GlobaisService {
                         id,
                         id_pessoa
                     FROM atribuicoes
+                    WHERE rascunho = 'S'
                 ) AS atb ON atb.id = log.fk
 
                 LEFT JOIN pessoas AS aux2
@@ -78,6 +79,7 @@ class GlobaisService {
                     SELECT id
                     FROM atribuicoes
                     WHERE id_setor IS NOT NULL
+                      AND rascunho = 'S'
                 ) AS atb ON atb.id = log.fk
 
                 WHERE (log.tabela = 'setores'
