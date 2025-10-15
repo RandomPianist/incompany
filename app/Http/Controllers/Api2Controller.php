@@ -871,7 +871,8 @@ class Api2Controller extends Controller {
                 "hash" => $request->hash
             ]
         );
-        $reg_log = $this->log_inserir($letra_log, "dedos", $linha->id, "APP"); // App\Http\Controllers\Controller.php
+        $id = Dedos::where("id_pessoa", $id_pessoa)->where("dedo", $request->dedo)->value("id");
+        $reg_log = $this->log_inserir($letra_log, "dedos", $id, "APP"); // App\Http\Controllers\Controller.php
         $reg_log->id_pessoa = $id_pessoa;
         $reg_log->nome = Pessoas::find($id_pessoa)->nome;
         $reg_log->save();
