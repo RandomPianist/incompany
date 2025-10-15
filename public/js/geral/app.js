@@ -434,6 +434,7 @@ async function cp_mp_validar_main(tipo) {
     $("#" + tipo + "Modal .preco").each(function() {
         $(this).val(parseInt(apenasNumeros($(this).val())) / 100);
     });
+    iniciarCarregamento(tipo + "Modal");
     $("#" + tipo + "Modal form").submit();
     return "";
 }
