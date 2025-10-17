@@ -17,6 +17,8 @@ use App\Models\Comodatos;
 use App\Models\ComodatosProdutos;
 use App\Models\Atribuicoes;
 use App\Http\Traits\GlobaisTrait;
+use App\Services\ConcorrenciaService;
+use App\Services\AtualizacaoService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -474,6 +476,7 @@ abstract class Controller extends BaseController {
     }
     
     protected function gerar_atribuicoes(Comodatos $comodato) {
+        $servico = new AtualizacaoService;
         $ret = false;
         $where = "lixeira = 0 AND id_maquina = ".$comodato->id_maquina." AND id_empresa = ".$comodato->id_empresa;
         $where_g = $where." AND gerado = 1";
@@ -482,7 +485,7 @@ abstract class Controller extends BaseController {
             if ($ret) {
                 $this->log_inserir_lote("D", "atribuicoes", $where_g);
                 Atribuicoes::whereRaw($where_g)->update(["lixeira" => 1]);
-                $this->excluir_atribuicao_sem_retirada();
+                $servico->excluir_atribuicao_sem_retirada(); // App\Services\AtualizacaoService.php
             }
             return $ret;
         }
@@ -708,6 +711,7 @@ abstract class Controller extends BaseController {
     }
 
     protected function atualizar_tudo($valor, $chave = "M", $completo = false, $id_pessoa = "0") {
+        $servico = new AtualizacaoService;
         $valor_ant = $valor;
         if (is_iterable($valor)) $valor = implode(",", $valor);
         $valor = "'".$valor."'";
@@ -715,23 +719,24 @@ abstract class Controller extends BaseController {
             switch($chave) {
                 case "P":
                     $minhas_maquinas = explode(",", $this->maquinas_da_pessoa($valor_ant));
-                    foreach ($minhas_maquinas as $maq) $this->atualizar_mat_vcomodatos($maq);
+                    foreach ($minhas_maquinas as $maq) $servico->atualizar_mat_vcomodatos($maq); // App\Services\AtualizacaoService.php
                     break;
                 case "M":
                     if (is_iterable($valor_ant)) {
-                        foreach ($valor_ant as $maq) $this->atualizar_mat_vcomodatos($maq);
-                    } else $this->atualizar_mat_vcomodatos($valor_ant);
+                        foreach ($valor_ant as $maq) $servico->atualizar_mat_vcomodatos($maq); // App\Services\AtualizacaoService.php
+                    } else $servico->atualizar_mat_vcomodatos($valor_ant); // App\Services\AtualizacaoService.php
                     break;
             }
         }
         // $this->atualizar_mat_vretiradas_vultretirada($chave, $valor, "R", false);
         // $this->atualizar_mat_vretiradas_vultretirada($chave, $valor, "U", false);
-        if ($completo) $this->excluir_atribuicao_sem_retirada();
+        if ($completo) $servico->excluir_atribuicao_sem_retirada(); // App\Services\AtualizacaoService.php
     }
 
     protected function atualizar_atribuicoes($consulta) {
+        $servico = new AtualizacaoService;
         foreach ($consulta as $linha) $this->atualizar_tudo($linha->psm_valor, $linha->psm_chave);
-        $this->excluir_atribuicao_sem_retirada();
+        $servico->excluir_atribuicao_sem_retirada(); // App\Services\AtualizacaoService.php
     }
     
     protected function extrato_consultar_main(Request $request) {
@@ -966,48 +971,8 @@ abstract class Controller extends BaseController {
     }
 
     protected function nomear($id) {
-        $pessoa = Pessoas::find($id);
-        if (!intval($pessoa->id_empresa)) return "administrador";
-        if (DB::table("users")->where("id_pessoa", $id)->exists()) return "usuário";
-        if ($pessoa->supervisor) return "supervisor";
-        return "funcionário";
-    }
-
-    private function atualizar_mat_vcomodatos($id_maquina) {
-        DB::table("mat_vcomodatos")
-            ->where("id_maquina", $id_maquina)
-            ->delete();
-        $campos = "
-            comodatos.id,
-            minhas_empresas.id_pessoa,
-            comodatos.id_maquina,
-            comodatos.travar_estq,
-            comodatos.id_empresa
-        ";
-        DB::statement("
-            INSERT INTO mat_vcomodatos (
-                SELECT ".$campos."
-
-                FROM (
-                    SELECT
-                        p.id AS id_pessoa,
-                        p.id_empresa
-                    FROM pessoas AS p
-                    JOIN empresas
-                        ON p.id_empresa IN (empresas.id, empresas.id_matriz)
-                    WHERE p.lixeira = 0
-                      AND empresas.lixeira = 0
-                ) AS minhas_empresas
-                
-                JOIN comodatos
-                    ON comodatos.id_empresa = minhas_empresas.id_empresa
-
-                WHERE comodatos.id_maquina = ".$id_maquina."
-                  AND (CURDATE() >= comodatos.inicio AND CURDATE() < comodatos.fim)
-
-                GROUP BY ".$campos."
-            )
-        ");
+        $servico = new ConcorrenciaService;
+        return $servico->srv_nomear($id); // App\Services\ConcorrenciaService.php
     }
 
     protected function atualizar_mat_vretiradas_vultretirada($chave, $valor, $tipo, $apenas_ativos) {
@@ -1116,23 +1081,6 @@ abstract class Controller extends BaseController {
         $bindings = $sourceQuery->getBindings();
         $sql = $sourceQuery->toSql();
         DB::insert("INSERT INTO {$targetTable} (id_pessoa, id_atribuicao, id_setor, ".($tipo == 'R' ? 'valor' : 'data').") ".$sql, $bindings);
-    }
-
-    private function excluir_atribuicao_sem_retirada() {
-        DB::statement("
-            DELETE a
-            FROM atribuicoes a
-            LEFT JOIN retiradas r ON r.id_atribuicao = a.id
-            WHERE r.id IS NULL
-              AND a.lixeira = 1 AND a.gerado = 0
-        ");
-        DB::statement("
-            DELETE l
-            FROM log l
-            LEFT JOIN atribuicoes a2 ON a2.id = l.fk
-            WHERE a2.id IS NULL
-              AND l.tabela = 'atribuicoes'
-        ");
     }
 
     protected function retorna_atb_aux($chave, $valor, $apenas_ativos, $id_pessoa) {
@@ -1320,74 +1268,9 @@ abstract class Controller extends BaseController {
         ";
     }
 
-    private function campos_usuario($terceiro) {
-        return "
-            IFNULL(users1.name, '') AS usuario,
-            IFNULL(users1.id, 0) AS usuario_id,
-            IFNULL(users2.name, '') AS associado1_usuario,
-            IFNULL(users2.id, 0) AS associado1_usuario_id,
-            ".($terceiro ? "IFNULL(users3.name, '')" : "''")." AS associado2_usuario,
-            ".($terceiro ? "IFNULL(users3.id, 0)" : "0")." AS associado2_usuario_id
-        ";
-    }
-
-    private function join_users($tabela, $cont) {
-        return "LEFT JOIN users AS users".$cont. " ON users".$cont.".id = ".$tabela.".id_usuario_editando";
-    }
-
-    private function from($tabela) {
-        return "FROM ".$tabela." ".$this->join_users($tabela, 1);
-    }
-
-    private function join_n_para_um($coluna_nome, $tabela, $fk) {
-        $alias = substr($tabela, 0, 3);
-        return "LEFT JOIN (
-            SELECT
-                id,
-                ".$coluna_nome.",
-                id_usuario_editando
-
-            FROM ".$tabela."
-
-            WHERE id_usuario_editando <> 0
-              AND lixeira = 0
-        ) AS ".$alias." ON ".$alias."."."id = ".$fk;
-    }
-
-    private function join_um_para_n($coluna_nome, $tabela, $alias, $fk, $pk) {
-        $colunas = $tabela.".id, ".$tabela.".".$coluna_nome.", ".$tabela.".".$fk.", ".$tabela.".id_usuario_editando";
-        return "LEFT JOIN (
-            SELECT ".$colunas."
-
-            FROM ".$tabela."
-
-            JOIN (
-                SELECT
-                    ".$fk.",
-                    MIN(id_usuario_editando) AS id_usuario_editando
-
-                FROM ".$tabela." AS ".substr($tabela, 0, 1)."
-
-                WHERE id_usuario_editando <> 0
-                  AND lixeira = 0
-
-                GROUP BY ".$fk."
-            ) AS lim ON lim.".$fk." = ".$tabela.".".$fk." AND lim.id_usuario_editando = ".$tabela.".id_usuario_editando
-
-            GROUP BY ".$colunas."
-        ) AS ".$alias." ON ".$alias.".".$fk." = ".$pk;
-    }
-
-    private function obter_mensagem($msg, $consulta) {
-        $id_pessoa = intval($consulta["id_pessoa"]);
-        if (!$id_pessoa) return $msg;        
-        $titulo = $this->nomear($id_pessoa); 
-        $msg = str_replace("a pessoa", ($consulta["pessoa_associado"] == "S" ? "o" : "e")." ".$titulo, $msg);
-        $msg = str_replace("o pessoa", ($consulta["pessoa_associado"] == "S" ? "o" : "e")." ".$titulo, $msg);
-        return $msg;
-    }
-
     protected function pode_abrir_main($tabela, $id, $acao) {
+        $servico = new ConcorrenciaService;
+
         $resultado = new \stdClass;
         $resultado->permitir = 1;
         
@@ -1409,13 +1292,13 @@ abstract class Controller extends BaseController {
                         '' AS associado2_artigo,
                         '' AS associado2_tipo,
 
-                        ".$this->campos_usuario(false)."
+                        ".$servico->campos_usuario(false)."
 
-                    ".$this->from($tabela)."
+                    ".$servico->from($tabela)."
 
-                    ".$this->join_um_para_n("descr", "produtos", "prod", "id_categoria", "categorias.id")."
+                    ".$servico->join_um_para_n("descr", "produtos", "prod", "id_categoria", "categorias.id")."
 
-                    ".$this->join_users("prod", 2);
+                    ".$servico->join_users("prod", 2);
                 break;
             case "empresas":
                 $query = "
@@ -1436,17 +1319,17 @@ abstract class Controller extends BaseController {
                         pes.id AS id_pessoa,
                         'S' AS pessoa_associado,
 
-                        ".$this->campos_usuario(true)."
+                        ".$servico->campos_usuario(true)."
 
-                    ".$this->from($tabela)."
+                    ".$servico->from($tabela)."
 
-                    ".$this->join_um_para_n("descr", "setores", "set", "id_empresa", "empresas.id")."
+                    ".$servico->join_um_para_n("descr", "setores", "set", "id_empresa", "empresas.id")."
 
-                    ".$this->join_users("set", 2)."
+                    ".$servico->join_users("set", 2)."
 
-                    ".$this->join_um_para_n("nome", "pessoas", "pes", "id_empresa", "empresas.id")."
+                    ".$servico->join_um_para_n("nome", "pessoas", "pes", "id_empresa", "empresas.id")."
 
-                    ".$this->join_users("pes", 3);
+                    ".$servico->join_users("pes", 3);
                 break;
             case "pessoas":
                 $query = "
@@ -1467,17 +1350,17 @@ abstract class Controller extends BaseController {
                         pessoas.id AS id_pessoa,
                         'N' AS pessoa_associado,
 
-                        ".$this->campos_usuario(true)."
+                        ".$servico->campos_usuario(true)."
 
-                    ".$this->from($tabela)."
+                    ".$servico->from($tabela)."
 
-                    ".$this->join_n_para_um("nome_fantasia", "empresas", "pessoas.id_empresa")."
+                    ".$servico->join_n_para_um("nome_fantasia", "empresas", "pessoas.id_empresa")."
 
-                    ".$this->join_users("emp", 2)."
+                    ".$servico->join_users("emp", 2)."
 
-                    ".$this->join_n_para_um("descr", "setores", "pessoas.id_setor")."
+                    ".$servico->join_n_para_um("descr", "setores", "pessoas.id_setor")."
 
-                    ".$this->join_users("set", 3);
+                    ".$servico->join_users("set", 3);
                 break;
             case "produtos":
                 $query = "
@@ -1498,13 +1381,13 @@ abstract class Controller extends BaseController {
                         0 AS id_pessoa,
                         'N' AS pessoa_associado,
 
-                        ".$this->campos_usuario(false)."
+                        ".$servico->campos_usuario(false)."
 
-                    ".$this->from($tabela)."
+                    ".$servico->from($tabela)."
 
-                    ".$this->join_n_para_um("descr", "categorias", "produtos.id_categoria")."
+                    ".$servico->join_n_para_um("descr", "categorias", "produtos.id_categoria")."
 
-                    ".$this->join_users("cat", 2);
+                    ".$servico->join_users("cat", 2);
                 break;
             case "setores":
                 $query = "
@@ -1525,17 +1408,17 @@ abstract class Controller extends BaseController {
                         pes.id AS id_pessoa,
                         'S' AS pessoa_associado,
 
-                        ".$this->campos_usuario(true)."
+                        ".$servico->campos_usuario(true)."
 
-                    ".$this->from($tabela)."
+                    ".$servico->from($tabela)."
 
-                    ".$this->join_n_para_um("nome_fantasia", "empresas", "setores.id_empresa")."
+                    ".$servico->join_n_para_um("nome_fantasia", "empresas", "setores.id_empresa")."
 
-                    ".$this->join_users("emp", 2)."
+                    ".$servico->join_users("emp", 2)."
 
-                    ".$this->join_um_para_n("nome", "pessoas", "pes", "id_setor", "setores.id")."
+                    ".$servico->join_um_para_n("nome", "pessoas", "pes", "id_setor", "setores.id")."
 
-                    ".$this->join_users("pes", 3)."
+                    ".$servico->join_users("pes", 3)."
                 ";
                 break;
         }
@@ -1548,7 +1431,7 @@ abstract class Controller extends BaseController {
         ) {
             if (intval($consulta["id_pessoa"])) $consulta["artigo"] = "o";
             $resultado->permitir = 0;
-            $resultado->aviso = $this->obter_mensagem("Não é possível ".$acao." <b>".mb_strtoupper($consulta["titulo"])."</b> porque ess".$consulta["tipo"]." está sendo editad".$consulta["artigo"]." por <b>".mb_strtoupper($consulta["usuario"])."</b>", $consulta);
+            $resultado->aviso = $servico->obter_mensagem("Não é possível ".$acao." <b>".mb_strtoupper($consulta["titulo"])."</b> porque ess".$consulta["tipo"]." está sendo editad".$consulta["artigo"]." por <b>".mb_strtoupper($consulta["usuario"])."</b>", $consulta); // App\Services\ConcorrenciaService.php
             return $resultado;
         }
         $msg = "";
@@ -1562,7 +1445,7 @@ abstract class Controller extends BaseController {
                 if (intval($consulta["id_pessoa"])) $consulta[$chave."_artigo"] = "o";
                 $msg = "Não é possível ".$acao." <b>".mb_strtoupper($consulta["titulo"])."</b> porque ".$consulta[$chave."_artigo"]." ".$consulta[$chave."_tipo"]." <b>".mb_strtoupper($consulta[$chave."_titulo"])."</b>,";
                 $msg .= "associado a ess".$consulta["tipo"].", está sendo editad".$consulta[$chave."_artigo"]." por <b>".mb_strtoupper($consulta[$chave."_usuario"])."</b>";
-                $msg = $this->obter_mensagem($msg, $consulta);
+                $msg = $servico->obter_mensagem($msg, $consulta); // App\Services\ConcorrenciaService.php
             }
         }
         $resultado->aviso = $msg;
