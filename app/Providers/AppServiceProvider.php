@@ -9,10 +9,11 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use App\Models\Pessoas;
 use App\Models\Empresas;
-use App\Services\GlobaisService;
+use App\Http\Traits\GlobaisTrait;
 
 class AppServiceProvider extends ServiceProvider
 {
+    use GlobaisTrait;
     /**
      * Register any application services.
      *
@@ -33,15 +34,13 @@ class AppServiceProvider extends ServiceProvider
         View::share("root_url", config("app.root_url"));
 
         if (strpos(Route::getCurrentRoute(), "api") === false) {
-            $servico = new GlobaisService;
-
-            View::composer('*', function ($view) use($servico) {
+            View::composer('*', function ($view) {
                 if (Auth::user() !== null) {
                     $consulta = DB::table("atribuicoes")
                         ->selectRaw("MAX(qtd) AS qtd")
                         ->get();
                     $max_atb = sizeof($consulta) ? $consulta[0]->qtd : 0;
-                    $emp = Empresas::find($servico->srv_obter_empresa()); // App\Services\GlobaisService.php
+                    $emp = Empresas::find($this->obter_empresa()); // App\Http\Traits\GlobaisTrait.php
                     $view->with([
                         'admin' => $emp === null,
                         'empresa_descr' => $emp !== null ? $emp->nome_fantasia : "Todas",
@@ -50,8 +49,8 @@ class AppServiceProvider extends ServiceProvider
                 }
             });
 
-            View::composer(['produtos', 'setores', 'empresas', 'maquinas', 'categorias'], function ($view) use ($servico) {
-                $view->with('ultima_atualizacao', $servico->srv_log_consultar($view->getName())); // App\Services\GlobaisService.php
+            View::composer(['produtos', 'setores', 'empresas', 'maquinas', 'categorias'], function ($view) {
+                $view->with('ultima_atualizacao', $this->log_consultar($view->getName())); // App\Http\Traits\GlobaisTrait.php
             });
         }
     }

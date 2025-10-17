@@ -18,52 +18,136 @@ use App\Models\PreRetiradas;
 use App\Models\Pessoas;
 use App\Models\Dedos;
 use Illuminate\Http\Request;
-use App\Http\Traits\RotinasTrait;
 
 class Api2Controller extends Controller {
-    use RotinasTrait;
-
     private function info_atb($id_pessoa, $obrigatorios, $grade) {
-        $campos = $obrigatorios ? "
-            produto_ou_referencia_chave,
-            chave_produto,
-            nome_produto
-        " : "
-            vpendentesgeral.id_atribuicao,
-            vpendentesgeral.obrigatorio,
-            vpendentesgeral.id_produto,
-            vpendentesgeral.referencia,
-            vpendentesgeral.descr,
-            vpendentesgeral.detalhes,
-            vpendentesgeral.codbar,
-            vpendentesgeral.tamanho,
-            vpendentesgeral.foto,
-            vpendentesgeral.qtd,
-            vpendentesgeral.ultima_retirada,
-            vpendentesgeral.proxima_retirada,
-            pr.seq
-        ";
-        $campos_select = $campos;
-        $campos_select = str_replace("vpendentesgeral.id_produto", "vpendentesgeral.id_produto AS id", $campos_select);
-        $campos_select = str_replace("vpendentesgeral.descr", "vpendentesgeral.descr AS nome", $campos_select);
-        $campos_select = str_replace("chave_produto", "chave_produto AS chave", $campos_select);
-        $campos_select = str_replace("nome_produto", "nome_produto AS nome", $campos_select);
-        $query = "SELECT ".$campos_select." FROM vpendentesgeral ";
-        if (!$obrigatorios) {
-            $query .= "
-                JOIN pre_retiradas AS pr
-                    ON pr.id_pessoa = vpendentesgeral.id_pessoa AND pr.id_produto = vpendentesgeral.id_produto
-            ";
+        // Passo 1: Obter a query base de atribuições para a pessoa específica.
+        // Como esta função é sempre para uma pessoa, filtramos desde o início.
+        $atribuicoesQuery = $this->retorna_atb_aux("T", "0", false, $id_pessoa);  // App\Http\Controllers\Controller.php
+    
+        // Passo 2: Construir a subquery que seleciona apenas a atribuição de maior prioridade.
+        // Esta lógica é a mesma da otimização anterior.
+        $prioridades = DB::table(DB::raw("({$atribuicoesQuery}) AS sub_atb"))
+            ->select(
+                "sub_atb.id_pessoa",
+                "sub_atb.id_produto",
+                DB::raw("MIN(sub_atb.grandeza) as min_grandeza")
+            )
+            ->where('sub_atb.lixeira', 0)
+            ->groupBy("sub_atb.id_pessoa", "sub_atb.id_produto");
+    
+        $atribuicoesPriorizadas = DB::table(DB::raw("({$atribuicoesQuery}) AS atb_bruto"))
+            ->select('atb_bruto.id_pessoa', 'atb_bruto.id_atribuicao')
+            ->joinSub($prioridades, 'prioridades', function ($join) {
+                $join->on('atb_bruto.id_pessoa', '=', 'prioridades.id_pessoa')
+                     ->on('atb_bruto.id_produto', '=', 'prioridades.id_produto')
+                     ->on('atb_bruto.grandeza', '=', 'prioridades.min_grandeza');
+            })
+            ->groupBy('atb_bruto.id_pessoa', 'atb_bruto.id_atribuicao');
+    
+        // Passo 3: Construir a base da query que substitui a 'vpendentesgeral'.
+        $baseQuery = DB::table('vatbold')
+            ->joinSub($atribuicoesPriorizadas, 'mat_vatribuicoes', function ($join) {
+                $join->on('mat_vatribuicoes.id_atribuicao', '=', 'vatbold.id');
+            })
+            ->join('produtos', function ($join) {
+                $join->on('produtos.cod_externo', '=', 'vatbold.cod_produto')
+                     ->orOn('produtos.referencia', '=', 'vatbold.referencia');
+            })
+            ->leftJoin(DB::raw("(
+                SELECT id_produto, id_pessoa, COUNT(id) AS qtd
+                FROM pre_retiradas
+                GROUP BY id_produto, id_pessoa
+            ) AS prev"), function ($join) {
+                $join->on('prev.id_produto', '=', 'produtos.id')
+                     ->on('prev.id_pessoa', '=', 'mat_vatribuicoes.id_pessoa');
+            })
+            ->join('vprodutosgeral AS vprodutos', function ($join) {
+                $join->on('vprodutos.id_pessoa', '=', 'mat_vatribuicoes.id_pessoa')
+                     ->on('vprodutos.id_produto', '=', 'produtos.id');
+            })
+            ->leftJoin('mat_vretiradas', function ($join) {
+                $join->on('mat_vretiradas.id_atribuicao', '=', 'vatbold.id')
+                     ->on('mat_vretiradas.id_pessoa', '=', 'mat_vatribuicoes.id_pessoa');
+            })
+            ->leftJoin('mat_vultretirada', function ($join) {
+                $join->on('mat_vultretirada.id_atribuicao', '=', 'vatbold.id')
+                     ->on('mat_vultretirada.id_pessoa', '=', 'mat_vatribuicoes.id_pessoa');
+            })
+            ->where('vatbold.rascunho', '=', 'S')
+            ->where('mat_vatribuicoes.id_pessoa', '=', $id_pessoa);
+    
+        // Passo 4: Aplicar a lógica condicional (seleção de campos, joins e filtros).
+        if ($obrigatorios) {
+            $baseQuery
+                ->select(
+                    'vatbold.pr_chave AS produto_ou_referencia_chave',
+                    DB::raw("CASE WHEN (vatbold.pr_chave = 'R') THEN produtos.referencia ELSE produtos.id END AS chave"),
+                    'vatbold.pr_valor AS nome'
+                )
+                ->where('vatbold.obrigatorio', '=', 1)
+                ->where(DB::raw("
+                    CASE
+                        WHEN (((DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE())) AND ((vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0))
+                        THEN 1
+                        ELSE 0
+                    END
+                "), '=', 1) // Lógica do 'esta_pendente = 1'
+                ->groupBy(
+                    'produto_ou_referencia_chave',
+                    'chave',
+                    'nome'
+                );
+        } else {
+            $baseQuery
+                ->select(
+                    'vatbold.id AS id_atribuicao',
+                    'vatbold.obrigatorio',
+                    'produtos.id', // Alias 'id'
+                    'produtos.referencia',
+                    'produtos.descr AS nome', // Alias 'nome'
+                    'produtos.detalhes',
+                    'produtos.cod_externo AS codbar',
+                    'produtos.tamanho',
+                    'produtos.foto',
+                    DB::raw("
+                        CASE
+                            WHEN ((DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE())) THEN
+                                ROUND(
+                                    CASE
+                                        WHEN (vprodutos.travar_estq = 1) THEN
+                                            CASE
+                                                WHEN (vprodutos.qtd >= (vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))))
+                                                THEN (vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0)))
+                                                ELSE vprodutos.qtd
+                                            END
+                                        ELSE (vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0)))
+                                    END
+                                )
+                            ELSE 0
+                        END AS qtd
+                    "),
+                    DB::raw("IFNULL(DATE_FORMAT(mat_vultretirada.data, '%d/%m/%Y'), '') AS ultima_retirada"),
+                    DB::raw("DATE_FORMAT((CASE WHEN ((DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE())) THEN CURDATE() ELSE (DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY)) END), '%d/%m/%Y') AS proxima_retirada"),
+                    'pr.seq'
+                )
+                ->join('pre_retiradas AS pr', function ($join) {
+                    $join->on('pr.id_pessoa', '=', 'mat_vatribuicoes.id_pessoa')
+                         ->on('pr.id_produto', '=', 'produtos.id');
+                })
+                ->when($grade, function ($query) {
+                    return $query->whereNotNull('produtos.referencia');
+                })
+                ->when(!$grade, function ($query) {
+                    return $query->whereNull('produtos.referencia');
+                })
+                ->groupBy(
+                    'id_atribuicao', 'obrigatorio', 'id', 'referencia', 'nome', 'detalhes', 'codbar', 'tamanho',
+                    'foto', 'qtd', 'ultima_retirada', 'proxima_retirada', 'pr.seq'
+                );
         }
-        $query .= " WHERE vpendentesgeral.id_pessoa = ".$id_pessoa;
-        $query .= $obrigatorios ? "
-            AND obrigatorios = 1
-            AND esta_pendente = 1
-        " : "
-            AND vpendentesgeral.referencia ".($grade ? "IS NOT" : "IS")." NULL
-        ";
-        $query .= " GROUP BY ".$campos;
-        return DB::select(DB::raw($query));
+    
+        return $baseQuery->get();
     }
 
     private function produtos_por_pessoa($id_pessoa, $grade) {
@@ -663,15 +747,61 @@ class Api2Controller extends Controller {
 
     public function receber_previa(Request $request) {
         if ($request->token != config("app.key")) return 401;
+    
+        // Passo 1: Encontrar IDs e validar a entrada
         $id_produto = Produtos::where("cod_externo", $request->codbar)->value("id");
         $id_pessoa = Pessoas::where("cpf", $request->cpf)->value("id");
-        if (
-            !DB::table("vpendentesgeral")
-                ->where("id_pessoa", $id_pessoa)
-                ->where("id_produto", $id_produto)
-                ->where("esta_pendente", 1)
-                ->exists()
-        ) return 403;
+    
+        if (!$id_produto || !$id_pessoa) return 404;
+    
+        // --- Início da Lógica de Refatoração ---
+    
+        // Passo 2: Encontrar a atribuição de maior prioridade para este par específico.
+        // Usamos a função auxiliar para obter todas as atribuições possíveis para a pessoa...
+        $atribuicoesQuery = $this->retorna_atb_aux('P', $id_pessoa, false, $id_pessoa); // App\Http\Controllers\Controller.php
+    
+        // ... e então filtramos pelo produto e selecionamos a de maior prioridade (menor grandeza).
+        $prioritizedAttributionId = DB::table(DB::raw("({$atribuicoesQuery}) AS atb"))
+            ->where('atb.id_produto', $id_produto)
+            ->where('atb.lixeira', 0) // Regra de negócio: atribuições na lixeira não contam.
+            ->orderBy('atb.grandeza', 'asc')
+            ->value('id_atribuicao');
+    
+        // Se não houver nenhuma atribuição válida para este produto/pessoa, não há pendência.
+        if (!$prioritizedAttributionId) return 403;
+    
+        // Passo 3: Replicar a lógica de 'esta_pendente' da antiga VIEW
+        // Contamos quantas vezes este item já foi adicionado à pré-retirada.
+        $preRetiradasCount = DB::table('pre_retiradas')
+            ->where('id_pessoa', $id_pessoa)
+            ->where('id_produto', $id_produto)
+            ->count();
+    
+        // Verificamos a pendência usando a atribuição priorizada.
+        $isPendente = DB::table('vatbold')
+            ->selectRaw(1) // Selecionamos 1 apenas para a verificação de existência.
+            ->where('vatbold.id', $prioritizedAttributionId)
+            // Usamos LEFT JOIN pois pode não haver retiradas anteriores.
+            ->leftJoin('mat_vretiradas', function($join) use ($id_pessoa) {
+                $join->on('mat_vretiradas.id_atribuicao', '=', 'vatbold.id')
+                     ->where('mat_vretiradas.id_pessoa', '=', $id_pessoa);
+            })
+            ->leftJoin('mat_vultretirada', function($join) use ($id_pessoa) {
+                $join->on('mat_vultretirada.id_atribuicao', '=', 'vatbold.id')
+                     ->where('mat_vultretirada.id_pessoa', '=', $id_pessoa);
+            })
+            // Condição 1: A retirada está vencida ou nunca foi feita.
+            ->whereRaw("DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()")
+            // Condição 2: A quantidade a ser retirada ainda é maior que zero.
+            ->whereRaw("(vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + ?)) > 0", [$preRetiradasCount])
+            ->exists();
+    
+    
+        if (!$isPendente) return 403;
+    
+        // --- Fim da Lógica de Refatoração ---
+    
+        // Passo 4: Se tudo estiver correto, criar a pré-retirada.
         $previa = new PreRetiradas;
         $previa->id_pessoa = $id_pessoa;
         $previa->id_produto = $id_produto;
@@ -837,8 +967,8 @@ class Api2Controller extends Controller {
         
                 $cont++;
             }
-            $this->atualizar_mat_vretiradas_vultretirada("P", $req_retiradas[0]["id_pessoa"], "R", false); // App\Http\Traits\RotinasTrait.php
-            $this->atualizar_mat_vretiradas_vultretirada("P", $req_retiradas[0]["id_pessoa"], "U", false); // App\Http\Traits\RotinasTrait.php
+            $this->atualizar_mat_vretiradas_vultretirada("P", $req_retiradas[0]["id_pessoa"], "R", false); // App\Http\Controllers\Controller.php
+            $this->atualizar_mat_vretiradas_vultretirada("P", $req_retiradas[0]["id_pessoa"], "U", false); // App\Http\Controllers\Controller.php
             $resultado->code = 201;
             $resultado->msg = "Sucesso";
             $connection->commit();
@@ -853,6 +983,12 @@ class Api2Controller extends Controller {
     public function dedos(Request $request) {
         if ($request->token != config("app.key")) return 401;
         return json_encode(Dedos::get());
+    }
+
+    public function dedos_pessoa(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        $id_pessoa = Pessoas::where("cpf", $request->cpf)->value("id");
+        return json_encode(Dedos::where("id_pessoa", $id_pessoa)->get());
     }
 
     public function salvar_dedos(Request $request) {
@@ -876,5 +1012,12 @@ class Api2Controller extends Controller {
         $reg_log->id_pessoa = $id_pessoa;
         $reg_log->nome = Pessoas::find($id_pessoa)->nome;
         $reg_log->save();
+    }
+
+    public function dedos_cpf(Request $request) {
+        if ($request->token != config("app.key")) return 401;
+        return json_encode(array(
+            "cpf" => Dedos::find($request->id)->pessoa->cpf
+        ));
     }
 }

@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Services;
+namespace App\Http\Traits;
 
 use DB;
 use Auth;
 use App\Models\Pessoas;
 
-class GlobaisService {
-    public function srv_obter_empresa() {
+trait GlobaisTrait {
+    public function obter_empresa() {
         return intval(Pessoas::find(Auth::user()->id_pessoa)->id_empresa);
     }
 
-    public function srv_log_consultar($tabela, $param = "") {
-        if ($this->srv_obter_empresa()) return "";
+    public function log_consultar($tabela, $param = "") {
+        if ($this->obter_empresa()) return "";
         $query = "
             SELECT
                 IFNULL(log.nome, log.origem) AS nome,

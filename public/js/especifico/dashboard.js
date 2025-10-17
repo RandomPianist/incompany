@@ -103,6 +103,7 @@ async function getDadosCards() {
         cardRetiradaAtrasoElement.style.display = "block";
         cardUltimasRetiradasElement.style.display = "block";
     }
+    cardRetiradaAtrasoElement.style.display = "none";
 
     cardUltimaRetirada.innerHTML = "";
     cardRetiradaAtraso.innerHTML = "";

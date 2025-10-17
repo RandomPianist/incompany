@@ -79,7 +79,7 @@ class MaquinasController extends Controller {
                         ->selectRaw("DISTINCTROW id_comodato"),
                 "aux4", "aux4.id_comodato", "aux1.id")
                 ->where(function($sql) {
-                    $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
+                    $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
                     if ($id_emp) $sql->whereRaw($id_emp." IN (aux2.id, aux2.id_matriz)");
                 })
                 ->whereRaw($where)
@@ -347,7 +347,7 @@ class MaquinasController extends Controller {
     }
 
     public function salvar(Request $request) {
-        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
+        if ($this->obter_empresa()) return 401; // App\Http\Traits\GlobaisTrait.php
         if (!trim($request->descr)) return 400;
         if (intval($this->consultar($request))) return 401;
         $linha = Maquinas::firstOrNew(["id" => $request->id]);
@@ -365,7 +365,7 @@ class MaquinasController extends Controller {
     }
 
     public function excluir(Request $request) {
-        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php        
+        if ($this->obter_empresa()) return 401; // App\Http\Traits\GlobaisTrait.php
         if (!$this->aviso_main($request->id)->permitir) return 401; // App\Http\Controllers\Controller.php
         $linha = Maquinas::find($request->id);
         $linha->lixeira = 1;
@@ -375,7 +375,7 @@ class MaquinasController extends Controller {
     }
     
     public function estoque(Request $request) {
-        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
+        if ($this->obter_empresa()) return 401; // App\Http\Traits\GlobaisTrait.php
 
         if ($this->consultar_estoque_main(
             $request->id_maquina,
@@ -460,7 +460,9 @@ class MaquinasController extends Controller {
     }
 
     public function criar_comodato(Request $request) {
-        if ($this->obter_empresa()) return $this->view_mensagem("error", "Operação não permitida"); // App\Http\Controllers\Controller.php
+        if ($this->obter_empresa()) { // App\Http\Traits\GlobaisTrait.php
+            return $this->view_mensagem("error", "Operação não permitida"); // App\Http\Controllers\Controller.php
+        }
         $erro = $this->consultar_comodato_main($request)->texto;
         if ($erro) return $this->view_mensagem("error", $erro); // App\Http\Controllers\Controller.php
                 
@@ -498,7 +500,9 @@ class MaquinasController extends Controller {
     }
 
     public function encerrar_comodato(Request $request) {
-        if ($this->obter_empresa()) return $this->view_mensagem("error", "Operação não permitida"); // App\Http\Controllers\Controller.php
+        if ($this->obter_empresa()) { // App\Http\Traits\GlobaisTrait.php
+            return $this->view_mensagem("error", "Operação não permitida"); // App\Http\Controllers\Controller.php
+        }
         $connection = DB::connection();
         $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
         $connection->beginTransaction();
@@ -570,7 +574,7 @@ class MaquinasController extends Controller {
     }
 
     public function produto(Request $request) {
-        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
+        if ($this->obter_empresa()) return 401; // App\Http\Traits\GlobaisTrait.php
 
         if ($this->consultar_comodatos_produtos( // App\Http\Controllers\Controller.php
             "maquina",

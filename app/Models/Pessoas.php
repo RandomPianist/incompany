@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Empresas;
 use App\Models\Setores;
+use App\Models\Dedos;
 
 class Pessoas extends Model
 {
@@ -55,5 +56,9 @@ class Pessoas extends Model
 
     public function setor() {
         return $this->belongsTo(Setores::class, "id_setor");
+    }
+
+    public function dedos() {
+        return $this->hasMany(Dedos::class, "id_pessoa");
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\CorrecoesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CategoriasController;
 use App\Http\Controllers\MaquinasController;
@@ -36,6 +37,7 @@ Route::middleware("auth")->group(function () {
     Route::get ("/consultar-simples",        [HomeController::class, "consultar_simples"]);
     Route::get ("/pode-abrir/{tabela}/{id}", [HomeController::class, "pode_abrir"]);
     Route::post("/descartar",                [HomeController::class, "descartar"]);
+    // Route::get ("/corrigir",                 [CorrecoesController::class, "gerar_log"]);
 
     Route::group(["prefix" => "dashboard"], function() {
         Route::get("/dados",                           [DashboardController::class, "dados"]);

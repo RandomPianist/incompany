@@ -50,7 +50,7 @@ class CategoriasController extends ControllerListavel {
     }
 
     public function salvar(Request $request) {
-        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
+        if ($this->obter_empresa()) return 401; // App\Http\Traits\GlobaisTrait.php
         if (!trim($request->descr)) return 400;
         if (intval($this->consultar($request))) return 401;
         $linha = Categorias::firstOrNew(["id" => $request->id]);
@@ -64,7 +64,7 @@ class CategoriasController extends ControllerListavel {
     }
 
     public function excluir(Request $request) {
-        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
+        if ($this->obter_empresa()) return 401; // App\Http\Traits\GlobaisTrait.php
         if (!$this->aviso_main($request->id)->permitir) return 401;
         $linha = Categorias::find($request->id);
         $linha->lixeira = 1;

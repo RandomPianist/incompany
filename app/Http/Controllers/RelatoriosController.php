@@ -146,7 +146,7 @@ class RelatoriosController extends Controller {
                         }
                         array_push($criterios, $periodo);
                     }
-                    $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
+                    $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
                     if ($request->id_pessoa) {
                         array_push($criterios, "Colaborador: ".Pessoas::find($request->id_pessoa)->nome);
                         $sql->where("retiradas.id_pessoa", $request->id_pessoa);
@@ -220,7 +220,7 @@ class RelatoriosController extends Controller {
     }
 
     public function comodatos() {
-        if ($this->obter_empresa()) return 401; // App\Http\Controllers\Controller.php
+        if ($this->obter_empresa()) return 401; // App\Http\Traits\GlobaisTrait.php
         $resultado = $this->comum("
             maquinas.descr AS maquina,
             empresas.nome_fantasia AS empresa,
@@ -339,7 +339,9 @@ class RelatoriosController extends Controller {
                             ->whereRaw("estoque.data >= '".$inicio."'")
                             ->whereRaw("estoque.data < '".$fim."'");
                     }
-                    if ($this->obter_empresa()) $sql->whereIn("maquinas.id", $this->maquinas_periodo($inicio, $fim)); // App\Http\Controllers\Controller.php
+                    if ($this->obter_empresa()) { // App\Http\Traits\GlobaisTrait.php
+                        $sql->whereIn("maquinas.id", $this->maquinas_periodo($inicio, $fim)); // App\Http\Controllers\Controller.php
+                    }
                 })
                 ->whereRaw("CURDATE() >= comodatos.inicio")
                 ->whereRaw("CURDATE() < comodatos.fim")
@@ -410,7 +412,7 @@ class RelatoriosController extends Controller {
         return json_encode(
             DB::table("pessoas")
                 ->where(function($sql) {
-                    $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
+                    $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
                     if ($id_emp) {
                         $sql->where(function($query) use($id_emp) {
                             $query->where(function($query2) use($id_emp) {
@@ -776,7 +778,7 @@ class RelatoriosController extends Controller {
                                     $periodo .= " até ".$request->fim;
                                 }
                             }
-                            $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
+                            $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
                             if ($id_emp) {
                                 $sql->where(function($query) use($id_emp) {
                                     $query->where("empresas.id_matriz", $id_emp)

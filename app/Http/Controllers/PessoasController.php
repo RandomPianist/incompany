@@ -10,11 +10,8 @@ use Illuminate\Http\Request;
 use App\Models\Pessoas;
 use App\Models\Setores;
 use App\Models\Permissoes;
-use App\Http\Traits\NomearTrait;
 
 class PessoasController extends ControllerListavel {
-    use NomearTrait;
-
     private function consultar_main(Request $request) {
         $resultado = new \stdClass;
         if (trim($request->cpf) && !$request->id &&
@@ -52,7 +49,7 @@ class PessoasController extends ControllerListavel {
             $resultado->aviso = "Não é possível excluir a si mesmo";
             return $resultado;
         }
-        if (substr($this->nomear($id), 0, 1) == "a" && substr($this->nomear(Auth::user()->id_pessoa), 0, 1) != "a") { // App\Http\Traits\NomearTrait.php
+        if (substr($this->nomear($id), 0, 1) == "a" && substr($this->nomear(Auth::user()->id_pessoa), 0, 1) != "a") { // App\Http\Controllers\Controller.php
             $resultado->permitir = 0;
             $resultado->aviso = "Você não tem permissão para excluir esse administrador";
             return $resultado;
@@ -104,7 +101,7 @@ class PessoasController extends ControllerListavel {
                     ->leftjoin("setores", "setores.id", "pessoas.id_setor")
                     ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
                     ->where(function($sql) use($tipo) {
-                        $id_emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
+                        $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
                         if ($id_emp) $sql->whereRaw($id_emp." IN (empresas.id, empresas.id_matriz)");
                         if (in_array($tipo, ["A", "U"])) {
                             $sql->where(function($q) {
@@ -139,7 +136,7 @@ class PessoasController extends ControllerListavel {
             $where = "setores1.cria_usuario = 1";
             if ($tipo == "A") $where .= " AND aux1.id_empresa = 0";
         }
-        $ultima_atualizacao = $this->log_consultar("pessoas", $where);
+        $ultima_atualizacao = $this->log_consultar("pessoas", $where); // App\Http\Traits\GlobaisTrait.php
         $consulta = DB::table("atribuicoes")
                         ->selectRaw("MAX(qtd) AS qtd")
                         ->get();
@@ -231,7 +228,7 @@ class PessoasController extends ControllerListavel {
         if ($this->validar_permissoes($request) != 200) return $this->view_mensagem("warning", "Não se pode atribuir a uma pessoa uma permissão que seu usuário não tem"); // App\Http\Controllers\Controller.php
 
         $empresas_possiveis_arr = array();
-        if ($this->obter_empresa()) { // App\Http\Controllers\Controller.php
+        if ($this->obter_empresa()) { // App\Http\Traits\GlobaisTrait.php
             $dados = $this->minhas_empresas(); // App\Http\Controllers\Controller.php
             $empresas_possiveis_obj = $dados->empresas;
             foreach ($empresas_possiveis_obj as $matriz) {
@@ -338,7 +335,7 @@ class PessoasController extends ControllerListavel {
                 ); // App\Http\Controllers\Controller.php
             } else $this->atualizar_tudo(explode(",", $this->maquinas_da_pessoa($linha->id)), "M", true, $linha->id); // App\Http\Controllers\Controller.php
             $connection->commit();
-            return redirect("/colaboradores/pagina/".substr(strtoupper($this->nomear($pessoa->id)), 0, 1)); // App\Http\Traits\NomearTrait.php
+            return redirect("/colaboradores/pagina/".substr(strtoupper($this->nomear($pessoa->id)), 0, 1)); // App\Http\Controllers\Controller.php
         } catch (\Exception $e) {    
             $connection->rollBack();
             return $this->view_mensagem("error", $e->getMessage()); // App\Http\Controllers\Controller.php

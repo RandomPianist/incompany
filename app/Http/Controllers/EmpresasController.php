@@ -56,7 +56,7 @@ class EmpresasController extends Controller {
     }
 
     public function listar() {
-        $id_emp = $this->obter_empresa();
+        $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
         $resultado = new \stdClass;
         $resultado->inicial = $this->busca_emp("M"); // App\Http\Controllers\Controller.php
         $resultado->final = $this->busca_emp("F"); // App\Http\Controllers\Controller.php
@@ -95,7 +95,7 @@ class EmpresasController extends Controller {
     }
 
     public function salvar(Request $request) {
-        $emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
+        $emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
         if ($this->verifica_vazios($request, ["cnpj", "razao_social", "nome_fantasia", "cidade"])) return 400; // App\Http\Controllers\Controller.php
         if ($this->consultar($request) == "R") return 401;
         if ($emp && $emp != $request->id_matriz && $emp != $request->id) return 401;
@@ -146,7 +146,7 @@ class EmpresasController extends Controller {
     }
 
     public function excluir(Request $request) {
-        $emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
+        $emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
         $linha = Empresas::find($request->id);
         if (!$this->aviso_main($request->id)->permitir) return 401;
         if ($emp && $emp != $linha->id && $emp != $linha->id_matriz) return 401;

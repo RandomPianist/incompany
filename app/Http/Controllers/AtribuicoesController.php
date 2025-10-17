@@ -40,7 +40,7 @@ class AtribuicoesController extends Controller {
         $atribuicao->obrigatorio = $obrigatorio;
         $atribuicao->data = date("Y-m-d");
         $atribuicao->id_usuario = Auth::user()->id;
-        $atribuicao->id_empresa_autor = $this->obter_empresa(); // App\Http\Controllers\Controller.php
+        $atribuicao->id_empresa_autor = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
         $atribuicao->save();
     }
 

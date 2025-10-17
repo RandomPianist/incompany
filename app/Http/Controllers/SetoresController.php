@@ -151,7 +151,7 @@ class SetoresController extends ControllerListavel {
     }
 
     public function salvar(Request $request) {
-        $emp = $this->obter_empresa(); // App\Http\Controllers\Controller.php
+        $emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
         if ($this->consultar_main($request)->msg) return 401;
         if ($this->validar_permissoes($request) != 200) return 401; // App\Http\Controllers\Controller.php
         $ok = true;
@@ -274,7 +274,7 @@ class SetoresController extends ControllerListavel {
     public function excluir(Request $request) {
         if (!$this->aviso_main($request->id)->permitir) return 401;
         $linha = Setores::find($request->id);
-        $emp = $this->obter_empresa();
+        $emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
         if ($emp && $linha->id_empresa != $emp) return 403;
         $linha->lixeira = 1;
         $linha->save();

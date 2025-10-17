@@ -86,6 +86,8 @@ Route::group(["prefix" => "app"], function() {
         });
         Route::group(["prefix" => "dedos"], function() {
             Route::post("/",       [Api2Controller::class, "dedos"]);
+            Route::post("/pessoa", [Api2Controller::class, "dedos_pessoa"]);
+            Route::post("/cpf",    [Api2Controller::class, "dedos_cpf"]);
             Route::post("/salvar", [Api2Controller::class, "salvar_dedos"]);
         });
         Route::post("/retirar", [Api2Controller::class, "retirar"]);

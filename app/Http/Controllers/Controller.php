@@ -16,21 +16,14 @@ use App\Models\Empresas;
 use App\Models\Comodatos;
 use App\Models\ComodatosProdutos;
 use App\Models\Atribuicoes;
-use App\Services\GlobaisService;
-use App\Services\ConcorrenciaService;
-use App\Http\Traits\RotinasTrait;
+use App\Http\Traits\GlobaisTrait;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 
 abstract class Controller extends BaseController {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, RotinasTrait;
-
-    //======================================================================
-    // BLOCO: UTILITÁRIOS E HELPERS GERAIS
-    // Funções genéricas para comparação de valores, validação de inputs e outras tarefas auxiliares.
-    //======================================================================
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, GlobaisTrait;
 
     protected function comparar_num($a, $b) {
         if ($a === null) $a = 0;
@@ -74,16 +67,6 @@ abstract class Controller extends BaseController {
                     ->exists() ? "1" : "0";
     }
 
-    //======================================================================
-    // BLOCO: CONTEXTO DE EMPRESA E USUÁRIO
-    // Métodos para identificar a empresa do usuário logado e filtrar dados com base nela.
-    //======================================================================
-
-    protected function obter_empresa() {
-        $servico = new GlobaisService;
-        return $servico->srv_obter_empresa(); // App\Services\GlobaisService.php
-    }
-
     protected function obter_where($id_pessoa, $tabela = "pessoas", $inclusive_excluidos = false) {
         $id_emp = Pessoas::find($id_pessoa)->id_empresa;
         $where = !in_array($tabela, ["comodatos", "retiradas"]) && !$inclusive_excluidos ? $tabela.".lixeira = 0" : "1";
@@ -104,7 +87,7 @@ abstract class Controller extends BaseController {
 
     protected function minhas_empresas() {
         $resultado = new \stdClass;
-        $id_emp = $this->obter_empresa();
+        $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
         $matriz = $id_emp ? intval(Empresas::find($id_emp)->id_matriz) : 0;
         $filial = "N";
         if ($matriz > 0) {
@@ -130,7 +113,7 @@ abstract class Controller extends BaseController {
             )
             ->where(function($sql) use($tipo, $id_emp, $id_matriz) {
                 if ($tipo == "T") {
-                    $m_emp = $this->obter_empresa();
+                    $m_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
                     $sql->where("id_matriz", $id_matriz);
                     if ($id_emp) {
                         $where = "id = ".$id_emp;
@@ -176,11 +159,6 @@ abstract class Controller extends BaseController {
         return $supervisor;
     }
 
-    //======================================================================
-    // BLOCO: PERMISSÕES E AUTORIZAÇÃO
-    // Funções para verificar as permissões do usuário logado.
-    //======================================================================
-
     protected function obter_lista_permissoes() {
         return ["financeiro", "atribuicoes", "retiradas", "pessoas", "usuarios", "solicitacoes", "supervisor"];
     }
@@ -194,28 +172,13 @@ abstract class Controller extends BaseController {
         }
         return $erro ? 401 : 200;
     }
-    
-    //======================================================================
-    // BLOCO: CONTROLE DE CONCORRÊNCIA
-    // Funções para gerenciar o acesso simultâneo a registros, evitando que dois usuários editem a mesma coisa.
-    //======================================================================
-    
-    protected function pode_abrir_main($tabela, $id, $acao) {
-        $servico = new ConcorrenciaService;
-        return $servico->srv_pode_abrir($tabela, $id, $acao);
-    }
-
+     
     protected function alterar_usuario_editando($tabela, $id, $remover = false) {
         $consulta = DB::table($tabela)->where("id", $id);
         if ($remover || !intval($consulta->first()->id_usuario_editando)) $consulta->update(["id_usuario_editando" => $remover ? 0 : Auth::user()->id]);
         return $consulta->first();
     }
 
-    //======================================================================
-    // BLOCO: LOGS DO SISTEMA
-    // Métodos responsáveis por criar e consultar registros de log para auditoria.
-    //======================================================================
-    
     protected function log_inserir($acao, $tabela, $fk, $origem = "WEB", $nome = "") {
         $linha = new Log;
         $linha->acao = $acao;
@@ -281,22 +244,12 @@ abstract class Controller extends BaseController {
         ");
     }
 
-    protected function log_consultar($tabela, $param = "") {
-        $servico = new GlobaisService;
-        return $servico->srv_log_consultar($tabela, $param); // App\Services\GlobaisService.php
-    }
-
     protected function obter_autor_da_solicitacao($solicitacao) {
         return Log::where("fk", $solicitacao)
                     ->where("tabela", "solicitacoes")
                     ->where("acao", "C")
                     ->value("id_pessoa");
     }
-
-    //======================================================================
-    // BLOCO: GESTÃO DE COMODATOS E MÁQUINAS
-    // Funções relacionadas à consulta e manipulação de comodatos e máquinas.
-    //======================================================================
 
     protected function maquinas_da_pessoa($id_pessoa) {
         return DB::table("vativos")
@@ -354,7 +307,7 @@ abstract class Controller extends BaseController {
             )
             ->whereRaw($where)
             ->where(function($sql) {
-                $emp = $this->obter_empresa();
+                $emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
                 if ($emp) $sql->where("minhas_empresas.id_empresa", $emp);
             })
             ->pluck("id_maquina")
@@ -382,11 +335,6 @@ abstract class Controller extends BaseController {
             trim($request->id_maquina) && !trim($request->maquina)
         ));
     }
-
-    //======================================================================
-    // BLOCO: GESTÃO DE PRODUTOS EM COMODATO
-    // Métodos específicos para validar, salvar e consultar produtos associados a um comodato.
-    //======================================================================
 
     protected function retorna_saldo_cp($id_comodato, $id_produto) {
         $consulta = DB::table("comodatos_produtos AS cp")
@@ -524,11 +472,6 @@ abstract class Controller extends BaseController {
             return $e->getMessage();
         }
     }
-
-    //======================================================================
-    // BLOCO: GESTÃO DE ATRIBUIÇÕES
-    // Lógica para criar, atualizar, listar e fazer backup de atribuições de EPIs.
-    //======================================================================
     
     protected function gerar_atribuicoes(Comodatos $comodato) {
         $ret = false;
@@ -539,7 +482,7 @@ abstract class Controller extends BaseController {
             if ($ret) {
                 $this->log_inserir_lote("D", "atribuicoes", $where_g);
                 Atribuicoes::whereRaw($where_g)->update(["lixeira" => 1]);
-                $this->excluir_atribuicao_sem_retirada(); // App\Http\Traits\RotinasTrait.php
+                $this->excluir_atribuicao_sem_retirada();
             }
             return $ret;
         }
@@ -586,7 +529,7 @@ abstract class Controller extends BaseController {
                 $modelo->id_empresa = $comodato->id_empresa;
                 $modelo->referencia = $item->referencia ? $item->referencia : null;
                 $modelo->cod_produto = $item->referencia ? null : $item->cod_externo;
-                $modelo->id_empresa_autor = $this->obter_empresa();
+                $modelo->id_empresa_autor = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
                 $modelo->data = date("Y-m-d");
                 $modelo->save();
                 $this->log_inserir($letra_log, "atribuicoes", $modelo->id);
@@ -646,18 +589,71 @@ abstract class Controller extends BaseController {
         $bkp->save();
     }
     
-    //======================================================================
-    // BLOCO: GESTÃO DE RETIRADAS
-    // Funções para consultar pendências e salvar novas retiradas de produtos.
-    //======================================================================
-
     protected function retirada_consultar($id_atribuicao, $qtd, $id_pessoa) {
-        $consulta = DB::table("vpendentesgeral")
-            ->where("esta_pendente", 1)
-            ->where("id_atribuicao", $id_atribuicao)
-            ->where("id_pessoa", $id_pessoa)
-            ->value("qtd");
-        if ($consulta === null) return 0;
+        // --- Início da Lógica de Refatoração ---
+    
+        // Construímos uma query que replica a lógica da vpendentesgeral,
+        // mas apenas para a atribuição e pessoa específicas.
+        $consulta = DB::table("vatbold")
+            // A cláusula WHERE principal torna a consulta extremamente rápida.
+            ->where("vatbold.id", $id_atribuicao)
+            // Precisamos do produto para os joins seguintes.
+            ->join('produtos', function ($join) {
+                $join->on('produtos.cod_externo', '=', 'vatbold.cod_produto')
+                     ->orOn('produtos.referencia', '=', 'vatbold.referencia');
+            })
+            // Trazemos o histórico de retiradas (pode não existir -> LEFT JOIN)
+            ->leftJoin('mat_vretiradas', function($join) use ($id_pessoa) {
+                $join->on('mat_vretiradas.id_atribuicao', '=', 'vatbold.id')
+                     ->where('mat_vretiradas.id_pessoa', '=', $id_pessoa);
+            })
+            // Trazemos a última retirada (pode não existir -> LEFT JOIN)
+            ->leftJoin('mat_vultretirada', function($join) use ($id_pessoa) {
+                $join->on('mat_vultretirada.id_atribuicao', '=', 'vatbold.id')
+                     ->where('mat_vultretirada.id_pessoa', '=', $id_pessoa);
+            })
+            // Trazemos a contagem de pré-retiradas (pode não existir -> LEFT JOIN)
+            ->leftJoin(DB::raw("(
+                SELECT id_produto, id_pessoa, COUNT(id) AS qtd
+                FROM pre_retiradas
+                GROUP BY id_produto, id_pessoa
+            ) AS prev"), function ($join) use ($id_pessoa) {
+                $join->on('prev.id_produto', '=', 'produtos.id')
+                     ->where('prev.id_pessoa', '=', $id_pessoa);
+            })
+            // Trazemos informações de estoque da pessoa (deve existir -> INNER JOIN)
+            ->join('vprodutosgeral AS vprodutos', function ($join) use ($id_pessoa) {
+                $join->on('vprodutos.id_pessoa', '=', $id_pessoa)
+                     ->on('vprodutos.id_produto', '=', 'produtos.id');
+            })
+            // Aqui replicamos o filtro 'esta_pendente = 1'
+            ->where(function($query) {
+                // Condição 1: A retirada está vencida ou nunca ocorreu.
+                $query->whereRaw("DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()");
+                // Condição 2: A quantidade pendente (descontando retiradas e pré-retiradas) é maior que zero.
+                $query->whereRaw("(vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0");
+            })
+            // E aqui calculamos e extraímos o valor 'qtd' da antiga VIEW
+            ->value(DB::raw("
+                ROUND(
+                    CASE
+                        WHEN (vprodutos.travar_estq = 1) THEN
+                            CASE
+                                WHEN (vprodutos.qtd >= (vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))))
+                                THEN (vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0)))
+                                ELSE vprodutos.qtd
+                            END
+                        ELSE (vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0)))
+                    END
+                )
+            "));
+    
+        // --- Fim da Lógica de Refatoração ---
+    
+        // A lógica de negócio original da função permanece idêntica.
+        if ($consulta === null) {
+            return 0;
+        }
         return floatval($consulta) > floatval($qtd) ? 0 : 1;
     }
 
@@ -711,11 +707,6 @@ abstract class Controller extends BaseController {
         }
     }
 
-    //======================================================================
-    // BLOCO: ATUALIZAÇÃO DE VIEWS MATERIALIZADAS
-    // Métodos que disparam procedures para atualizar dados consolidados, melhorando a performance de consultas.
-    //======================================================================
-
     protected function atualizar_tudo($valor, $chave = "M", $completo = false, $id_pessoa = "0") {
         $valor_ant = $valor;
         if (is_iterable($valor)) $valor = implode(",", $valor);
@@ -724,32 +715,25 @@ abstract class Controller extends BaseController {
             switch($chave) {
                 case "P":
                     $minhas_maquinas = explode(",", $this->maquinas_da_pessoa($valor_ant));
-                    foreach ($minhas_maquinas as $maq) $this->atualizar_mat_vcomodatos($maq); // App\Http\Traits\RotinasTrait.php
+                    foreach ($minhas_maquinas as $maq) $this->atualizar_mat_vcomodatos($maq);
                     break;
                 case "M":
                     if (is_iterable($valor_ant)) {
-                        foreach ($valor_ant as $maq) $this->atualizar_mat_vcomodatos($maq); // App\Http\Traits\RotinasTrait.php
-                    } else $this->atualizar_mat_vcomodatos($valor_ant); // App\Http\Traits\RotinasTrait.php
+                        foreach ($valor_ant as $maq) $this->atualizar_mat_vcomodatos($maq);
+                    } else $this->atualizar_mat_vcomodatos($valor_ant);
                     break;
             }
         }
-        $this->atualizar_mat_vatbaux($chave, $valor, false, intval($id_pessoa)); // App\Http\Traits\RotinasTrait.php
-        $this->atualizar_mat_vatribuicoes($chave, $valor, false, intval($id_pessoa)); // App\Http\Traits\RotinasTrait.php
-        $this->atualizar_mat_vretiradas_vultretirada($chave, $valor, "R", false); // App\Http\Traits\RotinasTrait.php
-        $this->atualizar_mat_vretiradas_vultretirada($chave, $valor, "U", false); // App\Http\Traits\RotinasTrait.php
-        if ($completo) $this->excluir_atribuicao_sem_retirada(); // App\Http\Traits\RotinasTrait.php
+        // $this->atualizar_mat_vretiradas_vultretirada($chave, $valor, "R", false);
+        // $this->atualizar_mat_vretiradas_vultretirada($chave, $valor, "U", false);
+        if ($completo) $this->excluir_atribuicao_sem_retirada();
     }
 
     protected function atualizar_atribuicoes($consulta) {
         foreach ($consulta as $linha) $this->atualizar_tudo($linha->psm_valor, $linha->psm_chave);
-        $this->excluir_atribuicao_sem_retirada(); // App\Http\Traits\RotinasTrait.php
+        $this->excluir_atribuicao_sem_retirada();
     }
     
-    //======================================================================
-    // BLOCO: RELATÓRIOS E CONSULTAS COMPLEXAS
-    // Métodos robustos para gerar relatórios, como sugestão de compra e extratos.
-    //======================================================================
-
     protected function extrato_consultar_main(Request $request) {
         $resultado = new \stdClass;
         if (isset($request->maquina)) {
@@ -889,7 +873,9 @@ abstract class Controller extends BaseController {
                             "descr"
                         )
                         ->where(function($sql) use($request, $inicio, $fim, &$criterios) {
-                            if ($this->obter_empresa()) $sql->whereIn("id", $this->maquinas_periodo($inicio, $fim));
+                            if ($this->obter_empresa()) { // App\Http\Traits\GlobaisTrait.php
+                                $sql->whereIn("id", $this->maquinas_periodo($inicio, $fim));
+                            }
                             if ($request->id_maquina) {
                                 $maquina = Maquinas::find($request->id_maquina);
                                 array_push($criterios, "Máquina: ".$maquina->descr);
@@ -977,5 +963,610 @@ abstract class Controller extends BaseController {
         $tela->resultado = $resultado;
         $tela->criterios = implode(" | ", $criterios);
         return $tela;
+    }
+
+    protected function nomear($id) {
+        $pessoa = Pessoas::find($id);
+        if (!intval($pessoa->id_empresa)) return "administrador";
+        if (DB::table("users")->where("id_pessoa", $id)->exists()) return "usuário";
+        if ($pessoa->supervisor) return "supervisor";
+        return "funcionário";
+    }
+
+    private function atualizar_mat_vcomodatos($id_maquina) {
+        DB::table("mat_vcomodatos")
+            ->where("id_maquina", $id_maquina)
+            ->delete();
+        $campos = "
+            comodatos.id,
+            minhas_empresas.id_pessoa,
+            comodatos.id_maquina,
+            comodatos.travar_estq,
+            comodatos.id_empresa
+        ";
+        DB::statement("
+            INSERT INTO mat_vcomodatos (
+                SELECT ".$campos."
+
+                FROM (
+                    SELECT
+                        p.id AS id_pessoa,
+                        p.id_empresa
+                    FROM pessoas AS p
+                    JOIN empresas
+                        ON p.id_empresa IN (empresas.id, empresas.id_matriz)
+                    WHERE p.lixeira = 0
+                      AND empresas.lixeira = 0
+                ) AS minhas_empresas
+                
+                JOIN comodatos
+                    ON comodatos.id_empresa = minhas_empresas.id_empresa
+
+                WHERE comodatos.id_maquina = ".$id_maquina."
+                  AND (CURDATE() >= comodatos.inicio AND CURDATE() < comodatos.fim)
+
+                GROUP BY ".$campos."
+            )
+        ");
+    }
+
+    protected function atualizar_mat_vretiradas_vultretirada($chave, $valor, $tipo, $apenas_ativos) {
+        // Definir nomes de tabelas e colunas
+        $tabela_pessoas = $apenas_ativos ? "vativos" : "pessoas";
+        $targetTable = $tipo == "R" ? "mat_vretiradas" : "mat_vultretirada";
+    
+        // =================================================================
+        // PASSO 1: OBTER A FONTE DE DADOS JÁ FILTRADA E OTIMIZADA
+        // =================================================================
+        $atribuicoesQuery = $this->retorna_atb_aux($chave, $valor, $apenas_ativos, 0);
+    
+        // =================================================================
+        // PASSO 2: CALCULAR AS ATRIBUIÇÕES PRIORITÁRIAS
+        // =================================================================
+        $prioridades = DB::table(DB::raw("({$atribuicoesQuery}) AS sub_atb"))
+            ->select(
+                "sub_atb.id_pessoa",
+                "sub_atb.id_produto",
+                DB::raw("MIN(sub_atb.grandeza) as min_grandeza")
+            )
+            ->where('sub_atb.lixeira', '=', 0)
+            ->groupBy("sub_atb.id_pessoa", "sub_atb.id_produto");
+    
+        $atribuicoesPriorizadas = DB::table(DB::raw("({$atribuicoesQuery}) AS atb_bruto"))
+            ->select('atb_bruto.id_pessoa', 'atb_bruto.id_atribuicao', 'atb_bruto.id_produto')
+            ->joinSub($prioridades, 'prioridades', function ($join) {
+                $join->on('atb_bruto.id_pessoa', '=', 'prioridades.id_pessoa')
+                     ->on('atb_bruto.id_produto', '=', 'prioridades.id_produto')
+                     ->on('atb_bruto.grandeza', '=', 'prioridades.min_grandeza');
+            });
+    
+        // =================================================================
+        // PASSO 3: CONSTRUIR A QUERY DE INSERT DE FORMA CONDICIONAL
+        // =================================================================
+        if ($tipo == "U") {
+            // Lógica para mat_vultretirada
+            $valueCalculation = DB::raw("MAX(retiradas.data) AS data");
+    
+            // Recria a lógica de 'id_associado' dinamicamente
+            $atribuicoesComAssociados = DB::table($atribuicoesPriorizadas, 'main_atb')
+                ->select(
+                    'main_atb.id_pessoa',
+                    'main_atb.id_atribuicao',
+                    'associada.id_atribuicao AS id_associado'
+                )
+                ->join(DB::raw("({$atribuicoesQuery}) AS associada"), function ($join) {
+                    $join->on('main_atb.id_pessoa', '=', 'associada.id_pessoa')
+                         ->on('main_atb.id_produto', '=', 'associada.id_produto');
+                })
+                ->groupBy('main_atb.id_pessoa', 'main_atb.id_atribuicao', 'id_associado');
+    
+            $sourceQuery = DB::table('vatbreal')
+                ->select('atb.id_pessoa', 'atb.id_atribuicao', 'p.id_setor', $valueCalculation)
+                // *** CORREÇÃO: Apenas UM joinSub com o alias 'atb' é feito aqui ***
+                ->joinSub($atribuicoesComAssociados, 'atb', 'atb.id_atribuicao', '=', 'vatbreal.id')
+                ->join('vatbreal AS associadas', 'associadas.id', '=', 'atb.id_associado')
+                ->join($tabela_pessoas . ' AS p', 'p.id', '=', 'atb.id_pessoa')
+                ->leftJoin('retiradas', function ($join) {
+                    $join->on('retiradas.id_atribuicao', '=', 'associadas.id')
+                         ->on('retiradas.id_pessoa', '=', 'p.id')
+                         ->whereRaw('p.id_empresa IN (0, retiradas.id_empresa)')
+                         ->whereNull('retiradas.id_supervisor');
+                });
+    
+        } else { // $tipo == "R"
+            // Lógica para mat_vretiradas
+            $valueCalculation = DB::raw("IFNULL(SUM(retiradas.qtd), 0) AS valor");
+            
+            $sourceQuery = DB::table('vatbreal')
+                ->select('atb.id_pessoa', 'atb.id_atribuicao', 'p.id_setor', $valueCalculation)
+                // *** CORREÇÃO: Apenas UM joinSub com o alias 'atb' é feito aqui ***
+                ->joinSub($atribuicoesPriorizadas, 'atb', 'atb.id_atribuicao', '=', 'vatbreal.id')
+                ->join($tabela_pessoas . ' AS p', 'p.id', '=', 'atb.id_pessoa')
+                ->leftJoin('retiradas', function ($join) {
+                    $join->on('retiradas.id_atribuicao', '=', 'vatbreal.id')
+                         ->on('retiradas.id_pessoa', '=', 'p.id')
+                         ->whereRaw('p.id_empresa IN (0, retiradas.id_empresa)')
+                         ->whereRaw('retiradas.data >= vatbreal.data')
+                         ->whereRaw('retiradas.data > DATE_SUB(CURDATE(), INTERVAL vatbreal.validade DAY)')
+                         ->whereNull('retiradas.id_supervisor');
+                });
+        }
+    
+        $sourceQuery->groupBy('atb.id_pessoa', 'atb.id_atribuicao', 'p.id_setor');
+    
+        // =================================================================
+        // PASSO 4: EXECUTAR AS OPERAÇÕES DE DELETE E INSERT
+        // =================================================================
+        $valorArray = explode(',', $valor);
+        switch($chave) {
+            case "M":
+                DB::statement("DELETE {$targetTable} FROM {$targetTable} JOIN mat_vcomodatos ON mat_vcomodatos.id_pessoa = {$targetTable}.id_pessoa WHERE mat_vcomodatos.id_maquina IN ({$valor})");
+                break;
+            case "S":
+                DB::statement("DELETE {$targetTable} FROM {$targetTable} JOIN {$tabela_pessoas} ON {$tabela_pessoas}.id = {$targetTable}.id_pessoa WHERE {$tabela_pessoas}.id_setor IN ({$valor})");
+                break;
+            default:
+                DB::table($targetTable)
+                    ->where(function($sql) use($chave, $valor) {
+                        if ($chave == "P") $sql->whereRaw("id_pessoa IN (".$valor.")");
+                    })
+                    ->delete();
+        }
+    
+        $bindings = $sourceQuery->getBindings();
+        $sql = $sourceQuery->toSql();
+        DB::insert("INSERT INTO {$targetTable} (id_pessoa, id_atribuicao, id_setor, ".($tipo == 'R' ? 'valor' : 'data').") ".$sql, $bindings);
+    }
+
+    private function excluir_atribuicao_sem_retirada() {
+        DB::statement("
+            DELETE a
+            FROM atribuicoes a
+            LEFT JOIN retiradas r ON r.id_atribuicao = a.id
+            WHERE r.id IS NULL
+              AND a.lixeira = 1 AND a.gerado = 0
+        ");
+        DB::statement("
+            DELETE l
+            FROM log l
+            LEFT JOIN atribuicoes a2 ON a2.id = l.fk
+            WHERE a2.id IS NULL
+              AND l.tabela = 'atribuicoes'
+        ");
+    }
+
+    protected function retorna_atb_aux($chave, $valor, $apenas_ativos, $id_pessoa) {
+        $tabela = $apenas_ativos ? "vativos" : "pessoas";
+        $where = "(users.admin = 0 OR users.id IS NULL OR vatbreal.gerado = 0) AND excecoes.id IS NULL AND cp.lixeira = 0 AND produtos.lixeira = 0";
+        if ($id_pessoa) $where .= " AND p.id = ".$id_pessoa;
+        else if ($chave == "P") $where .= " AND p.id IN (".$valor.")";
+        else if ($chave == "S") $where .= " AND p.id_setor IN (".$valor.")";
+        else if ($chave == "M") $where .= " AND mat_vcomodatos.id_maquina IN (".$valor.")";
+        $leftjoin = "
+            LEFT JOIN users
+                ON users.id_pessoa = p.id
+
+            LEFT JOIN excecoes
+                ON (excecoes.id_setor = p.id_setor OR excecoes.id_pessoa = p.id)
+                    AND vatbreal.id = excecoes.id_atribuicao
+                    AND excecoes.rascunho = 'S'
+        ";
+        $joincomum = "
+            JOIN mat_vcomodatos
+                ON mat_vcomodatos.id_pessoa = p.id
+            
+            JOIN comodatos_produtos AS cp
+                ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
+        ".$leftjoin;
+        return "
+            SELECT * FROM (
+                SELECT 
+                    p.id AS id_pessoa, 
+                    vatbreal.id AS id_atribuicao, 
+                    produtos.id AS id_produto,
+                    vatbreal.cod_produto AS cod,
+                    IFNULL(produtos.referencia, '') AS ref,
+                    vatbreal.lixeira,
+                    1 AS grandeza
+
+                FROM vatbreal 
+                
+                JOIN ".$tabela." AS p
+                    ON p.id = vatbreal.id_pessoa 
+                
+                JOIN produtos
+                    ON produtos.cod_externo = vatbreal.cod_produto 
+                
+                ".$joincomum."
+                
+                WHERE ".$where."
+
+                UNION ALL (
+                    SELECT 
+                        p.id AS id_pessoa, 
+                        vatbreal.id AS id_atribuicao,
+                        produtos.id AS id_produto,
+                        IFNULL(produtos.cod_externo, '') AS cod, 
+                        vatbreal.referencia AS ref,
+                        vatbreal.lixeira,
+                        2 AS grandeza
+
+                    FROM vatbreal
+
+                    JOIN ".$tabela." AS p
+                        ON p.id = vatbreal.id_pessoa
+
+                    JOIN produtos
+                        ON produtos.referencia = vatbreal.referencia
+
+                    ".$joincomum."
+            
+                    WHERE ".$where."
+                )
+
+                UNION ALL (
+                    SELECT 
+                        p.id AS id_pessoa, 
+                        vatbreal.id AS id_atribuicao, 
+                        produtos.id AS id_produto,
+                        vatbreal.cod_produto AS cod, 
+                        IFNULL(produtos.referencia, '') AS ref,
+                        vatbreal.lixeira,
+                        3 AS grandeza
+
+                    FROM vatbreal 
+
+                    JOIN ".$tabela." AS p
+                        ON p.id_setor = vatbreal.id_setor
+
+                    JOIN produtos
+                        ON produtos.cod_externo = vatbreal.cod_produto
+
+                    ".$joincomum."
+        
+                    WHERE ".$where."
+                )
+
+                UNION ALL (
+                    SELECT 
+                        p.id AS id_pessoa, 
+                        vatbreal.id AS id_atribuicao, 
+                        produtos.id AS id_produto,
+                        IFNULL(produtos.cod_externo, '') AS cod, 
+                        vatbreal.referencia AS ref,
+                        vatbreal.lixeira,
+                        4 AS grandeza
+
+                    FROM vatbreal 
+
+                    JOIN ".$tabela." AS p
+                        ON p.id_setor = vatbreal.id_setor 
+
+                    JOIN produtos
+                        ON produtos.referencia = vatbreal.referencia
+
+                    ".$joincomum."
+        
+                    WHERE ".$where."
+                )
+
+                UNION ALL (
+                    SELECT 
+                        p.id AS id_pessoa, 
+                        vatbreal.id AS id_atribuicao, 
+                        produtos.id AS id_produto,
+                        vatbreal.cod_produto AS cod, 
+                        IFNULL(produtos.referencia, '') AS ref,
+                        vatbreal.lixeira,
+                        5 AS grandeza
+
+                    FROM vatbreal 
+                    
+                    JOIN mat_vcomodatos
+                        ON mat_vcomodatos.id_maquina = vatbreal.id_maquina
+
+                    JOIN ".$tabela." AS p
+                        ON p.id = mat_vcomodatos.id_pessoa 
+
+                    JOIN produtos
+                        ON produtos.cod_externo = vatbreal.cod_produto
+
+                    JOIN comodatos_produtos AS cp
+                        ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
+
+                    ".$leftjoin."
+        
+                    WHERE ".$where."
+                )
+
+                UNION ALL (
+                    SELECT 
+                        p.id AS id_pessoa, 
+                        vatbreal.id AS id_atribuicao, 
+                        produtos.id AS id_produto,
+                        IFNULL(produtos.cod_externo, '') AS cod, 
+                        vatbreal.referencia AS ref,
+                        vatbreal.lixeira,
+                        6 AS grandeza
+                        
+                    FROM vatbreal 
+
+                    JOIN mat_vcomodatos
+                        ON mat_vcomodatos.id_maquina = vatbreal.id_maquina 
+
+                    JOIN ".$tabela." AS p
+                        ON p.id = mat_vcomodatos.id_pessoa 
+
+                    JOIN produtos
+                        ON produtos.referencia = vatbreal.referencia
+                        
+                    JOIN comodatos_produtos AS cp
+                        ON cp.id_comodato = mat_vcomodatos.id AND cp.id_produto = produtos.id
+
+                    ".$leftjoin."
+
+                    WHERE ".$where."
+                )
+            ) AS tab
+
+            GROUP BY
+                id_pessoa,
+                id_atribuicao,
+                id_produto,
+                cod,
+                ref,
+                lixeira,
+                grandeza
+        ";
+    }
+
+    private function campos_usuario($terceiro) {
+        return "
+            IFNULL(users1.name, '') AS usuario,
+            IFNULL(users1.id, 0) AS usuario_id,
+            IFNULL(users2.name, '') AS associado1_usuario,
+            IFNULL(users2.id, 0) AS associado1_usuario_id,
+            ".($terceiro ? "IFNULL(users3.name, '')" : "''")." AS associado2_usuario,
+            ".($terceiro ? "IFNULL(users3.id, 0)" : "0")." AS associado2_usuario_id
+        ";
+    }
+
+    private function join_users($tabela, $cont) {
+        return "LEFT JOIN users AS users".$cont. " ON users".$cont.".id = ".$tabela.".id_usuario_editando";
+    }
+
+    private function from($tabela) {
+        return "FROM ".$tabela." ".$this->join_users($tabela, 1);
+    }
+
+    private function join_n_para_um($coluna_nome, $tabela, $fk) {
+        $alias = substr($tabela, 0, 3);
+        return "LEFT JOIN (
+            SELECT
+                id,
+                ".$coluna_nome.",
+                id_usuario_editando
+
+            FROM ".$tabela."
+
+            WHERE id_usuario_editando <> 0
+              AND lixeira = 0
+        ) AS ".$alias." ON ".$alias."."."id = ".$fk;
+    }
+
+    private function join_um_para_n($coluna_nome, $tabela, $alias, $fk, $pk) {
+        $colunas = $tabela.".id, ".$tabela.".".$coluna_nome.", ".$tabela.".".$fk.", ".$tabela.".id_usuario_editando";
+        return "LEFT JOIN (
+            SELECT ".$colunas."
+
+            FROM ".$tabela."
+
+            JOIN (
+                SELECT
+                    ".$fk.",
+                    MIN(id_usuario_editando) AS id_usuario_editando
+
+                FROM ".$tabela." AS ".substr($tabela, 0, 1)."
+
+                WHERE id_usuario_editando <> 0
+                  AND lixeira = 0
+
+                GROUP BY ".$fk."
+            ) AS lim ON lim.".$fk." = ".$tabela.".".$fk." AND lim.id_usuario_editando = ".$tabela.".id_usuario_editando
+
+            GROUP BY ".$colunas."
+        ) AS ".$alias." ON ".$alias.".".$fk." = ".$pk;
+    }
+
+    private function obter_mensagem($msg, $consulta) {
+        $id_pessoa = intval($consulta["id_pessoa"]);
+        if (!$id_pessoa) return $msg;        
+        $titulo = $this->nomear($id_pessoa); 
+        $msg = str_replace("a pessoa", ($consulta["pessoa_associado"] == "S" ? "o" : "e")." ".$titulo, $msg);
+        $msg = str_replace("o pessoa", ($consulta["pessoa_associado"] == "S" ? "o" : "e")." ".$titulo, $msg);
+        return $msg;
+    }
+
+    protected function pode_abrir_main($tabela, $id, $acao) {
+        $resultado = new \stdClass;
+        $resultado->permitir = 1;
+        
+        $query = "";
+        switch($tabela) {
+            case "categorias":
+                $query = "
+                    SELECT
+                        categorias.descr AS titulo,
+                        prod.descr AS associado1_titulo,
+                        '' AS associado2_titulo,
+
+                        'a' AS artigo,
+                        'a categoria' AS tipo,
+
+                        'o' AS associado1_artigo,
+                        'produto' AS associado1_tipo,
+
+                        '' AS associado2_artigo,
+                        '' AS associado2_tipo,
+
+                        ".$this->campos_usuario(false)."
+
+                    ".$this->from($tabela)."
+
+                    ".$this->join_um_para_n("descr", "produtos", "prod", "id_categoria", "categorias.id")."
+
+                    ".$this->join_users("prod", 2);
+                break;
+            case "empresas":
+                $query = "
+                    SELECT
+                        empresas.nome_fantasia AS titulo,
+                        set.descr AS associado1_titulo,
+                        pes.nome AS associado2_titulo,
+
+                        'a' AS artigo,
+                        'a empresa' AS tipo,
+
+                        'o' AS associado1_artigo,
+                        'centro de custo' AS associado1_tipo,
+
+                        'a' AS associado2_artigo,
+                        'pessoa' AS associado2_tipo,
+
+                        pes.id AS id_pessoa,
+                        'S' AS pessoa_associado,
+
+                        ".$this->campos_usuario(true)."
+
+                    ".$this->from($tabela)."
+
+                    ".$this->join_um_para_n("descr", "setores", "set", "id_empresa", "empresas.id")."
+
+                    ".$this->join_users("set", 2)."
+
+                    ".$this->join_um_para_n("nome", "pessoas", "pes", "id_empresa", "empresas.id")."
+
+                    ".$this->join_users("pes", 3);
+                break;
+            case "pessoas":
+                $query = "
+                    SELECT
+                        pessoas.nome AS titulo,
+                        emp.nome_fantasia AS associado1_titulo,
+                        set.descr AS associado2_titulo,
+
+                        'a' AS artigo,
+                        'a pessoa' AS tipo,
+
+                        'a' AS associado1_artigo,
+                        'empresa' AS associado1_tipo,
+
+                        'o' AS associado2_artigo,
+                        'centro de custo' AS associado2_tipo,
+
+                        pessoas.id AS id_pessoa,
+                        'N' AS pessoa_associado,
+
+                        ".$this->campos_usuario(true)."
+
+                    ".$this->from($tabela)."
+
+                    ".$this->join_n_para_um("nome_fantasia", "empresas", "pessoas.id_empresa")."
+
+                    ".$this->join_users("emp", 2)."
+
+                    ".$this->join_n_para_um("descr", "setores", "pessoas.id_setor")."
+
+                    ".$this->join_users("set", 3);
+                break;
+            case "produtos":
+                $query = "
+                    SELECT
+                        produtos.descr AS titulo,
+                        cat.descr AS associado1_titulo,
+                        '' AS associado2_titulo,
+
+                        'o' AS artigo,
+                        'e produto' AS tipo,
+
+                        'a' AS associado1_artigo,
+                        'categoria' AS associado1_tipo,
+
+                        '' AS associado2_artigo,
+                        '' AS associado2_tipo,
+
+                        0 AS id_pessoa,
+                        'N' AS pessoa_associado,
+
+                        ".$this->campos_usuario(false)."
+
+                    ".$this->from($tabela)."
+
+                    ".$this->join_n_para_um("descr", "categorias", "produtos.id_categoria")."
+
+                    ".$this->join_users("cat", 2);
+                break;
+            case "setores":
+                $query = "
+                    SELECT
+                        setores.descr AS titulo,
+                        emp.nome_fantasia AS associado1_titulo,
+                        pes.nome AS associado2_titulo,
+
+                        'o' AS artigo,
+                        'e centro de custo' AS tipo,
+
+                        'a' AS associado1_artigo,
+                        'empresa' AS associado1_tipo,
+
+                        'a' AS associado2_artigo,
+                        'pessoa' AS associado2_tipo,
+
+                        pes.id AS id_pessoa,
+                        'S' AS pessoa_associado,
+
+                        ".$this->campos_usuario(true)."
+
+                    ".$this->from($tabela)."
+
+                    ".$this->join_n_para_um("nome_fantasia", "empresas", "setores.id_empresa")."
+
+                    ".$this->join_users("emp", 2)."
+
+                    ".$this->join_um_para_n("nome", "pessoas", "pes", "id_setor", "setores.id")."
+
+                    ".$this->join_users("pes", 3)."
+                ";
+                break;
+        }
+        if (!$query) return $resultado;
+        $query .= " WHERE ".$tabela.".id = ".$id;
+        $consulta = (array) DB::select(DB::raw(str_replace(" set ", " `set` ", $query)))[0];
+        if (
+            intval($consulta["usuario_id"]) &&
+            intval($consulta["usuario_id"]) != Auth::user()->id
+        ) {
+            if (intval($consulta["id_pessoa"])) $consulta["artigo"] = "o";
+            $resultado->permitir = 0;
+            $resultado->aviso = $this->obter_mensagem("Não é possível ".$acao." <b>".mb_strtoupper($consulta["titulo"])."</b> porque ess".$consulta["tipo"]." está sendo editad".$consulta["artigo"]." por <b>".mb_strtoupper($consulta["usuario"])."</b>", $consulta);
+            return $resultado;
+        }
+        $msg = "";
+        for ($i = 1; $i <= 2; $i++) {
+            $chave = "associado".$i;
+            if (
+                !$msg &&
+                intval($consulta[$chave."_usuario_id"]) &&
+                intval($consulta[$chave."_usuario_id"]) != Auth::user()->id
+            ) {
+                if (intval($consulta["id_pessoa"])) $consulta[$chave."_artigo"] = "o";
+                $msg = "Não é possível ".$acao." <b>".mb_strtoupper($consulta["titulo"])."</b> porque ".$consulta[$chave."_artigo"]." ".$consulta[$chave."_tipo"]." <b>".mb_strtoupper($consulta[$chave."_titulo"])."</b>,";
+                $msg .= "associado a ess".$consulta["tipo"].", está sendo editad".$consulta[$chave."_artigo"]." por <b>".mb_strtoupper($consulta[$chave."_usuario"])."</b>";
+                $msg = $this->obter_mensagem($msg, $consulta);
+            }
+        }
+        $resultado->aviso = $msg;
+        $resultado->permitir = $msg ? 0 : 1;
+        return $resultado;
     }
 }
