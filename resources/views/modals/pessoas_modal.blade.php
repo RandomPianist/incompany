@@ -25,8 +25,9 @@
                         </div>
                         <div class = "row">
                             <div class = "col-11 pr-0">
+                                <input type = "hidden" name = "id_empresa" id = "pessoa-id_empresa" />
                                 <label for = "pessoa-empresa-select" class = "custom-label-form">Empresa: *</label>
-                                <select id = "pessoa-empresa-select" name = "id_empresa" class = "form-control" onchange = "pessoa.mudou_empresa($(this).val())"></select>
+                                <select id = "pessoa-empresa-select" class = "form-control" onchange = "pessoa.mudou_empresa($(this).val())"></select>
                             </div>
                             <div class = "col-1 pt-4 d-flex align-items-center">
                                 <i

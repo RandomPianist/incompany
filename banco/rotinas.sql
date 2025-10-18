@@ -195,7 +195,7 @@ BEGIN
                 ) AS atrib
             JOIN vatbreal v ON v.id = atrib.id_atribuicao
             JOIN ', v_pessoas_table, ' AS p ON p.id = atrib.id_pessoa
-            LEFT JOIN retiradas ret ON ret.id_atribuicao = v.id AND ret.id_pessoa = p.id AND p.id_empresa IN (0, ret.id_empresa)
+            JOIN retiradas ret ON ret.id_atribuicao = v.id AND ret.id_pessoa = p.id AND p.id_empresa IN (0, ret.id_empresa)
                                   AND ret.data >= v.data AND ret.data > DATE_SUB(CURDATE(), INTERVAL v.validade DAY) AND ret.id_supervisor IS NULL
             GROUP BY atrib.id_pessoa, atrib.id_atribuicao, p.id_setor
         ');
@@ -223,7 +223,7 @@ BEGIN
                 ) AS atrib
             JOIN vatbreal v_assoc ON v_assoc.id = atrib.id_associado
             JOIN ', v_pessoas_table, ' AS p ON p.id = atrib.id_pessoa
-            LEFT JOIN retiradas ret ON ret.id_atribuicao = v_assoc.id AND ret.id_pessoa = p.id AND p.id_empresa IN (0, ret.id_empresa) AND ret.id_supervisor IS NULL
+            JOIN retiradas ret ON ret.id_atribuicao = v_assoc.id AND ret.id_pessoa = p.id AND p.id_empresa IN (0, ret.id_empresa) AND ret.id_supervisor IS NULL
             GROUP BY atrib.id_pessoa, atrib.id_atribuicao, p.id_setor
         ');
     END IF;

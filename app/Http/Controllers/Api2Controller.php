@@ -21,133 +21,98 @@ use Illuminate\Http\Request;
 
 class Api2Controller extends Controller {
     private function info_atb($id_pessoa, $obrigatorios, $grade) {
-        // Passo 1: Obter a query base de atribuições para a pessoa específica.
-        // Como esta função é sempre para uma pessoa, filtramos desde o início.
-        $atribuicoesQuery = $this->retorna_atb_aux("T", "0", false, $id_pessoa);  // App\Http\Controllers\Controller.php
-    
-        // Passo 2: Construir a subquery que seleciona apenas a atribuição de maior prioridade.
-        // Esta lógica é a mesma da otimização anterior.
-        $prioridades = DB::table(DB::raw("({$atribuicoesQuery}) AS sub_atb"))
-            ->select(
-                "sub_atb.id_pessoa",
-                "sub_atb.id_produto",
-                DB::raw("MIN(sub_atb.grandeza) as min_grandeza")
-            )
-            ->where('sub_atb.lixeira', 0)
-            ->groupBy("sub_atb.id_pessoa", "sub_atb.id_produto");
-    
-        $atribuicoesPriorizadas = DB::table(DB::raw("({$atribuicoesQuery}) AS atb_bruto"))
-            ->select('atb_bruto.id_pessoa', 'atb_bruto.id_atribuicao')
-            ->joinSub($prioridades, 'prioridades', function ($join) {
-                $join->on('atb_bruto.id_pessoa', '=', 'prioridades.id_pessoa')
-                     ->on('atb_bruto.id_produto', '=', 'prioridades.id_produto')
-                     ->on('atb_bruto.grandeza', '=', 'prioridades.min_grandeza');
-            })
-            ->groupBy('atb_bruto.id_pessoa', 'atb_bruto.id_atribuicao');
-    
-        // Passo 3: Construir a base da query que substitui a 'vpendentesgeral'.
-        $baseQuery = DB::table('vatbold')
-            ->joinSub($atribuicoesPriorizadas, 'mat_vatribuicoes', function ($join) {
-                $join->on('mat_vatribuicoes.id_atribuicao', '=', 'vatbold.id');
-            })
-            ->join('produtos', function ($join) {
-                $join->on('produtos.cod_externo', '=', 'vatbold.cod_produto')
-                     ->orOn('produtos.referencia', '=', 'vatbold.referencia');
-            })
-            ->leftJoin(DB::raw("(
-                SELECT id_produto, id_pessoa, COUNT(id) AS qtd
-                FROM pre_retiradas
-                GROUP BY id_produto, id_pessoa
-            ) AS prev"), function ($join) {
-                $join->on('prev.id_produto', '=', 'produtos.id')
-                     ->on('prev.id_pessoa', '=', 'mat_vatribuicoes.id_pessoa');
-            })
-            ->join('vprodutosgeral AS vprodutos', function ($join) {
-                $join->on('vprodutos.id_pessoa', '=', 'mat_vatribuicoes.id_pessoa')
-                     ->on('vprodutos.id_produto', '=', 'produtos.id');
-            })
-            ->leftJoin('mat_vretiradas', function ($join) {
-                $join->on('mat_vretiradas.id_atribuicao', '=', 'vatbold.id')
-                     ->on('mat_vretiradas.id_pessoa', '=', 'mat_vatribuicoes.id_pessoa');
-            })
-            ->leftJoin('mat_vultretirada', function ($join) {
-                $join->on('mat_vultretirada.id_atribuicao', '=', 'vatbold.id')
-                     ->on('mat_vultretirada.id_pessoa', '=', 'mat_vatribuicoes.id_pessoa');
-            })
-            ->where('vatbold.rascunho', '=', 'S')
-            ->where('mat_vatribuicoes.id_pessoa', '=', $id_pessoa);
-    
-        // Passo 4: Aplicar a lógica condicional (seleção de campos, joins e filtros).
-        if ($obrigatorios) {
-            $baseQuery
-                ->select(
-                    'vatbold.pr_chave AS produto_ou_referencia_chave',
-                    DB::raw("CASE WHEN (vatbold.pr_chave = 'R') THEN produtos.referencia ELSE produtos.id END AS chave"),
-                    'vatbold.pr_valor AS nome'
-                )
-                ->where('vatbold.obrigatorio', '=', 1)
-                ->where(DB::raw("
-                    CASE
-                        WHEN (((DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE())) AND ((vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0))
-                        THEN 1
-                        ELSE 0
-                    END
-                "), '=', 1) // Lógica do 'esta_pendente = 1'
-                ->groupBy(
-                    'produto_ou_referencia_chave',
-                    'chave',
-                    'nome'
-                );
-        } else {
-            $baseQuery
-                ->select(
-                    'vatbold.id AS id_atribuicao',
-                    'vatbold.obrigatorio',
-                    'produtos.id', // Alias 'id'
-                    'produtos.referencia',
-                    'produtos.descr AS nome', // Alias 'nome'
-                    'produtos.detalhes',
-                    'produtos.cod_externo AS codbar',
-                    'produtos.tamanho',
-                    'produtos.foto',
-                    DB::raw("
-                        CASE
-                            WHEN ((DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE())) THEN
-                                ROUND(
-                                    CASE
-                                        WHEN (vprodutos.travar_estq = 1) THEN
-                                            CASE
-                                                WHEN (vprodutos.qtd >= (vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))))
-                                                THEN (vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0)))
-                                                ELSE vprodutos.qtd
-                                            END
-                                        ELSE (vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0)))
-                                    END
-                                )
-                            ELSE 0
-                        END AS qtd
-                    "),
-                    DB::raw("IFNULL(DATE_FORMAT(mat_vultretirada.data, '%d/%m/%Y'), '') AS ultima_retirada"),
-                    DB::raw("DATE_FORMAT((CASE WHEN ((DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE())) THEN CURDATE() ELSE (DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY)) END), '%d/%m/%Y') AS proxima_retirada"),
-                    'pr.seq'
-                )
-                ->join('pre_retiradas AS pr', function ($join) {
-                    $join->on('pr.id_pessoa', '=', 'mat_vatribuicoes.id_pessoa')
-                         ->on('pr.id_produto', '=', 'produtos.id');
-                })
-                ->when($grade, function ($query) {
-                    return $query->whereNotNull('produtos.referencia');
-                })
-                ->when(!$grade, function ($query) {
-                    return $query->whereNull('produtos.referencia');
-                })
-                ->groupBy(
-                    'id_atribuicao', 'obrigatorio', 'id', 'referencia', 'nome', 'detalhes', 'codbar', 'tamanho',
-                    'foto', 'qtd', 'ultima_retirada', 'proxima_retirada', 'pr.seq'
-                );
-        }
-    
-        return $baseQuery->get();
+        $nucleo = " vatbold 
+            JOIN (".$this->retorna_sql_atb_vigente(
+                $this->retorna_atb_aux("P", $id_pessoa, false, $id_pessoa)
+            ).") AS atb ON atb.id_atribuicao = vatbold.id
+
+            JOIN produtos
+                ON produtos.id = atb.id_produto
+
+            ".$this->retorna_join_prev("atb.id_pessoa")."
+
+            JOIN vprodutosgeral AS vprodutos
+                ON vprodutos.id_pessoa = atb.id_pessoa AND vprodutos.id_produto = produtos.id
+
+            LEFT JOIN mat_vretiradas
+                ON mat_vretiradas.id_atribuicao = vatbold.id AND mat_vretiradas.id_pessoa = atb.id_pessoa
+
+            LEFT JOIN mat_vultretirada
+                ON mat_vultretirada.id_atribuicao = vatbold.id AND mat_vultretirada.id_pessoa = atb.id_pessoa
+        ";
+        $where = "atb.id_pessoa = ".$id_pessoa." AND vatbold.rascunho = 'S'";
+        $where .= $obrigatorios ? "
+            AND ((DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()))
+            AND ((vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0)
+            AND vatbold.obrigatorio = 1
+        " : " AND produtos.referencia ".($grade ? "IS NOT" : "IS")." NULL";
+        return DB::select(DB::raw($obrigatorios ? "
+            SELECT
+                vatbold.pr_chave AS produto_ou_referencia_chave,
+                CASE
+                    WHEN (vatbold.pr_chave = 'R') THEN produtos.referencia
+                    ELSE produtos.id
+                END AS chave,
+                vatbold.pr_valor AS nome
+
+            FROM ".$nucleo."
+
+            WHERE ".$where."
+
+            GROUP BY
+                vatbold.pr_chave,
+                CASE
+                    WHEN (vatbold.pr_chave = 'R') THEN produtos.referencia
+                    ELSE produtos.id
+                END,
+                vatbold.pr_valor
+        " : "
+            SELECT
+                vatbold.id AS id_atribuicao,
+                vatbold.obrigatorio,
+                produtos.id,
+                produtos.referencia,
+                produtos.descr AS nome,
+                produtos.detalhes,
+                produtos.cod_externo AS codbar,
+                produtos.tamanho,
+                produtos.foto,
+                ".$this->retorna_case_qtd()." AS qtd,
+                IFNULL(DATE_FORMAT(mat_vultretirada.data, '%d/%m/%Y'), '') AS ultima_retirada,
+                DATE_FORMAT(
+                    (CASE
+                        WHEN ((DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE())) THEN CURDATE()
+                        ELSE (DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY))
+                    END),
+                    '%d/%m/%Y'
+                ) AS proxima_retirada,
+                pr.seq 
+                
+            FROM ".$nucleo."
+
+            JOIN pre_retiradas AS pr
+                ON pr.id_pessoa = atb.id_pessoa AND pr.id_produto = produtos.id
+
+            WHERE ".$where."
+
+            GROUP BY
+                produtos.id,
+                produtos.referencia,
+                produtos.descr,
+                produtos.detalhes,
+                produtos.cod_externo,
+                produtos.tamanho,
+                produtos.foto,
+                prev.qtd,
+                vatbold.id,
+                vatbold.qtd,
+                vatbold.validade,
+                vatbold.obrigatorio,
+                vprodutos.qtd,
+                vprodutos.travar_estq,
+                mat_vultretirada.data,
+                mat_vretiradas.valor
+        "));
     }
 
     private function produtos_por_pessoa($id_pessoa, $grade) {
@@ -747,61 +712,37 @@ class Api2Controller extends Controller {
 
     public function receber_previa(Request $request) {
         if ($request->token != config("app.key")) return 401;
-    
-        // Passo 1: Encontrar IDs e validar a entrada
         $id_produto = Produtos::where("cod_externo", $request->codbar)->value("id");
         $id_pessoa = Pessoas::where("cpf", $request->cpf)->value("id");
-    
         if (!$id_produto || !$id_pessoa) return 404;
-    
-        // --- Início da Lógica de Refatoração ---
-    
-        // Passo 2: Encontrar a atribuição de maior prioridade para este par específico.
-        // Usamos a função auxiliar para obter todas as atribuições possíveis para a pessoa...
-        $atribuicoesQuery = $this->retorna_atb_aux('P', $id_pessoa, false, $id_pessoa); // App\Http\Controllers\Controller.php
-    
-        // ... e então filtramos pelo produto e selecionamos a de maior prioridade (menor grandeza).
-        $prioritizedAttributionId = DB::table(DB::raw("({$atribuicoesQuery}) AS atb"))
-            ->where('atb.id_produto', $id_produto)
-            ->where('atb.lixeira', 0) // Regra de negócio: atribuições na lixeira não contam.
-            ->orderBy('atb.grandeza', 'asc')
-            ->value('id_atribuicao');
-    
-        // Se não houver nenhuma atribuição válida para este produto/pessoa, não há pendência.
-        if (!$prioritizedAttributionId) return 403;
-    
-        // Passo 3: Replicar a lógica de 'esta_pendente' da antiga VIEW
-        // Contamos quantas vezes este item já foi adicionado à pré-retirada.
-        $preRetiradasCount = DB::table('pre_retiradas')
-            ->where('id_pessoa', $id_pessoa)
-            ->where('id_produto', $id_produto)
-            ->count();
-    
-        // Verificamos a pendência usando a atribuição priorizada.
-        $isPendente = DB::table('vatbold')
-            ->selectRaw(1) // Selecionamos 1 apenas para a verificação de existência.
-            ->where('vatbold.id', $prioritizedAttributionId)
-            // Usamos LEFT JOIN pois pode não haver retiradas anteriores.
-            ->leftJoin('mat_vretiradas', function($join) use ($id_pessoa) {
-                $join->on('mat_vretiradas.id_atribuicao', '=', 'vatbold.id')
-                     ->where('mat_vretiradas.id_pessoa', '=', $id_pessoa);
-            })
-            ->leftJoin('mat_vultretirada', function($join) use ($id_pessoa) {
-                $join->on('mat_vultretirada.id_atribuicao', '=', 'vatbold.id')
-                     ->where('mat_vultretirada.id_pessoa', '=', $id_pessoa);
-            })
-            // Condição 1: A retirada está vencida ou nunca foi feita.
-            ->whereRaw("DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()")
-            // Condição 2: A quantidade a ser retirada ainda é maior que zero.
-            ->whereRaw("(vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + ?)) > 0", [$preRetiradasCount])
-            ->exists();
-    
+        $base = $this->retorna_atb_aux("P", $id_pessoa, false, $id_pessoa); // App\Http\Controllers\Controller.php
+        $id_atribuicao = DB::table(DB::raw("(".$base.") AS atb"))
+                            ->where("atb.id_produto", $id_produto)
+                            ->where("atb.lixeira", 0)
+                            ->orderby("atb.grandeza")
+                            ->value("id_atribuicao");
+        if (!$id_atribuicao) return 403;
+        $pre_retiradas = DB::table('pre_retiradas')
+                            ->where("id_pessoa", $id_pessoa)
+                            ->where("id_produto", $id_produto)
+                            ->count();
+        $isPendente = DB::table("vatbold")
+                        ->selectRaw(1)
+                        ->where("vatbold.id", $id_atribuicao)
+                        ->leftJoin("mat_vretiradas", function($join) use ($id_pessoa) {
+                            $join->on("mat_vretiradas.id_atribuicao", "vatbold.id")
+                                ->where("mat_vretiradas.id_pessoa", $id_pessoa);
+                        })
+                        ->leftJoin("mat_vultretirada", function($join) use ($id_pessoa) {
+                            $join->on("mat_vultretirada.id_atribuicao", "vatbold.id")
+                                ->where("mat_vultretirada.id_pessoa", $id_pessoa);
+                        })
+                        ->whereRaw("DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()")
+                        ->whereRaw("(vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + ?)) > 0", [$preRetiradasCount])
+                        ->exists();
     
         if (!$isPendente) return 403;
     
-        // --- Fim da Lógica de Refatoração ---
-    
-        // Passo 4: Se tudo estiver correto, criar a pré-retirada.
         $previa = new PreRetiradas;
         $previa->id_pessoa = $id_pessoa;
         $previa->id_produto = $id_produto;

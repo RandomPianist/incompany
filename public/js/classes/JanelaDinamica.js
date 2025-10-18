@@ -90,6 +90,7 @@ class Pessoa extends JanelaDinamica {
     #htmlPermissoes;
     #usuario;
     #id_setor;
+    #id_empresa;
     #ant_id_setor;
     #ant_id_empresa;
     #obrigatorios;
@@ -166,6 +167,7 @@ class Pessoa extends JanelaDinamica {
                     modal("pessoasModal", this.#id, () => {
                         this.#carregando = false;
                         $("#id_setor").val(this.#id_setor);
+                        $("#id_empresa").val(this.#id_empresa);
                     });
                 });
             }
@@ -244,10 +246,14 @@ class Pessoa extends JanelaDinamica {
             el.style.removeProperty("margin-top");
         });
         dimensionar_linhas();
+        $("#pessoa-empresa-select").attr("disabled", this.#id == USUARIO ? true : false);
+        $("#pessoa-setor-select").attr("disabled", this.#id == USUARIO ? true : false);
     }
 
     mudou_empresa(id_empresa, callback) {
         id_empresa = parseInt(id_empresa);
+        $("#pessoa-id_empresa").val(id_empresa);
+        this.#id_empresa = id_empresa;
         if (id_empresa) {
             $.get(URL + "/empresas/setores/" + id_empresa, (data) => {
                 if (typeof data == "string") data = $.parseJSON(data);

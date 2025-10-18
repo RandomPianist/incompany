@@ -11,6 +11,7 @@ class CorrecoesController extends Controller {
                 ->where("origem", "<>", "COR")
                 ->where("acao", $acao)
                 ->where("tabela", $tabela)
+                ->where("fk", $fk)
                 ->value("id");
         if ($log === null) {
             DB::statement("
@@ -22,8 +23,8 @@ class CorrecoesController extends Controller {
     private function executar($tabelas, $tem_lixeira = true) {
         $campos = "
             id,
-            DATE(created_at) AS criado,
-            DATE(updated_at) AS atualizado
+            IFNULL(DATE(created_at), CURDATE()) AS criado,
+            IFNULL(DATE(created_at), CURDATE()) AS atualizado
         ";
         $campos2 = "id_pessoa, nome, origem, data, hms, acao, tabela, fk, created_at, updated_at";
         if ($tem_lixeira) $campos .= ", lixeira";
@@ -49,5 +50,13 @@ class CorrecoesController extends Controller {
         DB::table("log")->truncate();
         $this->executar(["atribuicoes", "categorias", "empresas", "maquinas", "pessoas", "produtos", "setores"]);
         $this->executar(["comodatos", "comodatos_produtos", "dedos", "estoque", "excecoes", "permissoes", "previas", "retiradas", "users", "solicitacoes", "solicitacoes_produtos"], false);
+        DB::statement("
+            UPDATE log AS main
+            JOIN setores AS aux
+                ON aux.id = main.fk
+            SET main.origem = 'SYS'
+            WHERE main.tabela = 'setores'
+              AND aux.descr IN ('FINANCEIRO', 'ADMINISTRADORES', 'SEGURANÇA DO TRABALHO', 'RECURSOS HUMANOS')
+        ");
     }
 }
