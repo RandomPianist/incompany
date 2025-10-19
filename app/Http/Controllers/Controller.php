@@ -1271,6 +1271,7 @@ abstract class Controller extends BaseController {
         else if ($chave == "P") $where .= " AND p.id IN (".$valor.")";
         else if ($chave == "S") $where .= " AND p.id_setor IN (".$valor.")";
         else if ($chave == "M") $where .= " AND mat_vcomodatos.id_maquina IN (".$valor.")";
+        else $where .= " AND ".$this->obter_where(Auth::user()->id_pessoa, "p");
         $leftjoin = "
             LEFT JOIN users
                 ON users.id_pessoa = p.id
