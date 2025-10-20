@@ -168,6 +168,8 @@ class Pessoa extends JanelaDinamica {
                         this.#carregando = false;
                         $("#id_setor").val(this.#id_setor);
                         $("#id_empresa").val(this.#id_empresa);
+                        $("#pessoa-setor-select").val(this.#id_setor);
+                        $("#pessoa-empresa-select").val(this.#id_empresa).trigger("change");
                     });
                 });
             }
