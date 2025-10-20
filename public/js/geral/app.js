@@ -644,7 +644,6 @@ function autocomplete(_this) {
         input_id = _this.data().input,
         element = _this;
 
-    // Remove qualquer resultado de autocomplete anterior
     $(".autocomplete-result").remove();
 
     if (!_search.trim()) {
@@ -653,32 +652,56 @@ function autocomplete(_this) {
     }
 
     var div_result = $("<div class='autocomplete-result'>");
-
-    // --- LÓGICA FINAL DE POSICIONAMENTO ---
-
-    // 1. O alvo para anexar o resultado é SEMPRE o <body>.
-    // Isso o liberta das restrições de 'overflow' do modal.
-    $('body').append(div_result);
-
-    // 2. Usamos .offset() para pegar a posição absoluta do input na PÁGINA INTEIRA.
-    const inputOffset = element.offset();
-
-    // 3. As coordenadas são aplicadas diretamente. A posição é calculada
-    // com base na distância do input até o topo/esquerda da janela.
-    div_result.css({
-        top: inputOffset.top + element.outerHeight(), // Posição do input + sua altura
-        left: inputOffset.left, // Posição do input
-        width: element.outerWidth() // Mesma largura do input
-    });
     
-    // Listener para fechar ao clicar fora.
+    let scrollHandler = null;
+    const scrollContainer = element.closest('.modal-tudo');
+
+    const cleanupAutocomplete = function() {
+        div_result.remove();
+        if (scrollContainer.length && scrollHandler) scrollContainer.off('scroll.autocomplete');
+    }
+
+    const posicionar = function(element, div_result) {
+        const inputOffset = element.offset();
+        div_result.css({
+            top: inputOffset.top + element.outerHeight(),
+            left: inputOffset.left,
+            width: element.outerWidth()
+        });
+    }
+
+    $('body').append(div_result);
+    posicionar(element, div_result);
+    
     $(document).one("click", function (e) {
-        if (!element.is(e.target) && div_result.has(e.target).length === 0) {
-            div_result.remove();
-        }
+        if (!element.is(e.target) && div_result.has(e.target).length === 0) cleanupAutocomplete();
     });
 
-    // O restante da função (chamada AJAX) continua igual...
+    if (scrollContainer.length) {
+        scrollContainer.off('scroll.autocomplete').on('scroll.autocomplete', function() {
+            if (!div_result.parent().length) {
+                scrollContainer.off('scroll.autocomplete');
+                return;
+            }
+
+            let isElementInView = function (element, container) {
+                if (!element.length || !container.length) return false;
+
+                const containerTop = container.offset().top;
+                const containerBottom = containerTop + container.outerHeight();
+                const elementTop = element.offset().top;
+                const elementBottom = elementTop + element.outerHeight();
+                
+                return (elementBottom > containerTop) && (elementTop < containerBottom);
+            }
+
+            if (isElementInView(element, scrollContainer)) {
+                posicionar(element, div_result);
+                div_result.show();
+            } else div_result.hide();
+        });
+    }
+
     $.get(URL + "/autocomplete", {
         table: _table,
         column: _column,
@@ -687,10 +710,12 @@ function autocomplete(_this) {
         search: _search
     }, function (data) {
         if (typeof data == "string") data = $.parseJSON(data);
+        if (!div_result.parent().length) return; 
+
         div_result.empty();
 
         if (data.length === 0) {
-            div_result.append("<div class='autocomplete-line' style='color:#888; cursor:default;'>Nenhum resultado</div>");
+            cleanupAutocomplete();
             return;
         }
 
@@ -702,7 +727,7 @@ function autocomplete(_this) {
             $(this).click(function () {
                 $(input_id).val($(this).data().id).trigger("change");
                 element.val($(this).text());
-                div_result.remove();
+                cleanupAutocomplete();
             });
 
             $(this).mouseover(function () {
@@ -991,7 +1016,7 @@ function cp_mp_listeners(tipo) {
 
 function cp_mp_limpar_tudo(tipo) {
     cp_mp_limpar(tipo);
-    const lista = tipo == "cp" ? ["busca-prod", "busca-refer", "busca-cat"] : ["busca-maq"];
+    const lista = tipo == "mp" ? ["busca-prod", "busca-refer", "busca-cat"] : ["busca-maq"];
     lista.forEach((id) => {
         $("#" + id).val("");
     });
