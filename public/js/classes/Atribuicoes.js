@@ -493,16 +493,12 @@ class Atribuicoes {
         if (typeof data == "string") data = $.parseJSON(data);
         $("#supervisorModal").modal("hide");
         $("#retiradasModal").modal("hide");
-        if (data.icon == "success") {
-            await s_alert({
-                icon: data.icon
-            });
-        } else {
-            await s_alert({
-                icon: "error",
-                html: data.msg
-            })
-        }
+        await s_alert(data.icon == "success" ? {
+            icon: data.icon
+        } : {
+            icon: "error",
+            html: data.msg
+        })
         listar();
     }
 }
