@@ -372,7 +372,7 @@ abstract class Controller extends BaseController {
                 )
             )";
         }
-        return $where;
+        return "(".$where.")";
     }
 
     protected function busca_emp($tipo, $id_emp = 0, $id_matriz = 0) {

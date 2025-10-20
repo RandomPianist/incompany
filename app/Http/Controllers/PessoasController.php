@@ -93,6 +93,7 @@ class PessoasController extends ControllerListavel {
                     ->leftjoinSub(
                         DB::table("retiradas")
                             ->selectRaw("DISTINCTROW id_pessoa")
+                            ->whereNull("numero_ped")
                             ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas")),
                         "ret",
                         "ret.id_pessoa",
