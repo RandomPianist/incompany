@@ -739,7 +739,7 @@ class Api2Controller extends Controller {
                                 ->where("mat_vultretirada.id_pessoa", $id_pessoa);
                         })
                         ->whereRaw("DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()")
-                        ->whereRaw("(vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + ?)) > 0", [$preRetiradasCount])
+                        ->whereRaw("(vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + ?)) > 0", [$pre_retiradas])
                         ->exists();
     
         if (!$isPendente) return 403;
