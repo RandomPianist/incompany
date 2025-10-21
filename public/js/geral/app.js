@@ -1038,7 +1038,7 @@ function cp_mp_limpar(tipo) {
 function cp_mp_contar(tipo) {
     let titulo = $("#" + tipo + "ModalLabel").html();
     if (titulo.indexOf("|") > -1) titulo = titulo.split("|")[0].trim();
-    titulo += " | Listando " + document.querySelectorAll("#" + tipo + "Modal .id_produto").length + " de " + cp_mp_total;
+    titulo += " | Listando " + document.querySelectorAll("#" + tipo + "Modal .id-produto").length + " de " + cp_mp_total;
     $("#" + tipo + "ModalLabel").html(titulo);
 }
 
