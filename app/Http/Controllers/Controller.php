@@ -1266,7 +1266,12 @@ abstract class Controller extends BaseController {
 
     protected function retorna_atb_aux($chave, $valor, $apenas_ativos, $id_pessoa) {
         $tabela = $apenas_ativos ? "vativos" : "pessoas";
-        $where = "(users.admin = 0 OR users.id IS NULL OR vatbreal.gerado = 0) AND excecoes.id IS NULL AND cp.lixeira = 0 AND produtos.lixeira = 0";
+        $where = "
+                (users.id IS NULL OR vatbreal.gerado = 0 OR (vatbreal.gerado = 1 AND users.admin = 0))
+            AND excecoes.id IS NULL
+            AND cp.lixeira = 0
+            AND produtos.lixeira = 0
+        ";
         if ($id_pessoa) $where .= " AND p.id = ".$id_pessoa;
         else if ($chave == "P") $where .= " AND p.id IN (".$valor.")";
         else if ($chave == "S") $where .= " AND p.id_setor IN (".$valor.")";
