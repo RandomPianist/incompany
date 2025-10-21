@@ -852,7 +852,7 @@ abstract class Controller extends BaseController {
     protected function retorna_case_qtd() {
         return "
             CASE
-                WHEN (DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE())) THEN ".$this->retorna_calc_qtd()."
+                WHEN (DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()) THEN ".$this->retorna_calc_qtd()."
                 ELSE 0
             END
         ";

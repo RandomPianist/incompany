@@ -111,7 +111,8 @@ class Api2Controller extends Controller {
                 vprodutos.qtd,
                 vprodutos.travar_estq,
                 mat_vultretirada.data,
-                mat_vretiradas.valor
+                mat_vretiradas.valor,
+                pr.seq
         "));
     }
 
