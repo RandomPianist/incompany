@@ -1472,7 +1472,7 @@ abstract class Controller extends BaseController {
                     FROM (".$vigentes.") AS main_atb
 
                     JOIN (".$base.") AS associada
-                        ON associada.id_pessoa = main_atb.id_pessoa AND associada.id_produto = associada.id_produto
+                        ON associada.id_pessoa = main_atb.id_pessoa AND associada.id_produto = main_atb.id_produto
 
                     GROUP BY
                         main_atb.id_pessoa,

@@ -734,11 +734,11 @@ class Api2Controller extends Controller {
                             $join->on("mat_vretiradas.id_atribuicao", "vatbold.id")
                                 ->where("mat_vretiradas.id_pessoa", $id_pessoa);
                         })
-                        ->leftJoin("mat_vultretirada", function($join) use ($id_pessoa) {
-                            $join->on("mat_vultretirada.id_atribuicao", "vatbold.id")
-                                ->where("mat_vultretirada.id_pessoa", $id_pessoa);
-                        })
-                        ->whereRaw("DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()")
+                        // ->leftJoin("mat_vultretirada", function($join) use ($id_pessoa) {
+                            // $join->on("mat_vultretirada.id_atribuicao", "vatbold.id")
+                                // ->where("mat_vultretirada.id_pessoa", $id_pessoa);
+                        // })
+                        // ->whereRaw("DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()")
                         ->whereRaw("(vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + ?)) > 0", [$pre_retiradas])
                         ->exists();
     
