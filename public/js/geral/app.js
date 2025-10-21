@@ -5,6 +5,7 @@ let validacao_bloqueada = false;
 let focar = true;
 let pessoa = null;
 let setor = null;
+let cp_mp_total = 0;
 let grupo_emp2 = 0;
 
 function debounce(func, delay) {
@@ -1034,6 +1035,13 @@ function cp_mp_limpar(tipo) {
     $("#" + tipo + "Modal #maximo-1").val(0).trigger("keyup");
 }
 
+function cp_mp_contar(tipo) {
+    let titulo = $("#" + tipo + "ModalLabel").html();
+    if (titulo.indexOf("|") > -1) titulo = titulo.split("|")[0].trim();
+    titulo += " | Listando " + document.querySelectorAll("#" + tipo + "Modal .id_produto").length + " de " + cp_mp_total;
+    $("#" + tipo + "ModalLabel").html(titulo);
+}
+
 function cp_mp_adicionar_campo(tipo) {
     const cont = ($("#" + tipo + "Modal input[type=number]").length / 2) + 1;
 
@@ -1062,6 +1070,7 @@ function cp_mp_adicionar_campo(tipo) {
                 $(this).attr("id", classe + "-" + (i + 1));
             });
         });
+        cp_mp_contar(tipo);
     });
 
     $("#" + tipo + "Modal .modal-tudo").append($(linha));
@@ -1077,6 +1086,7 @@ function cp_mp_adicionar_campo(tipo) {
     $($(linha).find(tipo == "cp" ? ".id-produto" : ".id-maquina")[0]).trigger("change");
     $($(linha).find(".minimo")[0]).trigger("change");
     $($(linha).find(".maximo")[0]).trigger("change");
+    cp_mp_contar(tipo);
 }
 
 function cp_mp_listar(tipo, abrir) {
@@ -1092,11 +1102,7 @@ function cp_mp_listar(tipo, abrir) {
     }, function(data) {
         cp_mp_limpar(tipo);
         if (typeof data == "string") data = $.parseJSON(data);
-        const total = data.total;
-        let titulo = $("#" + tipo + "ModalLabel").html();
-        if (titulo.indexOf("|") > -1) titulo = titulo.split("|")[0].trim();
-        titulo += " | Listando " + data.lista.length + " de " + total;
-        $("#" + tipo + "ModalLabel").html(titulo);
+        cp_mp_total = data.total;
         data = data.lista;
         for (let i = 0; i < data.length; i++) {
             if (i > 0) cp_mp_adicionar_campo(tipo);
@@ -1116,6 +1122,7 @@ function cp_mp_listar(tipo, abrir) {
                 limitar($(this), true);
             });
         }
+        cp_mp_contar(tipo);
     })
 }
 
