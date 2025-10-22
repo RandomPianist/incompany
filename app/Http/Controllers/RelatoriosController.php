@@ -728,7 +728,7 @@ class RelatoriosController extends Controller {
         $criterios = "";
         $periodo = "";
         $categoria = "";
-        if ($request->id_categoria) $categoria = Categorias::find($id_categoria)->descr;
+        if ($request->id_categoria) $categoria = Categorias::find($request->id_categoria)->descr;
 
         $ordenacao = $request->ordenacao;
         switch($ordenacao) {

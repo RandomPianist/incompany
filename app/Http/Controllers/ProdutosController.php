@@ -6,11 +6,8 @@ use DB;
 use Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\Pessoas;
 use App\Models\Produtos;
-use App\Models\Maquinas;
 use App\Models\Categorias;
-use App\Models\Atribuicoes;
 
 class ProdutosController extends ControllerListavel {
     private function busca_maq($where, $id_produto) {

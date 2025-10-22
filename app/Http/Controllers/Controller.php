@@ -764,6 +764,9 @@ abstract class Controller extends BaseController {
 
     protected function atribuicao_atualiza_ref($id, $antigo, $novo, $nome = "", $api = false) {
         if ($id && $this->comparar_texto($antigo, $novo)) {
+            $connection = DB::connection();
+            $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+            $connection->beginTransaction();
             try {
                 $novo = trim($novo);
                 $where = "referencia = '".$antigo."'";

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use DB;
 use Auth;
 use Illuminate\Http\Request;
-use App\Models\Pessoas;
 
 class DashboardController extends Controller {
     private function formatar_data($data) {

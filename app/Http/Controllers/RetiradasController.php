@@ -61,7 +61,7 @@ class RetiradasController extends Controller {
 
     public function desfazer(Request $request) {
         if ($this->obter_empresa()) return 401; // App\Http\Traits\GlobaisTrait.php
-        if ($this->permitir() == 401) return 401;
+        if ($this->permitir($request) == 401) return 401;
         $where = "id_pessoa = ".$request->id_pessoa." AND numero_ped IS NULL";
         $this->log_inserir_lote("D", "retiradas", $where); // App\Http\Controllers\Controller.php
         Retiradas::whereRaw($where)->delete();

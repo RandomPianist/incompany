@@ -17,6 +17,7 @@ use App\Models\Retiradas;
 use App\Models\PreRetiradas;
 use App\Models\Pessoas;
 use App\Models\Dedos;
+use App\Models\Atribuicoes;
 use Illuminate\Http\Request;
 
 class Api2Controller extends Controller {
@@ -456,7 +457,7 @@ class Api2Controller extends Controller {
 
     public function sincronizar(Request $request) {
         if ($request->token != config("app.key")) return 401;
-        $produtos = (object) $produtos;
+        $produtos = (object) $request->produtos;
         $resultado = $this->sincronizar_produtos($request->maq, $request->usu, $produtos);
         return json_encode(array(
             "ids_cdp" => implode("|", $resultado->ids_cdp),

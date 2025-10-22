@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use DB;
 use Auth;
+use Hash;
 use App\Models\Setores;
-use App\Models\Permissoes;
 use App\Models\Pessoas;
 use App\Models\Empresas;
 use Illuminate\Http\Request;
@@ -242,7 +242,7 @@ class SetoresController extends ControllerListavel {
                         
                         $id_usuario = DB::table("users")->insertGetId([
                             "name" => $pessoa->nome,
-                            "email" => $email,
+                            "email" => $pessoa->email,
                             "password" => Hash::make($request->password[$i]),
                             "id_pessoa" => $pessoa->id
                         ]);

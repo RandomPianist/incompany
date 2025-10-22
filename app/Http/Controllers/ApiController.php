@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use DB;
-use Auth;
 use Illuminate\Http\Request;
 use App\Models\Categorias;
 use App\Models\Comodatos;
-use App\Models\Maquinas;
 use App\Models\Produtos;
 use App\Models\Estoque;
 use App\Models\Retiradas;
@@ -330,7 +328,6 @@ class ApiController extends Controller {
         $connection->beginTransaction();
         try {
             for ($i = 0; $i < sizeof($request->idProduto); $i++) {
-                $saldo_ant = $this->retorna_saldo_cp($comodato->id, $request->idProduto[$i]); // App\Http\Controllers\Controller.php
                 $cp = ComodatosProdutos::find($comodato->cp($request->idProduto[$i])->value("id"));
                 $linha = new Estoque;
                 $linha->data = date("Y-m-d");
