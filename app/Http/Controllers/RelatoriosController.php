@@ -114,13 +114,17 @@ class RelatoriosController extends Controller {
                     DB::raw("IFNULL(retiradas.biometria, '') AS biometria"),
                     DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data"),
                     DB::raw("
-                        DATE_FORMAT(
-                            CASE 
-                                WHEN (retiradas.hms IS NULL) THEN DATE_SUB(retiradas.created_at, INTERVAL 3 HOUR)
-                                ELSE CONCAT(retiradas.data, ' ', retiradas.hms)
-                            END,
-                            '%d/%m/%Y %H:%i:%s'
-                        ) AS data_hora
+                        CASE
+                            WHEN (comodatos.id IS NOT NULL) THEN
+                                DATE_FORMAT(
+                                    CASE 
+                                        WHEN (retiradas.hms IS NULL) THEN DATE_SUB(retiradas.created_at, INTERVAL 3 HOUR)
+                                        ELSE CONCAT(retiradas.data, ' ', retiradas.hms)
+                                    END,
+                                    '%d/%m/%Y %H:%i:%s'
+                                )
+                            ELSE ''
+                        END AS data_hora
                     "),
                     DB::raw("IFNULL(CONCAT('Liberado por ', supervisor.nome, IFNULL(CONCAT(' - ', retiradas.observacao), '')), '') AS obs")
                 )
