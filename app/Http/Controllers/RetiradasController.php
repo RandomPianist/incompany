@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use DB;
+use Auth;
 use Carbon\Carbon;
 use App\Models\Pessoas;
 use App\Models\Empresas;
