@@ -24,11 +24,11 @@ class SolicitacoesController extends Controller {
         );
         if ($solicitacao === null) {
             $resultado->continuar = 1;
-            return $resultado;
+            return json_encode($resultado);
         }
         if (!in_array($solicitacao->status, ["A", "E"])) {
             $resultado->continuar = 1;
-            return $resultado;
+            return json_encode($resultado);
         }
         $id_autor = $this->obter_autor_da_solicitacao($solicitacao->id); // App\Http\Controllers\Controller.php
         $resultado->continuar = 0;
@@ -40,7 +40,7 @@ class SolicitacoesController extends Controller {
         $resultado->autor = Pessoas::find($id_autor)->nome;
         $resultado->sou_autor = Auth::user()->id_pessoa == $id_autor ? 1 : 0;
         $resultado->id = $solicitacao->id;
-        return $resultado;
+        return json_encode($resultado);
     }
 
     public function ver(Request $request) {
