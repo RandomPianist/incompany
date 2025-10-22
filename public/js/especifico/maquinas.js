@@ -149,7 +149,6 @@ function cp(id) {
                 if (prod.trim() || refer.trim()) $("#busca-cat").val("");
             });
         });
-        cp_mp_listeners("cp");
-        cp_mp_listar("cp", true);
+        cpmp = new CPMP("cp");
    });
 }

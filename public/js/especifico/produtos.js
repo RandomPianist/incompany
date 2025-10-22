@@ -131,7 +131,6 @@ function mp(id) {
         limpar_invalido();
         $("#mpModalLabel").html(prod.descr + " - contratos do produto");
         $("#id_produto").val(id);
-        cp_mp_listeners("mp");
-        cp_mp_listar("mp", true);
+        cpmp = new CPMP("mp");
    });
 }

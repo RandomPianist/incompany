@@ -282,6 +282,7 @@
             url()->current() != route('categorias')
         ))
             <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Atribuicoes.js')    }}"></script>
+            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/CPMP.js')           }}"></script>
             <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Excecoes.js')       }}"></script>
             <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/JanelaDinamica.js') }}"></script>
             <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Relatorios.js')     }}"></script>

@@ -5,15 +5,14 @@ let validacao_bloqueada = false;
 let focar = true;
 let pessoa = null;
 let setor = null;
-let cp_mp_total = 0;
+let cpmp = null;
+let autocomplete_mouse = true;
 let grupo_emp2 = 0;
 
 function debounce(func, delay) {
     let timeoutId;
     return function(...args) {
-        // Se a função for chamada novamente, cancela o timer anterior
         clearTimeout(timeoutId);
-        // E cria um novo timer
         timeoutId = setTimeout(() => {
             func.apply(this, args);
         }, delay);
@@ -190,12 +189,14 @@ $(document).ready(function() {
 
         ["cp", "mp"].forEach((tipo) => {
             $("#" + tipo + "Modal").on("hide.bs.modal", function() {
-                if (document.querySelector("#" + tipo + "Modal .form-search.new") === null) cp_mp_limpar_tudo(tipo);
-                else cp_mp_pergunta_salvar(tipo);
+                if (document.querySelector("#" + tipo + "Modal .form-search.new") === null) {
+                    cpmp.limpar_tudo();
+                    cpmp = null;
+                } else cpmp.pergunta_salvar();
             });
             $("#" + tipo + "Modal .form-control-lg").each(function() {
                 $(this).on("keyup", function(e) {
-                    if (e.keyCode == 13) cp_mp_listar(tipo, true);
+                    if (e.keyCode == 13) cpmp.listar();
                 }).on("focus", function() {
                     validacao_bloqueada = true;
                 }).on("blur", function() {
@@ -206,6 +207,12 @@ $(document).ready(function() {
 
         $("#atribuicoesModal").on("hide.bs.modal", function() {
             if (document.querySelector("#atribuicoesModal .linha-atb.new") !== null) atribuicao.pergunta_salvar();
+        });
+
+        $(".modal").each(function() {
+            $(this).on("hide.bs.modal", function() {
+                $(".autocomplete-result").remove();
+            });
         });
 
         ["categorias", "empresas", "pessoas", "produtos", "setores"].forEach((tipo) => {
@@ -406,63 +413,6 @@ async function excluirMain(_id, prefixo, aviso, callback) {
 //     }
 // }
 
-async function cp_mp_validar_main(tipo) {
-    limpar_invalido();
-    let erro = "";
-    let req = tipo == "cp" ? {
-        produtos_descr : obter_vetor("produto", "cp"),
-        produtos_id : obter_vetor("id-produto", "cp"),
-        id_maquina : $($(".id_maquina")[0]).val()
-    } : {
-        maquinas_descr : obter_vetor("maquina", "mp"),
-        maquinas_id : obter_vetor("id-maquina", "mp"),
-        id_produto : $("#id_produto").val()
-    };
-    req.precos = obter_vetor("preco", tipo);
-    req.maximos = obter_vetor("maximo", tipo);
-    let data = await $.get(URL + "/" + (tipo == "cp" ? "maquinas/produto" : "produtos/maquina") + "/consultar", req);
-    if (typeof data == "string") data = $.parseJSON(data);
-    if (!erro && data.texto) {
-        for (let i = 0; i < data.campos.length; i++) {
-            let el = $("#cpModal #" + data.campos[i]);
-            $(el).val(data.valores[i]);
-            $(el).trigger("keyup");
-            $(el).addClass("invalido");
-        }
-        erro = data.texto;
-    }
-    if (erro) return erro;
-    $("#" + tipo + "Modal .preco").each(function() {
-        $(this).val(parseInt(apenasNumeros($(this).val())) / 100);
-    });
-    iniciarCarregamento(tipo + "Modal");
-    $("#" + tipo + "Modal form").submit();
-    return "";
-}
-
-async function cp_mp_validar(tipo) {
-    const erro = await cp_mp_validar_main(tipo);
-    if (erro) s_alert(erro);
-}
-
-async function cp_mp_pergunta_salvar(tipo) {
-    const resp = await s_alert({
-        html : "Deseja salvar as alterações?",
-        ync : true
-    });
-    if (resp.isConfirmed) {
-        let erro = await cp_mp_validar(tipo);
-        if (erro) {
-            cp_mp_limpar_tudo(tipo);
-            s_alert({
-                icon : "error",
-                title : "Não foi possível salvar"
-            });
-        }
-    } else if (resp.isDenied) cp_mp_limpar_tudo(tipo);    
-    else $("#" + tipo + "Modal").modal();
-}
-
 function dimensionar_linhas() {
     $(".modal-body .row:not(.sem-margem)").each(function() {
         let anterior = $($(this).prev());
@@ -655,11 +605,12 @@ function autocomplete(_this) {
     var div_result = $("<div class='autocomplete-result'>");
     
     let scrollHandler = null;
-    const scrollContainer = element.closest('.modal-tudo');
+    const scrollContainer = element.closest(".modal-tudo");
 
     const cleanupAutocomplete = function() {
         div_result.remove();
-        if (scrollContainer.length && scrollHandler) scrollContainer.off('scroll.autocomplete');
+        if (scrollContainer.length && scrollHandler) scrollContainer.off("scroll.autocomplete");
+        if (cpmp !== null) cpmp.contar(true);
     }
 
     const posicionar = function(element, div_result) {
@@ -671,7 +622,7 @@ function autocomplete(_this) {
         });
     }
 
-    $('body').append(div_result);
+    $("body").append(div_result);
     posicionar(element, div_result);
     
     $(document).one("click", function (e) {
@@ -679,9 +630,9 @@ function autocomplete(_this) {
     });
 
     if (scrollContainer.length) {
-        scrollContainer.off('scroll.autocomplete').on('scroll.autocomplete', function() {
+        scrollContainer.off("scroll.autocomplete").on("scroll.autocomplete", function() {
             if (!div_result.parent().length) {
-                scrollContainer.off('scroll.autocomplete');
+                scrollContainer.off("scroll.autocomplete");
                 return;
             }
 
@@ -732,24 +683,23 @@ function autocomplete(_this) {
             });
 
             $(this).mouseover(function () {
-                $(this).parent().find(".hovered").removeClass("hovered");
-                $(this).addClass("hovered");
+                if (autocomplete_mouse) {
+                    $(this).parent().find(".hovered").removeClass("hovered");
+                    $(this).addClass("hovered");
+                }
             });
         });
         
-        div_result.find('.autocomplete-line[data-id]').first().addClass('hovered');
+        div_result.find(".autocomplete-line[data-id]").first().addClass("hovered");
     });
 }
 
 function carrega_autocomplete() {
-    // A função de busca com um "debounce" de 350ms.
-    // A requisição AJAX só será feita após o usuário parar de digitar por 350ms.
     const debouncedAutocomplete = debounce(function(element) {
         autocomplete(element);
     }, 350);
 
-    // Usando DELEGAÇÃO DE EVENTOS para funcionar em campos adicionados dinamicamente
-    $(document).on('keyup', '.autocomplete', function(e) {
+    $(document).on("keyup", ".autocomplete", function(e) {
         const element = $(this);
         element.removeClass("invalido");
 
@@ -801,10 +751,14 @@ function seta_autocomplete(direcao, _this) {
     } else {
         switch(direcao) {
             case 38: // Seta para cima
-                target = el_hovered.prevAll('[data-id]').first();
+                let prev = el_hovered.prevAll("[data-id]").first();
+                if (prev.length) target = prev;
+                else target = el.last();
                 break;
             case 40: // Seta para baixo
-                target = el_hovered.nextAll('[data-id]').first();
+                let next = el_hovered.nextAll("[data-id]").first();
+                if (next.length) target = next;
+                else target = el.first();
                 break;
             default: // Enter ou Tab
                 target = el_hovered;
@@ -816,12 +770,17 @@ function seta_autocomplete(direcao, _this) {
     if(target && target.length) {
         // Dispara mouseover para navegação e click para seleção
         if ([38, 40].indexOf(direcao) > -1) {
+            autocomplete_mouse = false;
             _this.val(target.text()); // Atualiza o texto do input ao navegar com as setas
-            el_hovered.removeClass('hovered');
-            target.addClass('hovered');
-        } else {
-            target.trigger("click");
-        }
+            el_hovered.removeClass("hovered");
+            target.addClass("hovered");
+            document.querySelector(".autocomplete-line.hovered").scrollIntoView({
+                block : "center"
+            });
+            setTimeout(function() {
+                autocomplete_mouse = true;
+            }, 300);
+        } else target.trigger("click");
     }
 }
 
@@ -987,143 +946,6 @@ function trocarEmpresaModal() {
         $("#empresa-select option[value='" + EMPRESA + "']").attr("selected", true);
         $("#trocarEmpresaModal").modal();
     });
-}
-
-function cp_mp_listeners(tipo) {
-    $((tipo == "mp" ? "#mpModal .id-maquina" : "#cpModal .id-produto") + ", #" + tipo + "Modal .minimo, #" + tipo + "Modal .maximo, #" + tipo + "Modal .preco, #" + tipo + "Modal .lixeira").each(function() {
-        $(this).off("change").on("change", function() {
-            const linha = $($($(this).parent()).parent())[0];
-            if ($(this).val().trim()) {
-                $.get(URL + "/maquinas/produto/verificar-novo", {
-                    preco : parseInt(apenasNumeros($($(linha).find(".preco")[0]).val())) / 100,
-                    minimo : $($(linha).find(".minimo")[0]).val(),
-                    maximo : $($(linha).find(".maximo")[0]).val(),
-                    lixeira : $($(linha).find(".lixeira")[0]).val().replace("opt-", ""),
-                    id_produto : tipo == "mp" ? $("#id_produto").val() : $($(linha).find(".id-produto")[0]).val(),
-                    id_maquina : tipo == "mp" ? $($(linha).find(".id-maquina")[0]).val() : $($(".id_maquina")[0]).val()
-                }, function(novo) {
-                    const el = $($(linha).find(".form-search")[0]);
-                    if (parseInt(novo)) $(el).addClass("new").removeClass("old");
-                    else $(el).addClass("old").removeClass("new");
-                });
-            } else $($(linha).find(".form-search")[0]).addClass("new").removeClass("old");
-            if ($(this).hasClass(tipo == "cp" ? "id-produto" : "id-maquina")) atualizaPreco(apenasNumeros($(this).attr("id")), tipo);
-            if ($(this).hasClass("maximo") || $(this).hasClass("minimo")) limitar($(this), true);
-        });
-    }).off("keyup").on("keyup", function() {
-        if ($(this).hasClass("maximo") || $(this).hasClass("minimo")) limitar($(this), true);
-    });
-}
-
-function cp_mp_limpar_tudo(tipo) {
-    cp_mp_limpar(tipo);
-    const lista = tipo == "mp" ? ["busca-prod", "busca-refer", "busca-cat"] : ["busca-maq"];
-    lista.forEach((id) => {
-        $("#" + id).val("");
-    });
-}
-
-function cp_mp_limpar(tipo) {
-    $("#" + tipo + "Modal .remove-linha").each(function() {
-        $(this).trigger("click");
-    });
-    $(tipo == "cp" ? "#cpModal #produto-1" : "#mpModal #maquina-1").val("");
-    $(tipo == "cp" ? "#cpModal #id_produto-1" : "#mpModal #id_maquina-1").val("");
-    $("#" + tipo + "Modal #lixeira-1").val("opt-0");
-    $("#" + tipo + "Modal #preco-1").val(0).trigger("keyup");
-    $("#" + tipo + "Modal #minimo-1").val(0).trigger("keyup");
-    $("#" + tipo + "Modal #maximo-1").val(0).trigger("keyup");
-}
-
-function cp_mp_contar(tipo) {
-    let titulo = $("#" + tipo + "ModalLabel").html();
-    if (titulo.indexOf("|") > -1) titulo = titulo.split("|")[0].trim();
-    titulo += " | Listando " + document.querySelectorAll("#" + tipo + "Modal .id-produto").length + " de " + cp_mp_total;
-    $("#" + tipo + "ModalLabel").html(titulo);
-}
-
-function cp_mp_adicionar_campo(tipo) {
-    const cont = ($("#" + tipo + "Modal input[type=number]").length / 2) + 1;
-
-    let linha = $($("#" + tipo + "Modal #template-linha").html());
-
-    if (tipo == "cp") {
-        $($(linha).find(".produto")[0]).attr("id", "produto-" + cont).attr("data-input", "#id_produto-" + cont);
-        $($(linha).find(".id-produto")[0]).attr("id", "id_produto-" + cont);
-    } else {
-        $($(linha).find(".maquina")[0]).attr("id", "maquina-" + cont).attr("data-input", "#id_maquina-" + cont);
-        $($(linha).find(".id-maquina")[0]).attr("id", "id_maquina-" + cont);
-    }
-
-    $($(linha).find(".lixeira")[0]).attr("id", "lixeira-" + cont).html($("#lixeira-1").html());
-    $($(linha).find(".preco")[0]).attr("id", "preco-" + cont);
-    $($(linha).find(".minimo")[0]).attr("id", "minimo-" + cont);
-    $($(linha).find(".maximo")[0]).attr("id", "maximo-" + cont);
-
-    $($(linha).find(".remove-linha")[0]).on("click", function() {
-        $(linha).remove();
-        let classes = ["lixeira", "minimo", "maximo", "preco"];
-        if (tipo == "cp") classes.push("produto", "id_produto");
-        else classes.push("maquina", "id_maquina");
-        classes.forEach((classe) => {
-            $("#" + tipo + "Modal ." + classe).each(function(i) {
-                $(this).attr("id", classe + "-" + (i + 1));
-            });
-        });
-        cp_mp_contar(tipo);
-    });
-
-    $("#" + tipo + "Modal .modal-tudo").append($(linha));
-
-    cp_mp_listeners(tipo);
-    // carrega_autocomplete();
-    carrega_dinheiro();
-
-    $(".form-control").keydown(function() {
-        $(this).removeClass("invalido");
-    });
-
-    $($(linha).find(tipo == "cp" ? ".id-produto" : ".id-maquina")[0]).trigger("change");
-    $($(linha).find(".minimo")[0]).trigger("change");
-    $($(linha).find(".maximo")[0]).trigger("change");
-    cp_mp_contar(tipo);
-}
-
-function cp_mp_listar(tipo, abrir) {
-    cp_mp_limpar(tipo);
-    $.get(URL + "/" + (tipo == "mp" ? "produtos/maquina" : "maquinas") + "/listar", tipo == "cp" ? {
-        id_maquina : $($(".id_maquina")[0]).val(),
-        filtro : $("#busca-prod").val(),
-        filtro_ref : $("#busca-ref").val(),
-        filtro_cat : $("#busca-cat").val()
-    } : {
-        id_produto : $("#id_produto").val(),
-        filtro : $("#busca-maq").val()
-    }, function(data) {
-        cp_mp_limpar(tipo);
-        if (typeof data == "string") data = $.parseJSON(data);
-        cp_mp_total = data.total;
-        data = data.lista;
-        for (let i = 0; i < data.length; i++) {
-            if (i > 0) cp_mp_adicionar_campo(tipo);
-            $((tipo == "cp" ? "#cpModal #produto-" : "#mpModal #maquina-") + (i + 1)).val(data[i][tipo == "cp" ? "produto" : "maquina"]);
-            $((tipo == "cp" ? "#cpModal #id_produto-" : "#mpModal #id_maquina-") + (i + 1)).val(data[i][tipo == "cp" ? "id_produto" : "id_maquina"]).trigger("change");
-            $("#" + tipo + "Modal #lixeira-" + (i + 1)).val("opt-" + data[i].lixeira);
-            $("#" + tipo + "Modal #preco-" + (i + 1)).val(data[i].preco).trigger("keyup");
-            $("#" + tipo + "Modal #minimo-" + (i + 1)).val(parseInt(data[i].minimo)).trigger("keyup");
-            $("#" + tipo + "Modal #maximo-" + (i + 1)).val(parseInt(data[i].maximo)).trigger("keyup");
-        }
-        if (abrir) {
-            if (!validacao_bloqueada) $("#" + tipo + "Modal").modal();
-            $(tipo == "cp" ? "#cpModal .id-produto" : "#mpModal .id-maquina").each(function() {
-                $(this).trigger("change");
-            });
-            $("#" + tipo + "Modal .minimo, #" + tipo + "Modal .maximo").each(function() {
-                limitar($(this), true);
-            });
-        }
-        cp_mp_contar(tipo);
-    })
 }
 
 function atualizarChk(id, numerico) {
