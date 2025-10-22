@@ -190,6 +190,7 @@ class SolicitacoesController extends Controller {
                 $this->log_inserir("C", "solicitacoes_produtos", $solicitacao->id); // App\Http\Controllers\Controller.php
             }
         }
+        $where = "id_solicitacao = ".$solicitacao->id;
         Previas::whereRaw($where)->update(["confirmado" => 1]);
         $this->log_inserir_lote("E", "previas", $where); // App\Http\Controllers\Controller.php
         return $this->view_mensagem("success", "Solicitação realizada"); // App\Http\Controllers\Controller.php
