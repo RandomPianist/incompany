@@ -144,7 +144,7 @@ class CPMP {
         if (naoCarregar === undefined) naoCarregar = false;
         const requestsToWaitFor = this.#requests;
         this.#limparReq(naoCarregar);
-        $.when.apply($, requestsToWaitFor).always(() => {
+        $.when(...requestsToWaitFor).always(() => {
             this.#contar_main();
             Array.from(document.getElementsByClassName("btn-primary")).forEach((el) => {
                 el.style.removeProperty("z-index");
