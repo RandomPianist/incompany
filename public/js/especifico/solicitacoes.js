@@ -122,7 +122,7 @@ async function solicitar() {
         });
         return;
     }
-    let data = $.get(URL + "/solicitacoes/consultar/" + $("#id_comodato").val());
+    let data = await $.get(URL + "/solicitacoes/consultar/" + $("#id_comodato").val());
     if (typeof data == "string") data = $.parseJSON(data);
     if (!parseInt(data.continuar)) {
         if (parseInt(data.sou_autor) && data.status == "A") {
