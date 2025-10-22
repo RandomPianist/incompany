@@ -40,6 +40,7 @@ class DashboardController extends Controller {
                                     "pessoas.id"
                                 )
                                 ->whereRaw($this->obter_where($id_pessoa, "pessoas", true)) // App\Http\Controllers\Controller.php
+                                ->orderby(DB::raw("retiradas.data DESC"))
                                 ->get();
         foreach ($ultimas_retiradas as $retirada) $retirada->foto = asset("storage/".$retirada->foto);
         return $ultimas_retiradas;
