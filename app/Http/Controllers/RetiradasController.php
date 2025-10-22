@@ -28,7 +28,7 @@ class RetiradasController extends Controller {
     public function salvar(Request $request) {
         $resultado = new \stdClass;
         $resultado->icon = "success";
-        if ($this->permitir() == 401) {
+        if ($this->permitir($request) == 401) {
             $resultado->icon = "error";
             $resultado->msg = "Operação não autorizada";
             return json_encode($resultado);
