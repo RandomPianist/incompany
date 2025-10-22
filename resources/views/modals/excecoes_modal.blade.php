@@ -19,10 +19,10 @@
                                 <option value = "S">Centro de custo</option>
                             </select>
                         </div>
-                        <div class = "col-7">
+                        <div class = "col-7 form-search">
                             <label for = "exc-ps-valor" id = "lbl-exc-ps-valor" class = "custom-label-form"></label>
                             <input id = "exc-ps-valor"
-                                class = "form-control autocomplete w-108"
+                                class = "form-control autocomplete"
                                 data-input = "#exc-ps-id"
                                 data-filter_col = ""
                                 data-filter = ""
