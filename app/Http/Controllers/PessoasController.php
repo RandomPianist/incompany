@@ -293,7 +293,7 @@ class PessoasController extends ControllerListavel {
                     ];
                     $id_usuario = DB::table("users")->insertGetId($json_usuario);
                 } else {
-                    DB::table("users")->where("id", $usuario->id)->update($json_usuario);
+                    if (count($json_usuario)) DB::table("users")->where("id", $usuario->id)->update($json_usuario);
                     $id_usuario = $usuario->id;
                 }
                 $this->log_inserir($usuario === null ? "C" : "E", "users", $id_usuario); // App\Http\Controllers\Controller.php

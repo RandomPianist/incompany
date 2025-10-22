@@ -491,6 +491,7 @@ class Setor extends JanelaDinamica {
         ) erro = "Não há alterações para salvar";
 
         $.get(URL + "/setores/consultar", {
+            id : $("#id").val(),
             descr: _descr,
             id_empresa: $("#setor-id_empresa").val(),
             empresa: _empresa
@@ -529,6 +530,8 @@ class Setor extends JanelaDinamica {
                 ehSetorSistema: !!setorDoSistema,
                 titulo: 'centro de custo'
             });
+
+            atualizarChk("cria_usuario", true);
 
             if (callback) callback();
         };

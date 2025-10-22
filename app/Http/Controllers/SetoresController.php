@@ -167,7 +167,7 @@ class SetoresController extends ControllerListavel {
             $supervisor_ant = $setor->permissao->supervisor ? 1 : 0;
             if (
                 $setor->id_empresa == $request->id_empresa &&
-                !$this->comparar_texto($request->descr, $linha->descr) && // App\Http\Controllers\Controller.php
+                !$this->comparar_texto($request->descr, $setor->descr) && // App\Http\Controllers\Controller.php
                 !$this->comparar_num($supervisor_ant, $supervisor) && // App\Http\Controllers\Controller.php
                 !$this->comparar_num($cria_usuario_ant, $cria_usuario) && // App\Http\Controllers\Controller.php
                 !$this->comparar_num($setor->permissao->financeiro, $request->financeiro) && // App\Http\Controllers\Controller.php

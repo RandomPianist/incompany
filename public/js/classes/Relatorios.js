@@ -248,14 +248,14 @@ class RelatorioRetiradas extends Relatorios {
                 if (this.#quebra == "setor") {
                     $($(this.#elementos.pessoa).parent()).addClass("d-none");
                     $($(this.#elementos.setor).parent()).removeClass("d-none");
-                    $("#retiradasModal .atalho[data-atalho='setores']").removeClass("d-none");
-                    $("#retiradasModal .atalho[data-atalho='pessoas']").addClass("d-none");
+                    $("#relatorioRetiradasModal .atalho[data-atalho='setores']").removeClass("d-none");
+                    $("#relatorioRetiradasModal .atalho[data-atalho='pessoas']").addClass("d-none");
                     $($("#rel-pessoa-tipo").parent()).addClass("d-none");
                 } else {
                     $($(this.#elementos.setor).parent()).addClass("d-none");
                     $($(this.#elementos.pessoa).parent()).removeClass("d-none");
-                    $("#retiradasModal .atalho[data-atalho='setores']").addClass("d-none");
-                    $("#retiradasModal .atalho[data-atalho='pessoas']").removeClass("d-none");
+                    $("#relatorioRetiradasModal .atalho[data-atalho='setores']").addClass("d-none");
+                    $("#relatorioRetiradasModal .atalho[data-atalho='pessoas']").removeClass("d-none");
                     $($("#rel-pessoa-tipo").parent()).removeClass("d-none");
                 }
 
