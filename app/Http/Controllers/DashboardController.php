@@ -31,16 +31,20 @@ class DashboardController extends Controller {
                                 )
                                 ->joinsub(
                                     DB::table("retiradas")
-                                        ->selectRaw("DISTINCTROW id_pessoa")
+                                        ->select(
+                                            "id_pessoa",
+                                            DB::raw("MAX(data) AS data")
+                                        )
                                         ->whereRaw($this->obter_where($id_pessoa, "retiradas")) // App\Http\Controllers\Controller.php
                                         ->whereRaw("retiradas.data >= '".$inicio."'")
-                                        ->whereRaw("retiradas.data <= '".$fim."'"),
+                                        ->whereRaw("retiradas.data <= '".$fim."'")
+                                        ->groupby("id_pessoa"),
                                     "ret",
                                     "ret.id_pessoa",
                                     "pessoas.id"
                                 )
                                 ->whereRaw($this->obter_where($id_pessoa, "pessoas", true)) // App\Http\Controllers\Controller.php
-                                ->orderby("retiradas.data", "DESC")
+                                ->orderby("ret.data", "DESC")
                                 ->get();
         foreach ($ultimas_retiradas as $retirada) $retirada->foto = asset("storage/".$retirada->foto);
         return $ultimas_retiradas;
