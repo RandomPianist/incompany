@@ -200,6 +200,7 @@ class PessoasController extends ControllerListavel {
         $minhas_permissoes = Permissoes::where("id_usuario", Auth::user()->id)->first();
         $permissao = $minhas_permissoes->pessoas;
         if ($conferir_email) $permissao = $minhas_permissoes->usuarios;
+        $permissao = $permissao || $request->id == Auth::user()->id_pessoa;
         if (!$permissao) return $this->view_mensagem("error", "Operação não permitida"); // App\Http\Controllers\Controller.php
         $obrigatorios = array();
         $nao_tem_usuario = DB::table("users")
@@ -417,5 +418,15 @@ class PessoasController extends ControllerListavel {
                 ->exists()
         ) return 401;
         return Pessoas::find($request->id)->senha;
+    }
+
+    public function supervisor(Request $request) {
+        $consulta = Pessoas::where("cpf", $request->cpf)
+                            ->where("senha", $request->senha)
+                            ->where("supervisor", 1)
+                            ->where("lixeira", 0)
+                            ->value("id");
+        if ($consulta === null) return 0;
+        return $consulta;
     }
 }

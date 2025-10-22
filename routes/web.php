@@ -110,6 +110,7 @@ Route::middleware("auth")->group(function () {
         Route::get ("/mostrar2/{id}",   [PessoasController::class, "mostrar2"]);
         Route::get ("/aviso/{id}",      [PessoasController::class, "aviso"]);
         Route::post("/senha",           [PessoasController::class, "senha"]);
+        Route::post("/supervisor",      [PessoasController::class, "supervisor"]);
         Route::post("/salvar",          [PessoasController::class, "salvar"]);
         Route::post("/alterar-empresa", [PessoasController::class, "alterar_empresa"]);
         Route::post("/excluir",         [PessoasController::class, "excluir"]);
