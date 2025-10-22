@@ -113,7 +113,10 @@ class DashboardController extends Controller {
 
                     FROM ".$this->retorna_sql_pendentes(0)."
 
-                    WHERE (((DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()))
+                    JOIN pessoas
+                        ON pessoas.id = atb.id_pessoa
+
+                    WHERE (((DATE_ADD(IFNULL(mat_vultretirada.data, DATE(pessoas.created_at)), INTERVAL vatbold.validade DAY) <= CURDATE()))
                       AND ((vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0))
                       AND vatbold.rascunho = 'S'
                 ) AS tab_pend
@@ -288,7 +291,10 @@ class DashboardController extends Controller {
 
                 FROM ".$this->retorna_sql_pendentes(intval($id_pessoa))."
 
-                WHERE (((DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()))
+                JOIN pessoas
+                    ON pessoas.id = ".$id_pessoa."
+
+                WHERE (((DATE_ADD(IFNULL(mat_vultretirada.data, DATE(pessoas.created_at)), INTERVAL vatbold.validade DAY) <= CURDATE()))
                   AND ((vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0))
                   AND atb.id_pessoa = ".$id_pessoa."
                   AND vatbold.rascunho = 'S'

@@ -69,7 +69,7 @@ class RetiradasController extends Controller {
     }
 
     public function proximas($id_pessoa) {
-        $data = "IFNULL(DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY), vatbold.data)";
+        $data = "IFNULL(DATE_ADD(IFNULL(mat_vultretirada.data, DATE(pessoas.created_at)), INTERVAL vatbold.validade DAY), vatbold.data)";
         return json_encode(DB::select(DB::raw("
             SELECT
                 produtos.descr,
@@ -83,7 +83,7 @@ class RetiradasController extends Controller {
                 ) AS proxima_retirada,
                 CASE
                     WHEN (
-                        ((DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()))
+                        ((DATE_ADD(IFNULL(mat_vultretirada.data, DATE(pessoas.created_at)), INTERVAL vatbold.validade DAY) <= CURDATE()))
                         AND ((vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0)
                     ) THEN
                         -ABS(DATEDIFF(".$data.", CURDATE()))
@@ -95,6 +95,9 @@ class RetiradasController extends Controller {
                 END AS nome_produto
 
             FROM ".$this->retorna_sql_pendentes(intval($id_pessoa))."
+
+            JOIN pessoas
+                ON pessoas.id = atb.id_pessoa
 
             WHERE atb.id_pessoa = ".$id_pessoa."
               AND vatbold.rascunho = 'S'

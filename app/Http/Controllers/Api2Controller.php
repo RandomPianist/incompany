@@ -34,6 +34,9 @@ class Api2Controller extends Controller {
             JOIN vprodutosgeral AS vprodutos
                 ON vprodutos.id_pessoa = atb.id_pessoa AND vprodutos.id_produto = produtos.id
 
+            JOIN pessoas
+                ON pessoas.id = atb.id_pessoa
+
             LEFT JOIN mat_vretiradas
                 ON mat_vretiradas.id_atribuicao = vatbold.id AND mat_vretiradas.id_pessoa = atb.id_pessoa
 
@@ -42,7 +45,7 @@ class Api2Controller extends Controller {
         ";
         $where = "atb.id_pessoa = ".$id_pessoa." AND vatbold.rascunho = 'S'";
         $where .= $obrigatorios ? "
-            AND ((DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()))
+            AND ((DATE_ADD(IFNULL(mat_vultretirada.data, DATE(pessoas.created_at)), INTERVAL vatbold.validade DAY) <= CURDATE()))
             AND ((vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0)
             AND vatbold.obrigatorio = 1
         " : " AND produtos.referencia ".($grade ? "IS NOT" : "IS")." NULL";
@@ -81,8 +84,8 @@ class Api2Controller extends Controller {
                 IFNULL(DATE_FORMAT(mat_vultretirada.data, '%d/%m/%Y'), '') AS ultima_retirada,
                 DATE_FORMAT(
                     (CASE
-                        WHEN ((DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE())) THEN CURDATE()
-                        ELSE (DATE_ADD(mat_vultretirada.data, INTERVAL vatbold.validade DAY))
+                        WHEN ((DATE_ADD(IFNULL(mat_vultretirada.data, DATE(pessoas.created_at)), INTERVAL vatbold.validade DAY) <= CURDATE())) THEN CURDATE()
+                        ELSE (DATE_ADD(IFNULL(mat_vultretirada.data, DATE(pessoas.created_at)), INTERVAL vatbold.validade DAY))
                     END),
                     '%d/%m/%Y'
                 ) AS proxima_retirada,
@@ -112,7 +115,8 @@ class Api2Controller extends Controller {
                 vprodutos.travar_estq,
                 mat_vultretirada.data,
                 mat_vretiradas.valor,
-                pr.seq
+                pr.seq,
+                pessoas.created_at
         "));
     }
 

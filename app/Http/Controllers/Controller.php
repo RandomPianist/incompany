@@ -852,7 +852,7 @@ abstract class Controller extends BaseController {
     protected function retorna_case_qtd() {
         return "
             CASE
-                WHEN (DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE()) THEN ".$this->retorna_calc_qtd()."
+                WHEN (DATE_ADD(IFNULL(mat_vultretirada.data, DATE(pessoas.created_at)), INTERVAL vatbold.validade DAY) <= CURDATE()) THEN ".$this->retorna_calc_qtd()."
                 ELSE 0
             END
         ";
@@ -866,6 +866,9 @@ abstract class Controller extends BaseController {
 
             JOIN produtos
                 ON produtos.cod_externo = vatbold.cod_produto OR produtos.referencia = vatbold.referencia
+
+            JOIN pessoas
+                ON pessoas.id = ".$id_pessoa."
                 
             LEFT JOIN mat_vretiradas
                 ON mat_vretiradas.id_atribuicao = vatbold.id AND mat_vretiradas.id_pessoa = ".$id_pessoa."
@@ -879,7 +882,7 @@ abstract class Controller extends BaseController {
                 ON vprodutos.id_pessoa = ".$id_pessoa." AND vprodutos.id_produto = produtos.id
                 
             WHERE vatbold.id = ".$id_atribuicao."
-              AND (DATE_ADD(IFNULL(mat_vultretirada.data, '1900-01-01'), INTERVAL vatbold.validade DAY) <= CURDATE())
+              AND (DATE_ADD(IFNULL(mat_vultretirada.data, DATE(pessoas.created_at)), INTERVAL vatbold.validade DAY) <= CURDATE())
               AND ((vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0)
         "));
         if (!sizeof($consulta)) return 0;
