@@ -929,7 +929,13 @@ class Api2Controller extends Controller {
 
     public function dedos(Request $request) {
         if ($request->token != config("app.key")) return 401;
-        return json_encode(Dedos::get());
+        return json_encode(
+            DB::table("dedos")
+                ->select("dedos.*")
+                ->join("pessoas", "pessoas.id", "dedos.id_pessoa")
+                ->where("pessoas.lixeira", 0)
+                ->get()
+        );
     }
 
     public function dedos_pessoa(Request $request) {
