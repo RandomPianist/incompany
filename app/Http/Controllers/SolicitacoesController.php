@@ -26,13 +26,13 @@ class SolicitacoesController extends Controller {
             $resultado->continuar = 1;
             return $resultado;
         }
-        if (!in_array($solicitacao->status, ["A", "E"])) {
+        if (!in_array($solicitacao->situacao, ["A", "E"])) {
             $resultado->continuar = 1;
             return $resultado;
         }
         $id_autor = $this->obter_autor_da_solicitacao($solicitacao->id); // App\Http\Controllers\Controller.php
         $resultado->continuar = 0;
-        $resultado->status = $solicitacao->status;
+        $resultado->status = $solicitacao->situacao;
         $resultado->data = DB::table("solicitacoes")
                                 ->selectRaw("DATE_FORMAT(DATE(solicitacoes.created_at), '%d/%m/%Y') AS data")
                                 ->where("id", $solicitacao->id)
@@ -134,7 +134,7 @@ class SolicitacoesController extends Controller {
         if ($solicitacao === null) return 200;
         if (
             !intval($solicitacao->avisou) &&
-            $solicitacao->status != "C" &&
+            $solicitacao->situacao != "C" &&
             Auth::user()->id_pessoa == $this->obter_autor_da_solicitacao($solicitacao->id) // App\Http\Controllers\Controller.php
         ) {
             $solicitacao->avisou = 1;
@@ -147,7 +147,7 @@ class SolicitacoesController extends Controller {
                             ->pluck("obs");
             foreach ($consulta as $obs) {
                 $aux = explode("|", $obs);
-                if (($aux[1] == config("app.msg_inexistente") && $solicitacao->status == "A") || $aux[1] != config("app.msg_inexistente")) $possui_inconsistencias = "A";
+                if (($aux[1] == config("app.msg_inexistente") && $solicitacao->situacao == "A") || $aux[1] != config("app.msg_inexistente")) $possui_inconsistencias = "A";
             }
             $resultado = array();
             return json_encode(array(
@@ -158,8 +158,8 @@ class SolicitacoesController extends Controller {
                                 ->where("tabela", "solicitacoes")
                                 ->where("acao", "C")
                                 ->value("data"),
-                "usuario_erp" => $solicitacao->status != "F" ? $solicitacao->usuario_erp : $solicitacao->usuario_erp2,
-                "status" => $solicitacao->status,
+                "usuario_erp" => $solicitacao->situacao != "F" ? $solicitacao->usuario_erp : $solicitacao->usuario_erp2,
+                "status" => $solicitacao->situacao,
                 "data" => Carbon::parse($solicitacao->data)->format("d/m/Y"),
                 "possui_inconsistencias" => $possui_inconsistencias
             ));
@@ -171,7 +171,7 @@ class SolicitacoesController extends Controller {
         if (!Permissoes::where("id_usuario", Auth::user()->id)->first()->solicitacoes) return 401;
         if (!$this->consultar_main($request->id_comodato)->continuar) return 401;
         $solicitacao = new Solicitacoes;
-        $solicitacao->status = "A";
+        $solicitacao->situacao = "A";
         $solicitacao->avisou = 1;
         $solicitacao->data = date("Y-m-d");
         $solicitacao->id_comodato = $request->id_comodato;
@@ -197,8 +197,8 @@ class SolicitacoesController extends Controller {
 
     public function cancelar(Request $request) {
         $solicitacao = Solicitacoes::find($request->id);
-        if ($solicitacao->status != "A" || $this->obter_autor_da_solicitacao($solicitacao->id) != Auth::user()->id_pessoa) return 401; // App\Http\Controllers\Controller.php
-        $solicitacao->status = "C";
+        if ($solicitacao->situacao != "A" || $this->obter_autor_da_solicitacao($solicitacao->id) != Auth::user()->id_pessoa) return 401; // App\Http\Controllers\Controller.php
+        $solicitacao->situacao = "C";
         $solicitacao->save();
         $this->log_inserir("D", "solicitacoes", $solicitacao->id); // App\Http\Controllers\Controller.php
         return 200;

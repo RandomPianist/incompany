@@ -326,7 +326,7 @@ class Api2Controller extends Controller {
         try {
             $solicitacao = Solicitacoes::find($request->id);
             $solicitacao->data = $status == "E" ? Carbon::createFromFormat('d-m-Y', $request->prazo)->format('Y-m-d') : date("Y-m-d");
-            $solicitacao->status = $status;
+            $solicitacao->situacao = $status;
             $solicitacao->avisou = 0;
             $solicitacao->usuario_erp = $request->usu;
             $solicitacao->save();
@@ -593,7 +593,7 @@ class Api2Controller extends Controller {
         foreach ($request->solicitacoes as $req_solicitacao_arr) {
             $req_solicitacao = (object) $req_solicitacao_arr;
             $solicitacao = Solicitacoes::find($req_solicitacao->id);
-            $solicitacao->status = "F";
+            $solicitacao->situacao = "F";
             $solicitacao->avisou = 0;
             $solicitacao->usuario_erp2 = $request->usu;
             $solicitacao->data = Carbon::createFromFormat('d-m-Y', $req_solicitacao->data)->format('Y-m-d');
