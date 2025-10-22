@@ -9,26 +9,6 @@ BEGIN
     SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
     START TRANSACTION;
     DELETE FROM mat_vultretirada;
-    UPDATE atribuicoes SET rascunho = 'S' WHERE rascunho IN ('E', 'R');
-    UPDATE excecoes SET rascunho = 'S' WHERE rascunho IN ('E', 'R');
-    UPDATE atribuicoes
-    JOIN atbbkp
-        ON atbbkp.id_atribuicao = atribuicoes.id
-    SET
-        atribuicoes.qtd = atbbkp.qtd,
-        atribuicoes.data = atbbkp.data,
-        atribuicoes.validade = atbbkp.validade,
-        atribuicoes.obrigatorio = atbbkp.obrigatorio,
-        atribuicoes.gerado = atbbkp.gerado,
-        atribuicoes.id_usuario = 0;
-    UPDATE excecoes
-    JOIN excbkp
-        ON excbkp.id_excecao = excecoes.id
-    SET
-        excecoes.id_pessoa = excbkp.id_pessoa,
-        excecoes.id_setor = excbkp.id_setor,
-        excecoes.id_usuario = 0;
-    CALL excluir_atribuicao_sem_retirada();
     -- CALL refazer_ids();
     -- CALL refazer_ids();
     -- CALL reindexar();
