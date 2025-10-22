@@ -148,7 +148,7 @@ $(document).ready(function() {
                     }, 0);
                 },
                 onSelect: function() {
-                    const el = document.getElementById(that.data().prox);
+                    const el = document.getElementById($(that).attr("data-prox"));
                     if (el !== null) {
                         setTimeout(function() {
                             $(el).focus();
@@ -587,12 +587,12 @@ function carrega_atalhos() {
 }
 
 function autocomplete(_this) {
-    var _table = _this.data().table,
-        _column = _this.data().column,
-        _filter = _this.data().filter,
-        _filter_col = _this.data().filter_col,
+    var _table = $(_this).attr("data-table"),
+        _column = $(_this).attr("data-column"),
+        _filter = $(_this).attr("data-filter"),
+        _filter_col = $(_this).attr("data-filter_col"),
         _search = _this.val(),
-        input_id = _this.data().input,
+        input_id = $(_this).attr("data-input"),
         element = _this;
 
     $(".autocomplete-result").remove();
@@ -677,7 +677,7 @@ function autocomplete(_this) {
 
         div_result.find(".autocomplete-line[data-id]").each(function () {
             $(this).click(function () {
-                $(input_id).val($(this).data().id).trigger("change");
+                $(input_id).val($(this).attr("data-id")).trigger("change");
                 element.val($(this).text());
                 cleanupAutocomplete();
             });
@@ -711,7 +711,7 @@ function carrega_autocomplete() {
         }
 
         if (!element.val().trim()) {
-            $($(this).data().input).val("");
+            $($(this).attr("data-input")).val("");
             $(".autocomplete-result").remove(); // Remove a caixa se o campo for limpo
         } else {
             // Em vez de chamar autocomplete() diretamente, chamamos nossa versão com debounce
