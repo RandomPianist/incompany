@@ -697,18 +697,21 @@ h5 {
 }
 
 .floating-action-button {
-    border-radius: 50%;
-    bottom: 19px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 100%;
+    bottom: 20px;
     color: white;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     right: 20px;
-    padding: 16px;
-    padding-bottom: 42px;
+    padding: 32px;
+    padding-bottom: 32px;
     position: fixed;
-    height: 37px;
+    height: 32px;
     width: 50px;
     background: #084f96;
-	cursor: pointer
+    cursor: pointer;
 }
 
 .fw-600 {
