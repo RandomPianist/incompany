@@ -142,7 +142,7 @@ class ProdutosController extends ControllerListavel {
     public function salvar(Request $request) {
         if ($this->obter_empresa()) return 401; // App\Http\Traits\GlobaisTrait.php
         if ($this->verifica_vazios($request, ["cod_externo", "descr", "validade", "categoria"])) return 400; // App\Http\Controllers\Controller.php
-        $validade_ca = Carbon::createFromFormat('d/m/Y', $request->validade_ca)->format('Y-m-d');
+        $validade_ca = $request->validade_ca ? Carbon::createFromFormat('d/m/Y', $request->validade_ca)->format('Y-m-d') : null;
         if ($this->consultar($request)) return 401;
         $linha = Produtos::firstOrNew(["id" => $request->id]);
         if (
@@ -170,7 +170,7 @@ class ProdutosController extends ControllerListavel {
         $linha->tamanho = $request->tamanho;
         $linha->detalhes = $request->detalhes;
         $linha->consumo = $request->consumo;
-        $linha->validade_ca = Carbon::createFromFormat('d/m/Y', $request->validade_ca)->format('Y-m-d');
+        $linha->validade_ca = $validade_ca;
         if ($request->file("foto")) $linha->foto = $request->file("foto")->store("uploads", "public");
         $linha->save();
         $this->log_inserir($request->id ? "E" : "C", "produtos", $linha->id); // App\Http\Controllers\Controller.php
