@@ -15,7 +15,7 @@ class RetiradasController extends Controller {
     private function permitir(Request $request) {
         if (!Permissoes::where("id_usuario", Auth::user()->id)->first()->retiradas) return 401;
         $emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
-        $pessoa = Pessoas::find($request->id_pessoa);
+        $pessoa = Pessoas::find($request->pessoa);
         $ok = true;
         if ($emp) $ok = ($pessoa->id_empresa == $emp || $pessoa->id_empresa == Empresas::find($emp)->id_matriz);
         if (!$ok) return 401;
