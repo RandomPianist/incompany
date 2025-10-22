@@ -2,13 +2,12 @@ class Atribuicoes {
     #idatb = 0;
     #hab = true;
     #grade; 
-    #psm_valor;
     #pessoa_selecionada;
     #ajaxRequest = null;
 
     constructor(grade, _psm_valor) {
         this.#grade = grade;
-        this.#psm_valor = _psm_valor;
+        this.psm_valor = _psm_valor;
 
         $('a[data-toggle="tab"]').on('shown.bs.tab', (e) => {
             const abaAtivaId = $(e.target).attr("id");
@@ -40,7 +39,7 @@ class Atribuicoes {
                             table: $element.data('table'),
                             column: $element.data('column'),
                             filter_col: $element.data('filter_col') || '',
-                            filter: (tipo === 'referencia') ? `${this.obter_psm()}|${this.#psm_valor}` : '',
+                            filter: (tipo === 'referencia') ? `${this.obter_psm()}|${this.psm_valor}` : '',
                             search: params.term
                         };
                         return queryParams;
@@ -72,7 +71,7 @@ class Atribuicoes {
         });
         
         $.get(`${URL}/atribuicoes/permissao`, {
-            id: this.#psm_valor,
+            id: this.psm_valor,
             tipo: this.#grade ? "R" : "P",
             tipo2: this.obter_psm()
         }, (data) => {
@@ -81,7 +80,7 @@ class Atribuicoes {
                 $("#table-atribuicoes").html("");
                 modal("atribuicoesModal", 0, () => {
                     const _psm_chave = this.obter_psm();
-                    const url = `${URL}/${_psm_chave === 'P' ? 'colaboradores' : (_psm_chave === 'S' ? 'setores' : 'maquinas')}/mostrar${_psm_chave !== 'M' ? '2' : ''}/${this.#psm_valor}`;
+                    const url = `${URL}/${_psm_chave === 'P' ? 'colaboradores' : (_psm_chave === 'S' ? 'setores' : 'maquinas')}/mostrar${_psm_chave !== 'M' ? '2' : ''}/${this.psm_valor}`;
                     
                     $.get(url, (resp) => {
                         if (typeof resp === "string") resp = $.parseJSON(resp);
@@ -135,7 +134,7 @@ class Atribuicoes {
             _token: $("meta[name='csrf-token']").attr("content"),
             id: this.#idatb,
             psm_chave: this.obter_psm(),
-            psm_valor: this.#psm_valor,
+            psm_valor: this.psm_valor,
             pr_chave,
             pr_valor: pr_valor,
             validade,
@@ -263,13 +262,13 @@ class Atribuicoes {
     retirar(id) {
         const psm = this.obter_psm();
         let _id_pessoa;
-        if (psm == "P") _id_pessoa = this.#psm_valor;
+        if (psm == "P") _id_pessoa = this.psm_valor;
         else _id_pessoa = this.#pessoa_selecionada;
         if (_id_pessoa === undefined) {
             modal("pessoaRetiradaModal", 0, function() {
                 $("#id_atribuicao").val(id);
                 $("#pessoa-retirando").attr("data-filter_col", psm == "S" ? "id_setor" : "v_maquina");
-                $("#pessoa-retirando").attr("data-filter", this.#psm_valor);
+                $("#pessoa-retirando").attr("data-filter", this.psm_valor);
                 $("#pessoa-retirando").attr("data-atribuicao", id);
             }.bind(this));
             return;
@@ -407,7 +406,7 @@ class Atribuicoes {
         }
 
         this.#ajaxRequest = $.get(URL + "/atribuicoes/listar", {
-            id: this.#psm_valor,
+            id: this.psm_valor,
             tipo: this.#grade ? "R" : "P",
             tipo2: _tipo2
         }, (data) => {
@@ -469,7 +468,7 @@ class Atribuicoes {
             $("#referencia").attr("disabled", false);
             $("#produto").attr("disabled", false);
             $.get(URL + "/atribuicoes/permissao", {
-                id: this.#psm_valor,
+                id: this.psm_valor,
                 tipo: this.#grade ? "R" : "P",
                 tipo2: this.obter_psm()
             }, (resp) => {

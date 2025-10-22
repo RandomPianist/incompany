@@ -15,6 +15,7 @@ class Excecoes {
                     $($("#exp-ps-chave").parent()).removeClass("d-none");
                     $($("#exp-ps-valor").parent()).removeClass("col-11").addClass("col-7");
                 }
+                this.mudarTipo($("#exc-ps-chave").val());
                 this.#mostrar();
             }, 0);
         });
@@ -87,7 +88,7 @@ class Excecoes {
         $("#lbl-exc-ps-valor").html((chave == "P" ? "Nome" : "Descrição") + ": *");
         $("#exc-ps-valor").attr("data-table", chave == "P" ? "pessoas" : "setores");
         $("#exc-ps-valor").attr("data-column", chave == "P" ? "nome" : "descr");
-        $("#exc-ps-valor").attr("data-filter", atribuicao.psm_val);
+        $("#exc-ps-valor").attr("data-filter", atribuicao.psm_valor);
         $("#exc-ps-valor").attr("data-filter_col", atribuicao.obter_psm() == "M" ? "v_maquina" : "id_setor");
         $("#exc-atalho").attr("data-atalho", chave == "P" ? "pessoas" : "setores");
         carrega_atalhos();
@@ -115,7 +116,7 @@ class Excecoes {
                     resultado += "<tr>" +
                         "<td class = 'exc-tipo'>" + (excecao.ps_chave == "P" ? "FUNCIONÁRIO" : "CENTRO DE CUSTO") + "</td>" +
                         "<td>" +
-                            "<span class = 'linha-atb " + (excecao.rascunho == "S" ? "old" : "new") + "'>" + excecao.pr_valor + "</span>" +
+                            "<span class = 'linha-atb " + (excecao.rascunho == "S" ? "old" : "new") + "'>" + excecao.ps_valor + "</span>" +
                         "</td>" +
                         "<td class = 'text-center manter-junto'>" + (
                             parseInt(excecao.pode_editar) ?
