@@ -816,6 +816,11 @@ class Api2Controller extends Controller {
                 }
             }
             
+            if (!intval(Pessoas::find($retirada["id_pessoa"])->id_empresa)) {
+                $resultado->code = 401;
+                $resultado->msg = "Pessoa sem empresa";
+            }
+
             if (!$resultado->msg) {
                 $comodato = Comodatos::find($cns_comodato[0]->id);
                 if (
