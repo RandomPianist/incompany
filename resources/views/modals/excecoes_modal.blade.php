@@ -31,7 +31,7 @@
                             />
                             <input id = "exc-ps-id" type = "hidden" />
                         </div>
-                        <div class = "col-1 d-flex align-items-center pl-0 pt-3 j-end">
+                        <div class = "col-1 d-flex align-items-center pt-3 j-end">
                             <i
                                 id = "exc-atalho"
                                 data-campo_id = "exc-ps-id"
