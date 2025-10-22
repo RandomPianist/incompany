@@ -172,7 +172,7 @@ class ApiController extends Controller {
                 ->where(function($sql) {
                     $sql->where(function($q) {
                         $q->where("matriz.lixeira", 0);
-                    })-orWhere(function($q) {
+                    })->orWhere(function($q) {
                         $q->whereNull("matriz.id");
                     });
                 })
