@@ -273,7 +273,6 @@ BEGIN
     UPDATE pessoas SET id_usuario_editando = 0;
     UPDATE produtos SET id_usuario_editando = 0;
     UPDATE setores SET id_usuario_editando = 0;
-    UPDATE maquinas SET id_usuario_editando = 0;
 END $$
 
 -- =================================================================================
