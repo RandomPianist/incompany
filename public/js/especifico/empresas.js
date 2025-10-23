@@ -144,7 +144,7 @@ async function validar() {
         id : $("#id").val(),
         cnpj : apenasNumeros($("#cnpj").val())
     });
-    if (!erro && data == "R" && !parseInt($("#id").val())) {
+    if (!erro && data == "R") {
         erro = "Já existe um registro com esse CNPJ";
         $("#cnpj").addClass("invalido");
     }
@@ -152,7 +152,7 @@ async function validar() {
     if (!erro) {
         const _descr = $("#nome_fantasia").val().toUpperCase().trim();
         const ha_maq = await $.get(URL + "/maquinas/consultar", {
-            id : $("#id").val(),
+            id : 0,
             descr : _descr
         });
         if (!parseInt(ha_maq) && !EMPRESA) {

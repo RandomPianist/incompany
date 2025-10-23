@@ -23,6 +23,7 @@ class AtualizacaoService {
     }
 
     public function atualizar_mat_vcomodatos($id_maquina) {
+        if (!$id_maquina) return;
         DB::table("mat_vcomodatos")
             ->where("id_maquina", $id_maquina)
             ->delete();

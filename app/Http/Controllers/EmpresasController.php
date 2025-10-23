@@ -83,6 +83,10 @@ class EmpresasController extends Controller {
 
     public function consultar(Request $request) {
         if (!$request->id && Empresas::where("lixeira", 0)->where("cnpj", $request->cnpj)->exists()) return "R";
+        if ($request->id) {
+            $emp = Empresas::where("lixeira", 0)->where("cnpj", $request->cnpj)->value("id");
+            if ($emp && $this->comparar_num($emp, $request->id)) return "R";
+        }
         return "A";
     }
 
@@ -134,13 +138,13 @@ class EmpresasController extends Controller {
             }
             $this->log_inserir_lote("C", "setores", "", "SYS"); // App\Http\Controllers\Controller.php
             $this->log_inserir_lote("C", "permissoes", "", "SYS"); // App\Http\Controllers\Controller.php
-        }
-        if ($request->maq_igual == "S" && !$emp) {
-            $maquina = new Maquinas;
-            $maquina->descr = $linha->nome_fantasia;
-            $maquina->save();
-            $this->log_inserir("C", "maquinas", $maquina->id);
-            return redirect("/maquinas");
+            if ($request->maq_igual == "S" && !$emp) {
+                $maquina = new Maquinas;
+                $maquina->descr = $linha->nome_fantasia;
+                $maquina->save();
+                $this->log_inserir("C", "maquinas", $maquina->id);
+                return redirect("/maquinas");
+            }
         }
         return redirect("/empresas?grupo=".$request->id_matriz);
     }
