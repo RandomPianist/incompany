@@ -382,6 +382,11 @@ class Pessoa extends JanelaDinamica {
             }
         }
 
+        if (apenasNumeros($("#cpf").val()).length != 11) {
+            erro = "CPF inválido";
+            $("#cpf").addClass("invalido");
+        }
+
         $.get(URL + "/colaboradores/consultar/", {
             cpf: apenasNumeros($("#cpf").val()),
             email: $("#email").val(),

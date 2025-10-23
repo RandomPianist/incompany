@@ -232,8 +232,8 @@ class Atribuicoes {
                 id: id_produto,
                 tipo: tipo
             }, function(validade) {
-                $("#validade").val(parseInt(validade)).trigger("change");
-            })
+                $("#validade_" + (this.#grade ? "r" : "p")).val(parseInt(validade)).trigger("change");
+            }.bind(this))
         }
     }
 
