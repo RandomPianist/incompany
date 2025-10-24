@@ -47,7 +47,7 @@ class JanelaDinamica {
                 "<div class = 'col-12'>" +
                     "<div class = 'custom-control custom-switch'>" +
                         "<input id = '" + prefixoCompleto + x + "' name = '" + x + "' type = 'hidden' />" +
-                        "<input id = '" + prefixoCompleto + x + "-chk' class = 'checkbox custom-control-input' type = 'checkbox' " + ((titulo === undefined && x == "supervisor") ? " onchange = 'pessoa.mudaTitulo()' " : "") + " />" +
+                        "<input id = '" + prefixoCompleto + x + "-chk' class = 'checkbox custom-control-input' type = 'checkbox' />" +
                         "<label id = '" + prefixoCompleto + x + "-lbl' for = '" + prefixoCompleto + x + "-chk' class = 'custom-control-label lbl-permissao'>" +
                             this._getLabelTexto(x, titulo) +
                         "</label>" +
