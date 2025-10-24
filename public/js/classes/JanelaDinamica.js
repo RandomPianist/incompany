@@ -47,7 +47,7 @@ class JanelaDinamica {
                 "<div class = 'col-12'>" +
                     "<div class = 'custom-control custom-switch'>" +
                         "<input id = '" + prefixoCompleto + x + "' name = '" + x + "' type = 'hidden' />" +
-                        "<input id = '" + prefixoCompleto + x + "-chk' class = 'checkbox custom-control-input' type = 'checkbox' />" +
+                        "<input id = '" + prefixoCompleto + x + "-chk' class = 'checkbox custom-control-input' type = 'checkbox' " + ((titulo === undefined && x == "supervisor") ? " onchange = 'pessoa.mudaTitulo()' " : "") + " />" +
                         "<label id = '" + prefixoCompleto + x + "-lbl' for = '" + prefixoCompleto + x + "-chk' class = 'custom-control-label lbl-permissao'>" +
                             this._getLabelTexto(x, titulo) +
                         "</label>" +
@@ -66,7 +66,7 @@ class JanelaDinamica {
 
         for (let x in permissoes) {
             $(prefixoCompleto + x + "-chk").off("change").on("change", function() {
-                atualizarChk(prefixoCompleto + x, true);
+                atualizarChk(prefixoCompleto.replace("#", "") + x, true);
             });
 
             const permissao = this.permissoesRascunho[x] || false;

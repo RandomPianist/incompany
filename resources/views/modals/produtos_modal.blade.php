@@ -60,7 +60,7 @@
                                 <label for = "validade" class = "custom-label-form">Validade em dias: *</label>
                                 <input id = "validade" name = "validade" class = "form-control text-right" autocomplete = "off" type = "number" onkeyup = "$(this).trigger('change')" onchange = "limitar(this)" />
                             </div>
-                            <div class = "col-5 pr-0 form-search form-search-3">
+                            <div class = "col-5 pr-0 form-search form-search-3 col-cat">
                                 <label for = "categoria" class = "custom-label-form">Categoria: *</label>
                                 <input id = "categoria"
                                     name = "categoria"
@@ -83,7 +83,7 @@
                                     data-campo_descr = "categoria"
                                 ></i>
                             </div>
-                            <div class = "col-3">
+                            <div class = "col-3 col-img">
                                 <button type = "button" class = "btn btn-target btn-target-black w-100 mt-4" onclick = "$(this).next().trigger('click')">Adicionar imagem</button>
                                 <input type = "file" name = "foto" class = "d-none" />
                             </div>
@@ -106,7 +106,7 @@
                         </div>
                     </div>
                 </div>
-                <div class = "d-flex">
+                <div class = "d-flex rodape">
                     <button type = "button" class = "btn btn-target mx-auto my-4 mb-4 px-5" onclick = "validar()">Salvar</button>
                 </div>
             </form>

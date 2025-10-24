@@ -127,21 +127,19 @@
                                 </li>
                             </ul>
                         </a>
-                        @if ($admin)
-                            <a href = "#">
-                                <img src = "{{ asset('img/itens.png') }}" class = "img-menu" />
-                                <span>Itens</span>
-                                <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
-                                <ul class = "dropdown-toolbar">
-                                    <li onclick = "redirect('{{ $root_url }}/categorias')">
-                                        <span>Categorias</span>
-                                    </li>
-                                    <li onclick = "redirect('{{ $root_url }}/produtos')">
-                                        <span>Produtos</span>
-                                    </li>
-                                </ul>
-                            </a>
-                        @endif
+                        <a href = "#">
+                            <img src = "{{ asset('img/itens.png') }}" class = "img-menu" />
+                            <span>Itens</span>
+                            <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
+                            <ul class = "dropdown-toolbar">
+                                <li onclick = "redirect('{{ $root_url }}/categorias')">
+                                    <span>Categorias</span>
+                                </li>
+                                <li onclick = "redirect('{{ $root_url }}/produtos')">
+                                    <span>Produtos</span>
+                                </li>
+                            </ul>
+                        </a>
                         <a href = "{{ $root_url }}/maquinas">
                             <img src = "{{ asset('img/maquinas.png') }}"  class = "img-menu" />
                             <span>Máquinas</span>
@@ -277,10 +275,7 @@
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/jquery-ui.min.js') }}"></script>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/bootstrap.min.js') }}"></script>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/select2.min.js')   }}"></script>
-        @if ($admin || (
-            url()->current() != route('produtos') && 
-            url()->current() != route('categorias')
-        ))
+       
             <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Atribuicoes.js')    }}"></script>
             <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/CPMP.js')           }}"></script>
             <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Excecoes.js')       }}"></script>
@@ -288,13 +283,7 @@
             <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Relatorios.js')     }}"></script>
             <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/app.js')              }}"></script>
             <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/mascaras.js')         }}"></script>
-        @else
-            <script type = "text/javascript" language = "JavaScript">
-                window.onload = function() {
-                    location.href = URL;
-                }
-            </script>
-        @endif
+
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/alerta.js') }}"></script>
     </body>
 </html>

@@ -18,9 +18,13 @@ function listar(coluna) {
                     "<td width = '32.5%'>" + linha.descr + "</td>" +
                     "<td width = '32.5%'>" + linha.categoria + "</td>" +
                     "<td class = 'text-center btn-table-action' width = '10%'>" +
-                        "<i class = 'my-icon far fa-edit'      title = 'Editar'               onclick = 'chamar_modal(" + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-handshake' title = 'Adicionar a contrato' onclick = 'mp(" + linha.id + ")'></i>" +
-                        "<i class = 'my-icon far fa-trash-alt' title = 'Excluir'              onclick = 'excluir(" + linha.id + ", " + '"/produtos"' + ")'></i>"
+                        (!EMPRESA ?
+                            "<i class = 'my-icon far fa-edit'      title = 'Editar'               onclick = 'chamar_modal(" + linha.id + ")'></i>" +
+                            "<i class = 'my-icon far fa-handshake' title = 'Adicionar a contrato' onclick = 'mp(" + linha.id + ")'></i>" +
+                            "<i class = 'my-icon far fa-trash-alt' title = 'Excluir'              onclick = 'excluir(" + linha.id + ", " + '"/produtos"' + ")'></i>"
+                        :
+                            "<i class = 'my-icon far fa-eye' title = 'Visualizar' onclick = 'chamar_modal(" + linha.id + ")'></i>"
+                        ) +
                     "</td>" +
                 "</tr>";
             });
@@ -81,7 +85,24 @@ async function validar() {
 }
 
 function chamar_modal(id) {
-    $("#produtosModalLabel").html((id ? "Editando" : "Cadastrando") + " produto");
+    const concluir = function() {
+        $("#produtosModal input, #produtosModal textarea").each(function() {
+            $(this).attr("disabled", !EMPRESA ? false : true);
+        });
+        $("#produtosModal .col-img, #produtosModal .rodape").each(function() {
+            if (!EMPRESA) $(this).removeClass("d-none").addClass("d-flex");
+            else $(this).addClass("d-none").removeClass("d-flex");
+        });
+        if (!EMPRESA) {
+            $("#produtosModal .col-cat").addClass("col-5").removeClass("col-8").addClass("form-search-3").addClass("form-search");
+            $("#produtosModal #categoria").addClass("w-108");
+        } else {
+            $("#produtosModal .col-cat").addClass("col-8").removeClass("col-5").removeClass("form-search-3").removeClass("form-search");
+            $("#produtosModal #categoria").removeClass("w-108");
+        }
+    }
+
+    $("#produtosModalLabel").html((!EMPRESA ? (id ? "Editando" : "Cadastrando") + " produto" : "Produto"));
     if (id) {
         $.get(URL + "/produtos/mostrar/" + id, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
@@ -95,6 +116,7 @@ function chamar_modal(id) {
                 $("#produtosModal img").attr("src", data.foto);
                 $($("#produtosModal img").parent()).removeClass("d-none");
                 if (!data.foto) $($("#produtosModal img").parent()).addClass("d-none");
+                concluir();
             });
         });
     } else {
@@ -104,6 +126,7 @@ function chamar_modal(id) {
             $("#validade_ca").val(hoje());
             $("#consumo-chk").prop("checked", false);
             ant_consumo = false;
+            concluir();
         });
     }
 }
