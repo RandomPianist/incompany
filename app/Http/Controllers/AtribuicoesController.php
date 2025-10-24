@@ -338,7 +338,8 @@ class AtribuicoesController extends Controller {
                     ->where("rascunho", "<>", "S")
                     ->update([
                         'lixeira' => DB::raw("CASE WHEN (rascunho = 'T') THEN 1 ELSE 0 END"),
-                        'rascunho' => 'S'
+                        'rascunho' => 'S',
+                        'id_usuario' => 0
                 ]);
             }
             $this->atualizar_atribuicoes($lista); // App\Http\Controllers\Controller.php
@@ -382,7 +383,7 @@ class AtribuicoesController extends Controller {
                     atribuicoes.validade = atbbkp.validade,
                     atribuicoes.obrigatorio = atbbkp.obrigatorio,
                     atribuicoes.gerado = atbbkp.gerado,
-                    atribuicoes.id_usuario = atbbkp.id_usuario
+                    atribuicoes.id_usuario = 0
                 WHERE atribuicoes.id_usuario = ".$id_usuario
             : "
                 UPDATE excecoes
@@ -391,7 +392,7 @@ class AtribuicoesController extends Controller {
                 SET
                     excecoes.id_pessoa = excbkp.id_pessoa,
                     excecoes.id_setor = excbkp.id_setor,
-                    excecoes.id_usuario = excbkp.id_usuario
+                    excecoes.id_usuario = 0
                 WHERE excecoes.id_usuario = ".$id_usuario
             );
             $this->apagar_backup($tabela);
