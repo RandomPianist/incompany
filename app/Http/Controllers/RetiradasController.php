@@ -69,7 +69,7 @@ class RetiradasController extends Controller {
     }
 
     public function proximas($id_pessoa) {
-        $data = "IFNULL(DATE_ADD(IFNULL(mat_vultretirada.data, DATE(pessoas.created_at)), INTERVAL vatbold.validade DAY), vatbold.data)";
+        $data = "IFNULL(".$this->calculo_atraso().", vatbold.data)"; // App\Http\Controllers\Controller.php
         return json_encode(DB::select(DB::raw("
             SELECT
                 produtos.descr,
@@ -83,7 +83,7 @@ class RetiradasController extends Controller {
                 ) AS proxima_retirada,
                 CASE
                     WHEN (
-                        ((DATE_ADD(IFNULL(mat_vultretirada.data, DATE(pessoas.created_at)), INTERVAL vatbold.validade DAY) <= CURDATE()))
+                        ((".$this->calculo_atraso()." <= CURDATE()))
                         AND ((vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0)
                     ) THEN
                         -ABS(DATEDIFF(".$data.", CURDATE()))

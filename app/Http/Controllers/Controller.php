@@ -852,10 +852,14 @@ abstract class Controller extends BaseController {
         ";
     }
 
+    protected function calculo_atraso() {
+        return "DATE_ADD(IFNULL(mat_vultretirada.data, IFNULL(pessoas.admissao, DATE(pessoas.created_at))), INTERVAL vatbold.validade DAY)";
+    }
+
     protected function retorna_case_qtd() {
         return "
             CASE
-                WHEN (DATE_ADD(IFNULL(mat_vultretirada.data, DATE(pessoas.created_at)), INTERVAL vatbold.validade DAY) <= CURDATE()) THEN ".$this->retorna_calc_qtd()."
+                WHEN (".$this->calculo_atraso()." <= CURDATE()) THEN ".$this->retorna_calc_qtd()."
                 ELSE 0
             END
         ";
@@ -885,7 +889,7 @@ abstract class Controller extends BaseController {
                 ON vprodutos.id_pessoa = ".$id_pessoa." AND vprodutos.id_produto = produtos.id
                 
             WHERE vatbold.id = ".$id_atribuicao."
-              AND (DATE_ADD(IFNULL(mat_vultretirada.data, DATE(pessoas.created_at)), INTERVAL vatbold.validade DAY) <= CURDATE())
+              AND (".$this->calculo_atraso()." <= CURDATE())
               AND ((vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0)
         "));
         if (!sizeof($consulta)) return 0;
