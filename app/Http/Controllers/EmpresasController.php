@@ -60,7 +60,7 @@ class EmpresasController extends Controller {
         $resultado = new \stdClass;
         $resultado->inicial = $this->busca_emp("M"); // App\Http\Controllers\Controller.php
         $resultado->final = $this->busca_emp("F"); // App\Http\Controllers\Controller.php
-        $resultado->matriz_editavel = $id_emp ? Empresas::find($id_emp)->filiais()->exists() ? 1 : 0 : 1;
+        $resultado->matriz_editavel = $id_emp ? (Empresas::find($id_emp)->filiais()->exists() ? 1 : 0) : 1;
         return json_encode($resultado);
     }
 
