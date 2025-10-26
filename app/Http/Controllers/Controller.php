@@ -406,8 +406,10 @@ abstract class Controller extends BaseController {
                 } else {
                     $empresa_usuario = Pessoas::find(Auth::user()->id_pessoa)->empresa;
                     if ($empresa_usuario !== null) {
-                        if ($tipo == "F" && !intval($empresa_usuario->id_matriz)) $sql->where("id_matriz", $empresa_usuario->id);
-                        else $sql->where("id", ($tipo == "M" && intval($empresa_usuario->id_matriz)) ? $empresa_usuario->id_matriz : $empresa_usuario->id);
+                        $sql->where(
+                            ($tipo == "F" && !intval($empresa_usuario->id_matriz)) ? "id_matriz" : "id",
+                            ($tipo == "M" && intval($empresa_usuario->id_matriz)) ? $empresa_usuario->id_matriz : $empresa_usuario->id
+                        );
                     } else $sql->where("id_matriz", $tipo == "M" ? "=" : ">", 0);
                 }
             })
