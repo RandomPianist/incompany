@@ -7,7 +7,6 @@ use Auth;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
-use App\Models\Pessoas;
 use App\Models\Empresas;
 use App\Http\Traits\GlobaisTrait;
 
