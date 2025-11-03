@@ -91,43 +91,41 @@ class DashboardController extends Controller {
     }
 
     private function retiradas_em_atraso_main($id_pessoa) {
-        $atrasos = DB::select(DB::raw("
-            SELECT
-                pessoas.id,
-                pessoas.nome,
-                pessoas.foto,
-                ROUND(pendente.total_qtd) AS total
+        $atrasos = DB::table("pessoas")
+                        ->select(
+                            "pessoas.id",
+                            "pessoas.nome",
+                            "pessoas.foto",
+                            DB::raw("ROUND(pendente.total_qtd) AS total")
+                        )
+                        ->joinSub(
+                            DB::table(DB::raw("(
+                                SELECT
+                                    atb.id_pessoa,
+                                    ".$this->retorna_case_qtd()." AS qtd_pendente
 
-            FROM pessoas
+                                FROM ".$this->retorna_sql_pendentes(0)."
 
-            JOIN (
-                SELECT
-                    id_pessoa,
-                    SUM(qtd_pendente) as total_qtd
+                                JOIN pessoas
+                                    ON pessoas.id = atb.id_pessoa
 
-                FROM (
-                    SELECT
-                        atb.id_pessoa,
-                        ".$this->retorna_case_qtd()." AS qtd_pendente
-
-                    FROM ".$this->retorna_sql_pendentes(0)."
-
-                    JOIN pessoas
-                        ON pessoas.id = atb.id_pessoa
-
-                    WHERE (((".$this->calculo_atraso()." <= CURDATE()))
-                      AND ((vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0))
-                      AND vatbold.rascunho = 'S'
-                ) AS tab_pend
-
-                GROUP BY id_pessoa
-            ) AS pendente ON pendente.id_pessoa = pessoas.id
-
-            WHERE ".$this->obter_where($id_pessoa)."
-              AND pendente.total_qtd > 0
-
-            ORDER BY pendente.total_qtd DESC
-        "));
+                                WHERE (((".$this->calculo_atraso()." <= CURDATE()))
+                                  AND ((vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0))
+                                  AND vatbold.rascunho = 'S'
+                            ) AS tab_pend"))
+                                ->select(
+                                    "id_pessoa",
+                                    DB::raw("SUM(qtd_pendente) AS total_qtd")
+                                )
+                                ->groupby("id_pessoa"),
+                            "pendente",
+                            "pendente.id_pessoa",
+                            "pessoas.id"
+                        )
+                        ->whereRaw($this->obter_where($id_pessoa))
+                        ->where("pendente.total_qtd", ">", 0)
+                        ->orderby("pendente.total_qtd", "DESC")
+                        ->get();
         foreach ($atrasos as $pessoa) $pessoa->foto = asset("storage/".$pessoa->foto);
         return $atrasos;
     }
