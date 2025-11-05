@@ -61,6 +61,7 @@ Route::group(["prefix" => "erp"], function() {
 });
 
 Route::group(["prefix" => "app"], function() {
+    Route::get ("/teste",                  [ApiController::class, "teste"]);
     Route::get ("/pessoas-com-foto",       [ApiController::class, "pessoas_com_foto"]);
     Route::post("/ver-pessoa",             [ApiController::class, "ver_pessoa"]);
     Route::post("/produtos-por-pessoa",    [ApiController::class, "produtos_por_pessoa"]);

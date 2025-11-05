@@ -718,17 +718,17 @@ class Api2Controller extends Controller {
     }
 
     public function receber_previa(Request $request) {
-        if ($request->token != config("app.key")) return 401;
+        if ($request->token != config("app.key")) return '{"status":401}';
         $id_produto = Produtos::where("cod_externo", $request->codbar)->value("id");
         $id_pessoa = Pessoas::where("cpf", $request->cpf)->value("id");
-        if (!$id_produto || !$id_pessoa) return 404;
+        if (!$id_produto || !$id_pessoa) return '{"status":404}';
         $base = $this->retorna_atb_aux("P", $id_pessoa, false, $id_pessoa); // App\Http\Controllers\Controller.php
         $id_atribuicao = DB::table(DB::raw("(".$base.") AS atb"))
                             ->where("atb.id_produto", $id_produto)
                             ->where("atb.lixeira", 0)
                             ->orderby("atb.grandeza")
                             ->value("id_atribuicao");
-        if (!$id_atribuicao) return 403;
+        if (!$id_atribuicao) return '{"status":403}';
         $pre_retiradas = DB::table('pre_retiradas')
                             ->where("id_pessoa", $id_pessoa)
                             ->where("id_produto", $id_produto)
@@ -748,13 +748,13 @@ class Api2Controller extends Controller {
                         ->whereRaw("(vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + ?)) > 0", [$pre_retiradas])
                         ->exists();
     
-        if (!$isPendente) return 403;
+        if (!$isPendente) return '{"status":403}';
     
         $previa = new PreRetiradas;
         $previa->id_pessoa = $id_pessoa;
         $previa->id_produto = $id_produto;
         $previa->save();
-        return 201;
+        return '{"status":201}';
     }
 
     public function limpar_previas(Request $request) {

@@ -616,4 +616,8 @@ class ApiController extends Controller {
         if ($pessoa == null) return 0;
         return $pessoa;
     }
+
+    public function teste() {
+        return '{"status":"ok"}';
+    }
 }
