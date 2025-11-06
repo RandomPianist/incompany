@@ -18,7 +18,7 @@
     </div>
 
     @if ($admin)
-        @include("components.add")
+        <x-add />
     @endif
 
     <link rel = "stylesheet" href = "{{ asset('css/especifico/empresas.css') }}" />

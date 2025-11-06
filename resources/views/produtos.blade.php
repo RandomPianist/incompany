@@ -13,7 +13,7 @@
                     </td>
                 </tr>
             </table>
-            @include("components.busca")
+            <x-busca />
         </div>
         <div class = "custom-table card">
             <div class = "table-header-scroll">
@@ -37,11 +37,11 @@
                     </thead>
                 </table>
             </div>
-            @include("components.table_dados")
+            <x-table_dados/>
         </div>
     </div>
     
-    @include("components.naoencontrado")
+    <x-naoencontrado />
 
     <script type = "text/javascript" language = "JavaScript">
         const ID = "{{ request('id') ?? '' }}";

@@ -67,7 +67,7 @@
         </div>
     </div>
     
-    @include("components.loader")
+    <x-loader />
 
     <link rel = "stylesheet" href = "{{ asset('css/especifico/dashboard.css') }}" />
     <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/highcharts.js') }}"></script>

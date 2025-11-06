@@ -306,8 +306,7 @@ class PessoasController extends ControllerListavel {
                         "retiradas" => $request->retiradas,
                         "pessoas" => $request->pessoas,
                         "usuarios" => $request->usuarios,
-                        "solicitacoes" => $request->solicitacoes,
-                        "supervisor" => $request->supervisor
+                        "solicitacoes" => $request->solicitacoes
                     ]
                 );
                 $this->log_inserir($usuario === null ? "C" : "E", "permissoes", $permissao->id); // App\Http\Controllers\Controller.php
@@ -394,7 +393,6 @@ class PessoasController extends ControllerListavel {
                     ->where("permissoes.pessoas", 1)
                     ->where("permissoes.usuarios", 1)
                     ->where("permissoes.solicitacoes", 1)
-                    ->where("permissoes.supervisor", 1)
                     ->where("setores.id_empresa", $request->idEmpresa)
                     ->value("id")
             : 0;

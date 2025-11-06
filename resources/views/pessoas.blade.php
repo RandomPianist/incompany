@@ -13,7 +13,7 @@
                     </td>
                 </tr>
             </table>
-            @include("components.busca")
+            <x-busca />
         </div>
         <div class = "custom-table card">
             <div class = "table-header-scroll">
@@ -42,17 +42,17 @@
                     </thead>
                 </table>
             </div>
-            @include("components.table_dados")
+            <x-table_dados/>
         </div>
     </div>
     
-    @include("components.naoencontrado")
+    <x-naoencontrado />
     
     @if (($titulo == "Usuários" && intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->supervisor)) || $titulo != "Usuários")
-        @include("components.add")
+        <x-add />
     @endif
 
-    @include("components.loader")
+    <x-loader />
 
     <link rel = "stylesheet" href = "{{ asset('css/especifico/pessoas.css') }}" />
     

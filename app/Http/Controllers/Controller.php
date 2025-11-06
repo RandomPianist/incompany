@@ -452,7 +452,7 @@ abstract class Controller extends BaseController {
     }
 
     protected function obter_lista_permissoes() {
-        return ["financeiro", "atribuicoes", "retiradas", "pessoas", "usuarios", "solicitacoes", "supervisor"];
+        return ["financeiro", "atribuicoes", "retiradas", "pessoas", "usuarios", "solicitacoes"];
     }
 
     protected function validar_permissoes(Request $request) {

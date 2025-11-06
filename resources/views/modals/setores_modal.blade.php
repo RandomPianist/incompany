@@ -54,6 +54,8 @@
                                 </div>
                             </div>
                         </div>
+                        <x-spv_vis cadastro = "setor" permissao = "supervisor" />
+                        <x-spv_vis cadastro = "setor" permissao = "visitante" />
                     </div>
                 </div>
                 <div class = "d-flex mt-4">
