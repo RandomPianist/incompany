@@ -257,6 +257,7 @@ class SetoresController extends ControllerListavel {
                         
                         $permissao = $setor->permissao->replicate(["id_setor"]);
                         $permissao->id_usuario = $id_usuario;
+                        $permissao->supervisor = $pessoa->supervisor;
                         $permissao->save();
                         $this->log_inserir("C", "permissoes", $permissao->id); // App\Http\Controllers\Controller.php
                     }
