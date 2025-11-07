@@ -42,7 +42,7 @@
                     </thead>
                 </table>
             </div>
-            <x-table_dados/>
+            <x-table_dados />
         </div>
     </div>
     

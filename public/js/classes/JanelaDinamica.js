@@ -3,10 +3,6 @@ class JanelaDinamica {
     #modalId;
 
     permissoesRascunho = [];
-    spv_vis = {
-        supervisor : false,
-        visitante : false
-    };
 
     constructor(config) {
         if (this.constructor === JanelaDinamica) {
@@ -73,7 +69,7 @@ class JanelaDinamica {
                 atualizarChk(prefixoCompleto.replace("#", "") + x, true);
             });
 
-            const permissao = this.permissoesRascunho[x];
+            const permissao = this.permissoesRascunho[x] || false;
             $(prefixoCompleto + x + "-chk").prop("checked", permissao).attr("disabled", ehSetorSistema || !permissoes[x]);
             $(prefixoCompleto + x).val(permissao ? "1" : "0");
 
@@ -162,8 +158,6 @@ class Pessoa extends JanelaDinamica {
                         this.#ant_id_empresa = parseInt(this.#dados.id_empresa);
                         this.#ant_id_setor = parseInt(this.#dados.id_setor);
                         for (let x in permissoes) this.permissoesRascunho[x] = parseInt(this.#dados[x]) ? true : false;
-                        this.spv_vis.supervisor = parseInt(this.#dados.supervisor) ? true : false;
-                        this.spv_vis.visitante = parseInt(this.#dados.visitante) ? true : false;
                         this.mudaTitulo();
                     } else {
                         this.#ant_id_empresa = 0;
@@ -211,11 +205,10 @@ class Pessoa extends JanelaDinamica {
     }
 
     mudaTitulo() {
-        let supervisor = this.spv_vis.supervisor;
+        let supervisor = this.permissoesRascunho.supervisor !== undefined ? this.permissoesRascunho.supervisor : false;
         let titulo = "";
-        
-        if (this.spv_vis.visitante) titulo = "visitante";
-        else if (!parseInt($("#pessoa-empresa-select").val())) titulo = "administrador";
+
+        if (!parseInt($("#pessoa-empresa-select").val())) titulo = "administrador";
         else if (this.#usuario) titulo = "usuário";
         else if (supervisor) titulo = "supervisor";
         else titulo = "funcionário";
@@ -223,24 +216,7 @@ class Pessoa extends JanelaDinamica {
         $("#pessoasModal .linha-permissao").remove();
         $("#pessoasModalLabel").html((this.#id ? "Editando" : "Cadastrando") + " " + titulo);
 
-        $("#pessoa-supervisor-chk").prop("checked", supervisor);
-        $("#pessoa-supervisor-lbl").html("Esse " + titulo + " pode usuar sua senha para autorizar retiradas de produtos antes do vencimento");
-        $("#pessoa-supervisor-lbl").attr("disabled", !SUPERVISOR);
-        if (!SUPERVISOR) $("#pessoa-supervisor-lbl").attr("title", "Não é possível atribuir a esse " + titulo + " permissões que seu usuário não tem");
-        else $("#pessoa-supervisor-lbl").removeAttr("title");
-
-        for (let x in this.spv_vis) {
-            $("#pessoa-" + x + "-chk").off("change").on("change", function() {
-                $("#pessoa-" + x).val($(this).prop("checked") ? "1" : "0");
-                if (x == "visitante") {
-                    if ($(this).prop("checked")) {
-                        
-                    }
-                } else this.mudaTitulo();
-            });
-        }
-
-        const htmlPermissoes = this._obterHtmlPermissoes(this.#usuario && !this.spv_vis.visitante, titulo);
+        const htmlPermissoes = this._obterHtmlPermissoes(this.#usuario, titulo);
         $("#pessoasModal .container").append(htmlPermissoes);
         this._permissoesPreencher({ titulo: titulo });
 
@@ -330,8 +306,6 @@ class Pessoa extends JanelaDinamica {
                 if (!this.#carregando) {
                     for (let x in permissoes) this.permissoesRascunho[x] = data[x] && permissoes[x];
                 }
-                this.spv_vis.supervisor = parseInt(data.supervisor) ? true : false;
-                this.spv_vis.visitante = parseInt(data.visitante) ? true : false;
                 concluir(data.cria_usuario);
             });
         } else {

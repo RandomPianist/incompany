@@ -264,7 +264,6 @@
             const URL = "{{ $root_url }}";
             const USUARIO = {{ Auth::user()->id_pessoa }};
             const EMPRESA = {{ App\Models\Pessoas::find(Auth::user()->id_pessoa)->id_empresa }};
-            const SUPERVISOR = {{ $supervisor }};
 
             function redirect(url, bNew_Tab) {
                 if (bNew_Tab) window.open(url, '_blank');

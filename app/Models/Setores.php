@@ -23,8 +23,6 @@ class Setores extends Model
     protected $casts = [
         'id' => 'integer',
         'descr' => 'string',
-        'supervisor' => 'boolean',
-        'visitante' => 'boolean',
         'cria_usuario' => 'boolean',
         'lixeira' => 'boolean',
         'id_empresa' => 'integer',
