@@ -3,6 +3,7 @@ class JanelaDinamica {
     #modalId;
 
     permissoesRascunho = [];
+    supervisor = false;
 
     constructor(config) {
         if (this.constructor === JanelaDinamica) {

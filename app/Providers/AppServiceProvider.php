@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use App\Models\Empresas;
+use App\Models\Pessoas;
 use App\Http\Traits\GlobaisTrait;
 
 class AppServiceProvider extends ServiceProvider
@@ -43,7 +44,8 @@ class AppServiceProvider extends ServiceProvider
                     $view->with([
                         'admin' => $emp === null,
                         'empresa_descr' => $emp !== null ? $emp->nome_fantasia : "Todas",
-                        'max_atb' => $max_atb
+                        'max_atb' => $max_atb,
+                        'pessoa' => Pessoas::find(Auth::user()->id_pessoa)
                     ]);
                 }
             });

@@ -51,7 +51,7 @@
     @if (
         ($titulo == "Administradores" && $admin) ||
         ($titulo == "Usuários" && $permissoes->usuarios) ||
-        ($titulo == "Supervisores" && $permissoes->pessoas && $permissoes->supervisor) ||
+        ($titulo == "Supervisores" && $permissoes->pessoas && App\Models\Pessoas::find(Auth::user()->id_pessoa)->supervisor) ||
         ($titulo == "Funcionários" && $permissoes->pessoas)
     )
         <x-add />

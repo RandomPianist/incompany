@@ -124,11 +124,12 @@ class EmpresasController extends Controller {
                 "ADMINISTRADORES" => $this->obter_lista_permissoes(), // App\Http\Controllers\Controller.php
                 "RECURSOS HUMANOS" => ["atribuicoes", "retiradas", "pessoas", "usuarios"],
                 "FINANCEIRO" => ["financeiro", "usuarios", "solicitacoes"],
-                "SEGURANÇA DO TRABALHO" => ["atribuicoes", "retiradas", "pessoas", "usuarios", "supervisor"]
+                "SEGURANÇA DO TRABALHO" => ["atribuicoes", "retiradas", "pessoas", "usuarios"]
             ];
             foreach ($setores as $setor => $permissoes) {
                 $m_setor = new Setores;
                 $m_setor->descr = $setor;
+                if ($setor == "SEGURANÇA DO TRABALHO") $m_setor->supervisor = 1;
                 $m_setor->id_empresa = $linha->id;
                 $m_setor->cria_usuario = 1;
                 $m_setor->save();
@@ -162,7 +163,7 @@ class EmpresasController extends Controller {
 
     public function setores($id) {
         $resultado = new \stdClass;
-        $permissoes = array();
+        $permissoes = ["(setores.supervisor = 1 AND ".(Pessoas::find(Auth::user()->id_pessoa)->supervisor ? "0" : "1").")"];
         $lista = $this->obter_lista_permissoes(); // App\Http\Controllers\Controller.php
         foreach ($lista as $permissao) array_push($permissoes, "(permissoes.".$permissao." = 1 AND minhas_permissoes.".$permissao." = 0)");
         return json_encode(
@@ -171,7 +172,7 @@ class EmpresasController extends Controller {
                     "setores.id",
                     "setores.descr",
                     "setores.cria_usuario",
-                    "permissoes.supervisor",
+                    "setores.supervisor",
                     DB::raw("
                         CASE
                             WHEN (".implode(" OR ", $permissoes).") THEN 0

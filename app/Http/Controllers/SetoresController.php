@@ -99,13 +99,13 @@ class SetoresController extends ControllerListavel {
                     "setores.descr",
                     "setores.cria_usuario",
                     "setores.id_empresa",
+                    "setores.supervisor",
                     "empresas.nome_fantasia AS empresa",
                     "permissoes.financeiro",
                     "permissoes.atribuicoes",
                     "permissoes.retiradas",
                     "permissoes.usuarios",
                     "permissoes.pessoas",
-                    "permissoes.supervisor",
                     "permissoes.solicitacoes",
                     DB::raw("
                         CASE
@@ -164,7 +164,7 @@ class SetoresController extends ControllerListavel {
         $setor = Setores::firstOrNew(["id" => $request->id]);
         if ($request->id) {
             $cria_usuario_ant = $setor->cria_usuario;
-            $supervisor_ant = $setor->permissao->supervisor ? 1 : 0;
+            $supervisor_ant = $setor->supervisor ? 1 : 0;
             if (
                 $setor->id_empresa == $request->id_empresa &&
                 !$this->comparar_texto($request->descr, $setor->descr) && // App\Http\Controllers\Controller.php
@@ -191,8 +191,7 @@ class SetoresController extends ControllerListavel {
                 "retiradas" => $request->retiradas,
                 "pessoas" => $request->pessoas,
                 "usuarios" => $request->usuarios,
-                "solicitacoes" => $request->solicitacoes,
-                "supervisor" => $supervisor
+                "solicitacoes" => $request->solicitacoes
             ]
         );
         $this->log_inserir($request->id ? "E" : "C", "permissoes", $setor->permissao->id); // App\Http\Controllers\Controller.php
@@ -257,7 +256,6 @@ class SetoresController extends ControllerListavel {
                         
                         $permissao = $setor->permissao->replicate(["id_setor"]);
                         $permissao->id_usuario = $id_usuario;
-                        $permissao->supervisor = $pessoa->supervisor;
                         $permissao->save();
                         $this->log_inserir("C", "permissoes", $permissao->id); // App\Http\Controllers\Controller.php
                     }

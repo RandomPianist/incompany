@@ -20,6 +20,7 @@ ALTER TABLE empresas ADD FOREIGN KEY (id_matriz) REFERENCES empresas(id);
 CREATE TABLE setores (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	descr VARCHAR(32),
+    supervisor TINYINT DEFAULT 0,
 	cria_usuario TINYINT DEFAULT 0,
 	lixeira TINYINT DEFAULT 0,
 	id_empresa INT,
@@ -99,7 +100,6 @@ CREATE TABLE permissoes (
     pessoas TINYINT DEFAULT 0,
     usuarios TINYINT DEFAULT 0,
     solicitacoes TINYINT DEFAULT 0,
-    supervisor TINYINT DEFAULT 0,
     id_usuario INT,
     id_setor INT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -12,6 +12,7 @@ class Setores extends Model
 
     protected $fillable = [
         'descr',
+        'supervisor',
         'cria_usuario',
         'lixeira',
         'id_empresa',
@@ -23,6 +24,7 @@ class Setores extends Model
     protected $casts = [
         'id' => 'integer',
         'descr' => 'string',
+        'supervisor' => 'boolean',
         'cria_usuario' => 'boolean',
         'lixeira' => 'boolean',
         'id_empresa' => 'integer',

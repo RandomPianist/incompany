@@ -100,6 +100,7 @@
                                 <input id = "password" name = "password" class = "form-control" autocomplete = "off" type = "password" title = "Senha para acessar essa plataforma" />
                             </div>
                         </div>
+                        <x-supervisor cadastro = "pessoa" />
                     </div>
                 </div>
                 <div class = "d-flex">
