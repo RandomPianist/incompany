@@ -48,7 +48,12 @@
     
     <x-naoencontrado />
     
-    @if (($titulo == "Usuários" && intval(App\Models\Pessoas::find(Auth::user()->id_pessoa)->supervisor)) || $titulo != "Usuários")
+    @if (
+        ($titulo == "Administradores" && $admin) ||
+        ($titulo == "Usuários" && $permissoes->usuarios) ||
+        ($titulo == "Supervisores" && $permissoes->pessoas && $permissoes->supervisor) ||
+        ($titulo == "Funcionários" && $permissoes->pessoas)
+    )
         <x-add />
     @endif
 

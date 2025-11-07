@@ -142,7 +142,8 @@ class PessoasController extends ControllerListavel {
                         ->selectRaw("MAX(qtd) AS qtd")
                         ->get();
         $max_atb = sizeof($consulta) ? $consulta[0]->qtd : 0;
-        return view("pessoas", compact("ultima_atualizacao", "titulo", "tipo", "max_atb"));
+        $permissoes = Permissoes::where("id_usuario", Auth::user()->id)->first();
+        return view("pessoas", compact("ultima_atualizacao", "titulo", "tipo", "max_atb", "permissoes"));
     }
 
     public function mostrar($id) {
