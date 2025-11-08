@@ -231,7 +231,7 @@ class Pessoa extends JanelaDinamica {
         $("#pessoasModal .linha-permissao").remove();
         $("#pessoasModalLabel").html((this.#id ? "Editando" : "Cadastrando") + " " + titulo);
         
-        $("pessoa-supervisor-lbl").html("Esse " + titulo + " pode usar sua senha para autorizar retiradas de produtos antes do vencimento.");
+        $("#pessoa-supervisor-lbl").html("Esse " + titulo + " pode usar sua senha para autorizar retiradas de produtos antes do vencimento.");
         this._ajustarSupervisor(this, titulo);
 
         const htmlPermissoes = this._obterHtmlPermissoes(this.#usuario, titulo);

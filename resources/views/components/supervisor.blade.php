@@ -1,6 +1,6 @@
 @props(["cadastro"])
 
-<div class = "row linha-permissao">
+<div class = "row">
     <div class = "col-12">
         <div class = "custom-control custom-switch">
             <input id = "{{ $cadastro }}-supervisor" name = "supervisor" type = "hidden" />
