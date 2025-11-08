@@ -129,7 +129,7 @@ class EmpresasController extends Controller {
             foreach ($setores as $setor => $permissoes) {
                 $m_setor = new Setores;
                 $m_setor->descr = $setor;
-                if ($setor == "SEGURANÇA DO TRABALHO") $m_setor->supervisor = 1;
+                if (in_array($setor, ["SEGURANÇA DO TRABALHO", "ADMINISTRADORES"])) $m_setor->supervisor = 1;
                 $m_setor->id_empresa = $linha->id;
                 $m_setor->cria_usuario = 1;
                 $m_setor->save();
