@@ -74,7 +74,7 @@ class JanelaDinamica {
 
             const labelSeletor = prefixoCompleto + x + "-lbl";
             if (ehSetorSistema) $(labelSeletor).attr("title", "Não é permitido alterar essa configuração em um centro de custo do sistema");
-            else if (!permissoes[x]) $(labelSeletor).attr("title", "Não é possível atribuir a esse " + titulo + " permissões que seu usuário não tem");
+            else if (!permissoes[x]) $(labelSeletor).attr("title", "Não é possível " + (permissao ? "retirar d" : "atribuir a ") + "esse " + titulo + " permissões que seu usuário não tem");
             else $(labelSeletor).removeAttr("title");
         }
     }
@@ -91,7 +91,7 @@ class JanelaDinamica {
         $("#" + cadastro + "-supervisor-chk").prop("checked", obj.supervisor).attr("disabled", !SUPERVISOR);
         $("#" + cadastro + "-supervisor").val(obj.supervisor ? "1" : "0");
 
-        if (!SUPERVISOR) $("#" + cadastro + "-supervisor-lbl").attr("title", "Não é possível atribuir a esse " + (cadastro == "setor" ? "centro de custo" : titulo) + " permissões que seu usuário não tem");
+        if (!SUPERVISOR) $("#" + cadastro + "-supervisor-lbl").attr("title", "Não é possível " + (obj.supervisor ? "retirar d" : "atribuir a ") + "esse " + (cadastro == "setor" ? "centro de custo" : titulo) + " permissões que seu usuário não tem");
         else $("#" + cadastro + "-supervisor-lbl").removeAttr("title");
     }
 }
@@ -441,9 +441,6 @@ class Setor extends JanelaDinamica {
 
         $("#setoresModalLabel").html((this.#id ? "Editando" : "Cadastrando") + " centro de custo");
 
-        $("#setor-supervisor-lbl").html("Pessoas nesse centro de custo podem, por padrão, usar suas senhas para autorizar retiradas de produtos antes do vencimento.");
-        this._ajustarSupervisor(this);
-
         if (this.#id) {
             $.get(URL + "/setores/mostrar/" + this.#id, (_dados) => {
                 if (typeof _dados == "string") _dados = $.parseJSON(_dados);
@@ -466,7 +463,7 @@ class Setor extends JanelaDinamica {
                 meu_setor: "0",
                 pessoas: "0"
             };
-            ["cria_usuario", "supervisor"].forEach((id_el) => {
+            ["cria_usuario", "setor-supervisor"].forEach((id_el) => {
                 $("#" + id_el + "-chk").prop("checked", false);
                 $("#" + id_el).val("0");
             });
@@ -487,8 +484,13 @@ class Setor extends JanelaDinamica {
         $("#cria_usuario-chk").attr("disabled", (!permissoes.usuarios || setorDoSistema || meuSetor) ? true : false);
         if (meuSetor) $("#cria_usuario-lbl").attr("title", "Alterar essa opção apagaria seu usuário");
         else if (setorDoSistema) $("#cria_usuario-lbl").attr("title", "Não é permitido alterar essa configuração em um setor do sistema");
-        else if (!permissoes.usuarios) $("#cria_usuario-lbl").attr("title", "Não é possível atribuir a esse centro de custo permissões que seu usuário não tem");
+        else if (!permissoes.usuarios) $("#cria_usuario-lbl").attr("title", "Não é possível " + ($("#cria_usuario-chk").prop("checked") ? "retirar d" : "atribuir a") + "esse centro de custo permissões que seu usuário não tem");
         else $("#cria_usuario-lbl").removeAttr("title");
+
+        $("#setor-supervisor-lbl").html("Pessoas nesse centro de custo podem, por padrão, usar suas senhas para autorizar retiradas de produtos antes do vencimento.");
+        this._ajustarSupervisor(this);
+        $("#setor-supervisor-chk").attr("disabled", setorDoSistema ? true : false);
+        if (setorDoSistema) $("#setor-supervisor-lbl").attr("title", "Não é permitido alterar essa configuração em um setor do sistema");
 
         this.muda_cria_usuario(() => {
             modal("setoresModal", this.#id);
