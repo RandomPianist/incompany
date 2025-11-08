@@ -1,4 +1,4 @@
-@props["cadastro"]
+@props(["cadastro"])
 
 <div class = "row linha-permissao">
     <div class = "col-12">
