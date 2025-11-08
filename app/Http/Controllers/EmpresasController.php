@@ -6,6 +6,7 @@ use DB;
 use Auth;
 use Illuminate\Http\Request;
 use App\Models\Empresas;
+use App\Models\Pessoas;
 use App\Models\Setores;
 use App\Models\Maquinas;
 

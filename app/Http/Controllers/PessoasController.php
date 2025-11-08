@@ -394,7 +394,6 @@ class PessoasController extends ControllerListavel {
                     ->where("permissoes.pessoas", 1)
                     ->where("permissoes.usuarios", 1)
                     ->where("permissoes.solicitacoes", 1)
-                    ->where("permissoes.supervisor", 1)
                     ->where("setores.id_empresa", $request->idEmpresa)
                     ->value("id")
             : 0;
