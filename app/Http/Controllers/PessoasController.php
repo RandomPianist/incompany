@@ -157,6 +157,7 @@ class PessoasController extends ControllerListavel {
                     DB::raw("IFNULL(pessoas.id_empresa, 0) AS id_empresa"),
                     "pessoas.funcao",
                     "pessoas.supervisor",
+                    "pessoas.visitante",
                     "pessoas.foto",
                     "pessoas.telefone",
                     DB::raw("IFNULL(setores.cria_usuario, 1) AS cria_usuario"),
@@ -262,6 +263,7 @@ class PessoasController extends ControllerListavel {
             $pessoa->id_setor = $setor;
             if (trim($request->senha)) $pessoa->senha = $request->senha;
             $pessoa->supervisor = $request->supervisor;
+            $pessoa->visitante = $request->visitante;
             if ($request->file("foto")) $pessoa->foto = $request->file("foto")->store("uploads", "public");
             $pessoa->telefone = $request->telefone;
             $pessoa->email = $request->email;

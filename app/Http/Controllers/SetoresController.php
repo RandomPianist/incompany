@@ -100,6 +100,7 @@ class SetoresController extends ControllerListavel {
                     "setores.cria_usuario",
                     "setores.id_empresa",
                     "setores.supervisor",
+                    "setores.visitante",
                     "empresas.nome_fantasia AS empresa",
                     "permissoes.financeiro",
                     "permissoes.atribuicoes",
@@ -112,6 +113,12 @@ class SetoresController extends ControllerListavel {
                             WHEN pes.id_setor IS NOT NULL THEN 1
                             ELSE 0
                         END AS pessoas
+                    "),
+                    DB::raw("
+                        CASE
+                            WHEN usu.id_setor IS NOT NULL THEN 1
+                            ELSE 0
+                        END AS usuarios
                     "),
                     DB::raw("
                         CASE
@@ -139,6 +146,15 @@ class SetoresController extends ControllerListavel {
                         ->where("lixeira", 0),
                     "pes",
                     "pes.id_setor",
+                    "setores.id"
+                )
+                ->leftjoinSub(
+                    DB::table("pessoas")
+                        ->selectRaw("DISTINCTROW pessoas.id_setor")
+                        ->join("users", "users.id_pessoa", "pessoas.id")
+                        ->where("pessoas.lixeira", 0),
+                    "usu",
+                    "usu.id_setor",
                     "setores.id"
                 )
                 ->where("setores.id", $id)
@@ -181,6 +197,7 @@ class SetoresController extends ControllerListavel {
         $setor->descr = mb_strtoupper($request->descr);
         $setor->id_empresa = $request->id_empresa;
         $setor->supervisor = $request->supervisor;
+        $setor->visitante = $request->visitante;
         $setor->cria_usuario = $cria_usuario;
         $setor->save();
         $this->log_inserir($request->id ? "E" : "C", "setores", $setor->id); // App\Http\Controllers\Controller.php

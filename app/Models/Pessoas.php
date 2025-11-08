@@ -21,6 +21,7 @@ class Pessoas extends Model
         'foto64',
         'biometria',
         'supervisor',
+        'visitante',
         'lixeira',
         'id_setor',
         'id_empresa',

@@ -13,6 +13,7 @@ class Setores extends Model
     protected $fillable = [
         'descr',
         'supervisor',
+        'visitante',
         'cria_usuario',
         'lixeira',
         'id_empresa',
