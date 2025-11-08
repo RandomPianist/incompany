@@ -346,6 +346,7 @@ class SetoresController extends ControllerListavel {
         $resultado = $setor->permissao;
         $resultado->cria_usuario = $setor->cria_usuario;
         $resultado->supervisor = $setor->supervisor;
+        $resultado->visitante = $setor->visitante;
         return json_encode($resultado);
     }
 }

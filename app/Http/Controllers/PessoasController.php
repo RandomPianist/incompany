@@ -110,7 +110,11 @@ class PessoasController extends ControllerListavel {
                                     ->orWhere("setores.cria_usuario", 1);
                             });
                             if ($tipo == "A") $sql->where("pessoas.id_empresa", 0);
-                        } else $sql->where("pessoas.supervisor", ($tipo == "S" ? 1 : 0));
+                        } else {
+                            $sql->where("setores.cria_usuario", 0);
+                            $sql->where("pessoas.supervisor", ($tipo == "S" ? 1 : 0));
+                            $sql->where("pessoas.visitante", ($tipo == "V" ? 1 : 0));
+                        }
                     })
                     ->whereRaw(str_replace("?", "pessoas.nome", $where))
                     ->where("pessoas.lixeira", 0)
@@ -131,8 +135,15 @@ class PessoasController extends ControllerListavel {
             case "U":
                 $titulo = "Usuários";
                 break;
+            case "V":
+                $titulo = "Visitantes";
+                break;
         }
-        $where = "setores1.cria_usuario = 0 AND aux1.supervisor = ".($tipo == "S" ? "1" : "0");
+        $where = "
+            setores1.cria_usuario = 0 AND
+            aux1.supervisor = ".($tipo == "S" ? "1" : "0")." AND
+            aux1.visitante = ".($tipo == "V" ? "1" : "0")
+        ;
         if (in_array($tipo, ["A", "U"])) {
             $where = "setores1.cria_usuario = 1";
             if ($tipo == "A") $where .= " AND aux1.id_empresa = 0";

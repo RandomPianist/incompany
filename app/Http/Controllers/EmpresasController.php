@@ -125,14 +125,16 @@ class EmpresasController extends Controller {
                 "ADMINISTRADORES" => $this->obter_lista_permissoes(), // App\Http\Controllers\Controller.php
                 "RECURSOS HUMANOS" => ["atribuicoes", "retiradas", "pessoas", "usuarios"],
                 "FINANCEIRO" => ["financeiro", "usuarios", "solicitacoes"],
-                "SEGURANÇA DO TRABALHO" => ["atribuicoes", "retiradas", "pessoas", "usuarios"]
+                "SEGURANÇA DO TRABALHO" => ["atribuicoes", "retiradas", "pessoas", "usuarios"],
+                "VISITANTES" => []
             ];
             foreach ($setores as $setor => $permissoes) {
                 $m_setor = new Setores;
                 $m_setor->descr = $setor;
                 if (in_array($setor, ["SEGURANÇA DO TRABALHO", "ADMINISTRADORES"])) $m_setor->supervisor = 1;
+                else if ($setor == "VISITANTES") $m_setor->visitante = 1;
                 $m_setor->id_empresa = $linha->id;
-                $m_setor->cria_usuario = 1;
+                if ($setor != "VISITANTES") $m_setor->cria_usuario = 1;
                 $m_setor->save();
                 $lista_permissoes = array();
                 foreach ($permissoes as $permissao) $lista_permissoes += [$permissao => 1];
@@ -174,6 +176,7 @@ class EmpresasController extends Controller {
                     "setores.descr",
                     "setores.cria_usuario",
                     "setores.supervisor",
+                    "setores.visitante",
                     DB::raw("
                         CASE
                             WHEN (".implode(" OR ", $permissoes).") THEN 0

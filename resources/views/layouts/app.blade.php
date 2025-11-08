@@ -125,6 +125,9 @@
                                 <li onclick = "redirect('{{ $root_url }}/colaboradores/pagina/U')">
                                     <span>Usuários</span>
                                 </li>
+                                <li onclick = "redirect('{{ $root_url }}/colaboradores/pagina/V')">
+                                    <span>Visitantes</span>
+                                </li>
                             </ul>
                         </a>
                         <a href = "#">
@@ -150,7 +153,7 @@
                             <img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}">
                             <ul class = "dropdown-toolbar">
                                 <li>
-                                    <span>Pessoas & consumo<img class = "dropdown-icon" src = "{{ asset ('img/sort-down.png') }}"></span>
+                                    <span>Pessoas & consumo<img class = "dropdown-icon" src = "{{ asset('img/sort-down.png') }}"></span>
                                     <ul class = "subdropdown-toolbar">
                                         <li onclick = "relatorio = new RelatorioPessoas()">
                                             <span>Pessoas</span>
@@ -277,13 +280,13 @@
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/bootstrap.min.js') }}"></script>
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/lib/select2.min.js')   }}"></script>
        
-            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Atribuicoes.js')    }}"></script>
-            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/CPMP.js')           }}"></script>
-            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Excecoes.js')       }}"></script>
-            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/JanelaDinamica.js') }}"></script>
-            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Relatorios.js')     }}"></script>
-            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/app.js')              }}"></script>
-            <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/mascaras.js')         }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Atribuicoes.js')    }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/CPMP.js')           }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Excecoes.js')       }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/JanelaDinamica.js') }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/classes/Relatorios.js')     }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/app.js')              }}"></script>
+        <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/mascaras.js')         }}"></script>
 
         <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/geral/alerta.js') }}"></script>
     </body>

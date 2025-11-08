@@ -50,11 +50,12 @@
                                 <div class = "custom-control custom-switch">
                                     <input id = "cria_usuario" name = "cria_usuario" type = "hidden" />
                                     <input id = "cria_usuario-chk" class = "checkbox custom-control-input" type = "checkbox" onchange = "setor.muda_cria_usuario()" />
-                                    <label id = "cria_usuario-lbl" for = "cria_usuario-chk" class = "custom-control-label">Pessoas nesse centro de custo são usuários<label>
+                                    <label id = "cria_usuario-lbl" for = "cria_usuario-chk" class = "custom-control-label">Pessoas nesse centro de custo são usuários.<label>
                                 </div>
                             </div>
                         </div>
-                        @include("components.supervisor", ["cadastro" => "setor"])
+                        @include("components.spv_vis", ["cadastro" => "setor", "tipo" => "visitante"])
+                        @include("components.spv_vis", ["cadastro" => "setor", "tipo" => "supervisor"])
                     </div>
                 </div>
                 <div class = "d-flex mt-4">

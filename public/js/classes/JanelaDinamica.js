@@ -4,6 +4,7 @@ class JanelaDinamica {
 
     permissoesRascunho = [];
     supervisor = false;
+    visitante = false;
 
     constructor(config) {
         if (this.constructor === JanelaDinamica) {
@@ -41,6 +42,7 @@ class JanelaDinamica {
         const prefixoCompleto = this.#prefixo + "-";
         let resultado = "";
 
+        if (!usuario) this.permissoesRascunho = new Array();
         for (let x in permissoes) {
             resultado += "<div class = 'row linha-permissao" + (!usuario ? " d-none" : "") + "'>" +
                 "<div class = 'col-12'>" +
@@ -154,7 +156,7 @@ class Pessoa extends JanelaDinamica {
 
         $.get(URL + "/empresas/minhas", (minhasEmpresas) => {
             const concluir = (_id_empresa) => {
-                $("#pessoa-empresa-select").val(_id_empresa).trigger('change');
+                $("#pessoa-empresa-select").val(_id_empresa);
                 this.mudou_empresa($("#pessoa-empresa-select").val(), () => {
                     if (this.#dados !== undefined) {
                         const that = this;
@@ -173,6 +175,7 @@ class Pessoa extends JanelaDinamica {
                         this.#ant_id_empresa = parseInt(this.#dados.id_empresa);
                         this.#ant_id_setor = parseInt(this.#dados.id_setor);
                         for (let x in permissoes) this.permissoesRascunho[x] = parseInt(this.#dados[x]) ? true : false;
+                        this.supervisor = parseInt(this.#dados.supervisor);
                         this.mudaTitulo();
                     } else {
                         this.#ant_id_empresa = 0;
@@ -180,11 +183,13 @@ class Pessoa extends JanelaDinamica {
                         $($("#pessoasModal .user-pic").parent()).addClass("d-none");
                     }
                     modal("pessoasModal", this.#id, () => {
-                        this.#carregando = false;
                         $("#id_setor").val(this.#id_setor);
                         $("#id_empresa").val(this.#id_empresa);
                         $("#pessoa-setor-select").val(this.#id_setor);
                         $("#pessoa-empresa-select").val(this.#id_empresa).trigger("change");
+                        setTimeout(() => {
+                            this.#carregando = false;
+                        }, 1000);
                     });
                 });
             }
@@ -233,6 +238,8 @@ class Pessoa extends JanelaDinamica {
         
         $("#pessoa-supervisor-lbl").html("Esse " + titulo + " pode usar sua senha para autorizar retiradas de produtos antes do vencimento.");
         this._ajustarSupervisor(this, titulo);
+        $("#pessoa-supervisor-chk").prop("checked", supervisor ? true : false);
+        $("#pessoa-supervisor").val(supervisor ? "1" : "0");
 
         const htmlPermissoes = this._obterHtmlPermissoes(this.#usuario, titulo);
         $("#pessoasModal .container").append(htmlPermissoes);
@@ -280,16 +287,19 @@ class Pessoa extends JanelaDinamica {
                 let resultado = "";
                 let primeiro = 0;
                 data.forEach((setor) => {
-                    resultado += "<option value = '" + setor.id + "'" + (!parseInt(setor.ativo) ? " disabled" : "") + ">" + setor.descr + "</option>";
-                    try {
-                        if (!primeiro && parseInt(setor.cria_usuario) && ["A", "U"].indexOf(TIPO) > -1) primeiro = parseInt(setor.id);
-                    } catch (err) {}
-                    try {
-                        if (!primeiro && parseInt(setor.supervisor) && !parseInt(setor.cria_usuario) && TIPO == "S") primeiro = parseInt(setor.id);
-                    } catch (err) {}
-                    try {
-                        if (!primeiro && !parseInt(setor.supervisor) && !parseInt(setor.cria_usuario) && TIPO == "F") primeiro = parseInt(setor.id);
-                    } catch (err) {}
+                    let ativo = parseInt(setor.ativo);
+                    resultado += "<option value = '" + setor.id + "'" + (!ativo ? " disabled" : "") + ">" + setor.descr + "</option>";
+                    if (ativo) {
+                        try {
+                            if (!primeiro && parseInt(setor.cria_usuario) && ["A", "U"].indexOf(TIPO) > -1) primeiro = parseInt(setor.id);
+                        } catch (err) {}
+                        try {
+                            if (!primeiro && parseInt(setor.supervisor) && !parseInt(setor.cria_usuario) && TIPO == "S") primeiro = parseInt(setor.id);
+                        } catch (err) {}
+                        try {
+                            if (!primeiro && !parseInt(setor.supervisor) && !parseInt(setor.cria_usuario) && TIPO == "F") primeiro = parseInt(setor.id);
+                        } catch (err) {}
+                    }
                 });
                 $("#pessoa-setor-select").html(resultado);
                 $(".row-setor").removeClass("d-none");
@@ -448,12 +458,12 @@ class Setor extends JanelaDinamica {
                 $("#descr").val(this.#dados.descr);
                 $("#setor-id_empresa").val(this.#dados.id_empresa);
                 $("#setor-empresa").val(this.#dados.empresa);
-                ["cria_usuario", "setor-supervisor"].forEach((id_el) => {
+                ["cria_usuario", "setor-supervisor", "setor-visitante"].forEach((id_el) => {
                     let chave = id_el.replace("setor-", "");
                     $("#" + id_el + "-chk").prop("checked", parseInt(this.#dados[chave]) ? true : false);
                     $("#" + id_el).val(this.#dados[chave]);
+                    if (id_el != "cria_usuario") this[chave] = parseInt(this.#dados[chave]) ? true : false;
                 });
-                this.supervisor = parseInt(this.#dados.supervisor) ? true : false;
                 for (let x in permissoes) this.permissoesRascunho[x] = parseInt(this.#dados[x]) ? true : false;
                 this.#mostrar();
             });
@@ -461,9 +471,10 @@ class Setor extends JanelaDinamica {
             this.#dados = {
                 sistema: "0",
                 meu_setor: "0",
-                pessoas: "0"
+                pessoas: "0",
+                usuarios: "0"
             };
-            ["cria_usuario", "setor-supervisor"].forEach((id_el) => {
+            ["cria_usuario", "setor-supervisor", "setor-visitante"].forEach((id_el) => {
                 $("#" + id_el + "-chk").prop("checked", false);
                 $("#" + id_el).val("0");
             });
@@ -474,27 +485,52 @@ class Setor extends JanelaDinamica {
     #mostrar() {
         const setorDoSistema = parseInt(this.#dados.sistema);
         const pessoas = parseInt(this.#dados.pessoas);
+        const usuarios = parseInt(this.#dados.usuarios);
         const meuSetor = parseInt(this.#dados.meu_setor);
-        
+
         $("#setor-empresa").attr("disabled", (setorDoSistema || pessoas) ? true : false);
         if (setorDoSistema) $("#setor-empresa").attr("title", "Não é possível alterar a empresa de um centro de custo do sistema");
         else if (pessoas) $("#setor-empresa").attr("title", "Não é possível alterar a empresa desse centro de custo porque existem pessoas vinculadas a ele");
         else $("#setor-empresa").removeAttr("title");
-
-        $("#cria_usuario-chk").attr("disabled", (!permissoes.usuarios || setorDoSistema || meuSetor) ? true : false);
-        if (meuSetor) $("#cria_usuario-lbl").attr("title", "Alterar essa opção apagaria seu usuário");
-        else if (setorDoSistema) $("#cria_usuario-lbl").attr("title", "Não é permitido alterar essa configuração em um setor do sistema");
-        else if (!permissoes.usuarios) $("#cria_usuario-lbl").attr("title", "Não é possível " + ($("#cria_usuario-chk").prop("checked") ? "retirar d" : "atribuir a") + "esse centro de custo permissões que seu usuário não tem");
-        else $("#cria_usuario-lbl").removeAttr("title");
 
         $("#setor-supervisor-lbl").html("Pessoas nesse centro de custo podem, por padrão, usar suas senhas para autorizar retiradas de produtos antes do vencimento.");
         this._ajustarSupervisor(this);
         $("#setor-supervisor-chk").attr("disabled", setorDoSistema ? true : false);
         if (setorDoSistema) $("#setor-supervisor-lbl").attr("title", "Não é permitido alterar essa configuração em um setor do sistema");
 
-        this.muda_cria_usuario(() => {
-            modal("setoresModal", this.#id);
+        $("#setor-visitante-lbl").html("Pessoas nesse centro de custo são, por padrão, visitantes.");
+        $("#setor-visitante-chk").attr("disabled", (setorDoSistema || usuarios) ? true : false)
+        if (setorDoSistema) $("#setor-visitante-lbl").attr("title", "Não é permitido alterar essa configuração em um setor do sistema");
+        else if (usuarios) $("#setor-visitante-lbl").attr("title", "Não é permitido alterar essa configuração de um setor que possui usuários");
+        else $("#setor-visitante-lbl").removeAttr("title");
+
+        let that = this;
+        $("#setor-visitante-chk").off("change").on("change", function() {
+            const marcado = $(this).prop("checked");
+            if (marcado) {
+                $("#cria_usuario-chk").prop("checked", false);
+                $("#setor-supervisor-chk").prop("checked", false).trigger("change");
+            }
+            that.muda_cria_usuario();
+            $("#cria_usuario-chk").attr("disabled", (!permissoes.usuarios || setorDoSistema || meuSetor || marcado) ? true : false);
+            if (meuSetor) $("#cria_usuario-lbl").attr("title", "Alterar essa opção apagaria seu usuário");
+            else if (setorDoSistema) $("#cria_usuario-lbl").attr("title", "Não é permitido alterar essa configuração em um setor do sistema");
+            else if (!permissoes.usuarios) $("#cria_usuario-lbl").attr("title", "Não é possível " + ($("#cria_usuario-chk").prop("checked") ? "retirar d" : "atribuir a") + "esse centro de custo permissões que seu usuário não tem");
+            else if (marcado) $("#cria_usuario-lbl").attr("title", "Não é permitido alterar essa configuração em um setor de visitantes");
+            else $("#cria_usuario-lbl").removeAttr("title");
+
+            $("#setor-supervisor-chk").attr("disabled", (!SUPERVISOR || setorDoSistema || marcado) ? true : false);
+            if (setorDoSistema) $("#setor-supervisor-lbl").attr("title", "Não é permitido alterar essa configuração em um setor do sistema");
+            else if (!SUPERVISOR) $("#setor-supervisor-lbl").attr("title", "Não é possível " + ($("#setor-supervisor-chk").prop("checked") ? "retirar d" : "atribuir a") + "esse centro de custo permissões que seu usuário não tem");
+            else if (marcado) $("#setor-supervisor-lbl").attr("title", "Não é permitido alterar essa configuração em um setor de visitantes");
+            else $("#setor-supervisor-lbl").removeAttr("title");
+
+            that.visitante = marcado;
+            $("#setor-visitante").val(marcado ? "1" : "0");
         });
+
+        $("#setor-visitante-chk").trigger("change");
+        modal("setoresModal", this.#id);
     }
 
     validar() {
@@ -544,7 +580,7 @@ class Setor extends JanelaDinamica {
         });
     }
 
-    muda_cria_usuario(callback) {
+    muda_cria_usuario() {
         let obter_campo_senha = (_i, _nome) => {
             return "<input type = 'password' name = 'password[]' class = 'validar form-control' id = 'senha-" + _i + "' placeholder = 'Senha de " + _nome + "' />";
         };
@@ -566,16 +602,15 @@ class Setor extends JanelaDinamica {
             });
 
             atualizarChk("cria_usuario", true);
-
-            if (callback) callback();
         };
 
-        if (!this.#id) {
-            concluir();
-            return;
-        }
+        if (!this.#id) concluir();
 
+        $("#setor-visitante-chk").attr("disabled", $("#cria_usuario-chk").prop("checked"));
+        
         if ($("#cria_usuario-chk").prop("checked")) {
+            $("#setor-visitante-lbl").attr("title", "Usuários não podem ser visitantes");
+            if (!this.#id) return;
             $.get(URL + "/setores/pessoas/" + this.#id, (data) => {
                 if (typeof data == "string") data = $.parseJSON(data);
                 const mostrar_email = parseInt(data.mostrar_email);
@@ -584,10 +619,8 @@ class Setor extends JanelaDinamica {
                 for (let i = 1; i <= data.consulta.length; i++) {
                     let pessoa = data.consulta[i - 1];
                     let nome = pessoa.nome;
-                    resultado += "<div class = 'row linha-usuario mb-2'>" +
-                        "<input type = 'hidden' name = 'id_pessoa[]' value = '" + pessoa.id + "' />";
 
-                    resultado += "<div class = 'row linha-usuario mb-2'>" +
+                    resultado += "<div class = 'row linha-usuario mb-2" + (i == 1 ? " mt-3" : "") + "'>" +
                         "<input type = 'hidden' name = 'id_pessoa[]' value = '" + pessoa.id + "' />";
                     let campo_email = "<input type = 'text' name = 'email[]' class = 'validar form-control' id = 'email-" + i + "' placeholder = 'Email de " + nome + "' value = '" + pessoa.email + "' />";
                     let campo_fone = "<input type = 'text' name = 'phone[]' class = 'validar telefone form-control' id = 'phone-" + i + "' placeholder = 'Telefone de " + nome + "' value = '" + pessoa.telefone + "' onkeyup = 'this.value=phoneMask(this.value)' />";
@@ -625,11 +658,13 @@ class Setor extends JanelaDinamica {
                 concluir(resultado);
             });
         } else {
+            $("#setor-visitante-lbl").removeAttr("title");
+            if (!this.#id) return;
             $.get(URL + "/setores/usuarios/" + this.#id, function(data) {
                 if (typeof data == "string") data = $.parseJSON(data);
                 let resultado = "";
                 for (let i = 1; i <= data.length; i++) {
-                    resultado += "<div class = 'row linha-usuario mb-2'>" +
+                    resultado += "<div class = 'row linha-usuario mb-2" + (i == 1 ? " mt-3" : "") + "'>" +
                         "<input type = 'hidden' name = 'id_pessoa[]' value = '" + data[i - 1].id + "' />" +
                         "<div class = 'col-12'>" +
                             obter_campo_senha(i, data[i - 1].nome) +

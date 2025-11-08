@@ -11,6 +11,7 @@ class ConcorrenciaService {
         if (!intval($pessoa->id_empresa)) return "administrador";
         if (DB::table("users")->where("id_pessoa", $id)->exists()) return "usuário";
         if ($pessoa->supervisor) return "supervisor";
+        if ($pessoa->visitante) return "visitante";
         return "funcionário";
     }
 
