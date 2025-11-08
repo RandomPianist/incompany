@@ -180,6 +180,7 @@ class SetoresController extends ControllerListavel {
         }
         $setor->descr = mb_strtoupper($request->descr);
         $setor->id_empresa = $request->id_empresa;
+        $setor->supervisor = $request->supervisor;
         $setor->cria_usuario = $cria_usuario;
         $setor->save();
         $this->log_inserir($request->id ? "E" : "C", "setores", $setor->id); // App\Http\Controllers\Controller.php
@@ -327,6 +328,7 @@ class SetoresController extends ControllerListavel {
         $setor = Setores::find($id);
         $resultado = $setor->permissao;
         $resultado->cria_usuario = $setor->cria_usuario;
+        $resultado->supervisor = $setor->supervisor;
         return json_encode($resultado);
     }
 }

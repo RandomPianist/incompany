@@ -29,8 +29,6 @@ class JanelaDinamica {
                 return texto + "atribuir produtos e grades a funcionários.";
             case "retiradas":
                 return texto + "fazer retiradas retroativas.";
-            case "supervisor":
-                return texto + "usar " + (setor ? "suas senhas" : "sua senha") + " para autorizar retiradas de produtos antes do vencimento.";
             case "solicitacoes":
                 return texto + "solicitar reposição de produtos.";
             default:
@@ -44,7 +42,7 @@ class JanelaDinamica {
         let resultado = "";
 
         for (let x in permissoes) {
-            resultado += "<div class = 'row linha-permissao" + ((!usuario && x != "supervisor") ? " d-none" : "") + "'>" +
+            resultado += "<div class = 'row linha-permissao" + (!usuario ? " d-none" : "") + "'>" +
                 "<div class = 'col-12'>" +
                     "<div class = 'custom-control custom-switch'>" +
                         "<input id = '" + prefixoCompleto + x + "' name = '" + x + "' type = 'hidden' />" +
@@ -79,6 +77,22 @@ class JanelaDinamica {
             else if (!permissoes[x]) $(labelSeletor).attr("title", "Não é possível atribuir a esse " + titulo + " permissões que seu usuário não tem");
             else $(labelSeletor).removeAttr("title");
         }
+    }
+
+    _ajustarSupervisor(obj, titulo) {
+        const cadastro = titulo === undefined ? "setor" : "pessoa";
+        titulo = "";
+        $("#" + cadastro + "-supervisor-chk").off("change").on("change", function() {
+            $("#" + cadastro + "-supervisor").val($(this).prop("checked") ? "1" : "0");
+            obj.supervisor = $(this).prop("checked");
+            if (cadastro == "pessoa") pessoa.mudaTitulo();
+        });
+
+        $("#" + cadastro + "-supervisor-chk").prop("checked", obj.supervisor).attr("disabled", !SUPERVISOR);
+        $("#" + cadastro + "-supervisor").val(obj.supervisor ? "1" : "0");
+
+        if (!SUPERVISOR) $("#" + cadastro + "-supervisor-lbl").attr("title", "Não é possível atribuir a esse " + (cadastro == "setor" ? "centro de custo" : titulo) + " permissões que seu usuário não tem");
+        else $("#" + cadastro + "-supervisor-lbl").removeAttr("title");
     }
 }
 
@@ -206,7 +220,7 @@ class Pessoa extends JanelaDinamica {
     }
 
     mudaTitulo() {
-        let supervisor = this.permissoesRascunho.supervisor !== undefined ? this.permissoesRascunho.supervisor : false;
+        let supervisor = this.supervisor;
         let titulo = "";
 
         if (!parseInt($("#pessoa-empresa-select").val())) titulo = "administrador";
@@ -216,6 +230,9 @@ class Pessoa extends JanelaDinamica {
 
         $("#pessoasModal .linha-permissao").remove();
         $("#pessoasModalLabel").html((this.#id ? "Editando" : "Cadastrando") + " " + titulo);
+        
+        $("pessoa-supervisor-lbl").html("Esse " + titulo + " pode usar sua senha para autorizar retiradas de produtos antes do vencimento.");
+        this._ajustarSupervisor(this, titulo);
 
         const htmlPermissoes = this._obterHtmlPermissoes(this.#usuario, titulo);
         $("#pessoasModal .container").append(htmlPermissoes);
@@ -306,12 +323,14 @@ class Pessoa extends JanelaDinamica {
                 if (typeof data == "string") data = $.parseJSON(data);
                 if (!this.#carregando) {
                     for (let x in permissoes) this.permissoesRascunho[x] = data[x] && permissoes[x];
+                    this.supervisor = data.supervisor && SUPERVISOR;
                 }
                 concluir(data.cria_usuario);
             });
         } else {
             if (!this.#carregando) {
                 for (let x in permissoes) this.permissoesRascunho[x] = permissoes[x];
+                this.supervisor = SUPERVISOR;
             }
             concluir(true);
         }
@@ -422,6 +441,9 @@ class Setor extends JanelaDinamica {
 
         $("#setoresModalLabel").html((this.#id ? "Editando" : "Cadastrando") + " centro de custo");
 
+        $("#setor-supervisor-lbl").html("Pessoas nesse centro de custo podem, por padrão, usar suas senhas para autorizar retiradas de produtos antes do vencimento.");
+        this._ajustarSupervisor(this);
+
         if (this.#id) {
             $.get(URL + "/setores/mostrar/" + this.#id, (_dados) => {
                 if (typeof _dados == "string") _dados = $.parseJSON(_dados);
@@ -429,11 +451,13 @@ class Setor extends JanelaDinamica {
                 $("#descr").val(this.#dados.descr);
                 $("#setor-id_empresa").val(this.#dados.id_empresa);
                 $("#setor-empresa").val(this.#dados.empresa);
-                $("#cria_usuario-chk").prop("checked", parseInt(this.#dados.cria_usuario) ? true : false);
-                $("#cria_usuario").val(this.#dados.cria_usuario);
-                for (let x in permissoes) {
-                    this.permissoesRascunho[x] = parseInt(this.#dados[x]) ? true : false;
-                }
+                ["cria_usuario", "setor-supervisor"].forEach((id_el) => {
+                    let chave = id_el.replace("setor-", "");
+                    $("#" + id_el + "-chk").prop("checked", parseInt(this.#dados[chave]) ? true : false);
+                    $("#" + id_el).val(this.#dados[chave]);
+                });
+                this.supervisor = parseInt(this.#dados.supervisor) ? true : false;
+                for (let x in permissoes) this.permissoesRascunho[x] = parseInt(this.#dados[x]) ? true : false;
                 this.#mostrar();
             });
         } else {
@@ -442,8 +466,10 @@ class Setor extends JanelaDinamica {
                 meu_setor: "0",
                 pessoas: "0"
             };
-            $("#cria_usuario-chk").prop("checked", false);
-            $("#cria_usuario").val("0");
+            ["cria_usuario", "supervisor"].forEach((id_el) => {
+                $("#" + id_el + "-chk").prop("checked", false);
+                $("#" + id_el).val("0");
+            });
             this.#mostrar();
         }
     }

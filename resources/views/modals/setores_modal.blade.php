@@ -54,6 +54,7 @@
                                 </div>
                             </div>
                         </div>
+                        <x-supervisor cadastro = "setor" />
                     </div>
                 </div>
                 <div class = "d-flex mt-4">

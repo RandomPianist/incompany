@@ -951,9 +951,6 @@ function trocarEmpresaModal() {
 function atualizarChk(id, numerico) {
     const checked = $("#" + id + "-chk").prop("checked");
     $("#" + id).val(numerico ? checked ? "1" : "0" : checked ? "S" : "N");
-    if (pessoa !== null) {
-        pessoa.permissoesRascunho[id.replace("pessoa-", "")] = checked;
-        if (id == "pessoa-supervisor") pessoa.mudaTitulo();
-    }
+    if (pessoa !== null) pessoa.permissoesRascunho[id.replace("pessoa-", "")] = checked;
     if (setor !== null) setor.permissoesRascunho[id.replace("setor-", "")] = checked;
 }
