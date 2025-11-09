@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use DB;
-use Hash;
 use Illuminate\Http\Request;
 use App\Models\Categorias;
 use App\Models\Comodatos;
