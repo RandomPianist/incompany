@@ -108,7 +108,6 @@ class JanelaDinamica {
 
 class Pessoa extends JanelaDinamica {
     #id;
-    #carregando = true;
     #mostrandoSenha = false;
     #impedirMostrarSenha = false;
     #dados;
@@ -161,8 +160,8 @@ class Pessoa extends JanelaDinamica {
             });
         })
 
-        $('#pessoa-setor-select').on('select2:select', (e) => this.mudou_setor(e.params.data.id));
-        $('#pessoa-empresa-select').on('select2:select', (e) => this.mudou_empresa(e.params.data.id));
+        $('#pessoa-setor-select').on('select2:select', (e) => this.mudou_setor(e.params.data.id, undefined, true));
+        $('#pessoa-empresa-select').on('select2:select', (e) => this.mudou_empresa(e.params.data.id, undefined, true));
 
         $.get(URL + "/empresas/minhas", (minhasEmpresas) => {
             const concluir = (_id_empresa) => {
@@ -193,7 +192,6 @@ class Pessoa extends JanelaDinamica {
                     } else {
                         this.#ant_id_empresa = 0;
                         this.#ant_id_setor = 0;
-                        this.#carregando = false;
                         $($("#pessoasModal .user-pic").parent()).addClass("d-none");
                     }
                     modal("pessoasModal", this.#id, () => {
@@ -201,9 +199,6 @@ class Pessoa extends JanelaDinamica {
                         $("#id_empresa").val(this.#id_empresa);
                         $("#pessoa-setor-select").val(this.#id_setor);
                         $("#pessoa-empresa-select").val(this.#id_empresa).trigger("change");
-                        setTimeout(() => {
-                            this.#carregando = false;
-                        }, 1000);
                     });
                 });
             }
@@ -312,7 +307,7 @@ class Pessoa extends JanelaDinamica {
         $("#pessoa-setor-select").attr("disabled", this.#id == USUARIO ? true : false);
     }
 
-    mudou_empresa(id_empresa, callback) {
+    mudou_empresa(id_empresa, callback, manual = false) {
         id_empresa = parseInt(id_empresa);
         $("#pessoa-id_empresa").val(id_empresa);
         this.#id_empresa = id_empresa;
@@ -347,15 +342,15 @@ class Pessoa extends JanelaDinamica {
                 else if (this.#dados.id_empresa == id_empresa) setor = parseInt(this.#dados.id_setor);
                 
                 if (setor) $("#pessoa-setor-select").val(setor);
-                this.mudou_setor($("#pessoa-setor-select").val(), callback);
+                this.mudou_setor($("#pessoa-setor-select").val(), callback, manual);
             });
         } else {
             $(".row-setor").addClass("d-none");
-            this.mudou_setor(0, callback);
+            this.mudou_setor(0, callback, manual);
         }
     }
 
-    mudou_setor(id_setor, callback) {
+    mudou_setor(id_setor, callback, manual = false) {
         const concluir = (_cria_usuario) => {
             this.#htmlPermissoes = this._obterHtmlPermissoes(_cria_usuario);
             this.#usuario = _cria_usuario;
@@ -369,7 +364,7 @@ class Pessoa extends JanelaDinamica {
         if (id_setor) {
             $.get(URL + "/setores/permissoes/" + id_setor, (data) => {
                 if (typeof data == "string") data = $.parseJSON(data);
-                if (!this.#carregando) {
+                if (manual) {
                     for (let x in permissoes) this.permissoesRascunho[x] = data[x] && permissoes[x];
                     this.supervisor = data.supervisor && SUPERVISOR;
                     this.visitante = data.visitante;
@@ -377,7 +372,7 @@ class Pessoa extends JanelaDinamica {
                 concluir(data.cria_usuario);
             });
         } else {
-            if (!this.#carregando) {
+            if (manual) {
                 for (let x in permissoes) this.permissoesRascunho[x] = permissoes[x];
                 this.supervisor = SUPERVISOR;
                 this.visitante = false;
