@@ -175,8 +175,10 @@ class SetoresController extends ControllerListavel {
         if (!$ok) return 401;
         $cria_usuario = $request->cria_usuario;
         $supervisor = $request->supervisor;
+        $visitante = $request->visitante;
         $cria_usuario_ant = null;
         $supervisor_ant = null;
+        $visitante_ant = null;
         $setor = Setores::firstOrNew(["id" => $request->id]);
         if ($request->id) {
             $cria_usuario_ant = $setor->cria_usuario;
@@ -184,8 +186,9 @@ class SetoresController extends ControllerListavel {
             if (
                 $setor->id_empresa == $request->id_empresa &&
                 !$this->comparar_texto($request->descr, $setor->descr) && // App\Http\Controllers\Controller.php
-                !$this->comparar_num($supervisor_ant, $supervisor) && // App\Http\Controllers\Controller.php
                 !$this->comparar_num($cria_usuario_ant, $cria_usuario) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($supervisor_ant, $supervisor) && // App\Http\Controllers\Controller.php
+                !$this->comparar_num($visitante_ant, $visitante) && // App\Http\Controllers\Controller.php
                 !$this->comparar_num($setor->permissao->financeiro, $request->financeiro) && // App\Http\Controllers\Controller.php
                 !$this->comparar_num($setor->permissao->atribuicoes, $request->atribuicoes) && // App\Http\Controllers\Controller.php
                 !$this->comparar_num($setor->permissao->retiradas, $request->retiradas) && // App\Http\Controllers\Controller.php
@@ -196,8 +199,8 @@ class SetoresController extends ControllerListavel {
         }
         $setor->descr = mb_strtoupper($request->descr);
         $setor->id_empresa = $request->id_empresa;
-        $setor->supervisor = $request->supervisor;
-        $setor->visitante = $request->visitante;
+        $setor->supervisor = $supervisor;
+        $setor->visitante = $visitante;
         $setor->cria_usuario = $cria_usuario;
         $setor->save();
         $this->log_inserir($request->id ? "E" : "C", "setores", $setor->id); // App\Http\Controllers\Controller.php
@@ -215,13 +218,20 @@ class SetoresController extends ControllerListavel {
         $this->log_inserir($request->id ? "E" : "C", "permissoes", $setor->permissao->id); // App\Http\Controllers\Controller.php
         if ($request->id) {
             $atualizar = array();
-            if ($supervisor != $supervisor_ant) {
-                $pessoas = Pessoas::where("id_setor", $request->id)->get();
-                foreach ($pessoas as $pessoa) {
-                    if ($this->comparar_num($pessoa->supervisor ? 1 : 0, $supervisor)) { // App\Http\Controllers\Controller.php
-                        $chave = "id".$pessoa->id;
-                        $atualizar[$chave] = array_merge($atualizar[$chave] ?? [], ["supervisor" => $supervisor]);
-                    }
+            $pessoas = Pessoas::where("id_setor", $request->id)->get();
+            foreach ($pessoas as $pessoa) {
+                $chave = "id".$pessoa->id;
+                if (
+                    $supervisor != $supervisor_ant &&
+                    $this->comparar_num($pessoa->supervisor ? 1 : 0, $supervisor) // App\Http\Controllers\Controller.php
+                ) {
+                    $atualizar[$chave] = array_merge($atualizar[$chave] ?? [], ["supervisor" => $supervisor]);
+                }
+                if (
+                    $visitante != $visitante_ant &&
+                    $this->comparar_num($pessoa->visitante ? 1 : 0, $visitante) // App\Http\Controllers\Controller.php
+                ) {
+                    $atualizar[$chave] = array_merge($atualizar[$chave] ?? [], ["visitante" => $visitante]);
                 }
             }
             if ($cria_usuario != $cria_usuario_ant) {

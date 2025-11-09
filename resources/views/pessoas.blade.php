@@ -52,7 +52,7 @@
         ($titulo == "Administradores" && $admin) ||
         ($titulo == "Usuários" && $permissoes->usuarios) ||
         ($titulo == "Supervisores" && $permissoes->pessoas && $pessoa->supervisor) ||
-        ($titulo == "Funcionários" && $permissoes->pessoas)
+        (($titulo == "Funcionários" || $titulo == "Visitantes") && $permissoes->pessoas)
     )
         <x-add />
     @endif

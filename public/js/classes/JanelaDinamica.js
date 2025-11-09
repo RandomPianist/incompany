@@ -90,11 +90,19 @@ class JanelaDinamica {
             if (cadastro == "pessoa") pessoa.mudaTitulo();
         });
 
-        $("#" + cadastro + "-supervisor-chk").prop("checked", obj.supervisor).attr("disabled", !SUPERVISOR);
         $("#" + cadastro + "-supervisor").val(obj.supervisor ? "1" : "0");
-
-        if (!SUPERVISOR) $("#" + cadastro + "-supervisor-lbl").attr("title", "Não é possível " + (obj.supervisor ? "retirar d" : "atribuir a ") + "esse " + (cadastro == "setor" ? "centro de custo" : titulo) + " permissões que seu usuário não tem");
-        else $("#" + cadastro + "-supervisor-lbl").removeAttr("title");
+        if (cadastro == "pessoa") {
+            $("#pessoa-supervisor-chk").prop("checked", obj.supervisor).attr("disabled", (!SUPERVISOR || obj.visitante) ? true : false);
+            
+            if (!SUPERVISOR) $("#pessoa-supervisor-lbl").attr("title", "Não é possível " + (obj.supervisor ? "retirar d" : "atribuir a ") + "esse " + titulo + " permissões que seu usuário não tem");
+            else if (obj.visitante) $("#pessoa-supervisor-lbl").attr("title", "Visitantes não podem ser supervisores");
+            else $("#pessoa-supervisor-lbl").removeAttr("title");
+        } else {
+            $("#setor-supervisor-chk").prop("checked", obj.supervisor).attr("disabled", !SUPERVISOR);
+            
+            if (!SUPERVISOR) $("#setor-supervisor-lbl").attr("title", "Não é possível " + (obj.supervisor ? "retirar d" : "atribuir a ") + "esse centro de custo permissões que seu usuário não tem");
+            else $("#setor-supervisor-lbl").removeAttr("title");
+        }
     }
 }
 
@@ -110,6 +118,8 @@ class Pessoa extends JanelaDinamica {
     #id_empresa;
     #ant_id_setor;
     #ant_id_empresa;
+    #ant_supervisor;
+    #ant_visitante;
     #obrigatorios;
 
     #validar_email(__email) {
@@ -176,10 +186,14 @@ class Pessoa extends JanelaDinamica {
                         this.#ant_id_setor = parseInt(this.#dados.id_setor);
                         for (let x in permissoes) this.permissoesRascunho[x] = parseInt(this.#dados[x]) ? true : false;
                         this.supervisor = parseInt(this.#dados.supervisor);
+                        this.visitante = parseInt(this.#dados.visitante);
+                        this.#ant_supervisor = this.supervisor;
+                        this.#ant_visitante = this.visitante;
                         this.mudaTitulo();
                     } else {
                         this.#ant_id_empresa = 0;
                         this.#ant_id_setor = 0;
+                        this.#carregando = false;
                         $($("#pessoasModal .user-pic").parent()).addClass("d-none");
                     }
                     modal("pessoasModal", this.#id, () => {
@@ -225,10 +239,12 @@ class Pessoa extends JanelaDinamica {
     }
 
     mudaTitulo() {
-        let supervisor = this.supervisor;
+        const administrador = !parseInt($("#pessoa-empresa-select").val());
+        const supervisor = this.supervisor;
         let titulo = "";
 
-        if (!parseInt($("#pessoa-empresa-select").val())) titulo = "administrador";
+        if (this.visitante) titulo = "visitante";
+        else if (administrador) titulo = "administrador";
         else if (this.#usuario) titulo = "usuário";
         else if (supervisor) titulo = "supervisor";
         else titulo = "funcionário";
@@ -240,6 +256,25 @@ class Pessoa extends JanelaDinamica {
         this._ajustarSupervisor(this, titulo);
         $("#pessoa-supervisor-chk").prop("checked", supervisor ? true : false);
         $("#pessoa-supervisor").val(supervisor ? "1" : "0");
+
+        const naoVisitante = (administrador || this.#usuario || supervisor);
+        $("#pessoa-visitante-lbl").html("Essa pessoa é visitante.");
+        $("#pessoa-visitante-chk").attr("disabled", naoVisitante ? true : false);
+        if (naoVisitante) {
+            this.visitante = false;
+            $("#pessoa-visitante-lbl").attr("title", (administrador ? "Administradores" : this.#usuario ? "Usuários" : "Supervisores") + " não podem ser visitantes");
+        } else $("#pessoa-visitante-lbl").removeAttr("title");
+
+        let that = this;
+        $("#pessoa-visitante-chk").off("change").on("change", function() {
+            const marcado = $(this).prop("checked");
+            that.visitante = marcado;
+            $("#pessoa-visitante").val(marcado ? "1" : "0");
+            that.mudaTitulo();
+        });
+        
+        $("#pessoa-visitante-chk").prop("checked", this.visitante ? true : false);
+        $("#pessoa-visitante").val(this.visitante ? "1" : "0");
 
         const htmlPermissoes = this._obterHtmlPermissoes(this.#usuario, titulo);
         $("#pessoasModal .container").append(htmlPermissoes);
@@ -299,6 +334,9 @@ class Pessoa extends JanelaDinamica {
                         try {
                             if (!primeiro && !parseInt(setor.supervisor) && !parseInt(setor.cria_usuario) && TIPO == "F") primeiro = parseInt(setor.id);
                         } catch (err) {}
+                        try {
+                            if (!primeiro && parseInt(setor.visitante) && TIPO == "V") primeiro = parseInt(setor.id);
+                        } catch (err) {}
                     }
                 });
                 $("#pessoa-setor-select").html(resultado);
@@ -334,6 +372,7 @@ class Pessoa extends JanelaDinamica {
                 if (!this.#carregando) {
                     for (let x in permissoes) this.permissoesRascunho[x] = data[x] && permissoes[x];
                     this.supervisor = data.supervisor && SUPERVISOR;
+                    this.visitante = data.visitante;
                 }
                 concluir(data.cria_usuario);
             });
@@ -341,6 +380,7 @@ class Pessoa extends JanelaDinamica {
             if (!this.#carregando) {
                 for (let x in permissoes) this.permissoesRascunho[x] = permissoes[x];
                 this.supervisor = SUPERVISOR;
+                this.visitante = false;
             }
             concluir(true);
         }
@@ -403,8 +443,16 @@ class Pessoa extends JanelaDinamica {
             if ($("#password").val() || $("#email").val().toLowerCase() != anteriores.email.toLowerCase()) alterou = true;
         } else if ($("#senha").val()) alterou = true;
 
-        if (!erro && $("#pessoa-setor-select").val() != this.#ant_id_setor) alterou = true;
-        if (!erro && $("#pessoa-empresa-select").val() != this.#ant_id_empresa) alterou = true;
+        if (
+            $("#pessoa-setor-select").val() != this.#ant_id_setor ||
+            $("#pessoa-empresa-select").val() != this.#ant_id_empresa ||
+            $("#pessoa-supervisor").val() != this.#ant_supervisor ||
+            $("#pessoa-visitante").val() != this.#ant_visitante
+        ) alterou = true;
+        for (let x in permissoes) {
+            if ($("#" + permissoes[x]).val() != anteriores[permissoes[x]]) alterou = true;
+        }
+
         if ($("#admissao").val()) {
             if (!erro && eFuturo($("#admissao").val())) {
                 erro = "A admissão não pode ser no futuro";
@@ -499,7 +547,7 @@ class Setor extends JanelaDinamica {
         if (setorDoSistema) $("#setor-supervisor-lbl").attr("title", "Não é permitido alterar essa configuração em um setor do sistema");
 
         $("#setor-visitante-lbl").html("Pessoas nesse centro de custo são, por padrão, visitantes.");
-        $("#setor-visitante-chk").attr("disabled", (setorDoSistema || usuarios) ? true : false)
+        $("#setor-visitante-chk").attr("disabled", (setorDoSistema || usuarios) ? true : false);
         if (setorDoSistema) $("#setor-visitante-lbl").attr("title", "Não é permitido alterar essa configuração em um setor do sistema");
         else if (usuarios) $("#setor-visitante-lbl").attr("title", "Não é permitido alterar essa configuração de um setor que possui usuários");
         else $("#setor-visitante-lbl").removeAttr("title");
@@ -556,6 +604,8 @@ class Setor extends JanelaDinamica {
             !erro &&
             !alterouPermissoes &&
             $("#cria_usuario").val() == anteriores.cria_usuario &&
+            $("#setor-supervisor").val() == anteriores["setor-supervisor"] &&
+            $("#setor-visitante").val() == anteriores["setor-visitante"] &&
             _descr == anteriores.descr.toUpperCase().trim() &&
             _empresa.toUpperCase().trim() == anteriores["setor-empresa"].toUpperCase().trim()
         ) erro = "Não há alterações para salvar";
