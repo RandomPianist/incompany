@@ -89,7 +89,7 @@ class HomeController extends Controller {
                 FROM vprodutosgeral
                 WHERE id_pessoa = ".Auth::user()->id_pessoa."
             )";
-            if (strpos($request->table, "_maq")) {
+            if (strpos($request->table, "_maq") !== false) {
                 $where .= " AND id IN (
                     SELECT cp.id_produto
                     FROM comodatos_produtos AS cp
