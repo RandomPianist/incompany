@@ -1,6 +1,6 @@
 ALTER TABLE permissoes DROP COLUMN supervisor;
 ALTER TABLE setores ADD COLUMN supervisor TINYINT DEFAULT 0 AFTER descr;
-UPDATE setores SET supervisor = 1 WHERE setores IN ('SEGURANÇA DO TRABALHO', 'ADMINISTRADORES');
+UPDATE setores SET supervisor = 1 WHERE descr IN ('SEGURANÇA DO TRABALHO', 'ADMINISTRADORES');
 
 ALTER TABLE pessoas ADD COLUMN visitante TINYINT DEFAULT 0 AFTER supervisor;
 UPDATE pessoas SET visitante = 1 WHERE cpf = '00000000000';

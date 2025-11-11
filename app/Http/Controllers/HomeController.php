@@ -52,6 +52,7 @@ class HomeController extends Controller {
     public function autocomplete(Request $request) {
         $tabela = str_replace("_todos", "", $request->table);
         $tabela = str_replace("_lixeira", "", $tabela);
+        $tabela = str_replace("_maq", "", $tabela);
         $where = " AND ".$request->column." LIKE '%".$request->search."%' AND ";
         $filter_col = $request->filter_col != "v_maquina" ? $request->filter_col : "";
         
@@ -86,8 +87,19 @@ class HomeController extends Controller {
             $where .= "id IN (
                 SELECT id_produto
                 FROM vprodutosgeral
-                WHERE id_pessoa = ".Auth::user()->id_pessoa.
-            ")";
+                WHERE id_pessoa = ".Auth::user()->id_pessoa."
+            )";
+            if (strpos($request->table, "_maq")) {
+                $where .= " AND id IN (
+                    SELECT cp.id_produto
+                    FROM comodatos_produtos AS cp
+                    JOIN comodatos
+                        ON comodatos.id = cp.id_comodato
+                    WHERE comodatos.id_maquina = ".$request->filter."
+                      AND comodatos.inicio <= CURDATE()
+                      AND comodatos.fim > CURDATE()
+                )";
+            }
         } elseif ($tabela == "maquinas") {
             $where .= "id IN (
                 SELECT id_maquina

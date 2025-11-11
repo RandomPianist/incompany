@@ -364,7 +364,7 @@ class Pessoa extends JanelaDinamica {
         if (id_setor) {
             $.get(URL + "/setores/permissoes/" + id_setor, (data) => {
                 if (typeof data == "string") data = $.parseJSON(data);
-                if (manual) {
+                if (manual || this.#dados === undefined) {
                     for (let x in permissoes) this.permissoesRascunho[x] = data[x] && permissoes[x];
                     this.supervisor = data.supervisor && SUPERVISOR;
                     this.visitante = data.visitante;
@@ -372,7 +372,7 @@ class Pessoa extends JanelaDinamica {
                 concluir(data.cria_usuario);
             });
         } else {
-            if (manual) {
+            if (manual || this.#dados === undefined) {
                 for (let x in permissoes) this.permissoesRascunho[x] = permissoes[x];
                 this.supervisor = SUPERVISOR;
                 this.visitante = false;

@@ -5,6 +5,9 @@ function estoque(id) {
         $(".id_maquina").each(function() {
             $(this).val(id);
         });
+        $("#estoqueModal .produto").each(function() {
+            $(this).attr("data-filter", id);
+        });
         modal2("estoqueModal", ["obs-1", "qtd-1"]);
         $("#estoqueModal #obs-1").trigger("keyup");
         $("#estoqueModal #qtd-1").trigger("keyup");

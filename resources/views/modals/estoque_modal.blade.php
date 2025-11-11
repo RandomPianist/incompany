@@ -22,7 +22,7 @@
                                         name = "produto[]"
                                         class = "form-control autocomplete produto"
                                         data-input = "#estoqueModal #id_produto-1"
-                                        data-table = "produtos_todos"
+                                        data-table = "produtos_maq"
                                         data-column = "descr"
                                         data-filter_col = ""
                                         data-filter = ""
@@ -69,7 +69,7 @@
                                     <div class = "col-3 form-search pr-1 col-prod">
                                         <input name = "produto[]"
                                             class = "form-control autocomplete produto"
-                                            data-table = "produtos_todos"
+                                            data-table = "produtos_maq"
                                             data-column = "descr"
                                             data-filter_col = ""
                                             data-filter = ""
