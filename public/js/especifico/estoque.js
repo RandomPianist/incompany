@@ -64,6 +64,7 @@ function carrega_obs(seq, focar) {
 
 function adicionar_campo_estoque() {
     const cont = $("#estoqueModal input[type=number]").length + 1;
+    const maquina = $("#estoqueModal #produto-1").data().filter;
 
     let linha = $($("#estoqueModal #template-linha").html());
 
@@ -93,10 +94,16 @@ function adicionar_campo_estoque() {
                 else if ($(this).hasClass("es")) $(this).off("change").on("change", () => carrega_obs(i + 1, true));
             });
         });
+        $("#estoqueModal .produto").each(function() {
+            $(this).attr("data-filter", maquina);
+        });
         carrega_atalhos();
     });
 
     $("#estoqueModal .modal-tudo").append($(linha));
+    $("#estoqueModal .produto").each(function() {
+        $(this).attr("data-filter", maquina);
+    });
 
     // carrega_autocomplete();
     carrega_dinheiro();
