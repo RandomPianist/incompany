@@ -177,21 +177,6 @@ class ProdutosController extends ControllerListavel {
     public function excluir(Request $request) {
         if ($this->obter_empresa()) return 401; // App\Http\Traits\GlobaisTrait.php
         if (!$this->aviso_main($request->id)->permitir) return 401;
-        $ant = DB::table("vatbold")
-                    ->select(
-                        "psm_chave",
-                        "psm_valor"
-                    )
-                    ->join("produtos", function($join) {
-                        $join->on("produtos.cod_externo", "vatbold.cod_produto")
-                            ->orOn("produtos.referencia", "vatbold.referencia");
-                    })
-                    ->where("produtos.id", $request->id)
-                    ->groupby(
-                        "psm_chave",
-                        "psm_valor"
-                    )
-                    ->get();
         $connection = DB::connection();
         $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
         $connection->beginTransaction();
@@ -200,7 +185,7 @@ class ProdutosController extends ControllerListavel {
             $linha->lixeira = 1;
             $linha->save();
             $this->log_inserir("D", "produtos", $linha->id); // App\Http\Controllers\Controller.php
-            $this->atualizar_atribuicoes($ant); // App\Http\Controllers\Controller.php
+            $this->atualizar_atribuicoes(); // App\Http\Controllers\Controller.php
             $connection->commit();
         } catch (\Exception $e) {
             $connection->rollBack();

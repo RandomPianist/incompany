@@ -342,7 +342,7 @@ class AtribuicoesController extends Controller {
                         'id_usuario' => 0
                 ]);
             }
-            $this->atualizar_atribuicoes($lista); // App\Http\Controllers\Controller.php
+            $this->atualizar_atribuicoes(); // App\Http\Controllers\Controller.php
             $connection->commit();
             $resultado->icon = "success";
         } catch (\Exception $e) {

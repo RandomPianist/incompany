@@ -330,25 +330,11 @@ class PessoasController extends ControllerListavel {
             }
             if ($request->id || 
                 !DB::table("vativos")
-                    ->where("id", $request->id)
+                    ->where("id", $pessoa->id)
                     ->where("atb_todos", ">", 0)
                     ->exists()
-            ) {
-                $this->atualizar_atribuicoes(
-                    DB::table("vatbold")
-                        ->select(
-                            "psm_chave",
-                            "psm_valor"
-                        )
-                        ->where("psm_chave", "S")
-                        ->whereIn("psm_valor", $setores)
-                        ->groupby(
-                            "psm_chave",
-                            "psm_valor"
-                        )
-                        ->get()
-                ); // App\Http\Controllers\Controller.php
-            } else $this->atualizar_tudo(explode(",", $this->maquinas_da_pessoa($pessoa->id)), "M", true, $pessoa->id); // App\Http\Controllers\Controller.php
+            ) $this->atualizar_atribuicoes(); // App\Http\Controllers\Controller.php
+            else $this->atualizar_tudo($this->maquinas_da_pessoa($pessoa->id)); // App\Http\Controllers\Controller.php
             $connection->commit();
             return redirect("/colaboradores/pagina/".substr(strtoupper($this->nomear($pessoa->id)), 0, 1)); // App\Http\Controllers\Controller.php
         } catch (\Exception $e) {    
@@ -411,7 +397,7 @@ class PessoasController extends ControllerListavel {
                     ->value("id")
             : 0;
             $pessoa->save();
-            $this->atualizar_tudo($pessoa->id, "P", true); // App\Http\Controllers\Controller.php
+            $this->atualizar_tudo($this->maquinas_da_pessoa($pessoa->id)); // App\Http\Controllers\Controller.php
             $connection->commit();
             $resultado->icon = "success";
         } catch (\Exception $e) {    

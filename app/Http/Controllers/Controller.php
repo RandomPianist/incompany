@@ -471,9 +471,11 @@ abstract class Controller extends BaseController {
 	// =====================================================================
 
     protected function maquinas_da_pessoa($id_pessoa) {
-        return DB::table("vativos")
-                    ->where("id", $id_pessoa)
-                    ->value("maquinas");
+        $consulta = DB::table("vativos")
+                        ->where("id", $id_pessoa)
+                        ->value("maquinas");
+        if ($consulta === null) return [];
+        return explode(",", $consulta);
     }
 
     protected function obter_comodato($id_maquina) {
@@ -683,7 +685,7 @@ abstract class Controller extends BaseController {
                 if ($this->gerar_atribuicoes($comodato)) array_push($maquinas_para_atualizar, $id_maquina);
             }
 
-            if (!empty($maquinas_para_atualizar)) $this->atualizar_tudo(array_unique($maquinas_para_atualizar), "M", true);
+            if (!empty($maquinas_para_atualizar)) $this->atualizar_tudo(array_unique($maquinas_para_atualizar));
             $connection->commit();
             return "/".($contexto == "maquina" ? "maquinas" : "produtos");
         } catch (\Exception $e) {    
@@ -785,7 +787,7 @@ abstract class Controller extends BaseController {
                     ->get();
                 $this->log_inserir_lote($novo ? "E" : "D", "atribuicoes", $where, $api ? "ERP" : "WEB", $nome);
                 Atribuicoes::whereRaw($where)->update($novo ? ["referencia" => $novo] : ["lixeira" => 1]);
-                $this->atualizar_atribuicoes($lista);
+                $this->atualizar_atribuicoes();
                 $connection->commit();
             } catch (\Exception $e) {
                 $connection->rollBack();
@@ -1213,32 +1215,14 @@ abstract class Controller extends BaseController {
 	// (Lógica complexa para atualizar tabelas de dados pré-calculados)
 	// =====================================================================
 
-    protected function atualizar_tudo($valor, $chave = "M", $completo = false, $id_pessoa = "0") {
+    protected function atualizar_tudo($maquinas) {
         $servico = new AtualizacaoService;
-        $valor_ant = $valor;
-        if (is_iterable($valor)) $valor = implode(",", $valor);
-        $valor = "'".$valor."'";
-        if ($completo) {
-            switch($chave) {
-                case "P":
-                    $minhas_maquinas = explode(",", $this->maquinas_da_pessoa($valor_ant));
-                    foreach ($minhas_maquinas as $maq) $servico->atualizar_mat_vcomodatos($maq); // App\Services\AtualizacaoService.php
-                    break;
-                case "M":
-                    if (is_iterable($valor_ant)) {
-                        foreach ($valor_ant as $maq) $servico->atualizar_mat_vcomodatos($maq); // App\Services\AtualizacaoService.php
-                    } else $servico->atualizar_mat_vcomodatos($valor_ant); // App\Services\AtualizacaoService.php
-                    break;
-            }
-        }
-        // $this->atualizar_mat_vretiradas_vultretirada($chave, $valor, "R", false);
-        // $this->atualizar_mat_vretiradas_vultretirada($chave, $valor, "U", false);
-        if ($completo) $servico->excluir_atribuicao_sem_retirada(); // App\Services\AtualizacaoService.php
+        foreach ($maquinas as $maquina) $servico->atualizar_mat_vcomodatos($maquina);
+        $servico->excluir_atribuicao_sem_retirada();
     }
 
-    protected function atualizar_atribuicoes($consulta) {
+    protected function atualizar_atribuicoes() {
         $servico = new AtualizacaoService;
-        foreach ($consulta as $linha) $this->atualizar_tudo($linha->psm_valor, $linha->psm_chave);
         $servico->excluir_atribuicao_sem_retirada(); // App\Services\AtualizacaoService.php
     }
 

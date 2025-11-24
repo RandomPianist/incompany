@@ -487,7 +487,7 @@ class MaquinasController extends Controller {
             $linha->validade = $request->validade;
             $linha->save();
 
-            if ($this->gerar_atribuicoes($linha)) $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
+            if ($this->gerar_atribuicoes($linha)) $this->atualizar_tudo([$request->id_maquina]); // App\Http\Controllers\Controller.php
 
             $this->log_inserir("C", "comodatos", $linha->id); // App\Http\Controllers\Controller.php
             
@@ -511,7 +511,7 @@ class MaquinasController extends Controller {
             $modelo->fim = date('Y-m-d');
             $modelo->save();
             $this->log_inserir("E", "comodatos", $modelo->id); // App\Http\Controllers\Controller.php
-            if ($this->gerar_atribuicoes($modelo)) $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
+            if ($this->gerar_atribuicoes($modelo)) $this->atualizar_tudo([$request->id_maquina]); // App\Http\Controllers\Controller.php
             $connection->commit();
             return redirect("/maquinas");
         } catch (\Exception $e) {    
@@ -563,7 +563,7 @@ class MaquinasController extends Controller {
             $this->log_inserir("E", "comodatos", $comodato->id); // App\Http\Controllers\Controller.php
             if ($this->comparar_num($atb_todos_ant, $request->atb_todos)) { // App\Http\Controllers\Controller.php
                 $this->gerar_atribuicoes($comodato); // App\Http\Controllers\Controller.php
-                $this->atualizar_tudo($request->id_maquina, "M", true); // App\Http\Controllers\Controller.php
+                $this->atualizar_tudo([$request->id_maquina]); // App\Http\Controllers\Controller.php
             }
             $connection->commit();
             return redirect("/maquinas");
