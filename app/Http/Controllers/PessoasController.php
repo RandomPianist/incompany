@@ -171,6 +171,7 @@ class PessoasController extends ControllerListavel {
                     "pessoas.visitante",
                     "pessoas.foto",
                     "pessoas.telefone",
+                    "pessoas.matricula",
                     DB::raw("IFNULL(setores.cria_usuario, 1) AS cria_usuario"),
                     DB::raw("DATE_FORMAT(pessoas.admissao, '%d/%m/%Y') AS admissao"),
                     DB::raw("IFNULL(users.name, pessoas.nome) AS nome"),
@@ -270,6 +271,7 @@ class PessoasController extends ControllerListavel {
             $pessoa->cpf = $request->cpf;
             $pessoa->funcao = mb_strtoupper($request->funcao);
             $pessoa->admissao = $request->admissao ? Carbon::createFromFormat('d/m/Y', $request->admissao)->format('Y-m-d') : null;
+            $pessoa->matricula = $request->matricula;
             $pessoa->id_empresa = $request->id_empresa;
             $pessoa->id_setor = $setor;
             if (trim($request->senha)) $pessoa->senha = $request->senha;

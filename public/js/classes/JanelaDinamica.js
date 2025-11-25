@@ -169,7 +169,7 @@ class Pessoa extends JanelaDinamica {
                 this.mudou_empresa($("#pessoa-empresa-select").val(), () => {
                     if (this.#dados !== undefined) {
                         const that = this;
-                        $("#nome, #cpf, #email, #funcao, #admissao, #telefone").each(function() {   
+                        $("#nome, #cpf, #email, #funcao, #admissao, #telefone", "#matricula").each(function() {   
                             $(this).val(that.#dados[$(this).attr("id")]).trigger("keyup");
                         });
                         $($("#pessoasModal .user-pic").parent()).removeClass("d-none");
@@ -472,6 +472,7 @@ class Pessoa extends JanelaDinamica {
             }
             if (!erro && !alterou && !document.querySelector("#pessoasModal input[type=file]").value) erro = "Altere pelo menos um campo para salvar";
             if (!erro) {
+                $("#pessoa-empresa-select").attr("disabled", false);
                 $("#pessoa-setor-select").attr("disabled", false);
                 $("#telefone").val(apenasNumeros($("#telefone").val()));
                 $("#cpf").val(apenasNumeros($("#cpf").val()));

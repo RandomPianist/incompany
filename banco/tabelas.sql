@@ -40,6 +40,7 @@ CREATE TABLE pessoas (
 	biometria TEXT,
     telefone VARCHAR(32),
     email VARCHAR(256),
+    matricula VARCHAR(32),
     supervisor TINYINT DEFAULT 0,
     visitante TINYINT DEFAULT 0,
     lixeira TINYINT DEFAULT 0,
@@ -314,8 +315,8 @@ CREATE TABLE usrbkp (
 CREATE TABLE dedos (
     id INT AUTO_INCREMENT PRIMARY KEY,
 	dedo INT,
-    hash TEXT,
-    imagem TEXT,
+    hash LONGTEXT,
+    imagem LONGTEXT,
     id_pessoa INT,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
