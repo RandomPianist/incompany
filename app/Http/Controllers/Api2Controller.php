@@ -937,7 +937,10 @@ class Api2Controller extends Controller {
         if ($request->token != config("app.key")) return 401;
         return json_encode(
             DB::table("dedos")
-                ->select("dedos.*")
+                ->select(
+                    "dedos.id",
+                    "dedos.hash"
+                )
                 ->join("pessoas", "pessoas.id", "dedos.id_pessoa")
                 ->where("pessoas.lixeira", 0)
                 ->get()

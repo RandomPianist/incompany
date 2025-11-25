@@ -410,7 +410,7 @@ class PessoasController extends ControllerListavel {
 
     public function senha(Request $request) {
         if (
-            DB::table("pessoas")
+            !DB::table("pessoas")
                 ->where("id", $request->id)
                 ->whereRaw($this->obter_where(Auth::user()->id_pessoa)) // App\Http\Controllers\Controller.php
                 ->exists()
