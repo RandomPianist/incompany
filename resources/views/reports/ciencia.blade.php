@@ -36,7 +36,7 @@
             </div>
         </div>
 
-        <div class="rep-ret-rodape" style="margin-top: 20px; padding-top: 20px; text-align: justify; margin-bottom: 0.125rem; font-size: 20px;">
+        <div class="rep-ret-rodape" style="padding-top: 30px; text-align: justify; margin-bottom: 0.125rem; font-size: 20px;">
             <p style="font-size: 27px;"><strong>OBJETO DO TERMO</strong></p>
             <p>Declaro, para os devidos fins, que:</p>
             <ol>
@@ -53,28 +53,30 @@
                     com a <strong>[empresa/instituição]</strong>, respeitados os prazos legais.</li>
             </ol>
 
-            <p style="font-size: 27px; padding-top: 20px;"><strong>DECLARAÇÃO DE CIÊNCIA</strong></p>
+            <p style="font-size: 27px; padding-top: 30px;"><strong>DECLARAÇÃO DE CIÊNCIA</strong></p>
             <p>Confirmo que recebi todas as informações necessárias, compreendi o objetivo da coleta e autorizo,
                 de forma livre, informada e inequívoca, o uso das minhas impressões digitais conforme descrito acima.</p>
         </div>
 
+        <div class="pagebreak2"></div>
+
         <div style="margin-top: 70px;">
             <p style="font-size: 27px;"><strong>COLETA DAS DIGITAIS</strong></p>
             
-            <table class="report-body table table-sm table-bordered table-striped px-5 rep-tb-color-black align-items-center">
+            <table class="report-body table-sm table-bordered table-striped px-5 rep-tb-color-black align-items-center">
                 <thead>
-                    <tr class="report-row" style="background-color: #c39be9ff; height: 50px;">
-                        <td width="50%" style="text-align: center; vertical-align: middle; font-weight: bold; font-size: 18px;">Dedo</td>
-                        <td width="50%" style="text-align: center; vertical-align: middle; font-weight: bold; font-size: 18px;data_extenso">Digital</td>
+                    <tr style="height: 50px; background-color: #cacacaff;">
+                        <td width="70%" style="text-align: left; vertical-align: middle; font-weight: bold; font-size: 18px;">Dedo</td>
+                        <td width="30%" style="text-align: center; vertical-align: middle; font-weight: bold; font-size: 18px;data_extenso">Digital</td>
                     </tr>
                 </thead>
                 <tbody>
                     @for ($i = 0; $i < sizeof($dedos_nome); $i++)
                         <tr>
-                            <td style="text-align: center; vertical-align: middle;">{{ $dedos_nome[$i] }}</td>
-                            <td style="height: 50px;">
+                            <td style="text-align: left; vertical-align: middle;">{{ $dedos_nome[$i] }}</td>
+                            <td style="height: 50px; text-align: center;">
                                 @if ($item->dedos[$i])
-                                    <img src = "data:image/jpeg;base64,{{ $item->dedos[$i] }}" style = "width:40px" />
+                                    <img src = "data:image/jpeg;base64,{{ $item->dedos[$i] }}" style = "width:40px;" />
                                 @else
                                     &nbsp;
                                 @endif

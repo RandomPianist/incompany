@@ -158,9 +158,11 @@
                                         <li onclick = "relatorio = new RelatorioPessoas()">
                                             <span>Pessoas</span>
                                         </li>
-                                        <li onclick = "relatorio = new RelatorioCiencia()">
-                                            <span>Termo de ciência</span>
-                                        </li>
+                                        @if ($admin)
+                                            <li onclick = "relatorio = new RelatorioCiencia()">
+                                                <span>Termo de ciência</span>
+                                            </li>
+                                        @endif
                                         <li onclick = "relatorio = new RelatorioControle()">
                                             <span>Termo de retirada</span>
                                         </li>

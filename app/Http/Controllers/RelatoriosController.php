@@ -828,6 +828,7 @@ class RelatoriosController extends Controller {
     }
 
     public function ciencia(Request $request) {
+        if ($this->obter_empresa()) return 401;
         $criterios = array();
         $resultado = array();
         $consulta = DB::table("pessoas")
@@ -886,6 +887,8 @@ class RelatoriosController extends Controller {
             ->setOption('page-size', 'A4')
             ->setOption('margin-top', '20mm')
             ->setOption('margin-bottom', '20mm')
+            ->setOption('margin-right', '21mm')
+            ->setOption('margin-left', '21mm')
             ->setOption('print-media-type', true);
         return sizeof($resultado) ? $pdf->inline('termos-de-ciencia-'.(date("YmdHis")).'.pdf') : $this->view_mensagem("warning", "Não há nada para exibir");
     }

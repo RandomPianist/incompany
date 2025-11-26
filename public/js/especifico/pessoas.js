@@ -13,8 +13,9 @@ function listar(coluna) {
             data.forEach((linha) => {
                 let biometria = "";
                 if (linha.possui_biometria.indexOf("possui") > -1) biometria = '<img src = "' + (linha.possui_biometria == "nao-possui" ? IMG_BIOMETRIA.replace("sim", "nao") : IMG_BIOMETRIA) + '" class = "imagem-biometria" />';
+                if (!EMPRESA) biometria = "<a href = '" + URL + "/relatorios/ciencia?pessoa=&id_pessoa=" +  linha.id + "' target = '_blank'>" + biometria + "</a>";
                 resultado += "<tr>" +
-                    "<td width = '5%'>" + biometria + "</td>" +
+                    "<td width = '5%'" + (!EMPRESA ? " style = 'cursor:pointer'" : "") + ">" + biometria + "</td>" +
                     "<td width = '10%' class = 'text-right'>" + linha.id.toString().padStart(4, "0") + "</td>" +
                     "<td width = '" + (TIPO == "A" ? 65 : 25) + "%'>" + linha.nome + "</td>";
                 if (TIPO != "A") {
