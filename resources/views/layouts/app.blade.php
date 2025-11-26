@@ -158,6 +158,9 @@
                                         <li onclick = "relatorio = new RelatorioPessoas()">
                                             <span>Pessoas</span>
                                         </li>
+                                        <li onclick = "relatorio = new RelatorioCiencia()">
+                                            <span>Termo de ciência</span>
+                                        </li>
                                         <li onclick = "relatorio = new RelatorioControle()">
                                             <span>Termo de retirada</span>
                                         </li>
@@ -255,6 +258,7 @@
                 @include("modals.reports.bilateral_modal")
                 @include("modals.reports.itens_modal")
                 @include("modals.reports.retiradas_modal")
+                @include("modals.reports.ciencia_modal")
                 @include("modals.reports.controle_modal")
                 @include("modals.reports.ranking_modal")
                 @include("modals.reports.produtos_modal")

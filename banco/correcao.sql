@@ -52,3 +52,4 @@ INSERT INTO log (acao, origem, tabela, id_pessoa, fk, data) (
 
     WHERE log.id IS NULL
 );
+UPDATE pessoas SET id_setor = 0 WHERE id_empresa = 0;

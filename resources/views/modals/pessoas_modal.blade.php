@@ -78,15 +78,15 @@
                             </div>
                         </div>
                         <div class = "row">
-                            <div class = "col-4">
+                            <div class = "col-6">
                                 <label for = "email" id = "email-lbl" class = "custom-label-form">E-mail:</label>
                                 <input id = "email" name = "email" class = "form-control" autocomplete = "off" type = "text"/>
                             </div>
-                            <div class = "col-4">
+                            <div class = "col-6">
                                 <label for = "telefone" class = "custom-label-form">Telefone: *</label>
                                 <input id = "telefone" name = "telefone" class = "form-control" autocomplete = "off" type = "text" onkeyup = "this.value=phoneMask(this.value)" />
                             </div>
-                            <div class = "col-4">
+                            <div class = "d-none">
                                 <label for = "matricula" class = "custom-label-form">Matrícula:</label>
                                 <input id = "matricula" name = "matricula" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 32)" />
                                 <span class = "custom-label-form tam-max"></span>

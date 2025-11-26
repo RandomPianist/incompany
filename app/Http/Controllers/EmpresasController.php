@@ -166,7 +166,10 @@ class EmpresasController extends Controller {
 
     public function setores($id) {
         $resultado = new \stdClass;
-        $permissoes = ["(setores.supervisor = 1 AND ".(Pessoas::find(Auth::user()->id_pessoa)->supervisor ? "0" : "1").")"];
+        $permissoes = [
+            "(usu.id_setor IS NOT NULL AND setores.visitante = 1)",
+            "(setores.supervisor = 1 AND ".(Pessoas::find(Auth::user()->id_pessoa)->supervisor ? "0" : "1").")"
+        ];
         $lista = $this->obter_lista_permissoes(); // App\Http\Controllers\Controller.php
         foreach ($lista as $permissao) array_push($permissoes, "(permissoes.".$permissao." = 1 AND minhas_permissoes.".$permissao." = 0)");
         return json_encode(
@@ -186,6 +189,15 @@ class EmpresasController extends Controller {
                 )
                 ->crossjoin("permissoes AS minhas_permissoes")
                 ->join("permissoes", "permissoes.id_setor", "setores.id")
+                ->leftjoinSub(
+                    DB::table("pessoas")
+                        ->selectRaw("DISTINCTROW pessoas.id_setor")
+                        ->join("users", "users.id_pessoa", "pessoas.id")
+                        ->where("pessoas.lixeira", 0),
+                    "usu",
+                    "usu.id_setor",
+                    "setores.id"
+                )
                 ->where("setores.lixeira", 0)
                 ->where("setores.id_empresa", $id)
                 ->where("minhas_permissoes.id_usuario", Auth::user()->id)

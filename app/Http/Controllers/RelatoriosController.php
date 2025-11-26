@@ -15,6 +15,7 @@ use App\Models\Maquinas;
 use App\Models\Solicitacoes;
 use App\Models\SolicitacoesProdutos;
 use App\Models\Produtos;
+use App\Models\Dedos;
 
 class RelatoriosController extends Controller {
     private function consultar_empresa(Request $request) {
@@ -387,10 +388,6 @@ class RelatoriosController extends Controller {
 
     public function controle(Request $request) {
         $principal = $this->controleMain($request);
-
-        $resultado = $principal->resultado;
-        $criterios = $principal->criterios;
-        $data_extenso = $principal->data_extenso;
 
         $pdf = \PDF::loadView('reports/controle', [
             "resultado" =>    $principal->resultado, 
@@ -828,5 +825,68 @@ class RelatoriosController extends Controller {
             $criterios .= $periodo;
         }
         return sizeof($resultado) ? view("reports/produtos", compact("resultado", "criterios")) : $this->view_mensagem("warning", "Não há nada para exibir");
+    }
+
+    public function ciencia(Request $request) {
+        $criterios = array();
+        $resultado = array();
+        $consulta = DB::table("pessoas")
+                        ->select(
+                            "pessoas.id",
+                            "pessoas.nome",
+                            "pessoas.cpf",
+                            "pessoas.matricula",
+                            "empresas.razao_social",
+                            "empresas.cnpj",
+                            DB::raw("IFNULL(empresas.cidade, 'Barueri') AS cidade")
+                        )
+                        ->joinsub(
+                            DB::table("dedos")
+                                ->selectRaw("DISTINCTROW id_pessoa"),
+                            "fingers",
+                            "fingers.id_pessoa",
+                            "pessoas.id"
+                        )
+                        ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
+                        ->where(function($sql) use($request, &$criterios) {
+                            $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
+                            if ($request->id_pessoa) {
+                                array_push($criterios, "Colaborador: ".Pessoas::find($request->id_pessoa)->nome);
+                                $sql->where("pessoas.id", $request->id_pessoa);
+                            } elseif ($id_emp) {
+                                $sql->where(function($query) use($id_emp) {
+                                    $query->where("pessoas.id_empresa", $id_emp)
+                                        ->orWhere("empresas.id_matriz", $id_emp)
+                                        ->orWhere("empresas.id", $id_emp);
+                                });
+                            }
+                        })
+                        ->get();
+        foreach ($consulta as $linha) {
+            $dedos = array();
+            for ($i = 0; $i < 10; $i++) {
+                $dedo = Dedos::where("id_pessoa", $linha->id)
+                            ->where("dedo", ($i + 1))
+                            ->value("imagem");
+                $dedos[$i] = $dedo !== null ? $dedo : "";
+            }
+            $linha->dedos = $dedos;
+            array_push($resultado, $linha);
+        }
+
+        $pdf = \PDF::loadView('reports/ciencia', [
+            "resultado" => $resultado, 
+            "criterios" => implode(" | ", $criterios),
+            "data_extenso" => ucfirst(strftime("%d de %B de %Y")),
+            "dedos_nome" => [
+                'Polegar Direito', 'Indicador Direito', 'Médio Direito', 'Anular Direito', 'Mínimo Direito',
+                'Polegar Esquerdo', 'Indicador Esquerdo', 'Médio Esquerdo', 'Anular Esquerdo', 'Mínimo Esquerdo'
+            ]
+        ])
+            ->setOption('page-size', 'A4')
+            ->setOption('margin-top', '20mm')
+            ->setOption('margin-bottom', '20mm')
+            ->setOption('print-media-type', true);
+        return sizeof($resultado) ? $pdf->inline('termos-de-ciencia-'.(date("YmdHis")).'.pdf') : $this->view_mensagem("warning", "Não há nada para exibir");
     }
 }

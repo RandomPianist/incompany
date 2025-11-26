@@ -224,6 +224,33 @@ class RelatorioControle extends Relatorios {
     }
 }
 
+class RelatorioCiencia extends Relatorios {
+    #elementos;
+
+    constructor() {
+        super();
+        this.#elementos = this._relObterElementos(["pessoa4"]);
+
+        limpar_invalido();
+        setTimeout(() => {
+            modal("relatorioCienciaModal", 0);
+        }, 0);
+    }
+
+    validar() {
+        limpar_invalido();
+        $.get(URL + "/relatorios/controle/consultar", this._relObterElementosValor(this.#elementos, ["pessoa"]), (data) => {
+            let erro = "";
+            if (data) {
+                $(this.#elementos.pessoa).addClass("invalido");
+                erro = "Colaborador não encontrado";
+            }
+            if (!erro) $("#relatorioCienciaModal form").submit();
+            else s_alert(erro);
+        });
+    }
+}
+
 class RelatorioRetiradas extends Relatorios {
     #elementos;
     #quebra;
