@@ -169,7 +169,7 @@ class Pessoa extends JanelaDinamica {
                 this.mudou_empresa($("#pessoa-empresa-select").val(), () => {
                     if (this.#dados !== undefined) {
                         const that = this;
-                        $("#nome, #cpf, #email, #funcao, #admissao, #telefone", "#matricula").each(function() {   
+                        $("#nome, #cpf, #email, #funcao, #admissao, #telefone, #matricula").each(function() {   
                             $(this).val(that.#dados[$(this).attr("id")]).trigger("keyup");
                         });
                         $($("#pessoasModal .user-pic").parent()).removeClass("d-none");
