@@ -442,7 +442,8 @@ class Pessoa extends JanelaDinamica {
             $("#pessoa-setor-select").val() != this.#ant_id_setor ||
             $("#pessoa-empresa-select").val() != this.#ant_id_empresa ||
             $("#pessoa-supervisor").val() != this.#ant_supervisor ||
-            $("#pessoa-visitante").val() != this.#ant_visitante
+            $("#pessoa-visitante").val() != this.#ant_visitante ||
+            $("#matricula").val().trim().toLowerCase() != anteriores.matricula.trim().toLowerCase()
         ) alterou = true;
         for (let x in permissoes) {
             if ($("#" + permissoes[x]).val() != anteriores[permissoes[x]]) alterou = true;

@@ -828,7 +828,7 @@ class RelatoriosController extends Controller {
     }
 
     public function ciencia(Request $request) {
-        if ($this->obter_empresa()) return 401;
+        if ($this->obter_empresa()) return 401; // App\Http\Traits\GlobaisTrait.php
         $criterios = array();
         $resultado = array();
         $consulta = DB::table("pessoas")
