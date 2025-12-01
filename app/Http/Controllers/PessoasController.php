@@ -61,6 +61,8 @@ class PessoasController extends ControllerListavel {
     }
 
     protected function busca($where, $tipo = "") {
+        $where = str_replace("?", "pessoas.nome", $where);
+        $where = str_replace("!", "pessoas.cpf", $where);
         return DB::table("pessoas")
                     ->select(
                         "pessoas.id",
@@ -116,7 +118,7 @@ class PessoasController extends ControllerListavel {
                             $sql->where("pessoas.visitante", ($tipo == "V" ? 1 : 0));
                         }
                     })
-                    ->whereRaw(str_replace("?", "pessoas.nome", $where))
+                    ->whereRaw($where)
                     ->where("pessoas.lixeira", 0)
                     ->get();
     }
