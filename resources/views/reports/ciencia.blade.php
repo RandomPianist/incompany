@@ -32,7 +32,14 @@
             </div>
 
             <div class="c-2">
-                <span>Matrícula: {{ $item->matricula ?? "__________________________" }}</span>
+                <span>
+                    @if ($item->id == 83)
+                        RG:
+                    @else
+                        Matrícula:
+                    @endif
+                    {{ $item->matricula ?? "__________________________" }}
+                </span>
             </div>
         </div>
 
