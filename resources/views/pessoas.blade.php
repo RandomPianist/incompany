@@ -71,6 +71,5 @@
     <script type = "text/javascript" language = "JavaScript" src = "{{ asset('js/especifico/pessoas.js') }}"></script>
 
     @include("modals.atribuicoes_modal")
-    @include("modals.retiradas_modal")
     @include("modals.proximas_retiradas_modal")
 @endsection
