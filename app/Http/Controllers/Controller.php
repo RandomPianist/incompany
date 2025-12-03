@@ -1157,6 +1157,7 @@ abstract class Controller extends BaseController {
                     }
                 })
                 ->where("vprodaux.lixeira", 0)
+                ->where("cp.lixeira", 0)
                 ->groupby(
                     "mq.id",
                     "mq.descr",

@@ -350,6 +350,7 @@ class RelatoriosController extends Controller {
                 })
                 ->whereRaw("CURDATE() >= comodatos.inicio")
                 ->whereRaw("CURDATE() < comodatos.fim")
+                ->where("cp.lixeira", 0)
                 ->where("vprodaux.lixeira", 0)
                 ->where("maquinas.lixeira", 0)
                 ->orderby("estoque.data")
