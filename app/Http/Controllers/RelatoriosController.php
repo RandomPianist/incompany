@@ -382,7 +382,7 @@ class RelatoriosController extends Controller {
             ];
         })->sortBy("descr")->values()->all();
         $criterios = implode(" | ", $criterios);
-        if (sizeof($resultado)) return view("reports/extrato".($request->lm == "S" ? "A" : "S"), compact("resultado", "criterios"));
+        if (sizeof($resultado)) return view("reports/extrato".($request->resumo == "S" ? "S" : "A"), compact("resultado", "criterios"));
         return $this->view_mensagem("warning", "Não há nada para exibir"); // App\Http\Controllers\Controller.php
     }
 

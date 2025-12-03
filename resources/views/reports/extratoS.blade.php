@@ -43,11 +43,13 @@
             <table class = "report-body table table-sm table-bordered table-striped">
                 <tbody>
                     @foreach ($item["maquina"]["produtos"] as $produto)
-                        <tr class = "report-row">
-                            <td width = "84%">{{ $produto["descr"] }}</td>
-                            <td width = "8%" class = "text-right dinheiro">{{ $produto["preco"] }}</td>
-                            <td width = "8%" class = "text-right">{{ $produto["saldo_res"] }}</td>
-                        </tr>
+                        @if ((request("lm") == "S" && floatval($produto["saldo_res"]) > 0) || request("lm") == "N")
+                            <tr class = "report-row">
+                                <td width = "84%">{{ $produto["descr"] }}</td>
+                                <td width = "8%" class = "text-right dinheiro">{{ $produto["preco"] }}</td>
+                                <td width = "8%" class = "text-right">{{ $produto["saldo_res"] }}</td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
             </table>

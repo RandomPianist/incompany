@@ -109,17 +109,27 @@ class RelatorioItens extends Relatorios {
                         ? this.#maquina === undefined ? "Sugestão de compra" : "Solicitação de compra"
                         : this.#tipo == "E" ? "Extrato de itens" : "Posição de estoque"
                 );
-                $("#resumo").val(this.#resumido ? "S" : "N");
+                $("#resumo").val(this.#tipo == "P" ? "S" : "N");
                 $("#rel-lm-chk").prop("checked", this.#tipo == "E");
                 $("#rel-lm-chk").trigger("change");
 
                 const pai = $($($($("#rel-lm-chk").parent()).parent()).parent());
-                if (!this.#resumido) $(pai).addClass("d-none");
+                if (tipo == "E") $(pai).addClass("d-none");
                 else $(pai).removeClass("d-none");
 
-                $("label[for='rel-lm-chk']").html(
-                    this.#resumido ? "Listar apenas produtos cuja compra é sugerida" : "Listar movimentação"
-                );
+                switch(tipo) {
+                    case "S":
+                        var legenda_chk = "Listar apenas produtos cuja compra é sugerida";
+                        break;
+                    case "E":
+                        var legenda_chk = "Listar movimentação";
+                        break;
+                    case "P":
+                        var legenda_chk = "Apenas com saldo positivo";
+                        break;
+                }
+
+                $("label[for='rel-lm-chk']").html(legenda_chk);
 
                 $("#relatorioItensModal form").attr(
                     "action",
