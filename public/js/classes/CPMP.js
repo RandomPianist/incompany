@@ -236,17 +236,16 @@ class CPMP {
                 $("#" + this.#tipo + "Modal #maximo-" + (i + 1)).val(parseInt(data[i].maximo)).trigger("keyup");
             }
             
-            if (abrir) {
-                if (!validacao_bloqueada) $("#" + this.#tipo + "Modal").modal();
-                
-                $(this.#tipo == "cp" ? "#cpModal .id-produto" : "#mpModal .id-maquina").each(function() {
-                    $(this).trigger("change");
-                });
-                
-                $("#" + this.#tipo + "Modal .minimo, #" + this.#tipo + "Modal .maximo").each(function() {
-                    limitar($(this), true);
-                });
-            }
+            if (abrir && !validacao_bloqueada) $("#" + this.#tipo + "Modal").modal(); 
+            
+            $(this.#tipo == "cp" ? "#cpModal .id-produto" : "#mpModal .id-maquina").each(function() {
+                $(this).trigger("change");
+            });
+            
+            $("#" + this.#tipo + "Modal .minimo, #" + this.#tipo + "Modal .maximo").each(function() {
+                limitar($(this), true);
+            });
+
             this.contar();
         });
     }
