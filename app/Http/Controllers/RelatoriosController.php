@@ -545,7 +545,7 @@ class RelatoriosController extends Controller {
         })->values()->all();
         $criterios = implode(" | ", $criterios);
         $quebra = $request->rel_grupo;
-        $titulo = $request->rel_grupo == "pessoa" ? "Consumo por colaborador" : "Consumo por setor";
+        $titulo = $request->rel_grupo == "pessoa" ? "Consumo por colaborador" : "Consumo por centro de custo";
         if ($request->json == "S") {
             $retorno = new \stdClass;
             $retorno->json = $resultado;

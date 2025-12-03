@@ -14,15 +14,32 @@
         <div class = "report">
             @yield("content")
         </div>
-        <div id = "btn-print" class = "btn btn-info floating-action-button" onclick = "window.print()" title = "Imprimir">
+
+        <div id = "btn-print" class = "btn btn-info floating-action-button d-none" onclick = "window.print()" title = "Imprimir">
             <i class = "fa fa-print"></i>
         </div>
+
         <div class = "menu-container" id = "menu">
             <div class = "menu-btn" onclick = "this.parentElement.classList.toggle('open')">
                 <i class = "fa fa-bars"></i>
             </div>
             <div class = "menu-item" onclick = "window.print()" title = "Imprimir">
                 <i class = "fa fa-print"></i>
+            </div>
+            <div class = "menu-item" onclick = "exportar()" title = "Exportar para Excel (CSV)">
+                <i class = "fal fa-file-export"></i>
+            </div>
+        </div>
+
+        <div class = "menu-container" id = "menu1">
+            <div class = "menu-btn" onclick = "this.parentElement.classList.toggle('open')">
+                <i class = "fa fa-bars"></i>
+            </div>
+            <div class = "menu-item" onclick = "window.print()" title = "Imprimir">
+                <i class = "fa fa-print"></i>
+            </div>
+            <div class = "menu-item" onclick="exportar()" title="Exportar para Excel (CSV)">
+                <i class="fa fa-file-export"></i>
             </div>
             <div class = "menu-item" onclick = "recalcular()" title = "Recalcular">
                 <i class = "fa fa-undo"></i>

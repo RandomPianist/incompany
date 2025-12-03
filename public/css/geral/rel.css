@@ -812,6 +812,10 @@ h5 {
     transform: translateY(-170px)
 }
 
+.menu-container.open .menu-item:nth-child(5) {
+    transform: translateY(-220px)
+}
+
 div:where(.swal2-container) div:where(.swal2-popup) {
 	width: 62em !important
 }
@@ -861,7 +865,7 @@ div:where(.swal2-container) div:where(.swal2-popup) {
         page-break-before: always
     }
 
-	#btn-print, .my-icon, #menu, .assinatura {
+	#btn-print, #btn-export .my-icon, #menu, .assinatura {
 		display: none !important
 	}
 

@@ -32,7 +32,7 @@
         <thead>
             <tr class = "report-row">
                 <td width = "70%">
-                    @if ($quebra == "setor") Setor @else Colaborador @endif
+                    @if ($quebra == "setor") Centro de custo @else Colaborador @endif
                 </td>
                 <td width = "10%" class = "text-right">Quantidade</td>
                 <td width = "20%" class = "text-right">Valor</td>
