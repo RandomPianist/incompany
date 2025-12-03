@@ -273,6 +273,11 @@ class RelatorioRetiradas extends Relatorios {
         limpar_invalido();
         setTimeout(() => {
             modal("relatorioRetiradasModal", 0, () => {
+                const toggleShortcut = function(atalho, mostrar) {
+                    $($("#relatorioRetiradasModal .atalho[data-atalho='" + atalho + "']").parent()).removeClass(mostrar ? "d-none" : "d-flex");
+                    $($("#relatorioRetiradasModal .atalho[data-atalho='" + atalho + "']").parent()).addClass(mostrar ? "d-flex" : "d-none");
+                }
+
                 $("#rel-pessoa-tipo, #rel-consumo2, #rel-tipo").each((_, el) => {
                     const parent = $($(el).parent());
                     parent.addClass(this.#quebra == "pessoa" ? "col-4" : "col-6");
@@ -285,14 +290,14 @@ class RelatorioRetiradas extends Relatorios {
                 if (this.#quebra == "setor") {
                     $($(this.#elementos.pessoa).parent()).addClass("d-none");
                     $($(this.#elementos.setor).parent()).removeClass("d-none");
-                    $("#relatorioRetiradasModal .atalho[data-atalho='setores']").removeClass("d-none");
-                    $("#relatorioRetiradasModal .atalho[data-atalho='pessoas']").addClass("d-none");
+                    toggleShortcut("setores", true);
+                    toggleShortcut("pessoas", false);
                     $($("#rel-pessoa-tipo").parent()).addClass("d-none");
                 } else {
                     $($(this.#elementos.setor).parent()).addClass("d-none");
                     $($(this.#elementos.pessoa).parent()).removeClass("d-none");
-                    $("#relatorioRetiradasModal .atalho[data-atalho='setores']").addClass("d-none");
-                    $("#relatorioRetiradasModal .atalho[data-atalho='pessoas']").removeClass("d-none");
+                    toggleShortcut("pessoas", true);
+                    toggleShortcut("setores", false);
                     $($("#rel-pessoa-tipo").parent()).removeClass("d-none");
                 }
 
