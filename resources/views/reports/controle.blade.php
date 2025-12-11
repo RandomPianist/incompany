@@ -81,7 +81,7 @@
             <ul>
                 <li>Usá-los apenas para a finalidade a que se destinam;</li>
                 <li>Responsabilizar-me por sua guarda e conservação;</li>
-                <li>Comunicar ao empregador qualquer modificação que os tornem imprópios para o uso;</li>
+                <li>Comunicar ao empregador qualquer modificação que os tornem impróprios para o uso;</li>
                 <li>Responsabilizar-me pela danificação do E.P.I e/ou uniforme devido ao uso inadequado ou fora das atividades a que se destina, bem como pelo seu extravio;</li>
                 <li>Ciente que serei advertido de acordo com o artigo 482 da CLT se não fizer uso devido dos E.P.I e uniformes entregues a mim.</li>
             </ul>
