@@ -729,14 +729,14 @@ abstract class Controller extends BaseController {
             $continua = true;
             $atb = Atribuicoes::whereRaw($where)->where("referencia", $item->referencia)->first();
             if ($atb !== null) {
-                if (intval($atb->gerado)) $modelo = Atribuicoes::find($atb->id);
-                else $continua = false;
+                if (intval($atb->gerado)) $modelo = $atb;
+                $continua = false;
             }
-            if (!$continua) {
+            if ($continua) {
                 $atb = Atribuicoes::whereRaw($where)->where("cod_produto", $item->cod_externo)->first();
                 if ($atb !== null) {
-                    if (intval($atb->gerado)) $modelo = Atribuicoes::find($atb->id);
-                    else $continua = false;
+                    if (intval($atb->gerado)) $modelo = $atb;
+                    $continua = false;
                 }
             }
             if ($continua && $modelo === null) {
