@@ -14,7 +14,6 @@ class Estoque extends Model
         'hms',
         'descr',
         'qtd',
-        'preco',
         'id_cp',
         'created_at',
         'updated_at'
@@ -27,7 +26,6 @@ class Estoque extends Model
         'hms' => 'string',
         'descr' => 'string',
         'qtd' => 'decimal:5',
-        'preco' => 'decimal:2',
         'id_cp' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
