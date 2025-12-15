@@ -903,7 +903,7 @@ class Api2Controller extends Controller {
                 }    
                 if (isset($retirada["biometria"])) $salvar += ["biometria" => $retirada["biometria"]];
                 
-                $this->retirada_salvar($salvar); // App\Http\Controllers\Controller.php
+                $m_retirada = $this->retirada_salvar($salvar); // App\Http\Controllers\Controller.php
                 
                 $linha = new Estoque;
                 $linha->es = "S";
@@ -912,6 +912,7 @@ class Api2Controller extends Controller {
                 $linha->data = date("Y-m-d");
                 $linha->hms = date("H:i:s");
                 $linha->id_cp = $comodato->cp($retirada["id_produto"])->value("id");
+                $linha->id_retirada = $m_retirada->id;
                 $linha->save();
                 $reg_log = $this->log_inserir("C", "estoque", $linha->id, "APP"); // App\Http\Controllers\Controller.php
                 $reg_log->id_pessoa = $retirada["id_pessoa"];

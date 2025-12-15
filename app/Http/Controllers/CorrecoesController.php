@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use DB;
+use App\Models\Estoque;
+use App\Models\Retiradas;
 
 class CorrecoesController extends Controller {
     private function gerar_log_main($data, $acao, $tabela, $fk) {
@@ -58,5 +60,43 @@ class CorrecoesController extends Controller {
             WHERE main.tabela = 'setores'
               AND aux.descr IN ('FINANCEIRO', 'ADMINISTRADORES', 'SEGURANÇA DO TRABALHO', 'RECURSOS HUMANOS')
         ");
+    }
+
+    public function guardar_mov_ret() {
+        $retiradas = Retiradas::where("id_comodato", ">", 0)->get();
+        foreach ($retiradas as $retirada) {
+            $consulta = DB::table("estoque")
+                            ->select("estoque.id")
+                            ->join("comodatos_produtos AS cp", "cp.id", "estoque.id_cp")
+                            ->join("log", function($join) {
+                                $join->on("log.fk", "estoque.id")
+                                    ->where("log.tabela", "estoque");
+                            })
+                            ->where("estoque.descr", "RETIRADA")
+                            ->whereNull("estoque.id_retirada")
+                            ->where("log.id_pessoa", $retirada->id_pessoa)
+                            ->where("cp.id_produto", $retirada->id_produto)
+                            ->where("cp.id_comodato", $retirada->id_comodato)
+                            ->where("estoque.data", $retirada->data)
+                            ->first();
+            if ($consulta !== null) {
+                $estoque = Estoque::find($consulta->id);
+                $estoque->id_retirada = $retirada->id;
+                $estoque->save();
+            }
+        }
+        Estoque::where("descr", "RETIRADA")->whereNull("estoque.id_retirada")->delete();
+        DB::statement("
+            DELETE log
+            FROM log
+            LEFT JOIN estoque
+                ON estoque.id = log.fk
+                    AND log.tabela = 'estoque'
+                    AND log.acao = 'C'
+            WHERE log.tabela = 'estoque'
+              AND estoque.id IS NULL
+              AND log.acao = 'C'
+        ");
+        return "ok";
     }
 }

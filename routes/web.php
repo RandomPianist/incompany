@@ -37,7 +37,7 @@ Route::middleware("auth")->group(function () {
     Route::get ("/consultar-simples",        [HomeController::class, "consultar_simples"]);
     Route::get ("/pode-abrir/{tabela}/{id}", [HomeController::class, "pode_abrir"]);
     Route::post("/descartar",                [HomeController::class, "descartar"]);
-    // Route::get ("/corrigir",                 [CorrecoesController::class, "gerar_log"]);
+    Route::get ("/corrigir",                 [CorrecoesController::class, "guardar_mov_ret"]);
 
     Route::group(["prefix" => "dashboard"], function() {
         Route::get("/dados",                           [DashboardController::class, "dados"]);

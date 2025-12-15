@@ -15,6 +15,7 @@ class Estoque extends Model
         'descr',
         'qtd',
         'id_cp',
+        'id_retirada',
         'created_at',
         'updated_at'
     ];
@@ -27,6 +28,7 @@ class Estoque extends Model
         'descr' => 'string',
         'qtd' => 'decimal:5',
         'id_cp' => 'integer',
+        'id_retirada' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];

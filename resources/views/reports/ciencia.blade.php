@@ -33,7 +33,7 @@
 
             <div class="c-2">
                 <span>
-                    @if ($item->id == 83)
+                    @if ($item->id == 83 || $item->id == 343)
                         RG:
                     @else
                         Matrícula:

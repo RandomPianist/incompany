@@ -7,6 +7,7 @@ use Auth;
 use Carbon\Carbon;
 use App\Models\Pessoas;
 use App\Models\Empresas;
+use App\Models\Estoque;
 use App\Models\Retiradas;
 use App\Models\Permissoes;
 use Illuminate\Http\Request;
@@ -62,9 +63,31 @@ class RetiradasController extends Controller {
     public function desfazer(Request $request) {
         if ($this->obter_empresa()) return 401; // App\Http\Traits\GlobaisTrait.php
         if ($this->permitir($request) == 401) return 401;
-        $where = "id_pessoa = ".$request->id_pessoa." AND numero_ped IS NULL";
-        $this->log_inserir_lote("D", "retiradas", $where); // App\Http\Controllers\Controller.php
-        Retiradas::whereRaw($where)->delete();
+        
+        $connection = DB::connection();
+        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+        $connection->beginTransaction();
+        try {
+            $where = "id_pessoa = ".$request->id_pessoa." AND numero_ped IS NULL";
+            $ids_retiradas = Retiradas::whereRaw($where)->pluck("id")->toArray();
+
+            $this->log_inserir_lote("D", "retiradas", $where); // App\Http\Controllers\Controller.php
+            Retiradas::whereRaw($where)->delete();
+            
+            if (sizeof($ids_retiradas)) {
+                $where = "id_retirada IN (".join(",", $ids_retiradas).")";
+                $this->log_inserir_lote("D", "estoque", $where); // App\Http\Controllers\Controller.php
+                Estoque::whereRaw($where)->delete();
+            }
+
+            $this->atualizar_mat_vretiradas_vultretirada("P", $request->id_pessoa, "R", false); // App\Http\Controllers\Controller.php
+            $this->atualizar_mat_vretiradas_vultretirada("P", $request->id_pessoa, "U", false); // App\Http\Controllers\Controller.php
+            $connection->commit();
+        } catch (\Exception $e) {
+            $connection->rollBack();
+            throw $e;
+        }
+
         return 200;
     }
 

@@ -179,9 +179,11 @@ CREATE TABLE estoque (
 	descr VARCHAR(16),
 	qtd NUMERIC(10,5),
 	id_cp INT,
+    id_retirada INT,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	FOREIGN KEY (id_cp) REFERENCES comodatos_produtos(id)
+	FOREIGN KEY (id_cp) REFERENCES comodatos_produtos(id),
+    FOREIGN KEY (id_retirada) REFERENCES retiradas(id)
 );
 
 CREATE TABLE atribuicoes (

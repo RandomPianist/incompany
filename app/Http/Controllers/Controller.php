@@ -948,6 +948,8 @@ abstract class Controller extends BaseController {
             $reg_log->nome = $pessoa->nome;
             $reg_log->save();
         }
+
+        return $linha;
     }  
 
     protected function retorna_sql_pendentes($id_pessoa) {
