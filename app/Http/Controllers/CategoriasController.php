@@ -23,12 +23,14 @@ class CategoriasController extends ControllerListavel {
     }
 
     protected function busca($param, $tipo = "") {
+        $param = str_replace("?", "categorias.descr", $param);
+        $param = str_replace("!", "categorias.descr", $param);
         return DB::table("categorias")
                     ->select(
                         "id",
                         "descr"
                     )
-                    ->whereRaw(str_replace("?", "categorias.descr", $param))
+                    ->whereRaw($param)
                     ->where("lixeira", 0)
                     ->get();
     }

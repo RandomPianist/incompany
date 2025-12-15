@@ -1264,8 +1264,7 @@ abstract class Controller extends BaseController {
     protected function retorna_atb_aux($chave, $valor, $apenas_ativos, $id_pessoa) {
         $tabela = $apenas_ativos ? "vativos" : "pessoas";
         $where = "
-                (users.id IS NULL OR vatbreal.gerado = 0 OR (vatbreal.gerado = 1 AND users.admin = 0))
-            AND excecoes.id IS NULL
+                excecoes.id IS NULL
             AND cp.lixeira = 0
             AND produtos.lixeira = 0
         ";

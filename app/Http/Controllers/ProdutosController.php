@@ -58,6 +58,8 @@ class ProdutosController extends ControllerListavel {
     }
 
     protected function busca($where, $tipo = "") {
+        $where = str_replace("?", "produtos.descr", $where);
+        $where = str_replace("!", "produtos.cod_externo", $where);
         return DB::table("produtos")
                     ->select(
                         DB::raw("produtos.*"),
@@ -69,7 +71,7 @@ class ProdutosController extends ControllerListavel {
                         ")
                     )
                     ->leftjoin("categorias", "categorias.id", "produtos.id_categoria")
-                    ->whereRaw(str_replace("?", "produtos.descr", $where))
+                    ->whereRaw($where)
                     ->where("produtos.lixeira", 0)
                     ->get();
     }
