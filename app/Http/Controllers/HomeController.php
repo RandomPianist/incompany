@@ -50,91 +50,102 @@ class HomeController extends Controller {
     }
 
     public function autocomplete(Request $request) {
+        if (
+            !preg_match('/^[a-zA-Z0-9_]+$/', $request->table) ||
+            !preg_match('/^[a-zA-Z0-9_]+$/', $request->column) ||
+            !preg_match('/^[a-zA-Z0-9_]+$/', $request->filter_col)
+        ) return "[]";
         $tabela = str_replace("_todos", "", $request->table);
         $tabela = str_replace("_lixeira", "", $tabela);
         $tabela = str_replace("_maq", "", $tabela);
-        $where = " AND ".$request->column." LIKE '%".$request->search."%' AND ";
+        $where = "1";
         $filter_col = $request->filter_col != "v_maquina" ? $request->filter_col : "";
         
         if (in_array($tabela, ["empresas", "pessoas", "setores"])) {
-            $where .= $this->obter_where(Auth::user()->id_pessoa, $tabela, true); // App\Http\Controllers\Controller.php
+            $where .= " AND ".$this->obter_where(Auth::user()->id_pessoa, $tabela, true); // App\Http\Controllers\Controller.php
             if ($request->filter_col == "v_maquina") {
+                $id_maquina = intval($request->filter);
                 $where .= " AND id IN ".($tabela == "setores" ? "(
                     SELECT pessoas.id_setor
                     FROM mat_vcomodatos
                     JOIN pessoas
                         ON pessoas.id = mat_vcomodatos.id_pessoa
-                    WHERE mat_vcomodatos.id_maquina = ".$request->filter."
+                    WHERE mat_vcomodatos.id_maquina = ".$id_maquina."
                 )" : "(
                     SELECT id_pessoa
                     FROM mat_vcomodatos
-                    WHERE id_maquina = ".$request->filter."
+                    WHERE id_maquina = ".$id_maquina."
                 )");
             }
             if ($request->atribuicao) {
+                $atribuicao = intval($request->id_atribuicao);
                 $where .= " AND id NOT IN (
                     SELECT id_pessoa
                     FROM excecoes
-                    WHERE id_atribuicao = ".$request->atribuicao."
+                    WHERE id_atribuicao = ".$atribuicao."
                 ) AND id_setor NOT IN (
                     SELECT id_setor
                     FROM excecoes
-                    WHERE id_atribuicao = ".$request->atribuicao."
+                    WHERE id_atribuicao = ".$atribuicao."
                 )";
             }
         } elseif ($tabela == "produtos") {
             $tabela = "vprodaux";
-            $where .= "id IN (
+            $where .= " AND id IN (
                 SELECT id_produto
                 FROM vprodutosgeral
                 WHERE id_pessoa = ".Auth::user()->id_pessoa."
             )";
             if (strpos($request->table, "_maq") !== false) {
+                $id_maquina = intval($request->filter);
                 $where .= " AND id IN (
                     SELECT cp.id_produto
                     FROM comodatos_produtos AS cp
                     JOIN comodatos
                         ON comodatos.id = cp.id_comodato
-                    WHERE comodatos.id_maquina = ".$request->filter."
+                    WHERE comodatos.id_maquina = ".$id_maquina."
                       AND comodatos.inicio <= CURDATE()
                       AND comodatos.fim > CURDATE()
                 )";
             }
         } elseif ($tabela == "maquinas") {
-            $where .= "id IN (
+            $where .= " AND id IN (
                 SELECT id_maquina
                 FROM mat_vcomodatos
             )";
-        } else $where .= "1";
+        } else $where .= " AND 1";
 
         if ($filter_col) {
+            $connection = DB::connection();
             if ($request->column == "referencia") {
                 $filtro = explode("|", $request->filter);
                 $where .= " AND referencia NOT IN (
                     SELECT pr_valor
                     FROM vatbold
-                    WHERE psm_valor = '".$filtro[1]."'
-                      AND psm_chave = '".$filtro[0]."'
+                    WHERE psm_valor = ".$connection->getPdo()->quote($filtro[1])."
+                      AND psm_chave = ".$connection->getPdo()->quote($filtro[0])."
                       AND pr_chave = 'R'
                 )";
-            } else $where .= " AND ".$filter_col." = '".$request->filter."'";
+            } else $where .= " AND ".$filter_col." = ".$connection->getPdo()->quote($request->filter);
         }
-
-        $query = "SELECT ";
-        if ($request->column == "referencia") $query .= "MIN(id) AS ";
-        $query .= "id, ".$request->column;
-        $query .= " FROM ".$tabela;
-        $query .= " WHERE ";
-        if (strpos($request->table, "todos") !== false) $query .= "1";
-        elseif (strpos($request->table, "lixeira") !== false) $query .= "lixeira = 1";
-        else $query .= "lixeira = 0";
-        $query .= $where;
-        if ($request->column == "referencia") $query .= " GROUP BY referencia";
-        $query .= " ORDER BY ".$request->column;
-        $query .= " LIMIT 30";
         
         $resultado = array();
-        $consulta = DB::select(DB::raw($query));
+
+        $consulta = DB::table($tabela)
+                        ->select(
+                            $request->column,
+                            DB::raw($request->column == "referencia" ? "MIN(id) AS id" : "id")
+                        )
+                        ->whereRaw($where)
+                        ->where(function($sql) use ($request) {
+                            if (strpos($request->table, "todos") === false) $sql->where("lixeira", (strpos($request->table, "lixeira") !== false) ? 1 : 0);
+                        })
+                        ->where($request->column, "LIKE", "%".$request->search."%")
+                        ->groupby(DB::raw($request->column == "referencia" ? "referencia" : "id,".$request->column))
+                        ->orderby($request->column)
+                        ->take(30)
+                        ->get();
+
         foreach ($consulta as $linha) {
             $linha = (array) $linha;
             $aux = array(

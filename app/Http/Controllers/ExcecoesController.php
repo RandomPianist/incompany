@@ -12,6 +12,7 @@ use App\Models\Excbkp;
 
 class ExcecoesController extends Controller {
     private function consulta($listando, $id) {
+        $id = intval($id);
         $campos = [
             "excecoes.id",
             "excecoes.id_atribuicao",

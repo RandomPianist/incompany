@@ -60,7 +60,7 @@ class PessoasController extends ControllerListavel {
         return $resultado;
     }
 
-    protected function busca($where, $tipo = "") {
+    protected function busca($where, $bindings = [], $tipo = "") {
         $where = str_replace("?", "pessoas.nome", $where);
         $where = str_replace("!", "pessoas.cpf", $where);
         return DB::table("pessoas")
@@ -118,7 +118,7 @@ class PessoasController extends ControllerListavel {
                             $sql->where("pessoas.visitante", ($tipo == "V" ? 1 : 0));
                         }
                     })
-                    ->whereRaw($where)
+                    ->whereRaw($where, $bindings)
                     ->where("pessoas.lixeira", 0)
                     ->get();
     }

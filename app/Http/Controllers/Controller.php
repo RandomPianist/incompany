@@ -91,6 +91,7 @@ abstract class Controller extends BaseController {
     }
 
     protected function pode_abrir_main($tabela, $id, $acao) {
+        $id = intval($id);
         $servico = new ConcorrenciaService;
 
         $resultado = new \stdClass;
@@ -773,7 +774,7 @@ abstract class Controller extends BaseController {
             $connection->beginTransaction();
             try {
                 $novo = trim($novo);
-                $where = "referencia = '".$antigo."'";
+                $where = "referencia = ".$connection->getPdo()->quote($antigo);
                 $lista = DB::table("vatbold")
                     ->select(
                         "psm_chave",
@@ -870,6 +871,8 @@ abstract class Controller extends BaseController {
     }
 
     protected function retirada_consultar($id_atribuicao, $qtd, $id_pessoa) {
+        $id_pessoa = intval($id_pessoa);
+        $id_atribuicao = intval($id_atribuicao);
         $consulta = DB::select(DB::raw("
             SELECT ".$this->retorna_calc_qtd()." AS qtd
                 

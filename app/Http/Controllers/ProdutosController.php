@@ -10,7 +10,7 @@ use App\Models\Produtos;
 use App\Models\Categorias;
 
 class ProdutosController extends ControllerListavel {
-    private function busca_maq($where, $id_produto) {
+    private function busca_maq($where, $bindings, $id_produto) {
         return DB::table("comodatos_produtos AS cp")
                     ->select(
                         "comodatos.id_maquina",
@@ -24,7 +24,7 @@ class ProdutosController extends ControllerListavel {
                     ->join("maquinas", "maquinas.id", "comodatos.id_maquina")
                     ->where("cp.id_produto", $id_produto)
                     ->whereRaw("CURDATE() >= comodatos.inicio AND CURDATE() < comodatos.fim")
-                    ->whereRaw($where)
+                    ->whereRaw($where, $bindings)
                     ->where("maquinas.lixeira", 0)
                     ->orderby("cp.lixeira")
                     ->take(20)
@@ -57,7 +57,7 @@ class ProdutosController extends ControllerListavel {
         return json_encode($produto);
     }
 
-    protected function busca($where, $tipo = "") {
+    protected function busca($where, $bindings = [], $tipo = "") {
         $where = str_replace("?", "produtos.descr", $where);
         $where = str_replace("!", "produtos.cod_externo", $where);
         return DB::table("produtos")
@@ -71,7 +71,7 @@ class ProdutosController extends ControllerListavel {
                         ")
                     )
                     ->leftjoin("categorias", "categorias.id", "produtos.id_categoria")
-                    ->whereRaw($where)
+                    ->whereRaw($where, $bindings)
                     ->where("produtos.lixeira", 0)
                     ->get();
     }
@@ -197,11 +197,45 @@ class ProdutosController extends ControllerListavel {
 
     public function listar_maquina(Request $request) {
         $filtro = trim($request->filtro);
+        $filtro_limpo = str_replace("  ", " ", $filtro);
+
         if ($filtro) {
-            $busca = $this->busca_maq("maquinas.descr LIKE '".$filtro."%'", $request->id_produto);
-            if (sizeof($busca) < 3) $busca = $this->busca_maq("maquinas.descr LIKE '%".$filtro."%'", $request->id_produto);
-            if (sizeof($busca) < 3) $busca = $this->busca_maq("(maquinas.descr LIKE '%".implode("%' AND maquinas.descr LIKE '%", explode(" ", str_replace("  ", " ", $filtro)))."%')", $request->id_produto);
-        } else $busca = $this->busca_maq("1", $request->id_produto);
+            $busca = $this->busca_maq(
+                "maquinas.descr LIKE ?", 
+                [$filtro_limpo . '%'], 
+                $request->id_produto
+            );
+
+            if (count($busca) < 3) {
+                $busca = $this->busca_maq(
+                    "maquinas.descr LIKE ?", 
+                    ['%' . $filtro_limpo . '%'], 
+                    $request->id_produto
+                );
+            }
+
+            if (count($busca) < 3) {
+                $palavras = explode(" ", $filtro_limpo);
+                $sql_parts = [];
+                $bindings = [];
+                foreach ($palavras as $palavra) {
+                    if (trim($palavra) !== '') {
+                        $sql_parts[] = "maquinas.descr LIKE ?";
+                        $bindings[] = '%' . $palavra . '%';
+                    }
+                }
+                if (count($sql_parts) > 0) {
+                    $sql_final = "(" . implode(" AND ", $sql_parts) . ")";
+                    $busca = $this->busca_maq(
+                        $sql_final, 
+                        $bindings, 
+                        $request->id_produto
+                    );
+                }
+            }
+        } else {
+            $busca = $this->busca_maq("1 = 1", [], $request->id_produto);
+        }
         $resultado = new \stdClass;
         $resultado->lista = $busca;
         $resultado->total = DB::table("comodatos_produtos AS cp")

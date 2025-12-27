@@ -22,7 +22,7 @@ class CategoriasController extends ControllerListavel {
         return $resultado;
     }
 
-    protected function busca($param, $tipo = "") {
+    protected function busca($param, $bindings = [], $tipo = "") {
         $param = str_replace("?", "categorias.descr", $param);
         $param = str_replace("!", "categorias.descr", $param);
         return DB::table("categorias")
@@ -30,7 +30,7 @@ class CategoriasController extends ControllerListavel {
                         "id",
                         "descr"
                     )
-                    ->whereRaw($param)
+                    ->whereRaw($param, $bindings)
                     ->where("lixeira", 0)
                     ->get();
     }
@@ -66,14 +66,15 @@ class CategoriasController extends ControllerListavel {
     }
 
     public function excluir(Request $request) {
+        $id = intval($id);
         if ($this->obter_empresa()) return 401; // App\Http\Traits\GlobaisTrait.php
-        if (!$this->aviso_main($request->id)->permitir) return 401;
-        $linha = Categorias::find($request->id);
+        if (!$this->aviso_main($id)->permitir) return 401;
+        $linha = Categorias::find($id);
         $linha->lixeira = 1;
         $linha->save();
-        $where = "id_categoria = ".$request->id;
-        $this->log_inserir("D", "categorias", $linha->id); // App\Http\Controllers\Controller.php
+        $where = "id_categoria = ".$id;
+        $this->log_inserir("D", "categorias", $id); // App\Http\Controllers\Controller.php
         $this->log_inserir_lote("E", "produtos", $where); // App\Http\Controllers\Controller.php
-        DB::statement("UPDATE produtos SET id_categoria = NULL ".$where);
+        DB::statement("UPDATE produtos SET id_categoria = NULL WHERE ".$where);
     }
 }

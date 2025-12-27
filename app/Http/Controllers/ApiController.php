@@ -16,6 +16,7 @@ use App\Models\Pessoas;
 
 class ApiController extends Controller {
     private function info_atb($id_pessoa, $obrigatorios, $grade) {
+        $id_pessoa = intval($id_pessoa);
         $nucleo = " vatbold 
             JOIN (".$this->retorna_sql_atb_vigente(
                 $this->retorna_atb_aux("P", $id_pessoa, false, $id_pessoa)

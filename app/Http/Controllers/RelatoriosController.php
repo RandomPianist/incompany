@@ -44,8 +44,8 @@ class RelatoriosController extends Controller {
 
     private function bilateral_construtor(Request $request, $grupo) {
         $filtro = array();
-        if ($request->id_empresa) array_push($filtro, "id_empresa = ".$request->id_empresa);
-        if ($request->id_maquina) array_push($filtro, "id_maquina = ".$request->id_maquina);
+        if ($request->id_empresa) array_push($filtro, "id_empresa = ".intval($request->id_empresa));
+        if ($request->id_maquina) array_push($filtro, "id_maquina = ".intval($request->id_maquina));
         $filtro = join(" AND ", $filtro);
         if (!$filtro) $filtro = "1";
         return collect(
@@ -739,6 +739,8 @@ class RelatoriosController extends Controller {
             case "ranking":
                 $ordenacao = "ret.qtd DESC";
                 break;
+            default:
+                $ordenacao = "produtos.cod_externo";
         }
 
         $resultado = collect(

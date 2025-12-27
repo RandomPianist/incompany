@@ -64,7 +64,7 @@ class SetoresController extends ControllerListavel {
         return $resultado;
     }
 
-    protected function busca($param, $tipo = "") {
+    protected function busca($param, $bindings = [], $tipo = "") {
         $param = str_replace("?", "setores.descr", $param);
         $param = str_replace("!", "setores.descr", $param);
         return DB::table("setores")
@@ -75,7 +75,7 @@ class SetoresController extends ControllerListavel {
                     )
                     ->join("empresas", "setores.id_empresa", "empresas.id")
                     ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores")) // App\Http\Controllers\Controller.php
-                    ->whereRaw($param)
+                    ->whereRaw($param, $bindings)
                     ->where("empresas.lixeira", 0)
                     ->get();
     }

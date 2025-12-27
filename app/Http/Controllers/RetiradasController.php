@@ -92,6 +92,7 @@ class RetiradasController extends Controller {
     }
 
     public function proximas($id_pessoa) {
+        $id_pessoa = intval($id_pessoa);
         $data = "IFNULL(".$this->calculo_atraso().", vatbold.data)"; // App\Http\Controllers\Controller.php
         return json_encode(DB::select(DB::raw("
             SELECT
@@ -117,7 +118,7 @@ class RetiradasController extends Controller {
                     ELSE CONCAT('REF: ', produtos.referencia)
                 END AS nome_produto
 
-            FROM ".$this->retorna_sql_pendentes(intval($id_pessoa))."
+            FROM ".$this->retorna_sql_pendentes($id_pessoa)."
 
             JOIN pessoas
                 ON pessoas.id = atb.id_pessoa

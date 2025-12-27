@@ -195,6 +195,7 @@ class AtribuicoesController extends Controller {
     }
 
     public function mostrar($id) {
+        $id = intval($id);
         return json_encode($this->consulta("
             CASE
                 WHEN (vatbold.pr_chave = 'R') THEN vprodaux.referencia
@@ -207,6 +208,7 @@ class AtribuicoesController extends Controller {
     }
 
     public function produtos($id) {
+        $id = intval($id);
         return json_encode($this->consulta("
             vprodaux.id,
             CASE
