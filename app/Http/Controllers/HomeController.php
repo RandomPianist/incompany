@@ -51,9 +51,9 @@ class HomeController extends Controller {
 
     public function autocomplete(Request $request) {
         if (
-            !preg_match('/^[a-zA-Z0-9_]+$/', $request->table) ||
-            !preg_match('/^[a-zA-Z0-9_]+$/', $request->column) ||
-            !preg_match('/^[a-zA-Z0-9_]+$/', $request->filter_col)
+            (!preg_match('/^[a-zA-Z0-9_]+$/', $request->table) && $request->table) ||
+            (!preg_match('/^[a-zA-Z0-9_]+$/', $request->column) && $request->column) ||
+            (!preg_match('/^[a-zA-Z0-9_]+$/', $request->filter_col) && $request->filter_col)
         ) return "[]";
         $tabela = str_replace("_todos", "", $request->table);
         $tabela = str_replace("_lixeira", "", $tabela);
