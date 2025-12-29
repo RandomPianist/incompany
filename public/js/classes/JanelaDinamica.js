@@ -277,7 +277,7 @@ class Pessoa extends JanelaDinamica {
 
         let id_usuario = 0;
         if (this.#dados !== undefined) id_usuario = parseInt(this.#dados.id_usuario);
-        const _usuario = ["a", "u"].indexOf(titulo.charAt(0)) > -1;
+        const _usuario = ["a", "u"].includes(titulo.charAt(0));
         const mostrar_password = _usuario && (!this.#id || this.#id == USUARIO || !id_usuario);
 
         if (mostrar_password) {
@@ -321,7 +321,7 @@ class Pessoa extends JanelaDinamica {
                     resultado += "<option value = '" + setor.id + "'" + (!ativo ? " disabled" : "") + ">" + setor.descr + "</option>";
                     if (ativo) {
                         try {
-                            if (!primeiro && parseInt(setor.cria_usuario) && ["A", "U"].indexOf(TIPO) > -1) primeiro = parseInt(setor.id);
+                            if (!primeiro && parseInt(setor.cria_usuario) && ["A", "U"].includes(TIPO)) primeiro = parseInt(setor.id);
                         } catch (err) {}
                         try {
                             if (!primeiro && parseInt(setor.supervisor) && !parseInt(setor.cria_usuario) && TIPO == "S") primeiro = parseInt(setor.id);

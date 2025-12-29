@@ -484,7 +484,7 @@ function modal(nome, id, callback) {
                 $(this).prop("checked", false);
             });
         }
-        if (!id && ["pessoasModal", "setoresModal", "maquinasModal", "categoriasModal"].indexOf(nome) > -1) {
+        if (!id && ["pessoasModal", "setoresModal", "maquinasModal", "categoriasModal"].includes(nome)) {
             let el = $("#" + (nome == "pessoasModal" ? "nome" : "descr"));
             $(el).val($("#busca").val());
             $(el).trigger("keyup");
@@ -493,7 +493,7 @@ function modal(nome, id, callback) {
         callback();
     }
     
-    if (id && ["categoriasModal", "empresasModal", "pessoasModal", "produtosModal", "setoresModal"].indexOf(nome) > -1) {
+    if (id && ["categoriasModal", "empresasModal", "pessoasModal", "produtosModal", "setoresModal"].includes(nome)) {
         $.get(URL + "/pode-abrir/" + nome.replace("Modal", "") + "/" + id, function(data) {
             if (typeof data == "string") data = $.parseJSON(data);
             if (!parseInt(data.permitir)) s_alert(data.aviso);
@@ -706,7 +706,7 @@ function carrega_autocomplete() {
         if (e.keyCode == 13) validacao_bloqueada = true;
         
         // Ignora teclas de navegação (Setas, Enter, Tab, etc.)
-        if ([9, 13, 17, 38, 40].indexOf(e.keyCode) > -1) {
+        if ([9, 13, 17, 38, 40].includes(e.keyCode)) {
             return;
         }
 
@@ -724,7 +724,7 @@ function carrega_autocomplete() {
     });
 
     $(document).on('keydown', '.autocomplete', function(e) {
-        if ([9, 13, 38, 40].indexOf(e.keyCode) > -1) {
+        if ([9, 13, 38, 40].includes(e.keyCode)) {
             e.preventDefault();
             if (e.keyCode == 13) {
                 validacao_bloqueada = true;
@@ -769,7 +769,7 @@ function seta_autocomplete(direcao, _this) {
     // Se o target existir, dispara o evento
     if(target && target.length) {
         // Dispara mouseover para navegação e click para seleção
-        if ([38, 40].indexOf(direcao) > -1) {
+        if ([38, 40].includes(direcao)) {
             autocomplete_mouse = false;
             _this.val(target.text()); // Atualiza o texto do input ao navegar com as setas
             el_hovered.removeClass("hovered");

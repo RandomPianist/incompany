@@ -27,7 +27,7 @@ function zebrar() {
         $("#principal .texto-tabela").each(function() {
             $(this).removeClass("impar");
             $(this).removeClass("par");
-            if (aux.indexOf($(this).attr("id")) > -1) lista.push($(this).attr("id").replace("empresa-", ""));
+            if (aux.includes($(this).attr("id")) > -1) lista.push($(this).attr("id").replace("empresa-", ""));
         });
         for (let i = 0; i < lista.length; i++) $("#principal #empresa-" + lista[i]).addClass(((i % 2 > 0) ? "im" : "") + "par");
     }, 0);
