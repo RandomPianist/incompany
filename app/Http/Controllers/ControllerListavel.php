@@ -12,7 +12,7 @@ abstract class ControllerListavel extends Controller {
         
         if ($filtro) {
             $filtro = str_replace("  ", " ", $filtro);
-            $campo = $poss_cpf == preg_replace("/[^0-9]/", "", $poss_cpf) ? "!" : "?";
+            $campo = $poss_cpf == preg_replace("/[^0-9]/", "", $poss_cpf) ? "!" : "#";
             if ($campo == "!") $filtro = $poss_cpf;
             $busca = $this->busca("$campo LIKE ?", [$filtro . '%'], $request->tipo);
 
