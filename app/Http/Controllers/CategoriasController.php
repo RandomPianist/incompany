@@ -23,7 +23,7 @@ class CategoriasController extends ControllerListavel {
     }
 
     protected function busca($param, $bindings = [], $tipo = "") {
-        $param = str_replace("?", "categorias.descr", $param);
+        $param = str_replace("#", "categorias.descr", $param);
         $param = str_replace("!", "categorias.descr", $param);
         return DB::table("categorias")
                     ->select(

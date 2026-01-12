@@ -65,7 +65,7 @@ class SetoresController extends ControllerListavel {
     }
 
     protected function busca($param, $bindings = [], $tipo = "") {
-        $param = str_replace("?", "setores.descr", $param);
+        $param = str_replace("#", "setores.descr", $param);
         $param = str_replace("!", "setores.descr", $param);
         return DB::table("setores")
                     ->select(

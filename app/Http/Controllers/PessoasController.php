@@ -61,7 +61,7 @@ class PessoasController extends ControllerListavel {
     }
 
     protected function busca($where, $bindings = [], $tipo = "") {
-        $where = str_replace("?", "pessoas.nome", $where);
+        $where = str_replace("#", "pessoas.nome", $where);
         $where = str_replace("!", "pessoas.cpf", $where);
         return DB::table("pessoas")
                     ->select(

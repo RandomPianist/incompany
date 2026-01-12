@@ -58,7 +58,7 @@ class ProdutosController extends ControllerListavel {
     }
 
     protected function busca($where, $bindings = [], $tipo = "") {
-        $where = str_replace("?", "produtos.descr", $where);
+        $where = str_replace("#", "produtos.descr", $where);
         $where = str_replace("!", "produtos.cod_externo", $where);
         return DB::table("produtos")
                     ->select(
