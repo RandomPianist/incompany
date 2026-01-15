@@ -289,7 +289,7 @@ class Pessoa extends JanelaDinamica {
         }
         $("#senha").attr("title", "Senha para retirar produtos " + (supervisor ? "e autorizar retiradas de produtos antes do vencimento" : ""));
 
-        this.#obrigatorios = ["nome", "telefone", "cpf"];
+        this.#obrigatorios = ["nome", "cpf"];
         if (titulo.charAt(0) != "a") this.#obrigatorios.push("funcao", "admissao");
         if (_usuario) this.#obrigatorios.push("email");
         if (!this.#id) this.#obrigatorios.push("senha");

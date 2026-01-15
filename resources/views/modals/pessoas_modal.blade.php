@@ -83,7 +83,7 @@
                                 <input id = "email" name = "email" class = "form-control" autocomplete = "off" type = "text"/>
                             </div>
                             <div class = "col-6">
-                                <label for = "telefone" class = "custom-label-form">Telefone: *</label>
+                                <label for = "telefone" class = "custom-label-form">Telefone:</label>
                                 <input id = "telefone" name = "telefone" class = "form-control" autocomplete = "off" type = "text" onkeyup = "this.value=phoneMask(this.value)" />
                             </div>
 
