@@ -156,6 +156,7 @@ CREATE TABLE estoque (
     hms VARCHAR(8),
 	descr VARCHAR(16),
 	qtd NUMERIC(10,5),
+    preco NUMERIC(8,2),
 	id_cp INT,
     id_retirada INT,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
