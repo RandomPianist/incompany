@@ -485,7 +485,7 @@ class Api2Controller extends Controller {
             DB::table("solicitacoes")
                 ->select(
                     "solicitacoes.id",
-                    "solicitacoes.status",
+                    "solicitacoes.situacao",
                     "solicitacoes.usuario_web AS autor",
                     "empresas.cod_externo AS cft",
                     DB::raw("DATE_FORMAT(solicitacoes.data, '%d-%m-%Y') AS data"),
@@ -505,8 +505,8 @@ class Api2Controller extends Controller {
                 ->whereRaw("CURDATE() < comodatos.fim")
                 ->where("empresas.lixeira", 0)
                 ->where(function($sql) {
-                    $sql->where("solicitacoes.status", "A")
-                        ->orWhere("solicitacoes.status", "C");
+                    $sql->where("solicitacoes.situacao", "A")
+                        ->orWhere("solicitacoes.situacao", "C");
                 })
                 ->whereNotNull("empresas.cod_externo")
                 ->get()
@@ -515,7 +515,7 @@ class Api2Controller extends Controller {
                 "id" => $produtos[0]->id,
                 "cft" => $produtos[0]->cft,
                 "data" => $produtos[0]->data,
-                "status" => $produtos[0]->status,
+                "status" => $produtos[0]->situacao,
                 "autor" => $produtos[0]->autor,
                 "produtos" => collect($produtos)->map(function($produto) {
                     return [
