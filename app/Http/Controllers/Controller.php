@@ -1137,7 +1137,7 @@ abstract class Controller extends BaseController {
                     "mq.id",
                     "cm.id_maquina"
                 )
-                ->joinSub(
+                ->leftjoinSub(
                     DB::table("estoque")
                         ->select(
                             "estoque.id_cp",

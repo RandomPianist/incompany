@@ -16,7 +16,7 @@ function recalcular() {
 
 function calcular(el, val) {
     val += parseInt($($($(el).parent()).find(".qtd")[0]).val());
-    let estilo = $($(el).parent()).find(".fa-minus").style;
+    let estilo = el.parentElement.querySelector(".fa-minus").style;
     if (!val) estilo.visibility = "hidden";
     else estilo.removeProperty("visibility");
     $($($(el).parent()).find(".qtd")[0]).val(val);
