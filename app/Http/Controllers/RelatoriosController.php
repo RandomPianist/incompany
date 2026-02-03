@@ -48,15 +48,15 @@ class RelatoriosController extends Controller {
         if ($request->id_maquina) array_push($filtro, "id_maquina = ".intval($request->id_maquina));
         $filtro = join(" AND ", $filtro);
         if (!$filtro) $filtro = "1";
-        return collect(
-            $this->comum("
+        return $this->comum("
                 empresas.nome_fantasia AS col1,
                 maquinas.descr AS col2
             ")->whereRaw($filtro."
                 AND CURDATE() >= inicio
                 AND CURDATE() < fim
-            ")->orderby("maquinas.descr")->get()
-        )->groupBy($grupo);
+            ")->orderby("maquinas.descr")
+            ->cursor()
+            ->groupBy($grupo);
     }
 
     private function maquinas_por_empresa(Request $request) {
@@ -96,111 +96,110 @@ class RelatoriosController extends Controller {
     private function controleMain(Request $request) {
         $retorno = new \stdClass;
         $criterios = array();
-        $retorno->resultado = collect(
-            DB::table("retiradas")
-                ->select(
-                    "retiradas.id_pessoa",
-                    "pessoas.nome",
-                    "pessoas.cpf",
-                    "pessoas.admissao",
-                    "pessoas.funcao",
-                    "setores.descr AS setor",
-                    "produtos.descr AS produto",
-                    "produtos.ca",
-                    "empresas.razao_social",
-                    "empresas.cnpj",
-                    DB::raw("IFNULL(empresas.cidade, 'Barueri') AS cidade"),
-                    "produtos.validade_ca",
-                    "retiradas.qtd",
-                    DB::raw("IFNULL(retiradas.biometria, '') AS biometria"),
-                    DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data"),
-                    DB::raw("
-                        CASE
-                            WHEN (comodatos.id IS NOT NULL) THEN
-                                DATE_FORMAT(
-                                    CASE 
-                                        WHEN (retiradas.hms IS NULL) THEN DATE_SUB(retiradas.created_at, INTERVAL 3 HOUR)
-                                        ELSE CONCAT(retiradas.data, ' ', retiradas.hms)
-                                    END,
-                                    '%d/%m/%Y %H:%i:%s'
-                                )
-                            ELSE ''
-                        END AS data_hora
-                    "),
-                    DB::raw("IFNULL(CONCAT('Liberado por ', supervisor.nome, IFNULL(CONCAT(' - ', retiradas.observacao), '')), '') AS obs")
-                )
-                ->join("produtos", "produtos.id", "retiradas.id_produto")
-                ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
-                ->leftjoin("comodatos", "comodatos.id", "retiradas.id_comodato")
-                ->leftjoin("maquinas", "maquinas.id", "comodatos.id_maquina")
-                ->leftjoin("pessoas AS supervisor", "supervisor.id", "retiradas.id_supervisor")
-                ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
-                ->leftjoin("setores", "setores.id", "pessoas.id_setor")
-                ->where(function($sql) use($request, &$criterios) {
-                    if ($request->inicio || $request->fim) {
-                        $periodo = "Período";
-                        if ($request->inicio) {
-                            $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
-                            $sql->whereRaw("retiradas.data >= '".$inicio."'");
-                            $periodo .= " de ".$request->inicio;
-                        }
-                        if ($request->fim) {
-                            $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-                            $sql->whereRaw("retiradas.data <= '".$fim."'");
-                            $periodo .= " até ".$request->fim;
-                        } else $periodo .= " em diante";
-                        array_push($criterios, $periodo);
-                    }
-                    $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
-                    if ($request->id_pessoa) {
-                        array_push($criterios, "Colaborador: ".Pessoas::find($request->id_pessoa)->nome);
-                        $sql->where("retiradas.id_pessoa", $request->id_pessoa);
-                    } elseif ($id_emp) {
-                        $sql->where(function($query) use($id_emp) {
-                            $query->where("pessoas.id_empresa", $id_emp)
-                                ->orWhere("empresas.id_matriz", $id_emp)
-                                ->orWhere("empresas.id", $id_emp);
-                        });
-                    }
-                    if ($request->consumo != "todos") {
-                        $sql->where("produtos.consumo", $request->consumo == "epi" ? 0 : 1);
-                        array_push($criterios, "Apenas ".($request->consumo == "epi" ? "EPI" : "produtos de consumo"));
-                    }
-                })
-                ->orderby("retiradas.id")
-                ->get()
-        )->groupBy("id_pessoa")->map(function($itens) {
-            $biometrias = $itens->pluck("biometria");
-            $titulo = "Assinatura / Biometria";
-            if ($biometrias->every(function($val) {
-                return $val == "";
-            })) $titulo = "Assinatura";
-            elseif ($biometrias->every(function($val) {
-                return $val !== "";
-            })) $titulo = "Biometria";
-            return [
-                "nome" => $itens[0]->nome,
-                "cpf" => $itens[0]->cpf,
-                "admissao" => $itens[0]->admissao,
-                "funcao" => $itens[0]->funcao,
-                "setor" => $itens[0]->setor,
-                "empresa" => $itens[0]->razao_social,
-                "cnpj" => $itens[0]->cnpj,
-                "cidade" => $itens[0]->cidade,
-                "titulo" => $titulo,
-                "retiradas" => $itens->map(function($retirada) {
-                    return [
-                        "produto" => $retirada->produto,
-                        "data" => $retirada->data_hora, 
-                        "obs" => $retirada->obs,
-                        "ca" => $retirada->ca,
-                        "biometria" => $retirada->biometria,
-                        "validade_ca" => $retirada->validade_ca,
-                        "qtd" => intval($retirada->qtd)
-                    ];
-                })->values()->all()
-            ];
-        })->sortBy("nome")->values()->all();
+        $retorno->resultado = DB::table("retiradas")
+                                    ->select(
+                                        "retiradas.id_pessoa",
+                                        "pessoas.nome",
+                                        "pessoas.cpf",
+                                        "pessoas.admissao",
+                                        "pessoas.funcao",
+                                        "setores.descr AS setor",
+                                        "produtos.descr AS produto",
+                                        "produtos.ca",
+                                        "empresas.razao_social",
+                                        "empresas.cnpj",
+                                        DB::raw("IFNULL(empresas.cidade, 'Barueri') AS cidade"),
+                                        "produtos.validade_ca",
+                                        "retiradas.qtd",
+                                        DB::raw("IFNULL(retiradas.biometria, '') AS biometria"),
+                                        DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data"),
+                                        DB::raw("
+                                            CASE
+                                                WHEN (comodatos.id IS NOT NULL) THEN
+                                                    DATE_FORMAT(
+                                                        CASE 
+                                                            WHEN (retiradas.hms IS NULL) THEN DATE_SUB(retiradas.created_at, INTERVAL 3 HOUR)
+                                                            ELSE CONCAT(retiradas.data, ' ', retiradas.hms)
+                                                        END,
+                                                        '%d/%m/%Y %H:%i:%s'
+                                                    )
+                                                ELSE ''
+                                            END AS data_hora
+                                        "),
+                                        DB::raw("IFNULL(CONCAT('Liberado por ', supervisor.nome, IFNULL(CONCAT(' - ', retiradas.observacao), '')), '') AS obs")
+                                    )
+                                    ->join("produtos", "produtos.id", "retiradas.id_produto")
+                                    ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
+                                    ->leftjoin("comodatos", "comodatos.id", "retiradas.id_comodato")
+                                    ->leftjoin("maquinas", "maquinas.id", "comodatos.id_maquina")
+                                    ->leftjoin("pessoas AS supervisor", "supervisor.id", "retiradas.id_supervisor")
+                                    ->leftjoin("empresas", "empresas.id", "pessoas.id_empresa")
+                                    ->leftjoin("setores", "setores.id", "pessoas.id_setor")
+                                    ->where(function($sql) use($request, &$criterios) {
+                                        if ($request->inicio || $request->fim) {
+                                            $periodo = "Período";
+                                            if ($request->inicio) {
+                                                $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
+                                                $sql->whereRaw("retiradas.data >= '".$inicio."'");
+                                                $periodo .= " de ".$request->inicio;
+                                            }
+                                            if ($request->fim) {
+                                                $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
+                                                $sql->whereRaw("retiradas.data <= '".$fim."'");
+                                                $periodo .= " até ".$request->fim;
+                                            } else $periodo .= " em diante";
+                                            array_push($criterios, $periodo);
+                                        }
+                                        $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
+                                        if ($request->id_pessoa) {
+                                            array_push($criterios, "Colaborador: ".Pessoas::find($request->id_pessoa)->nome);
+                                            $sql->where("retiradas.id_pessoa", $request->id_pessoa);
+                                        } elseif ($id_emp) {
+                                            $sql->where(function($query) use($id_emp) {
+                                                $query->where("pessoas.id_empresa", $id_emp)
+                                                    ->orWhere("empresas.id_matriz", $id_emp)
+                                                    ->orWhere("empresas.id", $id_emp);
+                                            });
+                                        }
+                                        if ($request->consumo != "todos") {
+                                            $sql->where("produtos.consumo", $request->consumo == "epi" ? 0 : 1);
+                                            array_push($criterios, "Apenas ".($request->consumo == "epi" ? "EPI" : "produtos de consumo"));
+                                        }
+                                    })
+                                    ->orderby("retiradas.id")
+                                    ->cursor()
+                                    ->groupBy("id_pessoa")->map(function($itens) {
+                                        $biometrias = $itens->pluck("biometria");
+                                        $titulo = "Assinatura / Biometria";
+                                        if ($biometrias->every(function($val) {
+                                            return $val == "";
+                                        })) $titulo = "Assinatura";
+                                        elseif ($biometrias->every(function($val) {
+                                            return $val !== "";
+                                        })) $titulo = "Biometria";
+                                        return [
+                                            "nome" => $itens[0]->nome,
+                                            "cpf" => $itens[0]->cpf,
+                                            "admissao" => $itens[0]->admissao,
+                                            "funcao" => $itens[0]->funcao,
+                                            "setor" => $itens[0]->setor,
+                                            "empresa" => $itens[0]->razao_social,
+                                            "cnpj" => $itens[0]->cnpj,
+                                            "cidade" => $itens[0]->cidade,
+                                            "titulo" => $titulo,
+                                            "retiradas" => $itens->map(function($retirada) {
+                                                return [
+                                                    "produto" => $retirada->produto,
+                                                    "data" => $retirada->data_hora, 
+                                                    "obs" => $retirada->obs,
+                                                    "ca" => $retirada->ca,
+                                                    "biometria" => $retirada->biometria,
+                                                    "validade_ca" => $retirada->validade_ca,
+                                                    "qtd" => intval($retirada->qtd)
+                                                ];
+                                            })->values()->all()
+                                        ];
+                                    })->sortBy("nome")->values()->all();
         $retorno->criterios = implode(" | ", $criterios);
         $retorno->data_extenso = ucfirst(strftime("%d de %B de %Y"));
         return $retorno;
@@ -231,7 +230,7 @@ class RelatoriosController extends Controller {
             empresas.nome_fantasia AS empresa,
             DATE_FORMAT(comodatos.inicio, '%d/%m/%Y') AS inicio,
             DATE_FORMAT(comodatos.fim, '%d/%m/%Y') AS fim
-        ")->orderby("comodatos.inicio")->get();
+        ")->orderby("comodatos.inicio")->cursor()->all();
         return sizeof($resultado) ? view("reports/comodatos", compact("resultado")) : $this->view_mensagem("warning", "Não há nada para exibir"); // App\Http\Controllers\Controller.php
     }
 
@@ -268,120 +267,119 @@ class RelatoriosController extends Controller {
         $fim = Carbon::createFromFormat('d/m/Y', $r_fim)->format('Y-m-d');
 
         $criterios = ["Período de ".$r_inicio." até ".$r_fim];
-        $resultado = collect(
-            DB::table("comodatos_produtos AS cp")
-                ->select(
-                    // GRUPO 1
-                    "maquinas.id AS id_maquina",
-                    "maquinas.descr AS maquina",
-
-                    // GRUPO 2
-                    "vprodaux.id AS id_produto",
-                    "vprodaux.descr AS produto",
-                    DB::raw("IFNULL(tot.qtd, 0) AS saldo"),
-                    "cp.preco",
-
-                    // DETALHES
-                    DB::raw("CONCAT(DATE_FORMAT(estoque.data, '%d/%m/%Y'), CASE WHEN estoque.hms IS NOT NULL THEN CONCAT(' ', estoque.hms) ELSE '' END) AS data"),
-                    "estoque.es",
-                    "estoque.descr AS estoque_descr",
-                    DB::raw("
-                        CASE
-                            WHEN (es = 'E') THEN estoque.qtd
-                            ELSE estoque.qtd * -1
-                        END AS qtd
-                    "),
-                    DB::raw("
-                        CASE
-                            WHEN (es = 'E') THEN estoque.qtd
-                            ELSE 0
-                        END AS entradas
-                    "),
-                    DB::raw("
-                        CASE
-                            WHEN (es = 'S') THEN estoque.qtd
-                            ELSE 0
-                        END AS saidas
-                    "),
-                    DB::raw("IFNULL(log.nome, IFNULL(log.origem, 'DESCONHECIDO')) AS autor")
-                )
-                ->join("comodatos", "comodatos.id", "cp.id_comodato")
-                ->join("maquinas", "maquinas.id", "comodatos.id_maquina")
-                ->join("vprodaux", "vprodaux.id", "cp.id_produto")
-                ->leftjoin("estoque", "estoque.id_cp", "cp.id")
-                ->leftjoin("log", function($join) {
-                    $join->on("log.fk", "estoque.id")
-                        ->where("log.tabela", "estoque");
-                })
-                ->leftjoinsub(
-                    DB::table("estoque")
+        $resultado = DB::table("comodatos_produtos AS cp")
                         ->select(
-                            "id_cp",
+                            // GRUPO 1
+                            "maquinas.id AS id_maquina",
+                            "maquinas.descr AS maquina",
+
+                            // GRUPO 2
+                            "vprodaux.id AS id_produto",
+                            "vprodaux.descr AS produto",
+                            DB::raw("IFNULL(tot.qtd, 0) AS saldo"),
+                            "cp.preco",
+
+                            // DETALHES
+                            DB::raw("CONCAT(DATE_FORMAT(estoque.data, '%d/%m/%Y'), CASE WHEN estoque.hms IS NOT NULL THEN CONCAT(' ', estoque.hms) ELSE '' END) AS data"),
+                            "estoque.es",
+                            "estoque.descr AS estoque_descr",
                             DB::raw("
-                                SUM(CASE
-                                    WHEN (es = 'E') THEN qtd
-                                    ELSE qtd * -1
-                                END) AS qtd
-                            ")
+                                CASE
+                                    WHEN (es = 'E') THEN estoque.qtd
+                                    ELSE estoque.qtd * -1
+                                END AS qtd
+                            "),
+                            DB::raw("
+                                CASE
+                                    WHEN (es = 'E') THEN estoque.qtd
+                                    ELSE 0
+                                END AS entradas
+                            "),
+                            DB::raw("
+                                CASE
+                                    WHEN (es = 'S') THEN estoque.qtd
+                                    ELSE 0
+                                END AS saidas
+                            "),
+                            DB::raw("IFNULL(log.nome, IFNULL(log.origem, 'DESCONHECIDO')) AS autor")
                         )
-                        ->whereRaw("DATE(created_at) < '".$inicio."'")
-                        ->groupby("id_cp"),
-                    "tot", "tot.id_cp", "cp.id"
-                )
-                ->where(function($sql) use($request, $inicio, $fim, &$criterios) {
-                    if ($request->id_maquina) {
-                        $maquina = Maquinas::find($request->id_maquina);
-                        array_push($criterios, "Máquina: ".$maquina->descr);
-                        $sql->where("maquinas.id", $maquina->id);
-                    }
-                    if ($request->id_produto) {
-                        $produto = Produtos::find($request->id_produto);
-                        array_push($criterios, "Produto: ".$produto->descr);
-                        $sql->where("cp.id_produto", $produto->id);
-                    }
-                    if ($request->lm == "S") {
-                        $sql->whereNotNull("estoque.id")
-                            ->whereRaw("estoque.data >= '".$inicio."'")
-                            ->whereRaw("estoque.data < '".$fim."'");
-                    }
-                    if ($this->obter_empresa()) { // App\Http\Traits\GlobaisTrait.php
-                        $sql->whereIn("maquinas.id", $this->maquinas_periodo($inicio, $fim)); // App\Http\Controllers\Controller.php
-                    }
-                })
-                ->whereRaw("CURDATE() >= comodatos.inicio")
-                ->whereRaw("CURDATE() < comodatos.fim")
-                ->where("cp.lixeira", 0)
-                ->where("vprodaux.lixeira", 0)
-                ->where("maquinas.lixeira", 0)
-                ->orderby("estoque.data")
-                ->get()
-        )->groupBy("id_maquina")->map(function($itens1) {
-            return [
-                "maquina" => [
-                    "descr" => $itens1[0]->maquina,
-                    "produtos" => collect($itens1)->groupBy("id_produto")->map(function($itens2) {
-                        $saldo_ant = intval($itens2[0]->saldo);
-                        $saldo_res = $saldo_ant + $itens2->sum("qtd");
-                        return [
-                            "descr" => $itens2[0]->produto,
-                            "preco" => $itens2[0]->preco,
-                            "saldo_ant" => $saldo_ant,
-                            "saldo_res" => $saldo_res,
-                            "movimentacao" => $itens2->map(function($movimento) {
-                                $qtd = floatval($movimento->qtd);
-                                return [
-                                    "data" => $movimento->data,
-                                    "es" => $movimento->es,
-                                    "descr" => $movimento->estoque_descr,
-                                    "qtd" => ($qtd < 0 ? ($qtd * -1) : $qtd),
-                                    "autor" => $movimento->autor
-                                ];
-                            })->values()->all()
-                        ];
-                    })->sortBy("descr")->values()->all()
-                ]
-            ];
-        })->sortBy("descr")->values()->all();
+                        ->join("comodatos", "comodatos.id", "cp.id_comodato")
+                        ->join("maquinas", "maquinas.id", "comodatos.id_maquina")
+                        ->join("vprodaux", "vprodaux.id", "cp.id_produto")
+                        ->leftjoin("estoque", "estoque.id_cp", "cp.id")
+                        ->leftjoin("log", function($join) {
+                            $join->on("log.fk", "estoque.id")
+                                ->where("log.tabela", "estoque");
+                        })
+                        ->leftjoinsub(
+                            DB::table("estoque")
+                                ->select(
+                                    "id_cp",
+                                    DB::raw("
+                                        SUM(CASE
+                                            WHEN (es = 'E') THEN qtd
+                                            ELSE qtd * -1
+                                        END) AS qtd
+                                    ")
+                                )
+                                ->whereRaw("DATE(created_at) < '".$inicio."'")
+                                ->groupby("id_cp"),
+                            "tot", "tot.id_cp", "cp.id"
+                        )
+                        ->where(function($sql) use($request, $inicio, $fim, &$criterios) {
+                            if ($request->id_maquina) {
+                                $maquina = Maquinas::find($request->id_maquina);
+                                array_push($criterios, "Máquina: ".$maquina->descr);
+                                $sql->where("maquinas.id", $maquina->id);
+                            }
+                            if ($request->id_produto) {
+                                $produto = Produtos::find($request->id_produto);
+                                array_push($criterios, "Produto: ".$produto->descr);
+                                $sql->where("cp.id_produto", $produto->id);
+                            }
+                            if ($request->lm == "S") {
+                                $sql->whereNotNull("estoque.id")
+                                    ->whereRaw("estoque.data >= '".$inicio."'")
+                                    ->whereRaw("estoque.data < '".$fim."'");
+                            }
+                            if ($this->obter_empresa()) { // App\Http\Traits\GlobaisTrait.php
+                                $sql->whereIn("maquinas.id", $this->maquinas_periodo($inicio, $fim)); // App\Http\Controllers\Controller.php
+                            }
+                        })
+                        ->whereRaw("CURDATE() >= comodatos.inicio")
+                        ->whereRaw("CURDATE() < comodatos.fim")
+                        ->where("cp.lixeira", 0)
+                        ->where("vprodaux.lixeira", 0)
+                        ->where("maquinas.lixeira", 0)
+                        ->orderby("estoque.data")
+                        ->cursor()
+                        ->groupBy("id_maquina")->map(function($itens1) {
+                            return [
+                                "maquina" => [
+                                    "descr" => $itens1[0]->maquina,
+                                    "produtos" => collect($itens1)->groupBy("id_produto")->map(function($itens2) {
+                                        $saldo_ant = intval($itens2[0]->saldo);
+                                        $saldo_res = $saldo_ant + $itens2->sum("qtd");
+                                        return [
+                                            "descr" => $itens2[0]->produto,
+                                            "preco" => $itens2[0]->preco,
+                                            "saldo_ant" => $saldo_ant,
+                                            "saldo_res" => $saldo_res,
+                                            "movimentacao" => $itens2->map(function($movimento) {
+                                                $qtd = floatval($movimento->qtd);
+                                                return [
+                                                    "data" => $movimento->data,
+                                                    "es" => $movimento->es,
+                                                    "descr" => $movimento->estoque_descr,
+                                                    "qtd" => ($qtd < 0 ? ($qtd * -1) : $qtd),
+                                                    "autor" => $movimento->autor
+                                                ];
+                                            })->values()->all()
+                                        ];
+                                    })->sortBy("descr")->values()->all()
+                                ]
+                            ];
+                        })->sortBy("descr")->values()->all();
         $criterios = implode(" | ", $criterios);
         if (sizeof($resultado)) return view("reports/extrato".($request->resumo == "S" ? "S" : "A"), compact("resultado", "criterios"));
         return $this->view_mensagem("warning", "Não há nada para exibir"); // App\Http\Controllers\Controller.php
@@ -445,104 +443,103 @@ class RelatoriosController extends Controller {
         $criterios = array();
         $qtd_total = 0;
         $val_total = 0;
-        $resultado = collect(
-            DB::table("retiradas")
-                ->select(
-                    // GRUPO
-                    "retiradas.id_pessoa",
-                    "pessoas.id_setor",
-                    "setores.descr AS setor",
+        $resultado = DB::table("retiradas")
+                        ->select(
+                            // GRUPO
+                            "retiradas.id_pessoa",
+                            "pessoas.id_setor",
+                            "setores.descr AS setor",
 
-                    // DETALHES
-                    DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data"),
-                    "produtos.descr AS produto",
-                    "pessoas.nome",
-                    DB::raw("SUM(retiradas.qtd) AS qtd"),
-                    DB::raw("SUM(retiradas.preco) AS valor")
-                )
-                ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
-                ->join("setores", "setores.id", "retiradas.id_setor")
-                ->join("produtos", "produtos.id", "retiradas.id_produto")
-                ->leftjoin("empresas", "empresas.id", "retiradas.id_empresa")
-                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas")) // App\Http\Controllers\Controller.php
-                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "pessoas", true)) // App\Http\Controllers\Controller.php
-                ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores", true)) // App\Http\Controllers\Controller.php
-                ->where(function($sql) use($request, &$criterios) {
-                    $inicio = "";
-                    $fim = "";
-                    if ($request->inicio) $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
-                    if ($request->fim) $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-                    
-                    if ($request->inicio || $request->fim) {
-                        $periodo = "Período";
-                        if ($request->inicio) {
-                            $sql->whereRaw("retiradas.data >= '".$inicio."'");
-                            $periodo .= " de ".$request->inicio;
-                        }
-                        if ($request->fim) {
-                            $sql->whereRaw("retiradas.data <= '".$fim."'");
-                            $periodo .= " até ".$request->fim;
-                        } else $periodo .= " em diante";
-                        array_push($criterios, $periodo);
-                    }
-                    if ($request->id_pessoa) {
-                        array_push($criterios, "Colaborador: ".Pessoas::find($request->id_pessoa)->nome);
-                        $sql->where("pessoas.id", $request->id_pessoa);
-                    }
-                    if ($request->id_setor) {
-                        array_push($criterios, "Centro de custo: ".$request->setor);
-                        $sql->where("setores.id", $request->id_setor);
-                    }
-                    if ($request->id_empresa) {
-                        $sql->where(function($query) use($request) {
-                            $query->where("empresas.id", $request->id_empresa)
-                                ->orWhere("empresas.id_matriz", $request->id_empresa);
-                        });
-                        $m_empresa = Empresas::find($request->id_empresa);
-                        $empresa = $m_empresa->razao_social;
-                        if ($m_empresa->filiais()->exists()) $empresa .= " e filiais";
-                        array_push($criterios, "Empresa: ".$empresa);
-                    }
-                    if ($request->consumo != "todos") {
-                        $sql->where("produtos.consumo", $request->consumo == "epi" ? 0 : 1);
-                        array_push($criterios, "Apenas ".($request->consumo == "epi" ? "EPI" : "produtos de consumo"));
-                    }
-                    if ($request->rel_grupo != "pessoa") {
-                        $sql->where("pessoas.lixeira", 0)
-                            ->where("setores.lixeira", 0);
-                    } elseif ($request->tipo_colab != "todos") {
-                        $sql->where("pessoas.lixeira", $request->tipo_colab == "ativos" ? 0 : 1);
-                        array_push($criterios, "Apenas colaboradores ".$request->tipo_colab);
-                    }
-                })
-                ->groupby(
-                    "retiradas.id_pessoa",
-                    "pessoas.id_setor",
-                    "setores.descr",
-                    "retiradas.data",
-                    "produtos.descr",
-                    "pessoas.nome"
-                )
-                ->orderby("retiradas.data")
-                ->get()
-        )->groupBy("id_".$request->rel_grupo)->map(function($itens) use($request, &$qtd_total, &$val_total) {
-            $qtd_total += $itens->sum("qtd");
-            $val_total += $itens->sum("valor");
-            return [
-                "grupo" => $request->rel_grupo == "pessoa" ? $itens[0]->nome : $itens[0]->setor,
-                "total_valor" => $itens->sum("valor"),
-                "total_qtd" => $itens->sum("qtd"),
-                "retiradas" => $itens->map(function($retirada) {
-                    return [
-                        "data" => $retirada->data,
-                        "produto" => $retirada->produto,
-                        "pessoa" => $retirada->nome,
-                        "qtd" => $retirada->qtd,
-                        "valor" => $retirada->valor
-                    ];
-                })->values()->all()
-            ];
-        })->values()->all();
+                            // DETALHES
+                            DB::raw("DATE_FORMAT(retiradas.data, '%d/%m/%Y') AS data"),
+                            "produtos.descr AS produto",
+                            "pessoas.nome",
+                            DB::raw("SUM(retiradas.qtd) AS qtd"),
+                            DB::raw("SUM(retiradas.preco) AS valor")
+                        )
+                        ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
+                        ->join("setores", "setores.id", "retiradas.id_setor")
+                        ->join("produtos", "produtos.id", "retiradas.id_produto")
+                        ->leftjoin("empresas", "empresas.id", "retiradas.id_empresa")
+                        ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas")) // App\Http\Controllers\Controller.php
+                        ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "pessoas", true)) // App\Http\Controllers\Controller.php
+                        ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores", true)) // App\Http\Controllers\Controller.php
+                        ->where(function($sql) use($request, &$criterios) {
+                            $inicio = "";
+                            $fim = "";
+                            if ($request->inicio) $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
+                            if ($request->fim) $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
+                            
+                            if ($request->inicio || $request->fim) {
+                                $periodo = "Período";
+                                if ($request->inicio) {
+                                    $sql->whereRaw("retiradas.data >= '".$inicio."'");
+                                    $periodo .= " de ".$request->inicio;
+                                }
+                                if ($request->fim) {
+                                    $sql->whereRaw("retiradas.data <= '".$fim."'");
+                                    $periodo .= " até ".$request->fim;
+                                } else $periodo .= " em diante";
+                                array_push($criterios, $periodo);
+                            }
+                            if ($request->id_pessoa) {
+                                array_push($criterios, "Colaborador: ".Pessoas::find($request->id_pessoa)->nome);
+                                $sql->where("pessoas.id", $request->id_pessoa);
+                            }
+                            if ($request->id_setor) {
+                                array_push($criterios, "Centro de custo: ".$request->setor);
+                                $sql->where("setores.id", $request->id_setor);
+                            }
+                            if ($request->id_empresa) {
+                                $sql->where(function($query) use($request) {
+                                    $query->where("empresas.id", $request->id_empresa)
+                                        ->orWhere("empresas.id_matriz", $request->id_empresa);
+                                });
+                                $m_empresa = Empresas::find($request->id_empresa);
+                                $empresa = $m_empresa->razao_social;
+                                if ($m_empresa->filiais()->exists()) $empresa .= " e filiais";
+                                array_push($criterios, "Empresa: ".$empresa);
+                            }
+                            if ($request->consumo != "todos") {
+                                $sql->where("produtos.consumo", $request->consumo == "epi" ? 0 : 1);
+                                array_push($criterios, "Apenas ".($request->consumo == "epi" ? "EPI" : "produtos de consumo"));
+                            }
+                            if ($request->rel_grupo != "pessoa") {
+                                $sql->where("pessoas.lixeira", 0)
+                                    ->where("setores.lixeira", 0);
+                            } elseif ($request->tipo_colab != "todos") {
+                                $sql->where("pessoas.lixeira", $request->tipo_colab == "ativos" ? 0 : 1);
+                                array_push($criterios, "Apenas colaboradores ".$request->tipo_colab);
+                            }
+                        })
+                        ->groupby(
+                            "retiradas.id_pessoa",
+                            "pessoas.id_setor",
+                            "setores.descr",
+                            "retiradas.data",
+                            "produtos.descr",
+                            "pessoas.nome"
+                        )
+                        ->orderby("retiradas.data")
+                        ->cursor()
+                        ->groupBy("id_".$request->rel_grupo)->map(function($itens) use($request, &$qtd_total, &$val_total) {
+                            $qtd_total += $itens->sum("qtd");
+                            $val_total += $itens->sum("valor");
+                            return [
+                                "grupo" => $request->rel_grupo == "pessoa" ? $itens[0]->nome : $itens[0]->setor,
+                                "total_valor" => $itens->sum("valor"),
+                                "total_qtd" => $itens->sum("qtd"),
+                                "retiradas" => $itens->map(function($retirada) {
+                                    return [
+                                        "data" => $retirada->data,
+                                        "produto" => $retirada->produto,
+                                        "pessoa" => $retirada->nome,
+                                        "qtd" => $retirada->qtd,
+                                        "valor" => $retirada->valor
+                                    ];
+                                })->values()->all()
+                            ];
+                        })->values()->all();
         $criterios = implode(" | ", $criterios);
         $quebra = $request->rel_grupo;
         $titulo = $request->rel_grupo == "pessoa" ? "Consumo por colaborador" : "Consumo por centro de custo";
@@ -559,70 +556,64 @@ class RelatoriosController extends Controller {
     public function ranking(Request $request) {
         $qtd_total = 0;
         $criterios = array();
-        $resultado = collect(
-            DB::table("retiradas")
-                    ->select(
-                        "pessoas.id_setor",
-                        "pessoas.id",
-                        "pessoas.nome",
-                        "setores.descr AS setor",
-                        DB::raw("SUM(qtd) AS retirados")
-                    )
-                    ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
-                    ->join("setores", "setores.id", "retiradas.id_setor")
-                    ->where(function($sql) use($request, &$criterios) {
-                        if ($request->inicio || $request->fim) {
-                            $periodo = "Período";
-                            if ($request->inicio) {
-                                $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
-                                $sql->whereRaw("retiradas.data >= '".$inicio."'");
-                                $periodo .= " de ".$request->inicio;
+        $resultado = DB::table("retiradas")
+                        ->select(
+                            "pessoas.id_setor",
+                            "pessoas.id",
+                            "pessoas.nome",
+                            "setores.descr AS setor",
+                            DB::raw("SUM(qtd) AS retirados")
+                        )
+                        ->join("pessoas", "pessoas.id", "retiradas.id_pessoa")
+                        ->join("setores", "setores.id", "retiradas.id_setor")
+                        ->where(function($sql) use($request, &$criterios) {
+                            if ($request->inicio || $request->fim) {
+                                $periodo = "Período";
+                                if ($request->inicio) {
+                                    $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
+                                    $sql->whereRaw("retiradas.data >= '".$inicio."'");
+                                    $periodo .= " de ".$request->inicio;
+                                }
+                                if ($request->fim) {
+                                    $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
+                                    $sql->whereRaw("retiradas.data <= '".$fim."'");
+                                    $periodo .= " até ".$request->fim;
+                                } else $periodo .= " em diante";
+                                array_push($criterios, $periodo);
                             }
-                            if ($request->fim) {
-                                $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-                                $sql->whereRaw("retiradas.data <= '".$fim."'");
-                                $periodo .= " até ".$request->fim;
-                            } else $periodo .= " em diante";
-                            array_push($criterios, $periodo);
-                        }
-                        if ($request->tipo != "todos") {
-                            if ($request->tipo == "inativos") {
-                                $sql->where(function($w) use($request) {
-                                    $w->where("pessoas.lixeira", 1)
-                                        ->orWhere("setores.lixeira", 1);
-                                });
-                            } else {
-                                $sql->where("pessoas.lixeira", 0)
-                                    ->where("setores.lixeira", 0);
+                            if ($request->tipo != "todos") {
+                                if ($request->tipo == "ativos") {
+                                    $sql->where("pessoas.lixeira", 0)
+                                        ->where("setores.lixeira", 0);
+                                } else $sql->whereRaw("1 IN (pessoas.lixeira, setores.lixeira)");
+                                array_push($criterios, "Apenas ".$request->tipo);
                             }
-                            array_push($criterios, "Apenas ".$request->tipo);
-                        }
-                    })
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "pessoas", true)) // App\Http\Controllers\Controller.php
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores", true)) // App\Http\Controllers\Controller.php
-                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas")) // App\Http\Controllers\Controller.php
-                    ->groupby(
-                        "pessoas.id_setor",
-                        "pessoas.id",
-                        "pessoas.nome",
-                        "setores.descr",
-                    )
-                    ->orderby("retirados", "DESC")
-                    ->orderby("pessoas.nome")
-                    ->get()
-        )->groupBy("id_setor")->map(function($itens) use($request, &$qtd_total) {
-            $qtd_total += $itens->sum("retirados");
-            return [
-                "setor" => $itens[0]->setor,
-                "total_qtd" => $itens->sum("retirados"),
-                "pessoas" => $itens->map(function($pessoa) {
-                    return [
-                        "nome" => $pessoa->nome,
-                        "retirados" => $pessoa->retirados
-                    ];
-                })->values()->all()
-            ];
-        })->values()->all();
+                        })
+                        ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "pessoas", true)) // App\Http\Controllers\Controller.php
+                        ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "setores", true)) // App\Http\Controllers\Controller.php
+                        ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas")) // App\Http\Controllers\Controller.php
+                        ->groupby(
+                            "pessoas.id_setor",
+                            "pessoas.id",
+                            "pessoas.nome",
+                            "setores.descr",
+                        )
+                        ->orderby("retirados", "DESC")
+                        ->orderby("pessoas.nome")
+                        ->cursor()
+                        ->groupBy("id_setor")->map(function($itens) use($request, &$qtd_total) {
+                            $qtd_total += $itens->sum("retirados");
+                            return [
+                                "setor" => $itens[0]->setor,
+                                "total_qtd" => $itens->sum("retirados"),
+                                "pessoas" => $itens->map(function($pessoa) {
+                                    return [
+                                        "nome" => $pessoa->nome,
+                                        "retirados" => $pessoa->retirados
+                                    ];
+                                })->values()->all()
+                            ];
+                        })->values()->all();
         $criterios = implode(" | ", $criterios);
         return sizeof($resultado) ? view("reports/ranking", compact("resultado", "criterios", "qtd_total")) : $this->view_mensagem("warning", "Não há nada para exibir"); // App\Http\Controllers\Controller.php
     }
@@ -646,78 +637,77 @@ class RelatoriosController extends Controller {
 
     public function pessoas(Request $request) {
         $criterios = array();
-        $resultado = collect(
-            DB::table("pessoas")
-                ->select(
-                    // GRUPO 1
-                    "empresas.nome_fantasia AS empresa",
-                    
-                    // GRUPO 2
-                    "setores.descr AS setor",
+        $resultado = DB::table("pessoas")
+                        ->select(
+                            // GRUPO 1
+                            "empresas.nome_fantasia AS empresa",
+                            
+                            // GRUPO 2
+                            "setores.descr AS setor",
 
-                    // DETALHES                    
-                    DB::raw("
-                        CASE
-                            WHEN pessoas.biometria IS NOT NULL THEN 'Sim'
-                            ELSE 'Não'
-                        END AS biometria
-                    "),
-                    "pessoas.nome",
-                    "pessoas.cpf",
-                    "pessoas.funcao",
-                    "pessoas.telefone",
-                    "pessoas.email"
-                )
-                ->join("setores", "setores.id", "pessoas.id_setor")
-                ->join("empresas", "empresas.id", "pessoas.id_empresa")
-                ->where(function($sql) use($request, &$criterios) {
-                    if ($request->id_empresa) {
-                        $empresa = Empresas::find($request->id_empresa);
-                        array_push($criterios, "Empresa: ".$empresa->nome_fantasia);
-                        $sql->where("empresas.id", $empresa->id);
-                    } else $sql->where("empresas.lixeira", 0);
-                    if ($request->id_setor) {
-                        $setor = Setores::find($request->id_setor);
-                        array_push($criterios, "Centro de custo: ".$setor->descr);
-                        $sql->where("setores.id", $setor->id);
-                    } else $sql->where("setores.lixeira", 0);
-                    switch($request->biometria) {
-                        case "sim":
-                            $sql->whereNotNull("pessoas.biometria");
-                            array_push($criterios, "Apenas com biometria");
-                            break;
-                        case "nao":
-                            $sql->whereNull("pessoas.biometria");
-                            array_push($criterios, "Apenas sem biometria");
-                            break;
-                    }
-                })
-                ->orderby(DB::raw("
-                    empresas.nome_fantasia,
-                    setores.descr,
-                    pessoas.nome
-                "))
-                ->get()
-        )->groupBy("empresa")->map(function($itens1) {
-            return [
-                "empresa" => $itens1[0]->empresa,
-                "setor" => collect($itens1)->groupBy("setor")->map(function($itens2) {
-                    return [
-                        "descr" => $itens2[0]->setor,
-                        "pessoas" => $itens2->map(function($pessoa) {
+                            // DETALHES                    
+                            DB::raw("
+                                CASE
+                                    WHEN pessoas.biometria IS NOT NULL THEN 'Sim'
+                                    ELSE 'Não'
+                                END AS biometria
+                            "),
+                            "pessoas.nome",
+                            "pessoas.cpf",
+                            "pessoas.funcao",
+                            "pessoas.telefone",
+                            "pessoas.email"
+                        )
+                        ->join("setores", "setores.id", "pessoas.id_setor")
+                        ->join("empresas", "empresas.id", "pessoas.id_empresa")
+                        ->where(function($sql) use($request, &$criterios) {
+                            if ($request->id_empresa) {
+                                $empresa = Empresas::find($request->id_empresa);
+                                array_push($criterios, "Empresa: ".$empresa->nome_fantasia);
+                                $sql->where("empresas.id", $empresa->id);
+                            } else $sql->where("empresas.lixeira", 0);
+                            if ($request->id_setor) {
+                                $setor = Setores::find($request->id_setor);
+                                array_push($criterios, "Centro de custo: ".$setor->descr);
+                                $sql->where("setores.id", $setor->id);
+                            } else $sql->where("setores.lixeira", 0);
+                            switch($request->biometria) {
+                                case "sim":
+                                    $sql->whereNotNull("pessoas.biometria");
+                                    array_push($criterios, "Apenas com biometria");
+                                    break;
+                                case "nao":
+                                    $sql->whereNull("pessoas.biometria");
+                                    array_push($criterios, "Apenas sem biometria");
+                                    break;
+                            }
+                        })
+                        ->orderby(DB::raw("
+                            empresas.nome_fantasia,
+                            setores.descr,
+                            pessoas.nome
+                        "))
+                        ->cursor()
+                        ->groupBy("empresa")->map(function($itens1) {
                             return [
-                                "biometria" => $pessoa->biometria,
-                                "nome" => $pessoa->nome,
-                                "cpf" => $pessoa->cpf,
-                                "funcao" => $pessoa->funcao,
-                                "telefone" => $pessoa->telefone,
-                                "email" => $pessoa->email
+                                "empresa" => $itens1[0]->empresa,
+                                "setor" => collect($itens1)->groupBy("setor")->map(function($itens2) {
+                                    return [
+                                        "descr" => $itens2[0]->setor,
+                                        "pessoas" => $itens2->map(function($pessoa) {
+                                            return [
+                                                "biometria" => $pessoa->biometria,
+                                                "nome" => $pessoa->nome,
+                                                "cpf" => $pessoa->cpf,
+                                                "funcao" => $pessoa->funcao,
+                                                "telefone" => $pessoa->telefone,
+                                                "email" => $pessoa->email
+                                            ];
+                                        })->sortBy("nome")->values()->all()
+                                    ];
+                                })->values()->all()
                             ];
-                        })->sortBy("nome")->values()->all()
-                    ];
-                })->values()->all()
-            ];
-        })->values()->all();
+                        })->values()->all();
         $criterios = implode(" | ", $criterios);
         return sizeof($resultado) ? view("reports/pessoas", compact("resultado", "criterios")) : $this->view_mensagem("warning", "Não há nada para exibir");
     }
@@ -743,85 +733,84 @@ class RelatoriosController extends Controller {
                 $ordenacao = "produtos.cod_externo";
         }
 
-        $resultado = collect(
-            DB::table("produtos")
-                ->select(
-                    // GRUPO
-                    DB::raw("IFNULL(categorias.id, 0) AS id_categoria"),
-                    DB::raw("IFNULL(categorias.descr, 'A CLASSIFICAR') AS descr_categoria"),
-                    
-                    // DETALHES                    
-                    "produtos.cod_externo AS cod",
-                    "produtos.descr",
-                    "produtos.ca",
-                    "produtos.referencia",
-                    "produtos.validade",
-                    DB::raw("DATE_FORMAT(produtos.validade_ca, '%d/%m%Y') AS validade_ca"),
-                    DB::raw("UPPER(produtos.tamanho) AS tamanho"),
-                    DB::raw("IFNULL(ret.qtd, 0) AS retiradas")
-                )
-                ->leftjoin("categorias", "categorias.id", "produtos.id_categoria")
-                ->leftjoinSub(
-                    DB::table("retiradas")
+        $resultado = DB::table("produtos")
                         ->select(
-                            "id_produto",
-                            DB::raw("SUM(qtd) AS qtd")
+                            // GRUPO
+                            DB::raw("IFNULL(categorias.id, 0) AS id_categoria"),
+                            DB::raw("IFNULL(categorias.descr, 'A CLASSIFICAR') AS descr_categoria"),
+                            
+                            // DETALHES                    
+                            "produtos.cod_externo AS cod",
+                            "produtos.descr",
+                            "produtos.ca",
+                            "produtos.referencia",
+                            "produtos.validade",
+                            DB::raw("DATE_FORMAT(produtos.validade_ca, '%d/%m%Y') AS validade_ca"),
+                            DB::raw("UPPER(produtos.tamanho) AS tamanho"),
+                            DB::raw("IFNULL(ret.qtd, 0) AS retiradas")
                         )
-                        ->leftjoin("empresas", "empresas.id", "retiradas.id_empresa")
-                        ->where(function($sql) use($request, &$periodo) {
-                            if ($request->inicio || $request->fim) {
-                                $periodo = "Período";
-                                if ($request->inicio) {
-                                    $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
-                                    $sql->whereRaw("retiradas.data >= '".$inicio."'");
-                                    $periodo .= " de ".$request->inicio;
-                                }
-                                if ($request->fim) {
-                                    $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
-                                    $sql->whereRaw("retiradas.data <= '".$fim."'");
-                                    $periodo .= " até ".$request->fim;
-                                } else $periodo .= " em diante";
-                            }
-                            $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
-                            if ($id_emp) {
-                                $sql->where(function($query) use($id_emp) {
-                                    $query->where("empresas.id_matriz", $id_emp)
-                                        ->orWhere("empresas.id", $id_emp);
-                                });
-                            }
+                        ->leftjoin("categorias", "categorias.id", "produtos.id_categoria")
+                        ->leftjoinSub(
+                            DB::table("retiradas")
+                                ->select(
+                                    "id_produto",
+                                    DB::raw("SUM(qtd) AS qtd")
+                                )
+                                ->leftjoin("empresas", "empresas.id", "retiradas.id_empresa")
+                                ->where(function($sql) use($request, &$periodo) {
+                                    if ($request->inicio || $request->fim) {
+                                        $periodo = "Período";
+                                        if ($request->inicio) {
+                                            $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
+                                            $sql->whereRaw("retiradas.data >= '".$inicio."'");
+                                            $periodo .= " de ".$request->inicio;
+                                        }
+                                        if ($request->fim) {
+                                            $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
+                                            $sql->whereRaw("retiradas.data <= '".$fim."'");
+                                            $periodo .= " até ".$request->fim;
+                                        } else $periodo .= " em diante";
+                                    }
+                                    $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
+                                    if ($id_emp) {
+                                        $sql->where(function($query) use($id_emp) {
+                                            $query->where("empresas.id_matriz", $id_emp)
+                                                ->orWhere("empresas.id", $id_emp);
+                                        });
+                                    }
+                                })
+                                ->groupby("id_produto"),
+                            "ret",
+                            "ret.id_produto",
+                            "produtos.id"
+                        )
+                        ->where("produtos.lixeira", 0)
+                        ->where(function($sql) {
+                            $sql->whereNull("categorias.id")
+                                ->orWhere("categorias.lixeira", 0);
                         })
-                        ->groupby("id_produto"),
-                    "ret",
-                    "ret.id_produto",
-                    "produtos.id"
-                )
-                ->where("produtos.lixeira", 0)
-                ->where(function($sql) {
-                    $sql->whereNull("categorias.id")
-                        ->orWhere("categorias.lixeira", 0);
-                })
-                ->where(function($sql) use($request) {
-                    if ($request->id_categoria) $sql->where("produtos.id_categoria", $request->id_categoria);
-                })
-                ->orderby(DB::raw($ordenacao))
-                ->get()
-        )->groupBy("id_categoria")->map(function($itens1) {
-            return [
-                "categoria" => $itens1[0]->descr_categoria,
-                "produtos" => $itens1->map(function($itens2) {
-                    return [
-                        "cod" => $itens2->cod,
-                        "descr" => $itens2->descr,
-                        "ca" => $itens2->ca,
-                        "validade" => $itens2->validade,
-                        "referencia" => $itens2->referencia,
-                        "validade_ca" => $itens2->validade_ca,
-                        "tamanho" => $itens2->tamanho,
-                        "retiradas" => intval($itens2->retiradas)
-                    ];
-                })->values()->all()
-            ];
-        })->sortBy("categoria")->values()->all();
+                        ->where(function($sql) use($request) {
+                            if ($request->id_categoria) $sql->where("produtos.id_categoria", $request->id_categoria);
+                        })
+                        ->orderby(DB::raw($ordenacao))
+                        ->cursor()
+                        ->groupBy("id_categoria")->map(function($itens1) {
+                            return [
+                                "categoria" => $itens1[0]->descr_categoria,
+                                "produtos" => $itens1->map(function($itens2) {
+                                    return [
+                                        "cod" => $itens2->cod,
+                                        "descr" => $itens2->descr,
+                                        "ca" => $itens2->ca,
+                                        "validade" => $itens2->validade,
+                                        "referencia" => $itens2->referencia,
+                                        "validade_ca" => $itens2->validade_ca,
+                                        "tamanho" => $itens2->tamanho,
+                                        "retiradas" => intval($itens2->retiradas)
+                                    ];
+                                })->values()->all()
+                            ];
+                        })->sortBy("categoria")->values()->all();
         if ($categoria) $criterios .= $categoria;
         if ($periodo) {
             if ($criterios) $criterios .= " | ";

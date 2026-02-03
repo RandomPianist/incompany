@@ -107,7 +107,7 @@ class SolicitacoesController extends Controller {
                 ->whereRaw("log.data < '".$fim."'")
                 ->where("cp.id_comodato", $this->obter_comodato($request->id_maquina)->id)
                 ->where("cp.id_produto", $request->id_produto);
-        return json_encode($consulta->get());
+        return json_encode($consulta->cursor());
     }
 
     public function meus_comodatos(Request $request) {

@@ -84,7 +84,7 @@ class MaquinasController extends Controller {
                 })
                 ->whereRaw($where)
                 ->where("maquinas.lixeira", 0)
-                ->get()
+                ->cursor()
         :
             DB::table("comodatos_produtos AS cp")
                 ->select(

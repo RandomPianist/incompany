@@ -52,8 +52,7 @@ class DashboardController extends Controller {
     private function retiradas_por_setor_main($id_pessoa, $inicio = "", $fim = "") {
         if (!$inicio) $inicio = date("Y-m")."-01";
         if (!$fim) $fim = date("Y-m-d");
-        return collect(
-            DB::table("retiradas")
+        return DB::table("retiradas")
                 ->select(
                     "setores.id",
                     "setores.descr",
@@ -69,15 +68,15 @@ class DashboardController extends Controller {
                     "setores.id",
                     "setores.descr"
                 )
-                ->get()
-        )->groupBy("id")->map(function($itens) {
-            return [
-                "id" => $itens[0]->id,
-                "descr" => $itens[0]->descr,
-                "retirados" => $itens->sum("retirados"),
-                "valor" => $itens->sum("valor")
-            ];
-        })->sortByDesc("valor")->values()->all();
+                ->cursor()
+                ->groupBy("id")->map(function($itens) {
+                    return [
+                        "id" => $itens[0]->id,
+                        "descr" => $itens[0]->descr,
+                        "retirados" => $itens->sum("retirados"),
+                        "valor" => $itens->sum("valor")
+                    ];
+                })->sortByDesc("valor")->values()->all();
     }
 
     private function maquinas_main($inicio, $fim) {

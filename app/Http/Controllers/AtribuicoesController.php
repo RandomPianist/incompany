@@ -258,35 +258,10 @@ class AtribuicoesController extends Controller {
                     ->update(["rascunho" => "T"]);
                 $this->apagar_backup($tabela);
             }
-            $lista = DB::table("vatbold")
-                        ->select(
-                            "psm_chave",
-                            "psm_valor"
-                        )
-                        ->joinSub(
-                            DB::table("atribuicoes")
-                                ->select("id")
-                                ->whereRaw($where)
-                                ->where("rascunho", "<>", "S")
-                                ->unionAll(
-                                    DB::table("excecoes")
-                                        ->select("id_atribuicao")
-                                        ->whereRaw($where)
-                                        ->where("rascunho", "<>", "S")
-                                ),
-                            "lim",
-                            "lim.id",
-                            "vatbold.id"
-                        )
-                        ->groupby(
-                            "psm_chave",
-                            "psm_valor"
-                        )
-                        ->get();
             $consulta = DB::table("vatbold")
                             ->whereRaw($where)
                             ->where("rascunho", "C")
-                            ->get();
+                            ->cursor();
             foreach ($consulta as $linha) {
                 $id_excluir = $linha->id;
                 $id_restaurar = Atribuicoes::where("rascunho", "S")
@@ -342,7 +317,7 @@ class AtribuicoesController extends Controller {
                         'lixeira' => DB::raw("CASE WHEN (rascunho = 'T') THEN 1 ELSE 0 END"),
                         'rascunho' => 'S',
                         'id_usuario' => 0
-                ]);
+                    ]);
             }
             $this->atualizar_atribuicoes(); // App\Http\Controllers\Controller.php
             $connection->commit();
