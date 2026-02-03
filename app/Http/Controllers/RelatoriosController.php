@@ -148,7 +148,7 @@ class RelatoriosController extends Controller {
                             $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
                             $sql->whereRaw("retiradas.data <= '".$fim."'");
                             $periodo .= " até ".$request->fim;
-                        }
+                        } else $periodo .= " em diante";
                         array_push($criterios, $periodo);
                     }
                     $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
@@ -482,7 +482,7 @@ class RelatoriosController extends Controller {
                         if ($request->fim) {
                             $sql->whereRaw("retiradas.data <= '".$fim."'");
                             $periodo .= " até ".$request->fim;
-                        }
+                        } else $periodo .= " em diante";
                         array_push($criterios, $periodo);
                     }
                     if ($request->id_pessoa) {
@@ -582,7 +582,7 @@ class RelatoriosController extends Controller {
                                 $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
                                 $sql->whereRaw("retiradas.data <= '".$fim."'");
                                 $periodo .= " até ".$request->fim;
-                            }
+                            } else $periodo .= " em diante";
                             array_push($criterios, $periodo);
                         }
                         if ($request->tipo != "todos") {
@@ -780,7 +780,7 @@ class RelatoriosController extends Controller {
                                     $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
                                     $sql->whereRaw("retiradas.data <= '".$fim."'");
                                     $periodo .= " até ".$request->fim;
-                                }
+                                } else $periodo .= " em diante";
                             }
                             $id_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
                             if ($id_emp) {
