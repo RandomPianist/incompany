@@ -149,7 +149,6 @@ class SolicitacoesController extends Controller {
                 $aux = explode("|", $obs);
                 if (($aux[1] == config("app.msg_inexistente") && $solicitacao->situacao == "A") || $aux[1] != config("app.msg_inexistente")) $possui_inconsistencias = "A";
             }
-            $resultado = array();
             return json_encode(array(
                 "id" => $solicitacao->id,
                 "criacao" => DB::table("log")

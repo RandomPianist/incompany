@@ -1081,7 +1081,7 @@ abstract class Controller extends BaseController {
                     DB::raw("
                         SUM(
                             CASE
-                                WHEN (estq.data >= '".$inicio."' AND estq.data < '".$fim."' AND estq.origem = 'ERP') THEN
+                                WHEN (estq.data >= '".$inicio."' AND estq.data < '".$fim."' AND estq.origem <> 'APP') THEN
                                     CASE
                                         WHEN estq.es = 'S' THEN estq.qtd
                                         ELSE 0
@@ -1093,7 +1093,7 @@ abstract class Controller extends BaseController {
                     DB::raw("
                         SUM(
                             CASE
-                                WHEN (estq.data >= '".$inicio."' AND estq.data < '".$fim."' AND estq.origem <> 'ERP') THEN
+                                WHEN (estq.data >= '".$inicio."' AND estq.data < '".$fim."' AND estq.origem = 'APP') THEN
                                     CASE
                                         WHEN estq.es = 'S' THEN estq.qtd
                                         ELSE 0
