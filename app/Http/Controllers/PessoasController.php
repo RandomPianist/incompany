@@ -171,6 +171,7 @@ class PessoasController extends ControllerListavel {
                     "pessoas.funcao",
                     "pessoas.supervisor",
                     "pessoas.visitante",
+                    "pessoas.rg",
                     "pessoas.foto",
                     "pessoas.telefone",
                     "pessoas.matricula",
@@ -282,6 +283,7 @@ class PessoasController extends ControllerListavel {
             if ($request->file("foto")) $pessoa->foto = $request->file("foto")->store("uploads", "public");
             $pessoa->telefone = $request->telefone;
             $pessoa->email = $request->email;
+            $pessoa->rg = $request->rg;
             $pessoa->save();
             $this->log_inserir($request->id ? "E" : "C", "pessoas", $pessoa->id); // App\Http\Controllers\Controller.php
 

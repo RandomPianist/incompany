@@ -78,24 +78,28 @@
                             </div>
                         </div>
                         <div class = "row">
-                            <div class = "col-6">
+                            <div class = "col-4">
                                 <label for = "email" id = "email-lbl" class = "custom-label-form">E-mail:</label>
                                 <input id = "email" name = "email" class = "form-control" autocomplete = "off" type = "text"/>
                             </div>
-                            <div class = "col-6">
+                            
+                            <div class = "col-4">
                                 <label for = "telefone" class = "custom-label-form">Telefone:</label>
                                 <input id = "telefone" name = "telefone" class = "form-control" autocomplete = "off" type = "text" onkeyup = "this.value=phoneMask(this.value)" />
                             </div>
 
-                            <input id = "matricula" name = "matricula" class = "form-control" autocomplete = "off" type = "hidden" />
+                            <div class = "col-4">
+                                <label for = "rg" class = "custom-label-form">RG:</label>
+                                <input id = "rg" name = "rg" class = "form-control" autocomplete = "off" type = "text" onkeyup = "this.value=numerosOuX(this.value); contar_char(this, 32)" />
+                            </div>
                             
-                            <!--
-                                <div>
-                                    <label for = "matricula" class = "custom-label-form">Matrícula:</label>
-                                    <input id = "matricula" name = "matricula" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 32)" />
-                                    <span class = "custom-label-form tam-max"></span>
-                                </div>
-                            -->
+                            <input id = "matricula" name = "matricula" class = "form-control" autocomplete = "off" type = "hidden" />
+
+                            <!-- <div>
+                                <label for = "matricula" class = "custom-label-form">Matrícula:</label>
+                                <input id = "matricula" name = "matricula" class = "form-control" autocomplete = "off" type = "text" onkeyup = "contar_char(this, 32)" />
+                                <span class = "custom-label-form tam-max"></span>
+                            </div> -->
                         </div>
                         <div class = "row row-senha">
                             <div class = "col-5">

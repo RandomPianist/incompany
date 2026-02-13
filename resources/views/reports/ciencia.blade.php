@@ -33,12 +33,20 @@
 
             <div class="c-2">
                 <span>
-                    @if ($item->id == 83 || $item->id == 343 || $item->id == 344 || $item->id == 345)
+                    @if ($item->matricula)
+                        Matrícula: {{ $item->matricula }}
+                    @elseif ($item->rg)
+                        RG: {{ $item->rg }}
+                    @else
+                        Matrícula: __________________________
+                    @endif
+
+                    <!-- @if ($item->id == 83 || $item->id == 343 || $item->id == 344 || $item->id == 345 || $item->id == 347)
                         RG:
                     @else
                         Matrícula:
                     @endif
-                    {{ $item->matricula ?? "__________________________" }}
+                        {{ $item->matricula ?? "__________________________" }} -->
                 </span>
             </div>
         </div>

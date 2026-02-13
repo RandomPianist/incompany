@@ -169,7 +169,7 @@ class Pessoa extends JanelaDinamica {
                 this.mudou_empresa($("#pessoa-empresa-select").val(), () => {
                     if (this.#dados !== undefined) {
                         const that = this;
-                        $("#nome, #cpf, #email, #funcao, #admissao, #telefone, #matricula").each(function() {   
+                        $("#nome, #cpf, #email, #funcao, #admissao, #telefone, #matricula, #rg").each(function() {   
                             $(this).val(that.#dados[$(this).attr("id")]).trigger("keyup");
                         });
                         $($("#pessoasModal .user-pic").parent()).removeClass("d-none");
@@ -260,6 +260,19 @@ class Pessoa extends JanelaDinamica {
             $("#pessoa-visitante-lbl").attr("title", (administrador ? "Administradores" : this.#usuario ? "Usuários" : "Supervisores") + " não podem ser visitantes");
         } else $("#pessoa-visitante-lbl").removeAttr("title");
 
+        const naoFuncionario = (this.visitante || administrador || this.#usuario || supervisor);
+        if (naoFuncionario) {
+            $($("#rg").parent()).removeClass("col-4").addClass("d-none");
+            $("#rg").val(null)
+
+            $($("#email").parent()).removeClass("col-4").addClass("col-6");
+            $($("#telefone").parent()).removeClass("col-4").addClass("col-6");
+        } else {
+            $($("#rg").parent()).removeClass("d-none").addClass("col-4");
+            $($("#email").parent()).removeClass("col-6").addClass("col-4");
+            $($("#telefone").parent()).removeClass("col-6").addClass("col-4");
+        }
+
         let that = this;
         $("#pessoa-visitante-chk").off("change").on("change", function() {
             const marcado = $(this).prop("checked");
@@ -298,7 +311,7 @@ class Pessoa extends JanelaDinamica {
         $("#email-lbl").html(_usuario ? "Email: *" : "Email:");
         $("#senha-lbl").html(!this.#id ? "Senha numérica: *" : "Senha numérica: (deixe em branco para não alterar)");
         $("#password-lbl").html((_usuario && (!this.#id || !id_usuario)) ? "Senha alfanumérica: *" : "Senha alfanumérica: (deixe em branco para não alterar)");
-
+        
         Array.from(document.querySelectorAll("#pessoasModal .row")).forEach((el) => {
             el.style.removeProperty("margin-top");
         });
@@ -443,7 +456,10 @@ class Pessoa extends JanelaDinamica {
             $("#pessoa-empresa-select").val() != this.#ant_id_empresa ||
             $("#pessoa-supervisor").val() != this.#ant_supervisor ||
             $("#pessoa-visitante").val() != this.#ant_visitante ||
-            $("#matricula").val().trim().toLowerCase() != anteriores.matricula.trim().toLowerCase()
+            $("#matricula").val().trim().toLowerCase() != anteriores.matricula.trim().toLowerCase() ||
+            $("#telefone").val(apenasNumeros($("#telefone").val())) != anteriores.telefone.toLowerCase() ||
+            $("#email").val().trim().toLowerCase() != anteriores.email.trim().toLowerCase() ||
+            $("#rg").val().trim().toLowerCase() != anteriores.rg.trim().toLowerCase()
         ) alterou = true;
         for (let x in permissoes) {
             if ($("#" + permissoes[x]).val() != anteriores[permissoes[x]]) alterou = true;

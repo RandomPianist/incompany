@@ -41,6 +41,8 @@ Route::group(["prefix" => "erp"], function() {
             Route::post("/todas",     [Api2Controller::class, "maquinas_todas"]);
             Route::post("/consultar", [Api2Controller::class, "consultar_maquina"]);
             Route::post("/criar",     [Api2Controller::class, "criar"]);
+            Route::get("/{id}/produtos", [Api2Controller::class, "listar_produtos_maquina"]);
+            Route::post("/vincular-produto", [Api2Controller::class, "vincular_produto"]);
         });
         Route::group(["prefix" => "solicitacoes"], function() {
             Route::post("/",                    [Api2Controller::class, "enviar_solicitacoes"]);

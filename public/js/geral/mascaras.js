@@ -34,3 +34,11 @@ const phoneMask = (value) => {
     }
     return value.substring(0, value == apenasNumeros(value) ? 13 : 20);
 }
+
+function numerosOuX(val) {
+    let resultado = "";
+    for (let i = 0; i < val.length; i++) {
+        if ("0123456789x".indexOf(val.charAt(i)) > -1) resultado += val.charAt(i);
+    }
+    return resultado;
+}

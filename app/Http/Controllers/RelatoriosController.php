@@ -829,6 +829,7 @@ class RelatoriosController extends Controller {
                             "pessoas.nome",
                             "pessoas.cpf",
                             "pessoas.matricula",
+                            "pessoas.rg",
                             "empresas.razao_social",
                             "empresas.cnpj",
                             DB::raw("IFNULL(empresas.cidade, 'Barueri') AS cidade")
