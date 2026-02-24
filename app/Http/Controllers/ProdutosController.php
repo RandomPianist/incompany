@@ -45,7 +45,12 @@ class ProdutosController extends ControllerListavel {
         $produto = DB::table("produtos")
                         ->select(
                             DB::raw("produtos.*"),
-                            DB::raw("IFNULL(categorias.descr, 'A CLASSIFICAR') AS categoria"),
+                                DB::raw("
+                                CASE
+                                    WHEN ((IFNULL(categorias.descr, '') = '') OR (IFNULL(categorias.lixeira, 1) = 1)) THEN 'A CLASSIFICAR'
+                                    ELSE categorias.descr
+                                END AS categoria
+                            "),
                             DB::raw("IFNULL(produtos.consumo, 0) AS e_consumo"),
                             DB::raw("DATE_FORMAT(produtos.validade_ca, '%d/%m/%Y') AS validade_ca_fmt")
                         )
@@ -65,7 +70,7 @@ class ProdutosController extends ControllerListavel {
                         DB::raw("produtos.*"),
                         DB::raw("
                             CASE
-                                WHEN (IFNULL(categorias.descr, '') = '') THEN 'A CLASSIFICAR'
+                                WHEN ((IFNULL(categorias.descr, '') = '') OR (IFNULL(categorias.lixeira, 1) = 1)) THEN 'A CLASSIFICAR'
                                 ELSE categorias.descr
                             END AS categoria
                         ")

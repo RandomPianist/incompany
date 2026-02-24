@@ -160,7 +160,10 @@ class EmpresasController extends Controller {
         if ($emp && $emp != $linha->id && $emp != $linha->id_matriz) return 401;
         $linha->lixeira = 1;
         $linha->save();
+        $where = "id_empresa = ".$linha->id;
         $this->log_inserir("D", "empresas", $linha->id); // App\Http\Controllers\Controller.php
+        $this->log_inserir_lote("D", "setores", $where); // App\Http\Controllers\Controller.php
+        DB::statement("UPDATE setores SET lixeira = 1 WHERE ".$where);
         return 200;
     }
 
