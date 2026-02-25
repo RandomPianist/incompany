@@ -127,9 +127,9 @@ class SolicitacoesController extends Controller {
     public function aviso($id_comodato) {
         $solicitacao = Solicitacoes::find(
             DB::table("solicitacoes")
-                    ->selectRaw("MAX(id) AS id")
-                    ->where("id_comodato", $id_comodato)
-                    ->value("id")
+                ->selectRaw("MAX(id) AS id")
+                ->where("id_comodato", $id_comodato)
+                ->value("id")
         );
         if ($solicitacao === null) return 200;
         if (

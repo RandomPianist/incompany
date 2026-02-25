@@ -36,12 +36,25 @@ class EmpresasController extends Controller {
         $emp = Empresas::find($id);
         $nome = "<b>".$emp->nome_fantasia."</b>";
         $resultado->permitir = 0;
-        if ($emp->pessoas()->exists()) {
+        $tem_pessoa = $emp->pessoas()->exists();
+        $tem_maquina = DB::table("comodatos")
+                            ->whereRaw("CURDATE() >= inicio AND CURDATE() < fim")
+                            ->where("id_empresa", $id)
+                            ->exists();
+        if ($emp->pessoas()->exists() || $emp->filiais()->whereHas('pessoas')->exists()) {
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem pessoas vinculadas a essa empresa.";
         } elseif (
             DB::table("comodatos")
                 ->whereRaw("CURDATE() >= inicio AND CURDATE() < fim")
-                ->where("id_empresa", $id)
+                ->where(function ($q) use ($id) {
+                    $q->where("id_empresa", $id)
+                    ->orWhereIn("id_empresa", function ($sub) use ($id) {
+                        $sub->select("id")
+                            ->from("empresas")
+                            ->where("id_matriz", $id)
+                            ->where("lixeira", 0);
+                    });
+                })
                 ->exists()
         ) {
             $resultado->aviso = "Não é possível excluir ".$nome." porque existem máquinas comodatadas para essa empresa.";
@@ -164,6 +177,10 @@ class EmpresasController extends Controller {
         $this->log_inserir("D", "empresas", $linha->id); // App\Http\Controllers\Controller.php
         $this->log_inserir_lote("D", "setores", $where); // App\Http\Controllers\Controller.php
         DB::statement("UPDATE setores SET lixeira = 1 WHERE ".$where);
+
+        $where = "id_matriz = ".$linha->id;
+        $this->log_inserir_lote("D", "empresas", $where); // App\Http\Controllers\Controller.php
+        DB::statement("UPDATE empresas SET lixeira = 1 WHERE ".$where);
         return 200;
     }
 

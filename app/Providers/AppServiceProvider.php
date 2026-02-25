@@ -37,8 +37,8 @@ class AppServiceProvider extends ServiceProvider
             View::composer('*', function ($view) {
                 if (Auth::user() !== null) {
                     $consulta = DB::table("atribuicoes")
-                        ->selectRaw("MAX(qtd) AS qtd")
-                        ->get();
+                                    ->selectRaw("MAX(qtd) AS qtd")
+                                    ->get();
                     $max_atb = sizeof($consulta) ? $consulta[0]->qtd : 0;
                     $emp = Empresas::find($this->obter_empresa()); // App\Http\Traits\GlobaisTrait.php
                     $view->with([

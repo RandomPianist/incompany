@@ -378,45 +378,45 @@ abstract class Controller extends BaseController {
 
     protected function busca_emp($tipo, $id_emp = 0, $id_matriz = 0) {
         return DB::table("empresas")
-            ->select(
-                "id",
-                "nome_fantasia",
-                "id_matriz"
-            )
-            ->where(function($sql) use($tipo, $id_emp, $id_matriz) {
-                if ($tipo == "T") {
-                    $m_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
-                    $sql->where("id_matriz", $id_matriz);
-                    if ($id_emp) {
-                        $where = "id = ".$id_emp;
-                        if (DB::table("empresas")
-                                ->where("id_matriz", $id_emp)
-                                ->where("lixeira", 0)
-                                ->exists()
-                        ) $where .= " OR id_matriz = ".$id_emp;
-                        $sql->whereRaw("(".$where.")");
-                    }
-                    if ($m_emp) {
-                        $possiveis = [$m_emp];
-                        $matriz = intval(Empresas::find($possiveis[0])->id_matriz);
-                        if ($matriz) {
-                            array_push($possiveis, $matriz);
-                            $sql->whereIn("id", $possiveis);
+                    ->select(
+                        "id",
+                        "nome_fantasia",
+                        "id_matriz"
+                    )
+                    ->where(function($sql) use($tipo, $id_emp, $id_matriz) {
+                        if ($tipo == "T") {
+                            $m_emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
+                            $sql->where("id_matriz", $id_matriz);
+                            if ($id_emp) {
+                                $where = "id = ".$id_emp;
+                                if (DB::table("empresas")
+                                        ->where("id_matriz", $id_emp)
+                                        ->where("lixeira", 0)
+                                        ->exists()
+                                ) $where .= " OR id_matriz = ".$id_emp;
+                                $sql->whereRaw("(".$where.")");
+                            }
+                            if ($m_emp) {
+                                $possiveis = [$m_emp];
+                                $matriz = intval(Empresas::find($possiveis[0])->id_matriz);
+                                if ($matriz) {
+                                    array_push($possiveis, $matriz);
+                                    $sql->whereIn("id", $possiveis);
+                                }
+                            }
+                        } else {
+                            $empresa_usuario = Pessoas::find(Auth::user()->id_pessoa)->empresa;
+                            if ($empresa_usuario !== null) {
+                                $sql->where(
+                                    ($tipo == "F" && !intval($empresa_usuario->id_matriz)) ? "id_matriz" : "id",
+                                    ($tipo == "M" && intval($empresa_usuario->id_matriz)) ? $empresa_usuario->id_matriz : $empresa_usuario->id
+                                );
+                            } else $sql->where("id_matriz", $tipo == "M" ? "=" : ">", 0);
                         }
-                    }
-                } else {
-                    $empresa_usuario = Pessoas::find(Auth::user()->id_pessoa)->empresa;
-                    if ($empresa_usuario !== null) {
-                        $sql->where(
-                            ($tipo == "F" && !intval($empresa_usuario->id_matriz)) ? "id_matriz" : "id",
-                            ($tipo == "M" && intval($empresa_usuario->id_matriz)) ? $empresa_usuario->id_matriz : $empresa_usuario->id
-                        );
-                    } else $sql->where("id_matriz", $tipo == "M" ? "=" : ">", 0);
-                }
-            })
-            ->where("lixeira", 0)
-            ->orderBy("nome_fantasia")
-            ->get();
+                    })
+                    ->where("lixeira", 0)
+                    ->orderBy("nome_fantasia")
+                    ->get();
     }
 
     protected function minhas_empresas() {
@@ -497,56 +497,56 @@ abstract class Controller extends BaseController {
         }
         $where = $where ? "(".$where.")" : "1";
         return DB::table("comodatos")
-            ->selectRaw("DISTINCTROW comodatos.id_maquina")
-            ->join(
-                DB::raw("(
-                    SELECT
-                        pessoas.id AS id_pessoa,
-                        pessoas.id_empresa
-                    FROM pessoas
-                    JOIN empresas
-                        ON pessoas.id_empresa IN (empresas.id, empresas.id_matriz)
-                    WHERE pessoas.lixeira = 0
-                        AND empresas.lixeira = 0
-                    
-                    UNION ALL (
-                        SELECT
-                            pessoas.id AS id_pessoa,
-                            empresas.id AS id_empresa
+                    ->selectRaw("DISTINCTROW comodatos.id_maquina")
+                    ->join(
+                        DB::raw("(
+                            SELECT
+                                pessoas.id AS id_pessoa,
+                                pessoas.id_empresa
+                            FROM pessoas
+                            JOIN empresas
+                                ON pessoas.id_empresa IN (empresas.id, empresas.id_matriz)
+                            WHERE pessoas.lixeira = 0
+                                AND empresas.lixeira = 0
+                            
+                            UNION ALL (
+                                SELECT
+                                    pessoas.id AS id_pessoa,
+                                    empresas.id AS id_empresa
 
-                        FROM pessoas
+                                FROM pessoas
 
-                        CROSS JOIN empresas
+                                CROSS JOIN empresas
 
-                        WHERE empresas.lixeira = 0
-                            AND pessoas.id_empresa = 0
-                            AND pessoas.lixeira = 0
+                                WHERE empresas.lixeira = 0
+                                    AND pessoas.id_empresa = 0
+                                    AND pessoas.lixeira = 0
+                            )
+                        ) AS minhas_empresas"),
+                        function ($join) {
+                            $join->on("minhas_empresas.id_empresa", "comodatos.id_empresa");
+                        }
                     )
-                ) AS minhas_empresas"),
-                function ($join) {
-                    $join->on("minhas_empresas.id_empresa", "comodatos.id_empresa");
-                }
-            )
-            ->whereRaw($where)
-            ->where(function($sql) {
-                $emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
-                if ($emp) $sql->where("minhas_empresas.id_empresa", $emp);
-            })
-            ->pluck("id_maquina")
-            ->toArray();
+                    ->whereRaw($where)
+                    ->where(function($sql) {
+                        $emp = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
+                        if ($emp) $sql->where("minhas_empresas.id_empresa", $emp);
+                    })
+                    ->pluck("id_maquina")
+                    ->toArray();
     }
 
     protected function dados_comodato(Request $request) {
         return DB::table("comodatos")
-            ->select(
-                DB::raw("MIN(inicio) AS inicio"),
-                DB::raw("MAX(fim) AS fim")
-            )
-            ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "comodatos"))
-            ->where(function($sql) use($request) {
-                if ($request->id_maquina) $sql->where("id_maquina", $request->id_maquina);
-            })
-            ->first();
+                    ->select(
+                        DB::raw("MIN(inicio) AS inicio"),
+                        DB::raw("MAX(fim) AS fim")
+                    )
+                    ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "comodatos"))
+                    ->where(function($sql) use($request) {
+                        if ($request->id_maquina) $sql->where("id_maquina", $request->id_maquina);
+                    })
+                    ->first();
     }
 
     protected function maquina_consultar(Request $request) {
@@ -699,13 +699,175 @@ abstract class Controller extends BaseController {
 	// BLOCO 6: LÓGICA DE NEGÓCIO - ATRIBUIÇÕES
 	// (Funções para gerar, atualizar e gerenciar atribuições de produtos)
 	// =====================================================================
+
+    protected function info_atb($id_pessoa, $obrigatorios, $grade) {
+        $id_pessoa = intval($id_pessoa);
+        $nucleo = " vatbold 
+            JOIN (".$this->retorna_sql_atb_vigente(
+                $this->retorna_atb_aux("P", $id_pessoa, false, $id_pessoa)
+            ).") AS atb ON atb.id_atribuicao = vatbold.id
+
+            JOIN produtos
+                ON produtos.id = atb.id_produto
+
+            ".$this->retorna_join_prev("atb.id_pessoa")."
+
+            JOIN vprodutosgeral AS vprodutos
+                ON vprodutos.id_pessoa = atb.id_pessoa AND vprodutos.id_produto = produtos.id
+
+            JOIN pessoas
+                ON pessoas.id = atb.id_pessoa
+
+            LEFT JOIN mat_vretiradas
+                ON mat_vretiradas.id_atribuicao = vatbold.id AND mat_vretiradas.id_pessoa = atb.id_pessoa
+
+            LEFT JOIN mat_vultretirada
+                ON mat_vultretirada.id_atribuicao = vatbold.id AND mat_vultretirada.id_pessoa = atb.id_pessoa
+        ";
+        $where = "atb.id_pessoa = ".$id_pessoa." AND vatbold.rascunho = 'S'";
+        $where .= $obrigatorios ? "
+            AND ((".$this->calculo_atraso()." <= CURDATE()))
+            AND ((vatbold.qtd - (IFNULL(mat_vretiradas.valor, 0) + IFNULL(prev.qtd, 0))) > 0)
+            AND vatbold.obrigatorio = 1
+        " : " AND produtos.referencia ".($grade ? "IS NOT" : "IS")." NULL";
+        return DB::select(DB::raw($obrigatorios ? "
+            SELECT
+                vatbold.pr_chave AS produto_ou_referencia_chave,
+                CASE
+                    WHEN (vatbold.pr_chave = 'R') THEN produtos.referencia
+                    ELSE produtos.id
+                END AS chave,
+                vatbold.pr_valor AS nome
+
+            FROM ".$nucleo."
+
+            WHERE ".$where."
+
+            GROUP BY
+                vatbold.pr_chave,
+                CASE
+                    WHEN (vatbold.pr_chave = 'R') THEN produtos.referencia
+                    ELSE produtos.id
+                END,
+                vatbold.pr_valor
+        " : "
+            SELECT
+                vatbold.id AS id_atribuicao,
+                vatbold.obrigatorio,
+                produtos.id,
+                produtos.referencia,
+                produtos.descr AS nome,
+                produtos.detalhes,
+                produtos.cod_externo AS codbar,
+                produtos.tamanho,
+                produtos.foto,
+                ".$this->retorna_case_qtd()." AS qtd,
+                IFNULL(DATE_FORMAT(mat_vultretirada.data, '%d/%m/%Y'), '') AS ultima_retirada,
+                DATE_FORMAT(
+                    (CASE
+                        WHEN ((".$this->calculo_atraso()." <= CURDATE())) THEN CURDATE()
+                        ELSE (".$this->calculo_atraso().")
+                    END),
+                    '%d/%m/%Y'
+                ) AS proxima_retirada,
+                pr.seq 
+                
+            FROM ".$nucleo."
+
+            JOIN pre_retiradas AS pr
+                ON pr.id_pessoa = atb.id_pessoa AND pr.id_produto = produtos.id
+
+            WHERE ".$where."
+
+            GROUP BY
+                produtos.id,
+                produtos.referencia,
+                produtos.descr,
+                produtos.detalhes,
+                produtos.cod_externo,
+                produtos.tamanho,
+                produtos.foto,
+                prev.qtd,
+                vatbold.id,
+                vatbold.qtd,
+                vatbold.validade,
+                vatbold.obrigatorio,
+                vprodutos.qtd,
+                vprodutos.travar_estq,
+                mat_vultretirada.data,
+                mat_vretiradas.valor,
+                pr.seq,
+                pessoas.created_at,
+                pessoas.admissao
+        "));
+    }
+
+    private function produtos_por_pessoa_main_priv($id_pessoa, $grade) {
+        $consulta = $this->info_atb($id_pessoa, false, $grade);
+
+        $resultado = array();
+        foreach ($consulta as $linha) {
+            if ($linha->foto) {
+                $foto = explode("/", $linha->foto);
+                $linha->foto = $foto[sizeof($foto) - 1];
+            }
+            array_push($resultado, $linha);
+        }
+
+        return collect($resultado)->groupBy($grade ? "referencia" : "id")->map(function($itens) use($id_pessoa) {
+            return [
+                "id_pessoa" => $id_pessoa,
+                "nome" => $itens[0]->nome,
+                "foto" => $itens[0]->foto,
+                "referencia" => $itens[0]->referencia,
+                "qtd" => $itens[0]->qtd,
+                "detalhes" => $itens[0]->detalhes,
+                "ultima_retirada" => $itens[0]->ultima_retirada,
+                "proxima_retirada" => $itens[0]->proxima_retirada,
+                "obrigatorio" => $itens[0]->obrigatorio,
+                "seq" => intval($itens[0]->seq),
+                "tamanhos" => $itens->groupBy("id")->map(function($tamanho) use($id_pessoa) {
+                    return [
+                        "id" => $tamanho[0]->id,
+                        "id_pessoa" => $id_pessoa,
+                        "id_atribuicao" => $tamanho[0]->id_atribuicao,
+                        "selecionado" => true,
+                        "qtd" => 1,
+                        "codbar" => $tamanho[0]->codbar,
+                        "numero" => $tamanho[0]->tamanho ? $tamanho[0]->tamanho : "UN"
+                    ];
+                })->values()->all()
+            ];
+        })->values()->all();
+    }
+
+    protected function produtos_por_pessoa_main($id_pessoa, $ordenacao) {
+        return json_encode(collect(
+            array_merge(
+                $this->produtos_por_pessoa_main_priv($id_pessoa, true),
+                $this->produtos_por_pessoa_main_priv($id_pessoa, false)
+            )
+        )->sortBy($ordenacao)->values()->all());
+    }
+
+    private function excluir_atb_cp_inativo(AtualizacaoService $servico, $where, $ret) {
+        if (Atribuicoes::whereRaw($where)->exists()) {
+            $ret = true;
+            $this->log_inserir_lote("D", "atribuicoes", $where);
+            Atribuicoes::whereRaw($where)->update(["lixeira" => 1]);
+            $servico->excluir_atribuicao_sem_retirada(); // App\Services\AtualizacaoService.php
+        }
+        return $ret;
+    }
     
     protected function gerar_atribuicoes(Comodatos $comodato) {
         $servico = new AtualizacaoService;
         $ret = false;
         $where = "lixeira = 0 AND id_maquina = ".$comodato->id_maquina." AND id_empresa = ".$comodato->id_empresa;
         $where_g = $where." AND gerado = 1";
-        if (!$comodato->atb_todos) {
+        $fim = Carbon::createFromFormat('Y-m-d', $comodato->fim)->startOfDay();
+        $hj = Carbon::today();
+        if (!$comodato->atb_todos || $hj->lessThan($fim)) {
             $ret = Atribuicoes::whereRaw($where_g)->exists();
             if ($ret) {
                 $this->log_inserir_lote("D", "atribuicoes", $where_g);
@@ -714,16 +876,44 @@ abstract class Controller extends BaseController {
             }
             return $ret;
         }
+
         $lista_itens = DB::table("produtos")
-            ->select(
-                DB::raw("IFNULL(produtos.cod_externo, '') AS cod_externo"),
-                DB::raw("IFNULL(produtos.referencia, '') AS referencia")
-            )
-            ->join("comodatos_produtos AS cp", "cp.id_produto", "produtos.id")
-            ->where("cp.id_comodato", $comodato->id)
-            ->where("cp.lixeira", 0)
-            ->where("produtos.lixeira", 0)
-            ->get();
+                            ->select("produtos.referencia")
+                            ->join("comodatos_produtos AS cp", "cp.id_produto", "produtos.id")
+                            ->where("cp.id_comodato", $comodato->id)
+                            ->whereRaw("IFNULL(produtos.referencia, '') <> ''")
+                            ->groupby("produtos.referencia")
+                            ->havingRaw("
+                                SUM(CASE
+                                    WHEN (cp.lixeira = 0 AND produtos.lixeira = 0) THEN 0
+                                    ELSE 1
+                                END) <> 0
+                            ")
+                            ->get();
+        foreach ($lista_itens as $item) $ret = $this->excluir_atb_cp_inativo($servico, $where_g." AND referencia = '".$item->referencia."'", $ret);
+
+        $lista_itens = DB::table("produtos")
+                            ->select("produtos.cod_externo")
+                            ->join("comodatos_produtos AS cp", "cp.id_produto", "produtos.id")
+                            ->where(function($sql) {
+                                $sql->where("produtos.lixeira", 1)
+                                    ->orWhere("cp.lixeira", 1);
+                            })
+                            ->where("cp.id_comodato", $comodato->id)
+                            ->whereRaw("IFNULL(produtos.cod_externo, '') <> ''")
+                            ->get();
+        foreach ($lista_itens as $item) $ret = $this->excluir_atb_cp_inativo($servico, $where_g." AND cod_produto = '".$item->cod_externo."'", $ret);
+
+        $lista_itens = DB::table("produtos")
+                            ->select(
+                                DB::raw("IFNULL(produtos.cod_externo, '') AS cod_externo"),
+                                DB::raw("IFNULL(produtos.referencia, '') AS referencia")
+                            )
+                            ->join("comodatos_produtos AS cp", "cp.id_produto", "produtos.id")
+                            ->where("cp.id_comodato", $comodato->id)
+                            ->where("cp.lixeira", 0)
+                            ->where("produtos.lixeira", 0)
+                            ->get();
         foreach ($lista_itens as $item) {
             $modelo = null;
             $letra_log = "E";
@@ -776,16 +966,16 @@ abstract class Controller extends BaseController {
                 $novo = trim($novo);
                 $where = "referencia = ".$connection->getPdo()->quote($antigo);
                 $lista = DB::table("vatbold")
-                    ->select(
-                        "psm_chave",
-                        "psm_valor"
-                    )
-                    ->whereRaw($where)
-                    ->groupby(
-                        "psm_chave",
-                        "psm_valor"
-                    )
-                    ->get();
+                            ->select(
+                                "psm_chave",
+                                "psm_valor"
+                            )
+                            ->whereRaw($where)
+                            ->groupby(
+                                "psm_chave",
+                                "psm_valor"
+                            )
+                            ->get();
                 $this->log_inserir_lote($novo ? "E" : "D", "atribuicoes", $where, $api ? "ERP" : "WEB", $nome);
                 Atribuicoes::whereRaw($where)->update($novo ? ["referencia" => $novo] : ["lixeira" => 1]);
                 $this->atualizar_atribuicoes();

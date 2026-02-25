@@ -193,6 +193,11 @@ class ProdutosController extends ControllerListavel {
             $linha->save();
             $this->log_inserir("D", "produtos", $linha->id); // App\Http\Controllers\Controller.php
             $this->atualizar_atribuicoes(); // App\Http\Controllers\Controller.php
+
+            $where = "id_produto = ".$linha->id;
+            $this->log_inserir_lote("D", "comodatos_produtos", $where); // App\Http\Controllers\Controller.php
+            DB::statement("UPDATE comodatos_produtos SET lixeira = 1 WHERE ".$where);
+
             $connection->commit();
         } catch (\Exception $e) {
             $connection->rollBack();

@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\Api2Controller;
-use App\Http\Controllers\ProdutosController;
+use App\Http\Controllers\ErpController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -23,42 +23,18 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::group(["prefix" => "erp"], function() {
-    Route::get ("/empresas",             [ApiController::class, "empresas"]);
-    Route::get ("/maquinas",             [ApiController::class, "maquinas"]);
-    Route::get ("/produtos-por-maquina", [ApiController::class, "produtos_por_maquina"]);
-    Route::get ("/retiradas-periodo",    [ApiController::class, "retiradas_por_periodo"]);
-    Route::get ("/produtos",             [ProdutosController::class, "listar"]);
-    Route::post("/categorias",           [ApiController::class, "categorias"]);
-    Route::post("/produtos",             [ApiController::class, "produtos"]);
-    Route::post("/movimentar-estoque",   [ApiController::class, "movimentar_estoque"]);
-    Route::post("/gerenciar-estoque",    [ApiController::class, "gerenciar_estoque"]);
-    Route::post("/marcar-gerou-pedido",  [ApiController::class, "marcar_gerou_pedido"]);
-    Route::post("/associar-empresa",     [ApiController::class, "associar_empresa"]);
+    Route::group(["prefix" => "maquinas"], function() {
+        Route::post("/listar",    [ErpController::class, "maquinas_listar"]);
+        Route::post("/consultar", [ErpController::class, "maquinas_consultar"]);
+        Route::post("/salvar",    [ErpController::class, "maquinas_salvar"]);
+        Route::post("/inativar",  [ErpController::class, "maquinas_inativar"]);
+    });
 
-    Route::group(["prefix" => "v2"], function() {
-        Route::group(["prefix" => "maquinas"], function() {
-            Route::post("/",          [Api2Controller::class, "maquinas_por_cliente"]);
-            Route::post("/todas",     [Api2Controller::class, "maquinas_todas"]);
-            Route::post("/consultar", [Api2Controller::class, "consultar_maquina"]);
-            Route::post("/criar",     [Api2Controller::class, "criar"]);
-            Route::get("/{id}/produtos", [Api2Controller::class, "listar_produtos_maquina"]);
-            Route::post("/vincular-produto", [Api2Controller::class, "vincular_produto"]);
-        });
-        Route::group(["prefix" => "solicitacoes"], function() {
-            Route::post("/",                    [Api2Controller::class, "enviar_solicitacoes"]);
-            Route::post("/gravar",              [Api2Controller::class, "gravar_solicitacao"]);
-            Route::post("/gravar-inexistentes", [Api2Controller::class, "gravar_inexistentes"]);
-            Route::post("/aceitar",             [Api2Controller::class, "aceitar_solicitacao"]);
-            Route::post("/recusar",             [Api2Controller::class, "recusar_solicitacao"]);
-            Route::post("/enviar",              [Api2Controller::class, "receber_solicitacao"]);
-        });
-        Route::group(["prefix" => "retiradas"], function() {
-            Route::post("/",       [Api2Controller::class, "obter_retiradas"]);
-            Route::post("/salvar", [Api2Controller::class, "salvar_retirada"]);
-        });
-        Route::post("/produtos",     [Api2Controller::class, "produtos"]);
-        Route::post("/sincronizar",  [Api2Controller::class, "sincronizar"]);
-        Route::post("/pode-faturar", [Api2Controller::class, "pode_faturar"]);
+    Route::group(["prefix" => "produtos"], function() {
+        Route::post("/listar",   [ErpController::class, "produtos_listar"]);
+        Route::post("/salvar",   [ErpController::class, "produtos_salvar"]);
+        Route::post("/inativar", [ErpController::class, "produtos_inativar"]);
+        Route::post("/estoque",  [ErpController::class, "estoque"]);
     });
 });
 
@@ -93,6 +69,5 @@ Route::group(["prefix" => "app"], function() {
             Route::post("/cpf",    [Api2Controller::class, "dedos_cpf"]);
             Route::post("/salvar", [Api2Controller::class, "salvar_dedos"]);
         });
-        Route::post("/retirar", [Api2Controller::class, "retirar"]);
     });
 });

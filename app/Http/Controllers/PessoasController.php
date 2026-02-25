@@ -288,12 +288,12 @@ class PessoasController extends ControllerListavel {
             $this->log_inserir($request->id ? "E" : "C", "pessoas", $pessoa->id); // App\Http\Controllers\Controller.php
 
             $usuario = DB::table("users")
-                                ->select(
-                                    "id",
-                                    "email"
-                                )
-                                ->where("id_pessoa", $pessoa->id)
-                                ->first();
+                            ->select(
+                                "id",
+                                "email"
+                            )
+                            ->where("id_pessoa", $pessoa->id)
+                            ->first();
             $cria_usuario = true;
             if ($pessoa->setor !== null) $cria_usuario = $pessoa->setor->cria_usuario;
             if ($cria_usuario) {

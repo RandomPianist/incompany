@@ -53,30 +53,30 @@ class DashboardController extends Controller {
         if (!$inicio) $inicio = date("Y-m")."-01";
         if (!$fim) $fim = date("Y-m-d");
         return DB::table("retiradas")
-                ->select(
-                    "setores.id",
-                    "setores.descr",
-                    DB::raw("SUM(retiradas.qtd) AS retirados"),
-                    DB::raw("SUM(retiradas.preco) AS valor")
-                )
-                ->join("setores", "setores.id", "retiradas.id_setor")
-                ->whereRaw("retiradas.data >= '".$inicio."'")
-                ->whereRaw("retiradas.data <= '".$fim."'")
-                ->whereRaw($this->obter_where($id_pessoa, "retiradas")) // App\Http\Controllers\Controller.php
-                ->whereRaw($this->obter_where($id_pessoa, "setores")) // App\Http\Controllers\Controller.php
-                ->groupby(
-                    "setores.id",
-                    "setores.descr"
-                )
-                ->cursor()
-                ->groupBy("id")->map(function($itens) {
-                    return [
-                        "id" => $itens[0]->id,
-                        "descr" => $itens[0]->descr,
-                        "retirados" => $itens->sum("retirados"),
-                        "valor" => $itens->sum("valor")
-                    ];
-                })->sortByDesc("valor")->values()->all();
+                    ->select(
+                        "setores.id",
+                        "setores.descr",
+                        DB::raw("SUM(retiradas.qtd) AS retirados"),
+                        DB::raw("SUM(retiradas.preco) AS valor")
+                    )
+                    ->join("setores", "setores.id", "retiradas.id_setor")
+                    ->whereRaw("retiradas.data >= '".$inicio."'")
+                    ->whereRaw("retiradas.data <= '".$fim."'")
+                    ->whereRaw($this->obter_where($id_pessoa, "retiradas")) // App\Http\Controllers\Controller.php
+                    ->whereRaw($this->obter_where($id_pessoa, "setores")) // App\Http\Controllers\Controller.php
+                    ->groupby(
+                        "setores.id",
+                        "setores.descr"
+                    )
+                    ->cursor()
+                    ->groupBy("id")->map(function($itens) {
+                        return [
+                            "id" => $itens[0]->id,
+                            "descr" => $itens[0]->descr,
+                            "retirados" => $itens->sum("retirados"),
+                            "valor" => $itens->sum("valor")
+                        ];
+                    })->sortByDesc("valor")->values()->all();
     }
 
     private function maquinas_main($inicio, $fim) {

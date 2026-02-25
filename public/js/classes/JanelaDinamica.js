@@ -44,7 +44,7 @@ class JanelaDinamica {
 
         if (!usuario) this.permissoesRascunho = new Array();
         for (let x in permissoes) {
-            resultado += "<div class = 'row linha-permissao" + (!usuario ? " d-none" : "") + "'>" +
+            resultado += "<div class = 'row linha-permissao" + (!usuario || x == "solicitacoes" ? " d-none" : "") + "'>" +
                 "<div class = 'col-12'>" +
                     "<div class = 'custom-control custom-switch'>" +
                         "<input id = '" + prefixoCompleto + x + "' name = '" + x + "' type = 'hidden' />" +
