@@ -25,7 +25,7 @@ class ErpController extends Controller {
                     "empresas.nome_fantasia AS descr_empresa",
                     "maquinas.id AS id_maquina",
                     "maquinas.descr AS descr_maquina",
-                    DB::raw("IFNULL(COUNT(cp.id), 0) AS associados"),
+                    DB::raw("IFNULL(COUNT(DISTINCT cp.id), 0) AS associados"),
                     DB::raw("
                         CASE
                             WHEN (IFNULL(MAX(aux.critico), 0) = 1) THEN 'S'
