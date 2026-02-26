@@ -23,6 +23,7 @@ class ErpController extends Controller {
                     DB::raw("DATE_FORMAT(comodatos.fim, '%d-%m-%Y') AS fim"),
                     "empresas.id AS id_empresa",
                     "empresas.nome_fantasia AS descr_empresa",
+                    "empresas.cod_externo AS emp_cod",
                     "maquinas.id AS id_maquina",
                     "maquinas.descr AS descr_maquina",
                     DB::raw("IFNULL(COUNT(DISTINCT cp.id), 0) AS associados"),
@@ -56,6 +57,7 @@ class ErpController extends Controller {
                     "aux.id_comodato",
                     "comodatos.id"
                 )
+                ->whereRaw("IFNULL(empresas.cod_externo, '') <> ''")
                 ->whereRaw("CURDATE() >= comodatos.inicio")
                 ->whereRaw("CURDATE() < comodatos.fim")
                 ->where(function($sql) {
@@ -271,6 +273,12 @@ class ErpController extends Controller {
                     "estq_maq.qtd",
                     "empresas.nome_fantasia"
                 )
+                ->orderBy(DB::raw("
+                    CASE
+                        WHEN (IFNULL(estq_maq.qtq, 0) < IFNULL(cp.minimo, 0)) THEN (IFNULL(estq_maq.qtq, 0) - IFNULL(cp.minimo, 0))
+                        ELSE IFNULL(estq_maq.qtq, 0)
+                    END
+                "))
                 ->get()
         );
     }
