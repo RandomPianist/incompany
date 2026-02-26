@@ -272,7 +272,8 @@ class ErpController extends Controller {
                     "cp.minimo",
                     "cp.maximo",
                     "estq_maq.qtd",
-                    "empresas.nome_fantasia"
+                    "empresas.nome_fantasia",
+                    "empresas.cod_externo"
                 )
                 ->orderBy(DB::raw("
                     CASE
