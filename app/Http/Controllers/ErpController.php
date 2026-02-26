@@ -234,7 +234,7 @@ class ErpController extends Controller {
                     "produtos.cod_externo AS cod_itm",
                     "produtos.descr AS descr_itm",
                     "produtos.ca",
-                    DB::raw("DATE_FORMAT(produtos.validade_ca, '%d-%m-%Y') AS validade_ca"),
+                    DB::raw("ISNULL(DATE_FORMAT(produtos.validade_ca, '%d-%m-%Y'), '') AS validade_ca"),
                     "produtos.validade",
                     "cp.preco AS preco",
                     DB::raw("IFNULL(cp.minimo, 0) AS minimo"),
