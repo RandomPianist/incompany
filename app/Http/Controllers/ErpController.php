@@ -271,6 +271,9 @@ class ErpController extends Controller {
                 ->groupby(
                     "produtos.cod_externo",
                     "produtos.descr",
+                    "produtos.ca",
+                    "produtos.validade_ca",
+                    "produtos.validade",
                     "cp.preco",
                     "cp.minimo",
                     "cp.maximo",
