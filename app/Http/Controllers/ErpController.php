@@ -51,6 +51,7 @@ class ErpController extends Controller {
                         )
                         ->join("produtos", "produtos.id", "cp.id_produto")
                         ->leftjoin("vestoque", "vestoque.id_cp", "cp.id")
+                        ->whereRaw("IFNULL(produtos.cod_externo, '') <> ''")
                         ->where("cp.lixeira", 0)
                         ->where("produtos.lixeira", 0),
                     "aux", 
@@ -233,10 +234,10 @@ class ErpController extends Controller {
                 ->select(
                     "produtos.cod_externo AS cod_itm",
                     "produtos.descr AS descr_itm",
-                    "produtos.ca",
-                    DB::raw("ISNULL(DATE_FORMAT(produtos.validade_ca, '%d-%m-%Y'), '') AS validade_ca"),
-                    "produtos.validade",
-                    "cp.preco AS preco",
+                    DB::raw("IFNULL(produtos.ca, '') AS ca"),
+                    DB::raw("IFNULL(DATE_FORMAT(produtos.validade_ca, '%d-%m-%Y'), '') AS validade_ca"),
+                    DB::raw("IFNULL(produtos.validade, 0) AS validade"),
+                    DB::raw("IFNULL(cp.preco, 0) AS preco"),
                     DB::raw("IFNULL(cp.minimo, 0) AS minimo"),
                     DB::raw("IFNULL(cp.maximo, 0) AS maximo"),
                     DB::raw("IFNULL(estq_maq.qtq, 0) AS qtd_maq"),
@@ -264,6 +265,7 @@ class ErpController extends Controller {
                 ->where("empresas.lixeira", 0)
                 ->where("filiais.lixeira", 0)
                 ->where("comodatos.id", $id_comodato)
+                ->whereRaw("IFNULL(produtos.cod_externo, '') <> ''")
                 ->whereRaw("CURDATE() >= comodatos.inicio")
                 ->whereRaw("CURDATE() < comodatos.fim")
                 ->whereRaw("CURDATE() >= outros.inicio")
