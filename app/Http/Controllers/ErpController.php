@@ -422,10 +422,10 @@ class ErpController extends Controller {
             if ($this->gerar_atribuicoes($comodato)) $this->atualizar_tudo([$comodato->id_maquina]); // App\Http\Controllers\Controller.php
             $connection->commit();
             $resultado = new \stdClass;
-            $resultado->ids_cdp = $ids_cdp;
-            $resultado->cods_cdp = $cods_cdp;
-            $resultado->ids_itm = $ids_itm;
-            $resultado->cods_itm = $cods_itm;
+            $resultado->ids_cdp = implode("|", $ids_cdp);
+            $resultado->cods_cdp = implode("|", $cods_cdp);
+            $resultado->ids_itm = implode("|", $ids_itm);
+            $resultado->cods_itm = implode("|", $cods_itm);
             return json_encode($resultado);
         } catch (\Exception $e) {
             $connection->rollBack();
