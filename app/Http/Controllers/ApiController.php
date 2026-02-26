@@ -126,8 +126,8 @@ class ApiController extends Controller {
         $consulta = $this->info_atb($request[0]["id_pessoa"], true, false); // App\Http\Controllers\Controller.php
         foreach ($consulta as $linha) {
             if (!$resultado->msg && (
-                ($linha->produto_ou_referencia_chave == "R" && !in_array($linha->chave_produto, $produtos_refer)) ||
-                ($linha->produto_ou_referencia_chave == "P" && !in_array(intval($linha->chave_produto), $produtos_ids))
+                ($linha->produto_ou_referencia_chave == "R" && !in_array($linha->chave, $produtos_refer)) ||
+                ($linha->produto_ou_referencia_chave == "P" && !in_array(intval($linha->chave), $produtos_ids))
             )) {
                 $msg = "Há um produto obrigatório que não foi retirado: ";
                 if ($linha->produto_ou_referencia_chave == "R") $msg .= "referência ";
