@@ -263,7 +263,7 @@ class ErpController extends Controller {
                 ->where("cp.lixeira", 0)
                 ->where("cpe.lixeira", 0)
                 ->where("empresas.lixeira", 0)
-                ->where("filiais.lixeira", 0)
+                ->whereRaw("(filiais.lixeira = 0 OR filiais.id IS NULL)")
                 ->where("comodatos.id", $id_comodato)
                 ->whereRaw("IFNULL(produtos.cod_externo, '') <> ''")
                 ->whereRaw("CURDATE() >= comodatos.inicio")
