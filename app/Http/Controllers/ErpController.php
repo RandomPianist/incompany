@@ -238,7 +238,8 @@ class ErpController extends Controller {
                     DB::raw("IFNULL(cp.maximo, 0) AS maximo"),
                     DB::raw("IFNULL(estq_maq.qtq, 0) AS qtd_maq"),
                     DB::raw("IFNULL(SUM(estq_emp.qtd), 0) AS qtd_emp"),
-                    "empresas.nome_fantasia AS empresa"
+                    "empresas.nome_fantasia AS empresa",
+                    "empresas.cod_externo AS cod_cft"
                 )
                 ->join("comodatos_produtos AS cp", "cp.id_produto", "produtos.id")
                 ->leftjoin("vestoque AS estq_maq", "estq_maq.id_cp", "cp.id")
