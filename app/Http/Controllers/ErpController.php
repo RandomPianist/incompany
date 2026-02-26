@@ -240,7 +240,7 @@ class ErpController extends Controller {
                     DB::raw("IFNULL(cp.preco, 0) AS preco"),
                     DB::raw("IFNULL(cp.minimo, 0) AS minimo"),
                     DB::raw("IFNULL(cp.maximo, 0) AS maximo"),
-                    DB::raw("IFNULL(estq_maq.qtq, 0) AS qtd_maq"),
+                    DB::raw("IFNULL(estq_maq.qtd, 0) AS qtd_maq"),
                     DB::raw("IFNULL(SUM(estq_emp.qtd), 0) AS qtd_emp"),
                     "empresas.nome_fantasia AS empresa",
                     "empresas.cod_externo AS cod_cft"
@@ -285,8 +285,8 @@ class ErpController extends Controller {
                 )
                 ->orderBy(DB::raw("
                     CASE
-                        WHEN (IFNULL(estq_maq.qtq, 0) < IFNULL(cp.minimo, 0)) THEN (IFNULL(estq_maq.qtq, 0) - IFNULL(cp.minimo, 0))
-                        ELSE IFNULL(estq_maq.qtq, 0)
+                        WHEN (IFNULL(estq_maq.qtd, 0) < IFNULL(cp.minimo, 0)) THEN (IFNULL(estq_maq.qtd, 0) - IFNULL(cp.minimo, 0))
+                        ELSE IFNULL(estq_maq.qtd, 0)
                     END
                 "))
                 ->get()
