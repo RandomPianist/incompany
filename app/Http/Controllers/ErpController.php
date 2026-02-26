@@ -233,6 +233,9 @@ class ErpController extends Controller {
                 ->select(
                     "produtos.cod_externo AS cod_itm",
                     "produtos.descr AS descr_itm",
+                    "produtos.ca",
+                    "produtos.validade_ca",
+                    "produtos.validade",
                     "cp.preco AS preco",
                     DB::raw("IFNULL(cp.minimo, 0) AS minimo"),
                     DB::raw("IFNULL(cp.maximo, 0) AS maximo"),
