@@ -139,11 +139,14 @@ class ErpController extends Controller {
                 $empresa->razao_social = $request->emp_razao;
                 $empresa->nome_fantasia = $request->emp_fantasia;
                 $empresa->cod_externo = $request->emp_cod;
+                $empresa->id_matriz = 0;
                 $empresa->save();
                 $this->log_inserir($id_empresa !== null ? "E" : "C", "empresas", $empresa->id, "ERP", $request->usuario); // App\Http\Controllers\Controller.php
             }
 
-            $id_maquina = Maquinas::find($request->id_maquina)->value("id");
+            $id_maquina = null;
+            $maquina = Maquinas::find($request->id_maquina);
+            if ($maquina !== null) $id_maquina = $maquina->id;
             $continua = false;
             $maquina = null;
             
@@ -164,7 +167,9 @@ class ErpController extends Controller {
                 $this->log_inserir($id_maquina !== null ? "E" : "C", "maquinas", $maquina->id, "ERP", $request->usuario); // App\Http\Controllers\Controller.php
             }
 
-            $id_comodato = Comodatos::find($request->id_comodato)->value("id");
+            $id_comodato = null;
+            $comodato = Maquinas::find($request->id_comodato);
+            if ($comodato !== null) $id_comodato = $comodato->id;
             $continua = false;
             $comodato = null;
 
