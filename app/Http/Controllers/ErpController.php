@@ -9,6 +9,8 @@ use App\Models\Categorias;
 use App\Models\ComodatosProdutos;
 use App\Models\Produtos;
 use App\Models\Estoque;
+use App\Models\Maquinas;
+use App\Models\Empresas;
 use Illuminate\Http\Request;
 
 class ErpController extends Controller {
@@ -27,12 +29,7 @@ class ErpController extends Controller {
                     "maquinas.id AS id_maquina",
                     "maquinas.descr AS descr_maquina",
                     DB::raw("IFNULL(COUNT(DISTINCT cp.id), 0) AS associados"),
-                    DB::raw("
-                        CASE
-                            WHEN (IFNULL(MAX(aux.critico), 0) = 1) THEN 'S'
-                            ELSE 'N'
-                        END AS critico
-                    ")
+                    DB::raw("IFNULL(aux.critico, 0) AS critico")
                 )
                 ->join("empresas", "empresas.id", "comodatos.id_empresa")
                 ->join("maquinas", "maquinas.id", "comodatos.id_maquina")
@@ -41,19 +38,20 @@ class ErpController extends Controller {
                 ->leftjoinSub(
                     DB::table("comodatos_produtos AS cp")
                         ->select(
-                            "id_comodato",
+                            "cp.id_comodato",
                             DB::raw("
-                                CASE
+                                SUM(CASE
                                     WHEN (IFNULL(vestoque.qtd, 0) < IFNULL(cp.minimo, 0)) THEN 1
                                     ELSE 0
-                                END AS critico
+                                END) AS critico
                             ")
                         )
                         ->join("produtos", "produtos.id", "cp.id_produto")
                         ->leftjoin("vestoque", "vestoque.id_cp", "cp.id")
                         ->whereRaw("IFNULL(produtos.cod_externo, '') <> ''")
                         ->where("cp.lixeira", 0)
-                        ->where("produtos.lixeira", 0),
+                        ->where("produtos.lixeira", 0)
+                        ->groupby("cp.id_comodato"),
                     "aux", 
                     "aux.id_comodato",
                     "comodatos.id"
@@ -77,7 +75,8 @@ class ErpController extends Controller {
                     "empresas.id",
                     "empresas.nome_fantasia",
                     "maquinas.id",
-                    "maquinas.descr"
+                    "maquinas.descr",
+                    "aux.critico"
                 )
                 ->get()
         );
@@ -150,7 +149,7 @@ class ErpController extends Controller {
             
             if ($id_maquina !== null) {
                 $maquina = Maquinas::find($id_maquina);
-                if (intval($empresa->lixeira)) {
+                if (intval($maquina->lixeira)) {
                     $connection->rollBack();
                     return "MAQUINA EXCLUIDA";
                 }
@@ -202,6 +201,7 @@ class ErpController extends Controller {
             return json_encode($resultado);
         } catch (\Exception $e) {
             $connection->rollBack();
+            return $e->getMessage() . " na linha " . $e->getLine() . " do arquivo " . $e->getFile();
 	        return $e->getMessage();
         }
     }
@@ -289,6 +289,7 @@ class ErpController extends Controller {
                         ELSE IFNULL(estq_maq.qtd, 0)
                     END
                 "))
+                ->take(30)
                 ->get()
         );
     }
