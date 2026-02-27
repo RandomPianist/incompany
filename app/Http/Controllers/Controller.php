@@ -860,17 +860,17 @@ abstract class Controller extends BaseController {
         return $ret;
     }
     
-    protected function gerar_atribuicoes(Comodatos $comodato) {
+    protected function gerar_atribuicoes(Comodatos $comodato, $origem = "WEB") {
         $servico = new AtualizacaoService;
         $ret = false;
         $where = "lixeira = 0 AND id_maquina = ".$comodato->id_maquina." AND id_empresa = ".$comodato->id_empresa;
         $where_g = $where." AND gerado = 1";
-        $fim = Carbon::createFromFormat('Y-m-d', $comodato->fim)->startOfDay();
+        $fim = Carbon::parse($comodato->fim)->startOfDay();
         $hj = Carbon::today();
         if (!$comodato->atb_todos || $hj->lessThan($fim)) {
             $ret = Atribuicoes::whereRaw($where_g)->exists();
             if ($ret) {
-                $this->log_inserir_lote("D", "atribuicoes", $where_g);
+                $this->log_inserir_lote("D", "atribuicoes", $where_g, $origem);
                 Atribuicoes::whereRaw($where_g)->update(["lixeira" => 1]);
                 $servico->excluir_atribuicao_sem_retirada(); // App\Services\AtualizacaoService.php
             }

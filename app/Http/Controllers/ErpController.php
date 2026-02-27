@@ -179,7 +179,7 @@ class ErpController extends Controller {
                     $comodato->fim = date("Y-m-d");
                     $comodato->save();
                     $this->log_inserir("E", "comodatos", $comodato->id, "ERP", $request->usuario); // App\Http\Controllers\Controller.php
-                    if ($this->gerar_atribuicoes($comodato)) $this->atualizar_tudo([$comodato->id_maquina]); // App\Http\Controllers\Controller.php
+                    if ($this->gerar_atribuicoes($comodato, "ERP")) $this->atualizar_tudo([$comodato->id_maquina]); // App\Http\Controllers\Controller.php
                     $continua = true;
                 }
             } else $continua = true;
@@ -206,7 +206,6 @@ class ErpController extends Controller {
             return json_encode($resultado);
         } catch (\Exception $e) {
             $connection->rollBack();
-            return $e->getMessage() . " na linha " . $e->getLine() . " do arquivo " . $e->getFile();
 	        return $e->getMessage();
         }
     }
@@ -222,7 +221,7 @@ class ErpController extends Controller {
             $comodato->fim = date("Y-m-d");
             $comodato->save();
             $this->log_inserir("E", "comodatos", $comodato->id, "ERP", $request->usuario); // App\Http\Controllers\Controller.php
-            if ($this->gerar_atribuicoes($comodato)) $this->atualizar_tudo([$comodato->id_maquina]); // App\Http\Controllers\Controller.php
+            if ($this->gerar_atribuicoes($comodato, "ERP")) $this->atualizar_tudo([$comodato->id_maquina]); // App\Http\Controllers\Controller.php
             $connection->commit();
             return "OK";
         } catch (\Exception $e) {
@@ -321,7 +320,11 @@ class ErpController extends Controller {
                 $criou = false;
                 $inserir_log = true;
                 $inserir_log_cp = true;
-                $validade_ca = Carbon::createFromFormat('d-m-Y', $req_produto->validade_ca)->format('Y-m-d');
+                $validade_ca = null;
+                if (!empty(trim($req_produto->validade_ca))) {
+                    $data_limpa = substr(trim($req_produto->validade_ca), 0, 10);
+                    $validade_ca = Carbon::createFromFormat('d-m-Y', $data_limpa)->format('Y-m-d');
+                }
                 if ($produto !== null) {
                     if ($this->comparar_texto($req_produto->cod, $produto->cod_externo)) $continua = true; // App\Http\Controllers\Controller.php
                     if ($this->comparar_texto($req_produto->descr, $produto->descr)) $continua = true; // App\Http\Controllers\Controller.php
@@ -425,7 +428,7 @@ class ErpController extends Controller {
                     }
                 }
             }
-            if ($this->gerar_atribuicoes($comodato)) $this->atualizar_tudo([$comodato->id_maquina]); // App\Http\Controllers\Controller.php
+            if ($this->gerar_atribuicoes($comodato, "ERP")) $this->atualizar_tudo([$comodato->id_maquina]); // App\Http\Controllers\Controller.php
             $connection->commit();
             $resultado = new \stdClass;
             $resultado->ids_cdp = implode("|", $ids_cdp);
@@ -454,7 +457,7 @@ class ErpController extends Controller {
 
             $this->log_inserir("D", "comodatos_produtos", $cp->id, "ERP", $request->usuario); // App\Http\Controllers\Controller.php
             
-            if ($this->gerar_atribuicoes($comodato)) $this->atualizar_tudo([$comodato->id_maquina]); // App\Http\Controllers\Controller.php
+            if ($this->gerar_atribuicoes($comodato, "ERP")) $this->atualizar_tudo([$comodato->id_maquina]); // App\Http\Controllers\Controller.php
 
             $connection->commit();
             return "OK";
