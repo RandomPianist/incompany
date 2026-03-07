@@ -471,14 +471,6 @@ abstract class Controller extends BaseController {
 	// (Funções para gerenciar máquinas, comodatos e os produtos neles)
 	// =====================================================================
 
-    protected function maquinas_da_pessoa($id_pessoa) {
-        $consulta = DB::table("vativos")
-                        ->where("id", $id_pessoa)
-                        ->value("maquinas");
-        if ($consulta === null) return [];
-        return explode(",", $consulta);
-    }
-
     protected function obter_comodato($id_maquina) {
         return Comodatos::find(
             DB::table("comodatos")
@@ -1015,7 +1007,7 @@ abstract class Controller extends BaseController {
 	// (Funções e helpers SQL para consultar e salvar retiradas)
 	// =====================================================================
 
-    protected function retorna_join_prev($id_pessoa) {
+    private function retorna_join_prev($id_pessoa) {
         return "
             LEFT JOIN (
                 SELECT
@@ -1422,7 +1414,7 @@ abstract class Controller extends BaseController {
         $servico->excluir_atribuicao_sem_retirada(); // App\Services\AtualizacaoService.php
     }
 
-    protected function retorna_sql_atb_vigente($base) {
+    private function retorna_sql_atb_vigente($base) {
         return "
             SELECT
                 atb_bruto.id_pessoa,

@@ -60,6 +60,14 @@ class PessoasController extends ControllerListavel {
         return $resultado;
     }
 
+    private function maquinas_da_pessoa($id_pessoa) {
+        $consulta = DB::table("vativos")
+                        ->where("id", $id_pessoa)
+                        ->value("maquinas");
+        if ($consulta === null) return [];
+        return explode(",", $consulta);
+    }
+
     protected function busca($where, $bindings = [], $tipo = "") {
         $where = str_replace("#", "pessoas.nome", $where);
         $where = str_replace("!", "pessoas.cpf", $where);
@@ -425,12 +433,6 @@ class PessoasController extends ControllerListavel {
     }
 
     public function supervisor(Request $request) {
-        $consulta = Pessoas::where("cpf", $request->cpf)
-                            ->where("senha", $request->senha)
-                            ->where("supervisor", 1)
-                            ->where("lixeira", 0)
-                            ->value("id");
-        if ($consulta === null) return 0;
-        return $consulta;
+        return $this->supervisor_consultar($request); // App\Http\Controllers\Controller.php
     }
 }
