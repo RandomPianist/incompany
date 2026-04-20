@@ -291,7 +291,7 @@ class Pessoa extends JanelaDinamica {
         let id_usuario = 0;
         if (this.#dados !== undefined) id_usuario = parseInt(this.#dados.id_usuario);
         const _usuario = ["a", "u"].includes(titulo.charAt(0));
-        const mostrar_password = _usuario && (!this.#id || this.#id == USUARIO || !id_usuario);
+        const mostrar_password = _usuario && (!this.#id || this.#id == USUARIO || !id_usuario /*|| permissoes.usuarios*/);
 
         if (mostrar_password) {
             $($("#senha").parent()).removeClass("col-11").addClass("col-5");

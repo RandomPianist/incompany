@@ -471,6 +471,14 @@ abstract class Controller extends BaseController {
 	// (Funções para gerenciar máquinas, comodatos e os produtos neles)
 	// =====================================================================
 
+    protected function maquinas_da_pessoa($id_pessoa) {
+        $consulta = DB::table("vativos")
+                        ->where("id", $id_pessoa)
+                        ->value("maquinas");
+        if ($consulta === null) return [];
+        return explode(",", $consulta);
+    }
+
     protected function obter_comodato($id_maquina) {
         return Comodatos::find(
             DB::table("comodatos")
@@ -842,29 +850,33 @@ abstract class Controller extends BaseController {
         )->sortBy($ordenacao)->values()->all());
     }
 
-    private function excluir_atb_cp_inativo(AtualizacaoService $servico, $where, $ret) {
+    private function excluir_atb_cp_inativo(AtualizacaoService $servico, $where, $ret, $origem = "WEB") {
         if (Atribuicoes::whereRaw($where)->exists()) {
             $ret = true;
-            $this->log_inserir_lote("D", "atribuicoes", $where);
+            $this->log_inserir_lote("D", "atribuicoes", $where, $origem);
             Atribuicoes::whereRaw($where)->update(["lixeira" => 1]);
             $servico->excluir_atribuicao_sem_retirada(); // App\Services\AtualizacaoService.php
         }
         return $ret;
     }
-    
+
     protected function gerar_atribuicoes(Comodatos $comodato, $origem = "WEB") {
         $servico = new AtualizacaoService;
         $ret = false;
-        $where = "lixeira = 0 AND id_maquina = ".$comodato->id_maquina." AND id_empresa = ".$comodato->id_empresa;
-        $where_g = $where." AND gerado = 1";
+        
+        $where_base = "id_maquina = ".$comodato->id_maquina." AND id_empresa = ".$comodato->id_empresa;
+        $where_ativos = "lixeira = 0 AND " . $where_base;
+        $where_g = $where_ativos." AND gerado = 1";
+        
         $fim = Carbon::parse($comodato->fim)->startOfDay();
         $hj = Carbon::today();
-        if (!$comodato->atb_todos || $hj->lessThan($fim)) {
+        
+        if (!$comodato->atb_todos || $hj->greaterThan($fim)) {
             $ret = Atribuicoes::whereRaw($where_g)->exists();
             if ($ret) {
                 $this->log_inserir_lote("D", "atribuicoes", $where_g, $origem);
                 Atribuicoes::whereRaw($where_g)->update(["lixeira" => 1]);
-                $servico->excluir_atribuicao_sem_retirada(); // App\Services\AtualizacaoService.php
+                $servico->excluir_atribuicao_sem_retirada(); 
             }
             return $ret;
         }
@@ -882,7 +894,8 @@ abstract class Controller extends BaseController {
                                 END) <> 0
                             ")
                             ->get();
-        foreach ($lista_itens as $item) $ret = $this->excluir_atb_cp_inativo($servico, $where_g." AND referencia = '".$item->referencia."'", $ret);
+                            
+        foreach ($lista_itens as $item) $ret = $this->excluir_atb_cp_inativo($servico, $where_g." AND referencia = '".$item->referencia."'", $ret, $origem);
 
         $lista_itens = DB::table("produtos")
                             ->select("produtos.cod_externo")
@@ -894,7 +907,8 @@ abstract class Controller extends BaseController {
                             ->where("cp.id_comodato", $comodato->id)
                             ->whereRaw("IFNULL(produtos.cod_externo, '') <> ''")
                             ->get();
-        foreach ($lista_itens as $item) $ret = $this->excluir_atb_cp_inativo($servico, $where_g." AND cod_produto = '".$item->cod_externo."'", $ret);
+                            
+        foreach ($lista_itens as $item) $ret = $this->excluir_atb_cp_inativo($servico, $where_g." AND cod_produto = '".$item->cod_externo."'", $ret, $origem);
 
         $lista_itens = DB::table("produtos")
                             ->select(
@@ -906,27 +920,30 @@ abstract class Controller extends BaseController {
                             ->where("cp.lixeira", 0)
                             ->where("produtos.lixeira", 0)
                             ->get();
+                            
         foreach ($lista_itens as $item) {
             $modelo = null;
             $letra_log = "E";
-            $continua = true;
-            $atb = Atribuicoes::whereRaw($where)->where("referencia", $item->referencia)->first();
+            
+            $query_busca = Atribuicoes::whereRaw($where_base);
+            if ($item->referencia) {
+                $query_busca->where("referencia", $item->referencia);
+            } else {
+                $query_busca->where("cod_produto", $item->cod_externo);
+            }
+            
+            $atb = $query_busca->first();
+
             if ($atb !== null) {
-                if (intval($atb->gerado)) $modelo = $atb;
-                $continua = false;
-            }
-            if ($continua) {
-                $atb = Atribuicoes::whereRaw($where)->where("cod_produto", $item->cod_externo)->first();
-                if ($atb !== null) {
-                    if (intval($atb->gerado)) $modelo = $atb;
-                    $continua = false;
-                }
-            }
-            if ($continua && $modelo === null) {
+                $modelo = $atb;
+            } else {
                 $modelo = new Atribuicoes;
                 $letra_log = "C";
             }
+
             if ($modelo !== null && (
+                $letra_log == "C" ||
+                $modelo->lixeira == 1 ||
                 $this->comparar_num($comodato->qtd, $modelo->qtd) ||
                 $this->comparar_num($comodato->validade, $modelo->validade) ||
                 $this->comparar_num($comodato->obrigatorio, $modelo->obrigatorio)
@@ -939,10 +956,15 @@ abstract class Controller extends BaseController {
                 $modelo->id_empresa = $comodato->id_empresa;
                 $modelo->referencia = $item->referencia ? $item->referencia : null;
                 $modelo->cod_produto = $item->referencia ? null : $item->cod_externo;
-                $modelo->id_empresa_autor = $this->obter_empresa(); // App\Http\Traits\GlobaisTrait.php
+                
+                $modelo->id_empresa_autor = ($origem == "ERP") ? $comodato->id_empresa : $this->obter_empresa(); 
+                
                 $modelo->data = date("Y-m-d");
+                $modelo->rascunho = "S";
+                $modelo->lixeira = 0;
                 $modelo->save();
-                $this->log_inserir($letra_log, "atribuicoes", $modelo->id);
+                
+                $this->log_inserir($letra_log, "atribuicoes", $modelo->id, $origem);
                 if ($letra_log == "C") $ret = true;
             }
         }
@@ -1007,7 +1029,7 @@ abstract class Controller extends BaseController {
 	// (Funções e helpers SQL para consultar e salvar retiradas)
 	// =====================================================================
 
-    private function retorna_join_prev($id_pessoa) {
+    protected function retorna_join_prev($id_pessoa) {
         return "
             LEFT JOIN (
                 SELECT
@@ -1414,7 +1436,7 @@ abstract class Controller extends BaseController {
         $servico->excluir_atribuicao_sem_retirada(); // App\Services\AtualizacaoService.php
     }
 
-    private function retorna_sql_atb_vigente($base) {
+    protected function retorna_sql_atb_vigente($base) {
         return "
             SELECT
                 atb_bruto.id_pessoa,

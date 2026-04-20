@@ -487,3 +487,63 @@ class RelatorioProdutos extends Relatorios {
         }
     }
 }
+
+class RelatorioConsumoProduto extends Relatorios {
+    #elementos;
+
+    constructor() {
+        super();
+        this.#elementos = this._relObterElementos(["inicio_cp", "fim_cp", "empresa_cp", "produto_cp", "setor_cp", "consumo2"]);
+
+        limpar_invalido();
+        setTimeout(() => {
+            modal("relatorioConsumoProdutoModal", 0, () => {
+                $(this.#elementos.inicio_cp).val(hoje());
+                $(this.#elementos.fim_cp).val(hoje());
+                $(this.#elementos.empresa_cp).val("");
+                $(this.#elementos.id_empresa_cp).val("");
+                $(this.#elementos.produto_cp).val("");
+                $(this.#elementos.id_produto_cp).val("");
+                $(this.#elementos.setor_cp).val("");
+                $(this.#elementos.id_setor_cp).val("");
+                $(this.#elementos.consumo).val("todos");
+            });
+        }, 0);
+    }
+
+    validar() {
+        limpar_invalido();
+        let erro = this._validarDatas($(this.#elementos.inicio_cp), $(this.#elementos.fim_cp));
+
+        let dados_requisicao = {
+            empresa: $(this.#elementos.empresa_cp).val(),
+            id_empresa: $(this.#elementos.id_empresa_cp).val(),
+            produto: $(this.#elementos.produto_cp).val(),
+            id_produto: $(this.#elementos.id_produto_cp).val(),
+            setor: $(this.#elementos.setor_cp).val(),
+            id_setor: $(this.#elementos.id_setor_cp).val(),
+            consumo: $(this.#elementos.consumo).val()
+        };
+
+        $.get(
+            URL + "/relatorios/consumo-produtos/consultar",
+            dados_requisicao,
+            (data) => {
+                if (data && !erro) {
+                    if (data === "empresa") {
+                        $(this.#elementos.empresa_cp).addClass("invalido");
+                        erro = "Empresa não encontrada";
+                    } else if (data === "produto") {
+                        $(this.#elementos.produto_cp).addClass("invalido");
+                        erro = "Produto não encontrado";
+                    } else {
+                        $(this.#elementos.setor_cp).addClass("invalido");
+                        erro = "Centro de custo não encontrado";
+                    }
+                }
+                if (!erro) $("#relatorioConsumoProdutoModal form").submit();
+                else s_alert(erro);
+            }
+        );
+    }
+}

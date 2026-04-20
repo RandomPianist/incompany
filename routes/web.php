@@ -211,6 +211,10 @@ Route::middleware("auth")->group(function () {
             Route::get("/",          [RelatoriosController::class, "retiradas"]);
             Route::get("/consultar", [RelatoriosController::class, "retiradas_consultar"]);
         });
+        Route::group(["prefix" => "consumo-produtos"], function() {
+            Route::get("/",          [RelatoriosController::class, "consumo_produto"]);
+            Route::get("/consultar", [RelatoriosController::class, "produtos_consultar"]);
+        });
     });
 });
 

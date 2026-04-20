@@ -6,6 +6,7 @@ use DB;
 use App\Models\Produtos;
 use App\Models\Pessoas;
 use App\Models\Dedos;
+use App\Models\PreRetiradas;
 use Illuminate\Http\Request;
 
 class Api2Controller extends Controller {

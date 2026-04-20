@@ -172,6 +172,9 @@
                                         <li onclick = "relatorio = new RelatorioRetiradas('setor')">
                                             <span>Consumo por centro de custo</span>
                                         </li>
+                                        <li onclick = "relatorio = new RelatorioConsumoProduto()">
+                                            <span>Consumo por produto</span>
+                                        </li>
                                         <li onclick = "relatorio = new RelatorioRanking()">
                                             <span>Ranking de retiradas</span>
                                         </li>
@@ -264,6 +267,7 @@
                 @include("modals.reports.controle_modal")
                 @include("modals.reports.ranking_modal")
                 @include("modals.reports.produtos_modal")
+                @include("modals.reports.consumo_produtos_modal")
             </main>
         </div>
         <div id = "loader">

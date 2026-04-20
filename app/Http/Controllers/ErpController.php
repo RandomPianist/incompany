@@ -11,6 +11,7 @@ use App\Models\Produtos;
 use App\Models\Estoque;
 use App\Models\Maquinas;
 use App\Models\Empresas;
+use App\Models\Atribuicoes;
 use Illuminate\Http\Request;
 
 class ErpController extends Controller {
@@ -293,7 +294,7 @@ class ErpController extends Controller {
                         ELSE IFNULL(estq_maq.qtd, 0)
                     END
                 "))
-                ->take(30)
+                //->take(30)
                 ->get()
         );
     }
@@ -302,9 +303,9 @@ class ErpController extends Controller {
         if ($request->token != config("app.key")) return 401;
 
         $connection = DB::connection();
-        $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
-        $connection->beginTransaction();
         try {
+            // $connection->statement('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;');
+            // $connection->beginTransaction();
             $ids_cdp = array();
             $cods_cdp = array();
             $ids_itm = array();
@@ -427,9 +428,54 @@ class ErpController extends Controller {
                         if ($inserir_log && !intval($req_categoria->id)) $this->log_inserir("E", "produtos", $produto->id, "ERP", $usuario); // App\Http\Controllers\Controller.php
                     }
                 }
+
+                $id_maquina_atb = $comodato->id_maquina;
+                $atb_todos = $comodato->atb_todos;
+
+                if ($atb_todos) {
+                    
+                    $ref_val = trim($produto->referencia) ? trim($produto->referencia) : null;
+                    $cod_val = trim($produto->referencia) ? null : trim($produto->cod_externo);
+
+                    $query_existe = DB::table('atribuicoes')
+                        ->where('lixeira', 0)
+                        ->where('id_maquina', $id_maquina_atb);
+                        
+                    if ($ref_val) {
+                        $query_existe->where('referencia', $ref_val);
+                    } else {
+                        $query_existe->where('cod_produto', $cod_val);
+                    }
+                                
+                    $atribuicao = Atribuicoes::updateOrCreate(
+                        [
+                            'id_empresa'  => $comodato->id_empresa,
+                            'id_maquina'  => $id_maquina_atb,
+                            'cod_produto' => $cod_val,
+                            'referencia'  => $ref_val,
+                            'lixeira'     => 0
+                        ],
+                        [
+                            'qtd'              => $comodato->qtd > 0 ? $comodato->qtd : 99,
+                            'data'             => date('Y-m-d'),
+                            'validade'         => $comodato->validade > 0 ? $comodato->validade : 1,
+                            'obrigatorio'      => $comodato->obrigatorio,
+                            'gerado'           => ($comodato->atb_todos == 1) ? 1 : 0, 
+                            'rascunho'         => 'S',
+                            'id_setor'         => null,
+                            'id_pessoa'        => null,
+                            'id_empresa_autor' => $comodato->id_empresa
+                        ]
+                    );
+
+                    $id_atb = $atribuicao->id;
+                    $letra_log = $atribuicao->wasRecentlyCreated ? "C" : "E";
+
+                    $this->log_inserir($letra_log, "atribuicoes", $id_atb, "ERP", $usuario);
+                }
             }
             if ($this->gerar_atribuicoes($comodato, "ERP")) $this->atualizar_tudo([$comodato->id_maquina]); // App\Http\Controllers\Controller.php
-            $connection->commit();
+            // $connection->commit();
             $resultado = new \stdClass;
             $resultado->ids_cdp = implode("|", $ids_cdp);
             $resultado->cods_cdp = implode("|", $cods_cdp);
@@ -437,7 +483,7 @@ class ErpController extends Controller {
             $resultado->cods_itm = implode("|", $cods_itm);
             return json_encode($resultado);
         } catch (\Exception $e) {
-            $connection->rollBack();
+            // $connection->rollBack();
 	        return $e->getMessage();
         }
     }
@@ -476,8 +522,8 @@ class ErpController extends Controller {
 
         foreach ($req_produtos as $produto) {
             $produto = (object) $produto;
-            $produto_m = Produtos::where("cod_externo", $produto->cod);
-            $cp = ComodatosProdutos::find($comodato->cp($produto_m->id));
+            $produto_m = Produtos::where("cod_externo", $produto->cod)->first();
+            $cp = ComodatosProdutos::where("id_comodato", $comodato->id)->where("id_produto", $produto_m->id)->first();
             if ($this->comparar_num($produto->preco, $cp->preco)) {
                 $cp->preco = $produto->preco;
                 $cp->save();

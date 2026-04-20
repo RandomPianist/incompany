@@ -340,7 +340,7 @@ class RelatoriosController extends Controller {
                             if ($request->lm == "S") {
                                 $sql->whereNotNull("estoque.id")
                                     ->whereRaw("estoque.data >= '".$inicio."'")
-                                    ->whereRaw("estoque.data < '".$fim."'");
+                                    ->whereRaw("estoque.data <= '".$fim."'");
                             }
                             if ($this->obter_empresa()) { // App\Http\Traits\GlobaisTrait.php
                                 $sql->whereIn("maquinas.id", $this->maquinas_periodo($inicio, $fim)); // App\Http\Controllers\Controller.php
@@ -884,5 +884,121 @@ class RelatoriosController extends Controller {
             ->setOption('margin-left', '21mm')
             ->setOption('print-media-type', true);
         return sizeof($resultado) ? $pdf->inline('termos-de-ciencia-'.(date("YmdHis")).'.pdf') : $this->view_mensagem("warning", "Não há nada para exibir");
+    }
+
+    public function produtos_consultar(Request $request) {
+        if ($this->consultar_empresa($request)) return "empresa";
+
+        if (((
+            !Produtos::where("id", $request->id_produto)
+                ->where("descr", $request->produto)
+                ->where("lixeira", 0)
+                ->exists()
+        ) && trim($request->produto)) || (!trim($request->produto) && trim($request->id_produto))) return "produto";
+
+        if (((
+            !Setores::where("id", $request->id_setor)
+                ->where("descr", $request->setor)
+                ->where("lixeira", 0)
+                ->exists()
+        ) && trim($request->setor)) || (!trim($request->setor) && trim($request->id_setor))) return "setor";
+
+        return "";
+    }
+
+    public function consumo_produto(Request $request) {
+        $criterios = array();
+        $qtd_total = 0;
+        $val_total = 0;
+
+        $resultado = DB::table("retiradas")
+            ->select(
+                "produtos.id",
+                "produtos.descr AS produto",
+                "produtos.ca",
+                "produtos.referencia",
+                "produtos.cod_externo",
+                "produtos.preco", 
+                DB::raw("SUM(retiradas.qtd) AS qtd_total")
+            )
+            ->join("produtos", "produtos.id", "retiradas.id_produto")
+            ->leftjoin("pessoas", "pessoas.id", "retiradas.id_pessoa")
+            ->leftjoin("setores", "setores.id", "retiradas.id_setor")
+            ->leftjoin("empresas", "empresas.id", "retiradas.id_empresa")
+            ->whereRaw($this->obter_where(Auth::user()->id_pessoa, "retiradas"))
+            ->where(function($sql) use($request, &$criterios) {
+                
+                if ($request->inicio || $request->fim) {
+                    $periodo = "Período";
+                    if ($request->inicio) {
+                        $inicio = Carbon::createFromFormat('d/m/Y', $request->inicio)->format('Y-m-d');
+                        $sql->whereRaw("retiradas.data >= '".$inicio."'");
+                        $periodo .= " de ".$request->inicio;
+                    }
+                    if ($request->fim) {
+                        $fim = Carbon::createFromFormat('d/m/Y', $request->fim)->format('Y-m-d');
+                        $sql->whereRaw("retiradas.data <= '".$fim."'");
+                        $periodo .= " até ".$request->fim;
+                    } else $periodo .= " em diante";
+                    array_push($criterios, $periodo);
+                }
+
+                if ($request->id_empresa) {
+                    $sql->where(function($query) use($request) {
+                        $query->where("empresas.id", $request->id_empresa)
+                            ->orWhere("empresas.id_matriz", $request->id_empresa);
+                    });
+                    $m_empresa = Empresas::find($request->id_empresa);
+                    $empresa = $m_empresa->razao_social;
+                    if ($m_empresa->filiais()->exists()) $empresa .= " e filiais";
+                    array_push($criterios, "Empresa: ".$empresa);
+                }
+                
+                if ($request->id_produto) {
+                    array_push($criterios, "Produto: ".Produtos::find($request->id_produto)->descr);
+                    $sql->where("produtos.id", $request->id_produto);
+                }
+
+                if ($request->id_setor) {
+                    array_push($criterios, "Centro de custo: ".$request->setor);
+                    $sql->where("setores.id", $request->id_setor);
+                }
+
+                if ($request->consumo && $request->consumo != "todos") {
+                    $sql->where("produtos.consumo", $request->consumo == "epi" ? 0 : 1);
+                    array_push($criterios, "Apenas ".($request->consumo == "epi" ? "EPI" : "produtos de consumo"));
+                }
+            })
+            ->groupby(
+                "produtos.id",
+                "produtos.descr",
+                "produtos.ca",
+                "produtos.referencia",
+                "produtos.cod_externo",
+                "produtos.preco"
+            )
+            ->orderby("qtd_total", "DESC")
+            ->cursor()
+            ->map(function($produto) use(&$qtd_total, &$val_total) {
+                $valor_total_item = $produto->qtd_total * $produto->preco;
+
+                $qtd_total += $produto->qtd_total;
+                $val_total += $valor_total_item;
+
+                return [
+                    "produto" => $produto->produto,
+                    "ca" => $produto->ca,
+                    "referencia" => $produto->referencia,
+                    "cod_externo" => $produto->cod_externo,
+                    "qtd_total" => $produto->qtd_total,
+                    "preco" => $produto->preco,
+                    "valor_total" => $valor_total_item
+                ];
+            })->values()->all();
+
+        $criterios = implode(" | ", $criterios);
+        $titulo = "Consumo por Produto";
+
+        return sizeof($resultado) ? view("reports/consumo_produto", compact("resultado", "criterios", "val_total", "qtd_total", "titulo")) : $this->view_mensagem("warning", "Não há nada para exibir");
     }
 }
