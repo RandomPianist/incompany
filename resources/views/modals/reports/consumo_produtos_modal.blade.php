@@ -64,7 +64,7 @@
                         </div>
 
                         <div class = "row">
-                            <div class = "col-5 form-search">
+                            <div class = "col-11 form-search">
                                 <label for = "rel-setor_cp" class = "custom-label-form">Centro de custo:</label>
                                 <input id = "rel-setor_cp"
                                     name = "setor"
